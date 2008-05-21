@@ -1,0 +1,100 @@
+moldyn-FST.txt
+--------------
+
+Goals
+1) How would the composed inspector and executor be generated if we use a library approach where data dependences and data mappings are explicitly generated as hypergraphs?
+    Subgoal:
+        -get a data and iteration reordering composition working
+
+
+----------------------
+Index Array Generators
+----------------------
+BFSHyper
+    Input:
+        hypergraph and dual
+    Output:
+        Permutation of nodes in hypergraph
+        
+CPack
+    Input:
+        hypergraph
+    Output:
+        Permutation of hyperedges in hypergraph
+
+
+---------------------
+Transformation Writer
+---------------------
+    Data reordering RTRT
+        Constraints: 
+            -1D data space
+            -No dependences between index arrays, or uninterpreted function symbols used to represent them.  Is this an issue?  See 1D iteration space below.
+            -Perfectly nested loop?  1D loop?
+        Possible IAGS:
+            list these
+        Input: 
+            -Data mapping relation
+            -Select IAG
+        Output:
+            -Permutation mapping for data
+            
+    Iteration reordering RTRT
+        Constraints:
+            -1D iteration space?  I don't think this is necessary because the inspector can generate hypergraph representing computation no matter what.  Is the problem generating the transformed executor?
+        Possible IAGS:
+            list these
+        Input:
+            -Data mapping relation
+            -Select IAG
+        Output:
+            -Permuation mapping for data
+    
+    SparseTiling RTRT
+    Tile Packing RTRT
+    
+-----------------------
+What the user specifies
+-----------------------
+Code
+    for (ii=0; ii<n_inter; ii++) {
+        // simplified computations
+        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+    }
+
+Iteration Space
+    II_0 = { [ii,1] : 0 <= ii <= (n_inter-1)  }
+           union { [ii,2] : 0 <= ii <= (n_inter-1)  }
+
+Data Spaces
+    X_0 = { [k] : 0 <= k <= (N-1) }, data array
+    FX_0 = { [k] : 0 <= k <= (N-1) }, data array
+    INTER1_0 = { [k] : 0 <= ii <= (n_inter-1) }, index array
+    INTER2_0 = { [k] : 0 <= ii <= (n_inter-1) }, index array
+
+Index Array Value Constraints
+    // if (0 <= ii <= (n_iter-1)) then (0 <= inter1(i) <= (N-1))
+    { [ii] -> [inter1(i)] : not (0 <= ii <= (n_inter-1)) || (0 <= inter1(i) <= (N-1)) }
+    
+    // if (0 <= ii <= (n_iter-1)) then (0 <= inter2(i) <= (N-1))
+    { [ii] -> [inter2(i)] : not (0 <= ii <= (n_inter-1)) || (0 <= inter2(i) <= (N-1)) }   
+        
+
+Data Mappings
+    M_II0_to_X0 = { [ii,1] -> [ inter1(i) ] : 1 <= j <= T  && 1 <= i <= N } 
+                   union { [j,1,i,1] -> [ idx2(i) ] : 1<=j<= T  && 1<=i<= N }
+
+
+Data Dependences
+
+Composition and choice of RTRTs
+    data reordering, iteration reordering
+    Does the choice of RTRT 
+
+-------------------------
+ITOs and other automation
+-------------------------
+
+
+
