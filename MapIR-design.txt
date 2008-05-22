@@ -1,0 +1,227 @@
+General notes
+
+
+
+Need a MapIR specification.
+    -MapIREnvironment
+        - maps set and relation names to set and relation instances
+        maybe even separate maps for each type.
+            map<String,MapIRSet>
+        
+        class MapIREnvironment {
+            IterSpace getIterSpace(String);
+            void putIterSpace(String,IterSpace);
+            
+            DataSpace getDataSpace(String);
+            
+            IndexArray getIndexArray(String);
+               
+        }
+
+        Questions
+            - do we actually need to index the DataSpaces, IterSpaces, etc. by name?  Won't other data structures just have the data spaces in there?  I guess in the final representation that will be the case, but when parsing, need to treat the name like a symbol table, so a DataSpace can be referenced in other contexts.
+
+
+    -One iteration space set.
+        class IterSpace {
+            String name;
+            OmegaSet spec;
+        }
+        
+        
+    -The MapIR environment will contain multiple data spaces.  Also will want to know if a data space will contain the concrete realization for an uninterpreted symbol, which is the case for index arrays.  Have string identifier for the array data space and the corresponding uninterpreted function symbol be the same.
+        class DataSpace {
+            String name;
+            bool is_index_array;
+            OmegaSet spec;
+        }
+        
+    
+    -Each index array, which is mathematically represented with an uninterpreted function symbol, is specified with a relation where the domain  represents the uninterpreted function parameters and the single dimensional range represents the value of the uninterpreted function.  The relation constraints should indicate that if the parameters lie within certain boundaries, then the value of the uninterpreted function is also bounded.
+
+        class IndexArray {
+            String id;
+            OmegaRelation index_value_constraints;
+        }
+    Checking
+        - The dimensionality of the domain should match the dimensionality of the associated index array DataSpace.
+        - For now we are assuming that the dimensionality of the range of the index array is one.
+        
+    -Access relations (used to be called data mappings) are relations where the domain is an iteration space (subspaces are specified with constraints) and the range is a data space.  Initially thought we might want to rename this to "access functions", but they are not functions.  We can have the same iteration mapping to multiple places in one array.  Decided to call it a relation versus a mapping, because mappings are usually synonymous with functions (http://en.wikipedia.org/wiki/Function_(mathematics)).  Using the term access to more clearly indicate the relationship between iterations and data.  Each iteration accesses various data locations.
+    
+        class AccessRelation {
+            IterSpace iter_space;
+            DataSpace data_space;
+            OmegaRelation iterspace_to_data;
+        }
+
+    Checking
+        - Can compare domain with iteration space and range with data space.
+    
+    
+    -Data dependences are relations from subspaces in the iteration space to subspaces in the iteration space.  Should be represented as between full iteration space and itself.  Constraints will make it so that it is really just between subspaces.  The data dependence also stores what data space is inducing the dependence.
+    
+        class DataDependence {
+            IterSpace iter_space;
+            OmegaRelation dd;
+            DataSpace data_space;
+        }
+        
+    Checking
+        - Can we check that given the iteration space, data spaces, and access functions, the given data dependence is valid?  Is it overly conservative?  optimistic?
+        
+-------------------------------------------------------------------        
+Transformation Specification:
+
+    All of the run-time reordering transformations (RTRTs) should derive from this base class.  For now just for conceptual organization.  We might need functionality or interface specifications later.
+    
+    class RTRT {
+    }
+    
+    class DataReordering extends RTRT {
+        // reordering specification
+        OmegaRelation data_reordering;
+
+        // DataSpace source, target
+        DataSpace data_space;
+        
+        // Generator for the index arrays that are represented 
+        // as uninterpreted functions 
+        // in the data reordering specification.
+        // For now ASSUMING there is only one.
+        IndexArrayGenerator index_array_generator;
+        
+        // Codifying correctness?  How should we codify things like
+        // the data space should be 1D?
+    }
+    
+    class IterReordering extends RTRT {
+        // reordering specification
+        OmegaRelation iter_reordering;
+
+        // Iter space source
+        IterSpace iter_space;
+        
+        // Generator for the index arrays that are represented 
+        // as uninterpreted functions 
+        // in the iteration reordering specification.
+        // For now ASSUMING there is only one.
+        IndexArrayGenerator index_array_generator;
+        
+        // Codifying correctness?  How should we codify things like
+        // the data space should be 1D?
+    }       
+    
+    
+    IndexArrayGenerators
+        Data structures that at least initially will be specific to each heuristic type.
+        
+    // Base class
+    class IndexArrayGenerator {
+    }
+        
+    
+    //      IAG_Permute - creates an index array that specifies a 
+    //          permutation of either
+    //          the domain of a data mapping, which is an iteration space, or
+    //          the range of a data mapping, which is a data space.
+    class IAG_Permute {
+        DataMapping input;
+        Heuristic heuristic;
+        IndexArray result;
+    }
+
+    //      IAG_Group - creates an index array that groups the space
+    //          used to access the index array.
+    //          Assuming for now that we are only applying these to iteration
+    //          spaces.
+    //      Don't want to make this abstract.  Instead, it can be used by
+    //      any grouping that does not inspect data mappings or data
+    //      dependences.
+    class IAG_Group {
+        // return the space being grouped
+        IterSpace getInputIterSpace();
+        
+        // return heuristic being used to perform the grouping
+        Heuristic getHeuristic();
+        
+        // Return specification for the index array that will be the 
+        // result of the grouping.  Won't know name but will know 
+        // input and output constraints for the uninterpreted function.
+        // Is this something that the IAG should be able to compute from
+        // its various pieces of info, the input space being grouped,
+        // and the Heuristic info?  What do we really want here?
+        OmegaRelation getIndexArraySpec();
+        
+        // might have these members in the base class, 
+        // but might just have this be an interface
+        IterSpace input;
+        Heuristic heuristic;
+        IndexArray result;
+    }
+    
+    // uses data dependences in iteration space
+    class IAG_Wavefront : public IAG_Group {
+        // Wavefront needs the set of data dependences between the
+        // points in the input iteration space.
+        DataDeps input_dd;
+        
+    }
+    
+    // uses data dependences in iter space and a seed partitioning
+    // on a subspace of the iter space
+    class IAG_SparseTiling : public IAG_Group {
+        // take dependences, a mapping from iter to seed space 
+        // and a partitioning of the seed space
+        DataDeps input_dd;
+        OmegaRelation iter_space_to_seed_space;
+        IndexArray seed_partition;
+    }
+    
+    
+    
+    // The Heuristic class contains the AST for the heuristic
+    // template and requirements on the input MapIR and 
+    // constraints on output index arrays.
+    // Requirements on the data mappings, 
+    // data dependences, data spaces, iteration spaces, and generated
+    // index arrays as well.
+    class Heuristic {
+        String filename;    // template for heuristic
+        
+        // want to specify the restrictions on the MapIR that are needed
+        // for this heuristic
+        
+        // restrictions on the number and dimensionality of the data mappings
+        int max_data_mappings;
+        int max_dm_range_dim;
+        int max_dm_domain_dim;
+        
+        // restrictions on the dimensionality of the restricted data dependences
+        int max_dd_range_dim;
+        int max_dd_domain_dim;
+        
+        // constraints on output
+            // Assumption is that any generated index functions would be
+            // accessed by the domain specified in the reordering
+            // be that an iteration subspace or a data space.
+            // The generated index array will have values that range from
+            // lb to ub and might have other properties like 
+            // being a permutation.  For now we just keep fields for the 
+            // bounds on the values in the generated index array.  Those
+            // bounds will be passed into the heuristic.
+            // should they be symbolic?  As in should we have a string
+            // that will be the var holding those bounds?
+            // The original iteration space has various symbolic parameters
+            // and index arrays.  The transformations often result in new
+            // symbolic parameters (e.g. number of tile, partitions, etc.)
+            // and index arrays being generated.  But maybe these are
+            // represented in the constraints for the index arrays.
+        
+    }
+    
+Initial assumptions:
+    -single iteration space, but different heuristics can operate on subspaces within that iteration space
+    -range of uninterpreted function symbols are single dimensional
+    -data and index arrays are only one dimensional when first specified?  what about later?
+    -a data space is either an index array or a data array but not both, not sure what being both would mean
