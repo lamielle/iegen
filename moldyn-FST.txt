@@ -87,10 +87,18 @@ Data Mappings
 
 
 Data Dependences
+    Only reduction dependences.
 
 Composition and choice of RTRTs
-    data reordering, iteration reordering
-    Does the choice of RTRT 
+    data reordering
+        DataPermuteRTRT
+            data_reordering = { [ k ] -> [ sigma( k ) ] }
+            data_spaces = [ X_0, FX_0 ]
+           R_DATA0_to_DATA1 = { [ k ] -> [ sigma( k ) ] : 1<=k<=N && 1<=sigma(k)<=N }
+      using CPACK and mapping of full iteration space to iteration subspace for use in data reordering heuristic {[j,1,i,1] -> [i,1]}
+            
+    
+    iteration reordering
 
 -------------------------
 ITOs and other automation

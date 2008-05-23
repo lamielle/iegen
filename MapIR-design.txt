@@ -75,68 +75,81 @@ Transformation Specification:
 
     All of the run-time reordering transformations (RTRTs) should derive from this base class.  For now just for conceptual organization.  We might need functionality or interface specifications later.
     
+    An IAGspec is different than an RTRT because an IAGspec is a specification of a library routine that takes hypergraphs as input and generates indexed permutations and/or groupings.  The IAGspec could eventually have pre and post conditions.  The RTRT needs to keep track of data and iteration spaces involved in the reordering, and the RTRT will be responsible for generating the code that generates the hypergraph data structures that will be passed to the IAG library routine at runtime.
+
+    
     class RTRT {
     }
     
-    class DataReordering extends RTRT {
+    class DataPermuteRTRT extends RTRT {
         // reordering specification
         OmegaRelation data_reordering;
 
-        // DataSpace source, target
-        DataSpace data_space;
+        // DataSpaces that should all be permuted in the same way.
+        List<DataSpace> data_spaces;
+        
+        // AccessRelation, mapping of iterations to data that
+        // needs to have hypergraph creation code generated
+        AccessRelation access_relation;
         
         // Generator for the index arrays that are represented 
         // as uninterpreted functions 
         // in the data reordering specification.
         // For now ASSUMING there is only one.
-        IndexArrayGenerator index_array_generator;
+        IAGspec index_array_generator;
         
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?
     }
     
-    class IterReordering extends RTRT {
+    class IterReorderingRTRT extends RTRT {
         // reordering specification
         OmegaRelation iter_reordering;
 
         // Iter space source
         IterSpace iter_space;
         
+        // AccessRelation, mapping of iterations to data that
+        // needs to have hypergraph creation code generated
+        AccessRelation access_relation;
+        
         // Generator for the index arrays that are represented 
         // as uninterpreted functions 
         // in the iteration reordering specification.
         // For now ASSUMING there is only one.
-        IndexArrayGenerator index_array_generator;
+        IAGspec index_array_generator;
         
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?
     }       
     
-    
-    IndexArrayGenerators
-        Data structures that at least initially will be specific to each heuristic type.
-        
+
     // Base class
-    class IndexArrayGenerator {
+    // Index array generator specifications.
+    class IAGspec {
     }
         
     
-    //      IAG_Permute - creates an index array that specifies a 
-    //          permutation of either
-    //          the domain of a data mapping, which is an iteration space, or
-    //          the range of a data mapping, which is a data space.
-    class IAG_Permute {
-        DataMapping input;
-        Heuristic heuristic;
+    //      IAG_Permute - specification for an IAG that 
+    //          takes a hypergraph (and possibly its dual) and 
+    //          creates an index array containing a 
+    //          permutation of either the nodes or hyperedges in 
+    //          the hypergraph.
+    
+    class IAG_Permute extends IAGspec {
+        AccessRelation input;
+        String name;
         IndexArray result;
     }
+
+FIXME: MMS, 5/23/08, only need IAG_Permute to work on the first part of the moldyn-FST composed transformation, so the rest of this still needs thought out
 
     //      IAG_Group - creates an index array that groups the space
     //          used to access the index array.
     //          Assuming for now that we are only applying these to iteration
     //          spaces.
     //      Don't want to make this abstract.  Instead, it can be used by
-    //      any grouping that does not inspect data mappings or data
+    //      any grouping that does not inspect access relations or data
     //      dependences.
     class IAG_Group {
         // return the space being grouped
@@ -179,49 +192,8 @@ Transformation Specification:
     }
     
     
-    
-    // The Heuristic class contains the AST for the heuristic
-    // template and requirements on the input MapIR and 
-    // constraints on output index arrays.
-    // Requirements on the data mappings, 
-    // data dependences, data spaces, iteration spaces, and generated
-    // index arrays as well.
-    class Heuristic {
-        String filename;    // template for heuristic
-        
-        // want to specify the restrictions on the MapIR that are needed
-        // for this heuristic
-        
-        // restrictions on the number and dimensionality of the data mappings
-        int max_data_mappings;
-        int max_dm_range_dim;
-        int max_dm_domain_dim;
-        
-        // restrictions on the dimensionality of the restricted data dependences
-        int max_dd_range_dim;
-        int max_dd_domain_dim;
-        
-        // constraints on output
-            // Assumption is that any generated index functions would be
-            // accessed by the domain specified in the reordering
-            // be that an iteration subspace or a data space.
-            // The generated index array will have values that range from
-            // lb to ub and might have other properties like 
-            // being a permutation.  For now we just keep fields for the 
-            // bounds on the values in the generated index array.  Those
-            // bounds will be passed into the heuristic.
-            // should they be symbolic?  As in should we have a string
-            // that will be the var holding those bounds?
-            // The original iteration space has various symbolic parameters
-            // and index arrays.  The transformations often result in new
-            // symbolic parameters (e.g. number of tile, partitions, etc.)
-            // and index arrays being generated.  But maybe these are
-            // represented in the constraints for the index arrays.
-        
-    }
-    
 Initial assumptions:
     -single iteration space, but different heuristics can operate on subspaces within that iteration space
-    -range of uninterpreted function symbols are single dimensional
+    -range of uninterpreted function symbol is single dimensional
     -data and index arrays are only one dimensional when first specified?  what about later?
     -a data space is either an index array or a data array but not both, not sure what being both would mean
