@@ -64,8 +64,8 @@ Code
     }
 
 Iteration Space
-    II_0 = { [ii,1] : 0 <= ii <= (n_inter-1)  }
-           union { [ii,2] : 0 <= ii <= (n_inter-1)  }
+    I_0 = { [ii,1] : 0 <= ii <= (n_inter-1)  }
+          union { [ii,2] : 0 <= ii <= (n_inter-1)  }
 
 Data Spaces
     X_0 = { [k] : 0 <= k <= (N-1) }, data array
@@ -81,9 +81,12 @@ Index Array Value Constraints
     { [ii] -> [inter2(i)] : not (0 <= ii <= (n_inter-1)) || (0 <= inter2(i) <= (N-1)) }   
         
 
-Data Mappings
-    M_II0_to_X0 = { [ii,1] -> [ inter1(i) ] : 1 <= j <= T  && 1 <= i <= N } 
-                   union { [j,1,i,1] -> [ idx2(i) ] : 1<=j<= T  && 1<=i<= N }
+Access Relations
+    A_II0_to_X0 = { [ii,1] -> [ inter1(ii) ] } 
+                   union { [ii,1] -> [ inter2(ii) ] }
+                   
+    A_II0_to_FX0 = { [ii,1] -> [ inter1(ii) ] } 
+                   union { [ii,2] -> [ inter2(ii) ] }
 
 
 Data Dependences
@@ -94,9 +97,9 @@ Composition and choice of RTRTs
         DataPermuteRTRT
             data_reordering = { [ k ] -> [ sigma( k ) ] }
             data_spaces = [ X_0, FX_0 ]
-           R_DATA0_to_DATA1 = { [ k ] -> [ sigma( k ) ] : 1<=k<=N && 1<=sigma(k)<=N }
-      using CPACK and mapping of full iteration space to iteration subspace for use in data reordering heuristic {[j,1,i,1] -> [i,1]}
-            
+            access_relation = A_II0_to_X0
+            iter_sub_space_relation = { [ ii, 1 ] -> [ ii ] }
+            index_array_generator = CPACK
     
     iteration reordering
 
@@ -104,5 +107,33 @@ Composition and choice of RTRTs
 ITOs and other automation
 -------------------------
 
+Generating the composed inspector
 
+    1) DataPermuteRTRT
+        a) restrict access_relation to iteration subspace
+            input:
+                access_relation
+                iter_sub_space_relation
 
+            output:
+                relation_to_traverse = inverse ( iter_sub_space_relation compose (inverse access_relation))
+                
+            For the example, output is the following:
+                { [ii] -> [ inter1(ii) ] } 
+                union { [ii] -> [ inter2(ii) ] }
+            
+        b) restrict iteration space to iteration subspace
+            input:
+                I_0     // original iteration space
+                access_relation
+            output:
+                iter_sub_space = iter_sub_space_relation ( I_0 )
+                
+        c) generate code that explicitly creates hypergraph and dual (if necessary) at runtime.
+            input:
+                iter_sub_space
+                relation_to_traverse
+            output:
+                code that traverses iter_sub_space and creates hypergraph, this needs to be more specific
+                
+            algorithm:

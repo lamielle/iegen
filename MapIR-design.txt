@@ -92,6 +92,11 @@ Transformation Specification:
         // needs to have hypergraph creation code generated
         AccessRelation access_relation;
         
+        // Mapping of full iteration space to sub space of the 
+        // iteration space that inspector should 
+        // traverse when inspecting the access relation.
+        OmegaRelation iter_sub_space_relation;
+        
         // Generator for the index arrays that are represented 
         // as uninterpreted functions 
         // in the data reordering specification.
@@ -106,7 +111,8 @@ Transformation Specification:
         // reordering specification
         OmegaRelation iter_reordering;
 
-        // Iter space source
+        // Iteration space that inspector should traverse and also that
+        // is being reordered
         IterSpace iter_space;
         
         // AccessRelation, mapping of iterations to data that
