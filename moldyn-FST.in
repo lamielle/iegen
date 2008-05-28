@@ -1,0 +1,24 @@
+symbolic n_inter, N, inter1(1), inter2(1);
+
+I_0 := { [ii,1] : 0 <= ii <= (n_inter-1)  }
+          union { [ii,2] : 0 <= ii <= (n_inter-1)  };
+
+X_0 := { [k] : 0 <= k <= (N-1) };
+FX_0 := { [k] : 0 <= k <= (N-1) };
+INTER1_0 := { [k] : 0 <= k <= (n_inter-1) };
+INTER2_0 := { [k] : 0 <= k <= (n_inter-1) };
+
+A_II0_to_X0 := { [ii,1] -> [ inter1(ii) ] } 
+               union { [ii,1] -> [ inter2(ii) ] };
+
+iss_relation := { [ ii, 1 ] -> [ ii ] };
+
+rel_to_traverse := { [ii] -> [ inter1(ii) ] } 
+                   union { [ii] -> [ inter2(ii) ] };
+
+iss := iss_relation ( I_0 );
+
+iss;
+
+codegen iss;
+

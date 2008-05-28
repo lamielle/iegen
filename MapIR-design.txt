@@ -3,12 +3,12 @@ General notes
 
 
 Need a MapIR specification.
-    -MapIREnvironment
+    -MapIR
         - maps set and relation names to set and relation instances
         maybe even separate maps for each type.
             map<String,MapIRSet>
         
-        class MapIREnvironment {
+        class MapIR {
             IterSpace getIterSpace(String);
             void putIterSpace(String,IterSpace);
             
