@@ -160,7 +160,7 @@ Generating the composed inspector
                     a) for each conjunct in the DNF // seem omega lib docs
                          -gen code that solves for the out variable, data_index, using the input iterator values
                          -gen code that makes the following call:
-                            hg_ordered_insert_node( iter_count, data_index )
+                            HyperGraph_ordered_insert_node( iter_count, data_index )
 
 
 LEFTOFF: 

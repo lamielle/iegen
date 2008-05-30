@@ -3,9 +3,30 @@
 
  \authors Michelle Strout
 
+ The Hypergraph data structure is for creating an explicit representation
+ of access relations at runtime.  The primary hypergraph will have
+ iterations as hyperedges and the data locations being accessed as 
+ nodes within individual hyperedges.
+ 
+ To create a Hypergraph, call the constructor
+ 
+    hg = Hypergraph_ctor();
+
+ and then add (hyperedge,node) relationships by calling
+ 
+    Hypergraph_ordered_insert_node( hg, hyperedge, node );
+    
+ Note that the ordered word indicates that the hyperedges will be inserted
+ starting at 0 and monotonically increasing until the finalization call is 
+ made.
+ 
+    Hypergraph_finalize( hg );
+    
+
  Copyright ((c)) 2008, Colorado State University
  All rights reserved.
  See COPYING for copyright details.
+ 
 *//**********************************************************************/
 
 #ifndef _Hypergraph_H
