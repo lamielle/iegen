@@ -76,11 +76,11 @@ Data Spaces
     INTER2_0 := { [k] : 0 <= k <= (n_inter-1) }, index array
 
 Index Array Value Constraints
-    // if (0 <= ii <= (n_iter-1)) then (0 <= inter1(i) <= (N-1))
-    { [ii] -> [inter1(i)] : not (0 <= ii <= (n_inter-1)) || (0 <= inter1(i) <= (N-1)) }
+    // if (0 <= ii <= (n_iter-1)) then (0 <= inter1(ii) <= (N-1))
+    { [ii] -> [inter1(ii)] : not (0 <= ii <= (n_inter-1)) || (0 <= inter1(ii) <= (N-1)) }
     
-    // if (0 <= ii <= (n_iter-1)) then (0 <= inter2(i) <= (N-1))
-    { [ii] -> [inter2(i)] : not (0 <= ii <= (n_inter-1)) || (0 <= inter2(i) <= (N-1)) }   
+    // if (0 <= ii <= (n_iter-1)) then (0 <= inter2(ii) <= (N-1))
+    { [ii] -> [inter2(ii)] : not (0 <= ii <= (n_inter-1)) || (0 <= inter2(ii) <= (N-1)) }   
         
 
 Access Relations
@@ -101,7 +101,7 @@ Composition and choice of RTRTs
             iteration_space = I_0
             data_spaces = [ X_0, FX_0 ]
             access_relation = A_II0_to_X0
-            iter_sub_space_relation = { [ ii, 1 ] -> [ ii ] }
+            iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
             index_array_generator = CPACK
     
     iteration reordering
@@ -128,7 +128,7 @@ Generating the composed inspector
         b) restrict iteration space to iteration subspace
             input:
                 I_0     // original iteration space
-                access_relation
+                iter_sub_space_relation
             output:
                 iter_sub_space = iter_sub_space_relation ( I_0 )
                 
@@ -145,7 +145,8 @@ Generating the composed inspector
                     // loop that traverses iter_sub_space
                     for ...
                         S1(i_1, ..., i_d);
-                        
+           
+            For the example, output is the following:
                     // this specific example
                     for(t1 = 0; t1 <= n_inter-1; t1++) {
                         s1(t1);
@@ -160,7 +161,7 @@ Generating the composed inspector
                     a) for each conjunct in the DNF // seem omega lib docs
                          -gen code that solves for the out variable, data_index, using the input iterator values
                          -gen code that makes the following call:
-                            HyperGraph_ordered_insert_node( iter_count, data_index )
+                            Hypergraph_ordered_insert_node( hgraph, iter_count, data_index )
 
 
 LEFTOFF: 
