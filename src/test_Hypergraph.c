@@ -28,5 +28,21 @@ int main()
     // indicate we are done constructing the hypergraph
     Hypergraph_finalize(hg);
     
+    Hypergraph_dump(hg);
+    
+    
+    // ok now do somewhat of a stress test of the memory management
+    hg = Hypergraph_ctor();
+    for (he=0; he<MEM_ALLOC_INCREMENT*2+10; he++) {
+      for (n=0; n<MEM_ALLOC_INCREMENT*2+5; n++) {
+      
+            Hypergraph_ordered_insert_node( hg, he, n );
+        }
+    }
+    Hypergraph_finalize(hg);
+    
+    Hypergraph_dump(hg);
+    
+    
     return 0;
 }

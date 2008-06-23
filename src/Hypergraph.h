@@ -34,6 +34,7 @@
 *//**********************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 
 #ifndef _Hypergraph_H
@@ -42,7 +43,8 @@
 // assuming one page is 4K or less, going to create more space for array
 // in increments of 4K, which is 1024 integers.
 // Will probably need to experiment with this number for performance reasons.
-#define MEM_ALLOC_INCREMENT 1024
+//#define MEM_ALLOC_INCREMENT 1024
+#define MEM_ALLOC_INCREMENT 120
 
 /* ////////////////////////////////////////////////////////////////////
 // Hypergraph Definition
@@ -87,5 +89,8 @@ Hypergraph* Hypergraph_ctor();
 void Hypergraph_ordered_insert_node(Hypergraph* this, int hyperedge, int node);
 //! Indicate that all nodes and hyperedges have been added to the hypergraph.
 void Hypergraph_finalize( Hypergraph* this );
+
+//! Output text representation of hypergraph to standard out.
+void Hypergraph_dump( Hypergraph* this );
 
 #endif

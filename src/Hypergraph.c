@@ -22,7 +22,8 @@ Hypergraph* Hypergraph_ctor()
     Hypergraph* this = (Hypergraph*)malloc(sizeof(Hypergraph));
     
     this->nv = 0;
-    this->ne = 0;
+    this->ne = -1;  // this is so that when start inserting
+                    // hyperedge 0, we can actually notice
     
     this->from = (int*)malloc(sizeof(int)*MEM_ALLOC_INCREMENT);
     this->hgdata = (int*)malloc(sizeof(int)*MEM_ALLOC_INCREMENT);
@@ -34,6 +35,8 @@ Hypergraph* Hypergraph_ctor()
     this->final = 0;
     this->from_size = MEM_ALLOC_INCREMENT;
     this->hgdata_size = MEM_ALLOC_INCREMENT;
+    
+    return this;
 }
 
 
@@ -114,3 +117,40 @@ void Hypergraph_ordered_insert_node(Hypergraph* this, int hyperedge, int node)
 void Hypergraph_finalize( Hypergraph* this ) {
     this->final = 1;
 }
+
+/*----------------------------------------------------------------*//*! 
+  \short Output text representation of hypergraph to standard out.
+
+  Format of output is one hyperedge per line.
+  
+    0: 3 5 6
+    1: 2 8 5
+    ...
+    
+  Where the first number is the hyperedge number and the nodes in that hyperedge
+  are listed after it.
+  The values of other fields are also printed.
+
+  \author Michelle Strout 6/23/08
+*//*----------------------------------------------------------------*/
+void Hypergraph_dump( Hypergraph* this )
+{
+    int he, p;
+    
+    printf("Hypergraph\n");
+    printf("\tnv = %d\n", this->nv);
+    printf("\tne = %d\n", this->ne);
+    printf("\tdual_built = %d\n", this->dual_built);
+    printf("\tfinal = %d\n", this->final);
+    printf("\tfrom_size = %d\n", this->from_size);
+    printf("\thgdata_size = %d\n", this->hgdata_size);
+    
+    for (he=0; he<this->ne; he++) {
+        printf("\t%d: ", he);
+        for (p=this->from[he]; p<this->from[he+1]; p++) {
+            printf("%d ", this->hgdata[p]);
+        }
+        printf("\n");
+    }
+}
+
