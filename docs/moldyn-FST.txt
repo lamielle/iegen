@@ -92,7 +92,7 @@ Access Relations
 
 
 Data Dependences
-    Only reduction dependences.
+    Only reduction dependences.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically.
 
 Composition and choice of RTRTs
     data reordering

@@ -1,13 +1,22 @@
+# Omega Calculator experimentation that corresponds to notes in
+# moldyn-FST.txt
+
+# n_inter is the number of interactions
+# N is the number of atoms
+# inter1 and inter2 maintain the interaction list
 symbolic n_inter, N, inter1(1), inter2(1);
 
+# iteration space
 I_0 := { [ii,1] : 0 <= ii <= (n_inter-1)  }
           union { [ii,2] : 0 <= ii <= (n_inter-1)  };
 
+# data spaces
 X_0 := { [k] : 0 <= k <= (N-1) };
 FX_0 := { [k] : 0 <= k <= (N-1) };
 INTER1_0 := { [k] : 0 <= k <= (n_inter-1) };
 INTER2_0 := { [k] : 0 <= k <= (n_inter-1) };
 
+# access relation
 A_II0_to_X0 := { [ii,1] -> [ inter1(ii) ] } 
                union { [ii,1] -> [ inter2(ii) ] };
 
