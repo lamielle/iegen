@@ -25,24 +25,38 @@ Hypergraph* Hypergraph_ctor()
     this->ne = -1;  // this is so that when start inserting
                     // hyperedge 0, we can actually notice
     
-    this->from = (int*)malloc(sizeof(int)*MEM_ALLOC_INCREMENT);
-    this->hgdata = (int*)malloc(sizeof(int)*MEM_ALLOC_INCREMENT);
+    this->from = NULL;
+    this->hgdata = NULL;
     
     this->dual_built = 0;
     this->from2 = NULL;
     this->dualdata = NULL;
     
     this->final = 0;
-    this->from_size = MEM_ALLOC_INCREMENT;
-    this->hgdata_size = MEM_ALLOC_INCREMENT;
+    this->from_size = 0;
+    this->hgdata_size = 0;
     
     return this;
 }
 
+/*----------------------------------------------------------------*//*! 
+  \short Deallocate all memory for Hypergraph
+
+  \author Michelle Strout 6/24/08
+*//*----------------------------------------------------------------*/
+void Hypergraph_dtor( Hypergraph** this )
+{
+    if ((*this)->from != NULL) { free((*this)->from); }
+    if ((*this)->hgdata != NULL) { free((*this)->hgdata); }
+    if ((*this)->from2 != NULL) { free((*this)->from2); }
+    if ((*this)->dualdata != NULL) { free((*this)->dualdata); }
+    free(*this);
+    *this = NULL;
+}
+
 
 //! Helper routine for expanding an arrays data allocation.
-// FIXME: How do I make this routine visible only in this C file?
-void expand_array( int** array_handle, int* array_size )
+static void expand_array( int** array_handle, int* array_size )
 {
     // save old info
     int* temp = *array_handle;
@@ -51,12 +65,15 @@ void expand_array( int** array_handle, int* array_size )
             
     // create new array that is bigger
     *array_size += MEM_ALLOC_INCREMENT;
-    *array_handle = (int*)malloc(sizeof(int)*(*array_size));
+    *array_handle = (int*)calloc((*array_size),sizeof(int));
             
     // copy data from old array
     for (i=0; i<old_size; i++) {
         (*array_handle)[i] = temp[i];
     }
+
+    // delete old array
+    free(temp);
 }
 
 
@@ -73,7 +90,8 @@ void Hypergraph_ordered_insert_node(Hypergraph* this, int hyperedge, int node)
     assert(this->final==0);
     
     // first check whether this is a new hyperedge
-    if (this->ne < hyperedge) {
+    // adding one to hyperedge because they are zero indexed
+    if (this->ne < (hyperedge+1)) {
         // number of hyperedges is going to go up
         this->ne += 1;
     
@@ -153,4 +171,5 @@ void Hypergraph_dump( Hypergraph* this )
         printf("\n");
     }
 }
+
 

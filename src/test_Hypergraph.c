@@ -30,6 +30,7 @@ int main()
     
     Hypergraph_dump(hg);
     
+    Hypergraph_dtor(&hg);
     
     // ok now do somewhat of a stress test of the memory management
     hg = Hypergraph_ctor();
@@ -40,9 +41,11 @@ int main()
         }
     }
     Hypergraph_finalize(hg);
+    Hypergraph_dtor(&hg);
     
-    Hypergraph_dump(hg);
+    //Hypergraph_dump(hg);
     
     
     return 0;
 }
+

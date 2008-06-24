@@ -85,6 +85,9 @@ typedef struct {
 //! construct an empty hypergraph
 Hypergraph* Hypergraph_ctor();
 
+//! deallocate all of the memory for the Hypergraph
+void Hypergraph_dtor(Hypergraph**);
+
 //! Insert a node into a hyperedge.  Insert in order of the hyperedges.
 void Hypergraph_ordered_insert_node(Hypergraph* this, int hyperedge, int node);
 //! Indicate that all nodes and hyperedges have been added to the hypergraph.
@@ -94,3 +97,4 @@ void Hypergraph_finalize( Hypergraph* this );
 void Hypergraph_dump( Hypergraph* this );
 
 #endif
+
