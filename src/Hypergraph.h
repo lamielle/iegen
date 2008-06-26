@@ -43,8 +43,8 @@
 // assuming one page is 4K or less, going to create more space for array
 // in increments of 4K, which is 1024 integers.
 // Will probably need to experiment with this number for performance reasons.
-//#define MEM_ALLOC_INCREMENT 1024
-#define MEM_ALLOC_INCREMENT 120
+#define MEM_ALLOC_INCREMENT 1024
+//#define MEM_ALLOC_INCREMENT 120
 
 /* ////////////////////////////////////////////////////////////////////
 // Hypergraph Definition
@@ -58,6 +58,8 @@ typedef struct {
 	int      ne;		 // Number of hyperedges.
 	
 	//----- primary hypergraph ---------------------------------------
+    // WARNING: Do not access these fields directly.  Use the FOREACH*
+    // macros instead.
 	int*     from; 	 // Indices into the hgdata array that indicate
 	                     // where the nodes for hyperedges start and finish.
 	                     // hyperedge i will have its nodes stored at
@@ -66,6 +68,8 @@ typedef struct {
 	int*     hgdata;    // Stores nodes for each hyperedge.
 	
 	//----- dual hypergraph ------------------------------------------
+    // WARNING: Do not access these fields directly.  Use the FOREACH*
+    // macros instead.
 	int      dual_built; // Keeps track of whether dual has been built.
 	int*     from2;  	 // Indices into dualdata for hyperedges in dual.
 	int*     dualdata;   // Stores nodes for each hyperedge in dual.
@@ -89,12 +93,29 @@ Hypergraph* Hypergraph_ctor();
 void Hypergraph_dtor(Hypergraph**);
 
 //! Insert a node into a hyperedge.  Insert in order of the hyperedges.
-void Hypergraph_ordered_insert_node(Hypergraph* this, int hyperedge, int node);
+void Hypergraph_ordered_insert_node(Hypergraph* self, int hyperedge, int node);
 //! Indicate that all nodes and hyperedges have been added to the hypergraph.
-void Hypergraph_finalize( Hypergraph* this );
+void Hypergraph_finalize( Hypergraph* self );
 
 //! Output text representation of hypergraph to standard out.
-void Hypergraph_dump( Hypergraph* this );
+void Hypergraph_dump( Hypergraph* self );
+
+//----------------------- Macros for iterating over nodes and hyperedges
+
+//! Iterate over the hyperedges in order.  
+#define FOREACH_hyperedge(hgraph, hedge) \
+    for ((hedge)=0; (hedge)<(hgraph)->ne; (hedge)++) 
+
+//! Iterate over the nodes in a hyperedge
+// hgraph is the hypergraph
+// hedge is the hyperedge id
+// node is the node id.  node is assigned in this macro.
+#define FOREACH_node_in_hyperedge(hgraph, hedge, node) \
+    int _FE_iter;  \
+    for (_FE_iter=(hgraph)->from[(hedge)],node=(hgraph)->hgdata[_FE_iter]; \
+         _FE_iter<(hgraph)->from[(hedge)+1]; \
+         _FE_iter++,node=(hgraph)->hgdata[_FE_iter]) 
+        
 
 #endif
 

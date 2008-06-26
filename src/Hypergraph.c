@@ -19,24 +19,24 @@
 *//*----------------------------------------------------------------*/
 Hypergraph* Hypergraph_ctor() 
 {
-    Hypergraph* this = (Hypergraph*)malloc(sizeof(Hypergraph));
+    Hypergraph* self = (Hypergraph*)malloc(sizeof(Hypergraph));
     
-    this->nv = 0;
-    this->ne = -1;  // this is so that when start inserting
+    self->nv = 0;
+    self->ne = -1;  // this is so that when start inserting
                     // hyperedge 0, we can actually notice
     
-    this->from = NULL;
-    this->hgdata = NULL;
+    self->from = NULL;
+    self->hgdata = NULL;
     
-    this->dual_built = 0;
-    this->from2 = NULL;
-    this->dualdata = NULL;
+    self->dual_built = 0;
+    self->from2 = NULL;
+    self->dualdata = NULL;
     
-    this->final = 0;
-    this->from_size = 0;
-    this->hgdata_size = 0;
+    self->final = 0;
+    self->from_size = 0;
+    self->hgdata_size = 0;
     
-    return this;
+    return self;
 }
 
 /*----------------------------------------------------------------*//*! 
@@ -44,14 +44,14 @@ Hypergraph* Hypergraph_ctor()
 
   \author Michelle Strout 6/24/08
 *//*----------------------------------------------------------------*/
-void Hypergraph_dtor( Hypergraph** this )
+void Hypergraph_dtor( Hypergraph** self )
 {
-    if ((*this)->from != NULL) { free((*this)->from); }
-    if ((*this)->hgdata != NULL) { free((*this)->hgdata); }
-    if ((*this)->from2 != NULL) { free((*this)->from2); }
-    if ((*this)->dualdata != NULL) { free((*this)->dualdata); }
-    free(*this);
-    *this = NULL;
+    if ((*self)->from != NULL) { free((*self)->from); }
+    if ((*self)->hgdata != NULL) { free((*self)->hgdata); }
+    if ((*self)->from2 != NULL) { free((*self)->from2); }
+    if ((*self)->dualdata != NULL) { free((*self)->dualdata); }
+    free(*self);
+    *self = NULL;
 }
 
 
@@ -84,44 +84,43 @@ static void expand_array( int** array_handle, int* array_size )
 
   \author Michelle Strout 6/23/08
 *//*----------------------------------------------------------------*/
-void Hypergraph_ordered_insert_node(Hypergraph* this, int hyperedge, int node)
+void Hypergraph_ordered_insert_node(Hypergraph* self, int hyperedge, int node)
 {
     // cannot insert new data into a finalized graph
-    assert(this->final==0);
+    assert(self->final==0);
     
-    // first check whether this is a new hyperedge
+    // first check whether self is a new hyperedge
     // adding one to hyperedge because they are zero indexed
-    if (this->ne < (hyperedge+1)) {
+    if (self->ne < (hyperedge+1)) {
         // number of hyperedges is going to go up
-        this->ne += 1;
+        self->ne += 1;
     
         // if we are on the next hyperedge then check if we need to 
         // expand the array.
-        if  (this->ne + 1 > this->from_size) {
-            expand_array( &(this->from), &(this->from_size) );
+        if  (self->ne + 1 > self->from_size) {
+            expand_array( &(self->from), &(self->from_size) );
         }
         
         // set the end of the indices to nodes for this new hyperedge to 
         // the same as the beginning, since currently haven't inserted any
         // nodes for the hyperedge.
-        //this->from[(this->ne)] = this->from[(this->ne)-1];
-        this->from[hyperedge+1] = this->from[hyperedge];
+        self->from[hyperedge+1] = self->from[hyperedge];
         
     }
     
     // check that there is enough room to insert a node into this hyperedge,
     // and if not then expand allocation for hgdata array.
-    if (this->from[hyperedge+1] + 1 > this->hgdata_size) {
-        expand_array( &(this->hgdata), &(this->hgdata_size) );
+    if (self->from[hyperedge+1] + 1 > self->hgdata_size) {
+        expand_array( &(self->hgdata), &(self->hgdata_size) );
     }
     
     // insert the node into the hyperedge
-    this->hgdata[ this->from[hyperedge+1]++ ] = node;
+    self->hgdata[ self->from[hyperedge+1]++ ] = node;
     
     // if this node id is higher than any we have seen then increase the number
     // of nodes.
-    if (node > (this->nv -1) ) {
-        this->nv = node+1;
+    if (node > (self->nv -1) ) {
+        self->nv = node+1;
     }
 }
 
@@ -132,8 +131,8 @@ void Hypergraph_ordered_insert_node(Hypergraph* this, int hyperedge, int node)
 
   \author Michelle Strout 6/23/08
 *//*----------------------------------------------------------------*/
-void Hypergraph_finalize( Hypergraph* this ) {
-    this->final = 1;
+void Hypergraph_finalize( Hypergraph* self ) {
+    self->final = 1;
 }
 
 /*----------------------------------------------------------------*//*! 
@@ -151,22 +150,22 @@ void Hypergraph_finalize( Hypergraph* this ) {
 
   \author Michelle Strout 6/23/08
 *//*----------------------------------------------------------------*/
-void Hypergraph_dump( Hypergraph* this )
+void Hypergraph_dump( Hypergraph* self )
 {
     int he, p;
     
     printf("Hypergraph\n");
-    printf("\tnv = %d\n", this->nv);
-    printf("\tne = %d\n", this->ne);
-    printf("\tdual_built = %d\n", this->dual_built);
-    printf("\tfinal = %d\n", this->final);
-    printf("\tfrom_size = %d\n", this->from_size);
-    printf("\thgdata_size = %d\n", this->hgdata_size);
+    printf("\tnv = %d\n", self->nv);
+    printf("\tne = %d\n", self->ne);
+    printf("\tdual_built = %d\n", self->dual_built);
+    printf("\tfinal = %d\n", self->final);
+    printf("\tfrom_size = %d\n", self->from_size);
+    printf("\thgdata_size = %d\n", self->hgdata_size);
     
-    for (he=0; he<this->ne; he++) {
+    for (he=0; he<self->ne; he++) {
         printf("\t%d: ", he);
-        for (p=this->from[he]; p<this->from[he+1]; p++) {
-            printf("%d ", this->hgdata[p]);
+        for (p=self->from[he]; p<self->from[he+1]; p++) {
+            printf("%d ", self->hgdata[p]);
         }
         printf("\n");
     }

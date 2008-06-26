@@ -2,6 +2,8 @@
 # Simple makefile for building the test driver that unit
 # tests the hypergraph datastructure.
 
-test_Hypergraph: Hypergraph.h Hypergraph.c test_Hypergraph.c
-	gcc -Wall -g  test_Hypergraph.c Hypergraph.c -o test_Hypergraph
+SRCS = Hypergraph.c test_Hypergraph.c IAG_cpack.c
+
+test_Hypergraph: Hypergraph.h $(SRCS)
+	g++ -Wall -g  $(SRCS) -o test_Hypergraph
 
