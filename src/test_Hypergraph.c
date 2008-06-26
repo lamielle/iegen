@@ -5,6 +5,7 @@
 */
 
 #include "Hypergraph.h"
+#include "IAG.h"
 
 #define NUM_HE 10
 #define NUM_NODES 5
@@ -31,8 +32,39 @@ int main()
     Hypergraph_dump(hg);
     
     Hypergraph_dtor(&hg);
+
+    // testing IAG_cpack
+    hg = Hypergraph_ctor();
+
+    // add only some nodes to each hyperedge
+    for (he=0; he<NUM_HE; he++) {
+      for (n=(he)%NUM_NODES; n<NUM_NODES; n+=2) {
+      
+            Hypergraph_ordered_insert_node( hg, he, n );
+        }
+    }
+    
+    // indicate we are done constructing the hypergraph
+    Hypergraph_finalize(hg);
+    
+    Hypergraph_dump(hg);
+
+    int* new2old = (int*)malloc(sizeof(int)*hg->nv);
+    int i;
+    CPackHyper(hg,new2old);
+    printf("\nnew2old = ");
+    for (i=0; i<hg->nv; i++) {
+        printf("%d ", new2old[i]);
+    }
+    printf("\n");
+    
+    Hypergraph_dtor(&hg);
+
+
     
     // ok now do somewhat of a stress test of the memory management
+    /* MMS, this takes a long time so only do it when MEM_ALLOC_INCREMENT
+     * is set low
     hg = Hypergraph_ctor();
     for (he=0; he<MEM_ALLOC_INCREMENT*2+10; he++) {
       for (n=0; n<MEM_ALLOC_INCREMENT*2+5; n++) {
@@ -44,6 +76,7 @@ int main()
     Hypergraph_dtor(&hg);
     
     //Hypergraph_dump(hg);
+    */
     
     
     return 0;

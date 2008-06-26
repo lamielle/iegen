@@ -163,11 +163,10 @@ Generating the composed inspector
                          -gen code that makes the following call:
                             Hypergraph_ordered_insert_node( hgraph, iter_count, data_index )
 
+        d) generate code that passes hypergraph to IAG
 
 LEFTOFF: 
-    - what should the interface for the hypergraph data structure be?
-    - create the hypergraph data structure based on hypergraph code I already have
-    - part (d) of the DataPermuteRTRT requires that the generated hypergraph be passed to the specified IAG
+
     - then we have to figure out whether to actually reorder the data or not and whether to do the pointer update.     
     
     
