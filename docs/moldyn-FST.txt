@@ -149,7 +149,9 @@ Generating the composed inspector
                 code
                     // data index calc for each disjunct in access relation
                     #define s1(i_1, ..., i_d) data_index = ...; \
-                        Hypergraph_ordered_insert_node([artt.name],count++,data_index);
+                        Hypergraph_ordered_insert_node([artt.name], \
+                        count,data_index); \
+                        count++;
                         
                     // initialize variables
                     Hypergraph* [artt.name] = Hypergraph_ctor();
@@ -165,12 +167,13 @@ Generating the composed inspector
            
             For the example, output is the following:
                     // this macro captures A_II0_to_X0, count, and data_index
-                    #define s1(t1) data_index = inter1(t1); \
-                        Hypergraph_ordered_insert_node(A_II0_to_X0,count++, \
+                    #define s1(t1) data_index = inter1[t1]; \
+                        Hypergraph_ordered_insert_node(A_II0_to_X0,count, \
                         data_index); \
-                        data_index = inter2(t1); \
-                        Hypergraph_ordered_insert_node(A_II0_to_X0,count++, \
-                        data_index);
+                        data_index = inter2[t1]; \
+                        Hypergraph_ordered_insert_node(A_II0_to_X0,count, \
+                        data_index); \
+                        count++
                         
                     // initialize variables
                     Hypergraph* A_II0_to_X0 = Hypergraph_ctor();
