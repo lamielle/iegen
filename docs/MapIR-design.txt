@@ -102,10 +102,16 @@ Transformation Specification:
         // as uninterpreted functions 
         // in the data reordering specification.
         // For now ASSUMING there is only one.
-        IAGspec index_array_generator;
+        // When DataPermuteRTRT is created don't have all the info needed
+        // for the IAGspec instance.  Instead, just store the name of the 
+        // IAG function and the IAGspec subclass (can you do this in python?).
+        //IAGspec index_array_generator;
+        String iag_func_name;
+        Type(?) iag_type;
         
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?
+            - all data spaces being reordered should have the same bounds
     }
     
     class IterReorderingRTRT extends RTRT {

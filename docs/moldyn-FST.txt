@@ -102,16 +102,12 @@ Composition and choice of RTRTs
             data_spaces = [ X_0, FX_0 ]
             access_relation = A_II0_to_X0
             iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
-            index_array_generator = IAG_cpack
+            iag_func_name = IAG_cpack
+            iag_type = IAG_Permute
+           
     
-        IAG_cpack = new IAG_Permute ()
-            String name = "IAG_cpack"       // function name
-            AccessRelation input = A_II0_to_X0
-            IndexArray result = new IndexArray( 
-                data_space = "sigma", X_0.spec, index array,
-                index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
-                )
-    }
+
+    
     
     iteration reordering
 
@@ -168,7 +164,7 @@ Generating the composed inspector
                     
            
             For the example, output is the following:
-                    // this macro captures hg, count, and data_index
+                    // this macro captures A_II0_to_X0, count, and data_index
                     #define s1(t1) data_index = inter1(t1); \
                         Hypergraph_ordered_insert_node(A_II0_to_X0,count++, \
                         data_index); \
@@ -198,22 +194,64 @@ Generating the composed inspector
                          -gen code that makes the following call:
                             Hypergraph_ordered_insert_node( hgraph, iter_count, data_index )
 
-        c) Can we automatically generate the IndexArray specification for sigma?
+        c) Automatically generate the IndexArray specification for sigma
+            input:
+                DataPermuteRTRT instance
+                access_relation_to_traverse
+                
+            output:
+                iag_spec = new IAG_Permute(
+                    String name = rtrt.iag_func_name
+                    AccessRelation input = access_relation_to_traverse
+                    IndexArray result = new IndexArray(
+                        data_space = [name of uninterp func in data_reordering],
+                                     [specification from data space in RTRT],
+                                     index array,
+                        index_value_constraints = { [k] -> [ uninterp(k) ] : 
+                            not [k has same bounds as data space] || 
+                            [uninterp(k) has same bounds as data space] }   
+                    )
+                )
+                        
+            Initial Assumptions:
+                -only one interpreted function in data reordering
+                -that uninterpreted function has a domain with dimensionality 1
+                    
         
             For this example:
-                IndexArray result = new IndexArray( 
-                    dataspace = "sigma", X_0.spec, index array,
-                    index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
+                IAG_cpack = new IAG_Permute (
+                    String name = "IAG_cpack"       // function name
+                    AccessRelation input = A_II0_to_X0
+                    IndexArray result = new IndexArray( 
+                        data_space = "sigma", X_0.spec, index array,
+                        index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
+                    )
+
                 )        
         
         
         d) generate code that passes hypergraph to IAG
             input: 
-                index_array_generator
+                iag_spec
                 
             output:
-                code 
+                code
+                    [iag_spec.result.data_space.name] = malloc( ... );
+                    [iag_spec.name]( [iag_spec.input.name],
+                                     [iag_spec.result.data_space.name] );
                     
+            For this example:
+                    sigma = (int*)malloc(sizeof(int)*N);
+                    IAG_cpack( A_II0_to_X0, sigma );
+                    
+         
+        e) generate code that does data reordering
+        
+        f) generate code that does pointer update
+        
+        
+        
+         
 LEFTOFF: 
 
     - then we have to figure out whether to actually reorder the data or not and whether to do the pointer update.     
