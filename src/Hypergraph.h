@@ -22,6 +22,18 @@
  
     Hypergraph_finalize( hg );
     
+ Index array generators that iterate over the hypergraph representing
+ the access relation can do so as follows:
+
+    // Iterate over access relation in order of iterations. 
+    // (see IAG_cpack.c for an example)
+    FOREACH_hyperedge(hg,hedge) {
+        FOREACH_node_in_hyperedge(hg,hedge,index) {
+            ... // hedge is iteration and index is data index
+        }
+    }
+    
+
  Assumptions
     - the number of nodes and/or iterations are not known before the hypergraph is being constructed
     - nodes have ids going from 0 to nv-1

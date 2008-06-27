@@ -40,7 +40,7 @@ Need a MapIR specification.
     -Each index array, which is mathematically represented with an uninterpreted function symbol, is specified with a relation where the domain  represents the uninterpreted function parameters and the single dimensional range represents the value of the uninterpreted function.  The relation constraints should indicate that if the parameters lie within certain boundaries, then the value of the uninterpreted function is also bounded.
 
         class IndexArray {
-            String id;
+            DataSpace dataspace;    // reference to associated dataspace
             OmegaRelation index_value_constraints;
         }
     Checking
@@ -50,6 +50,7 @@ Need a MapIR specification.
     -Access relations (used to be called data mappings) are relations where the domain is an iteration space (subspaces are specified with constraints) and the range is a data space.  Initially thought we might want to rename this to "access functions", but they are not functions.  We can have the same iteration mapping to multiple places in one array.  Decided to call it a relation versus a mapping, because mappings are usually synonymous with functions (http://en.wikipedia.org/wiki/Function_(mathematics)).  Using the term access to more clearly indicate the relationship between iterations and data.  Each iteration accesses various data locations.
     
         class AccessRelation {
+            String name;            // need a name so can name hypergraph
             IterSpace iter_space;
             DataSpace data_space;
             OmegaRelation iterspace_to_data;
@@ -137,7 +138,7 @@ Transformation Specification:
         
     
     //      IAG_Permute - specification for an IAG that 
-    //          takes a hypergraph (and possibly its dual) and 
+    //          takes a hypergraph (and possibly use its dual) and 
     //          creates an index array containing a 
     //          permutation of either the nodes or hyperedges in 
     //          the hypergraph.

@@ -69,11 +69,11 @@ Iteration Space
     I_0 := { [ii,1] : 0 <= ii <= (n_inter-1)  }
           union { [ii,2] : 0 <= ii <= (n_inter-1)  }
 
-Data Spaces
-    X_0 := { [k] : 0 <= k <= (N-1) }, data array
-    FX_0 := { [k] : 0 <= k <= (N-1) }, data array
-    INTER1_0 := { [k] : 0 <= k <= (n_inter-1) }, index array
-    INTER2_0 := { [k] : 0 <= k <= (n_inter-1) }, index array
+Data Spaces (probably need a name field for these as well so can match with uninterpreted function symbols.  For now use the same string for the name and UFS.
+    X_0 := name = "x", { [k] : 0 <= k <= (N-1) }, data array
+    FX_0 := name = "fx", { [k] : 0 <= k <= (N-1) }, data array
+    INTER1_0 := name = "inter1", { [k] : 0 <= k <= (n_inter-1) }, index array
+    INTER2_0 := name = "inter2", { [k] : 0 <= k <= (n_inter-1) }, index array
 
 Index Array Value Constraints
     // if (0 <= ii <= (n_iter-1)) then (0 <= inter1(ii) <= (N-1))
@@ -84,10 +84,10 @@ Index Array Value Constraints
         
 
 Access Relations
-    A_II0_to_X0 := { [ii,1] -> [ inter1(ii) ] } 
+    A_II0_to_X0 := name = "A_II0_to_X0", { [ii,1] -> [ inter1(ii) ] } 
                    union { [ii,1] -> [ inter2(ii) ] }
                    
-    A_II0_to_FX0 := { [ii,1] -> [ inter1(ii) ] } 
+    A_II0_to_FX0 := name = "A_II0_to_FX0", { [ii,1] -> [ inter1(ii) ] } 
                    union { [ii,2] -> [ inter2(ii) ] }
 
 
@@ -102,7 +102,16 @@ Composition and choice of RTRTs
             data_spaces = [ X_0, FX_0 ]
             access_relation = A_II0_to_X0
             iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
-            index_array_generator = CPACK
+            index_array_generator = IAG_cpack
+    
+        IAG_cpack = new IAG_Permute ()
+            String name = "IAG_cpack"       // function name
+            AccessRelation input = A_II0_to_X0
+            IndexArray result = new IndexArray( 
+                data_space = "sigma", X_0.spec, index array,
+                index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
+                )
+    }
     
     iteration reordering
 
@@ -119,39 +128,65 @@ Generating the composed inspector
                 iter_sub_space_relation
 
             output:
-                relation_to_traverse = inverse ( iter_sub_space_relation compose (inverse access_relation))
+                access_relation_to_traverse = new AccessRelation
+                    name = access_relation.name
+                    iter_space = iter_sub_space_relation (     
+                                    [access_relation.iter_space] )
+                    data_space = access_relation.data_space
+                    iterspace_to_data =  inverse 
+                    ( iter_sub_space_relation compose (inverse access_relation))
+                
                 
             For the example, output is the following:
-                relation_to_traverse := { [ii] -> [ inter1(ii) ] } 
+                access_relation_to_traverse = new AccessRelation
+                    name = "A_II0_to_X0"
+                    iter_space = { [ii] : 0 <= ii < n_inter  }
+                    data_space = X0                    
+                    iterspace_to_data := { [ii] -> [ inter1(ii) ] } 
                                        union { [ii] -> [ inter2(ii) ] }
-            
-        b) restrict iteration space to iteration subspace
-            input:
-                I_0     // original iteration space
-                iter_sub_space_relation
-            output:
-                iter_sub_space = iter_sub_space_relation ( I_0 )
-                
-            For the example, output is the following:
-                iter_sub_space = { [ii] : 0 <= ii < n_inter  }
                                  
                 
-        c) generate code that explicitly creates hypergraph and dual (if necessary) at runtime.
+        b) generate code that explicitly creates hypergraph and dual (if necessary) at runtime.
             input:
-                iter_sub_space
-                relation_to_traverse
+                access_relation_to_traverse (artt)
             output:
                 code
-                    // loop that traverses iter_sub_space
+                    // data index calc for each disjunct in access relation
+                    #define s1(i_1, ..., i_d) data_index = ...; \
+                        Hypergraph_ordered_insert_node([artt.name],count++,data_index);
+                        
+                    // initialize variables
+                    Hypergraph* [artt.name] = Hypergraph_ctor();
+                    int count=0;
+                    int data_index=0;
+                    
+                    // loop that traverses [artt.iter_space]
                     for ...
-                        S1(i_1, ..., i_d);
+                        s1(i_1, ..., i_d);
+                        
+                    Hypergraph_finalize([argtt.name]);
+                    
            
             For the example, output is the following:
+                    // this macro captures hg, count, and data_index
+                    #define s1(t1) data_index = inter1(t1); \
+                        Hypergraph_ordered_insert_node(A_II0_to_X0,count++, \
+                        data_index); \
+                        data_index = inter2(t1); \
+                        Hypergraph_ordered_insert_node(A_II0_to_X0,count++, \
+                        data_index);
+                        
+                    // initialize variables
+                    Hypergraph* A_II0_to_X0 = Hypergraph_ctor();
+                    int count=0;
+                    int data_index=0;
+                    
                     // this specific example
                     for(t1 = 0; t1 <= n_inter-1; t1++) {
                         s1(t1);
                     }
 
+                    Hypergraph_finalize(A_II0_to_X0);
                         
             algorithm:
                 1) use omega codegen to generate loop over iteration sub space
@@ -163,8 +198,22 @@ Generating the composed inspector
                          -gen code that makes the following call:
                             Hypergraph_ordered_insert_node( hgraph, iter_count, data_index )
 
+        c) Can we automatically generate the IndexArray specification for sigma?
+        
+            For this example:
+                IndexArray result = new IndexArray( 
+                    dataspace = "sigma", X_0.spec, index array,
+                    index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
+                )        
+        
+        
         d) generate code that passes hypergraph to IAG
-
+            input: 
+                index_array_generator
+                
+            output:
+                code 
+                    
 LEFTOFF: 
 
     - then we have to figure out whether to actually reorder the data or not and whether to do the pointer update.     
