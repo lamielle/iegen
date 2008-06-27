@@ -58,6 +58,7 @@ int main()
     }
     printf("\n");
     
+    free(new2old);
     Hypergraph_dtor(&hg);
 
 
