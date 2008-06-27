@@ -22,8 +22,7 @@ Hypergraph* Hypergraph_ctor()
     Hypergraph* self = (Hypergraph*)malloc(sizeof(Hypergraph));
     
     self->nv = 0;
-    self->ne = -1;  // this is so that when start inserting
-                    // hyperedge 0, we can actually notice
+    self->ne = 0;  
     
     self->from = NULL;
     self->hgdata = NULL;
@@ -115,8 +114,9 @@ void Hypergraph_ordered_insert_node(Hypergraph* self, int hyperedge, int node)
     }
     
     // insert the node into the hyperedge
-    self->hgdata[ self->from[hyperedge+1]++ ] = node;
-    
+    self->hgdata[ self->from[hyperedge+1] ] = node;
+    self->from[hyperedge+1]++;
+
     // if this node id is higher than any we have seen then increase the number
     // of nodes.
     if (node > (self->nv -1) ) {
