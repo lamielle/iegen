@@ -105,6 +105,7 @@ void pointerUpdate(int *index_array, int ia_size, int *old2new, int n_nodes)
         index_array[i] = old2new[temp[i]]; 
     }
         
+    FREE(temp, int, ia_size);
 }
 
 void reorderArray(unsigned char *ptr, int elem_size, int n_nodes, int *old2new)

@@ -164,6 +164,15 @@ int main()
         printf("\nDifferent result\n");
     }
 
+    // cleanup
+    Hypergraph_dtor(&A_II0_to_X0);
+    FREE(original_fx, double, NUM_NODES);
+    FREE(sigma,int,NUM_NODES);
+    FREE(fx,double,NUM_NODES);
+    FREE(x,double,NUM_NODES);
+    FREE(inter1,int,NUM_NODES);
+    FREE(inter2,int,NUM_NODES);
+
     return 0;
 }
 
