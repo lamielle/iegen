@@ -44,7 +44,7 @@ int main()
     int i;
     for (i=0; i<NUM_NODES; i++) {
         inter1[i] = i;
-        inter2[i] = (i+2)%NUM_NODES;
+        inter2[i] = (i+3)%NUM_NODES;
     }
  
     printf("inter1 = "); 
@@ -57,22 +57,22 @@ int main()
         fx[i] = 0.0;
         x[i] = i;
     }    
+    printf("before original computation\n");
+    printf("x = "); printRealArray(x, NUM_NODES);
+    printf("fx = "); printRealArray(x, NUM_NODES);
     
     //---------------- Original computation
     
     int ii;
     int n_inter = NUM_NODES;
     for (ii=0; ii<n_inter; ii++) {
-        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
-        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+        fx[inter1[ii]] += x[inter1[ii]]*0.1 + x[inter2[ii]]*0.3; 
+        fx[inter2[ii]] += x[inter1[ii]]*0.2 + x[inter2[ii]]*0.4; 
     }
 
     // print fx values
-    printf("fx = ");
-    for (i=0; i<NUM_NODES; i++) {
-        printf("%f ", fx[i]);
-    }
-    printf("\n");
+    printf("after original computation, fx = ");
+    printRealArray(fx, NUM_NODES);
 
     // save off values of fx to enable later comparisons
     // also reset fx values to 0
@@ -85,6 +85,10 @@ int main()
     
 //=======================================================
 // Code that should be automatically generated
+
+    printf("\nbefore inspector/executor computation\n");
+    printf("x = "); printRealArray(x, NUM_NODES);
+    printf("fx = "); printRealArray(fx, NUM_NODES);
 
     //---------------- Data reordering inspector/executor
 
@@ -108,36 +112,56 @@ int main()
     MALLOC(sigma,int,NUM_NODES);
     CPackHyper( A_II0_to_X0, sigma );
 
-    // FIXME: sigma is really new2old, inverse of what transformation
-    // specifies
+    printf("\nAfter call to CPackHyper, sigma = ");
+    printArray(sigma, NUM_NODES);
+
 
     // reorder two data array based on reordering function
-    // FIXME: this interface is a bit confusing, might want to refactor
-    int n = 2;          // reordering 2 arrays
-    long (*repos)[2];   // pointer to reordering info
-    repos = (long (*)[2]) malloc( sizeof(long)*2*n ); 
-    repos[0][0] = (long) x; repos[0][1] = sizeof(*x);
-    repos[0][0] = (long) fx; repos[0][1] = sizeof(*fx);
-    reorderArrays(n,repos,sigma,NUM_NODES); 
+    reorderArray((unsigned char *)x, sizeof(double), NUM_NODES, sigma); 
+    reorderArray((unsigned char *)fx, sizeof(double), NUM_NODES, sigma); 
+
+    printf("\nafter reordering arrays\n");
+    printf("x = "); printRealArray(x, NUM_NODES);
+    printf("fx = "); printRealArray(fx, NUM_NODES);
 
     // update the index arrays
     pointerUpdate(inter1, n_inter, sigma, NUM_NODES);
     pointerUpdate(inter2, n_inter, sigma, NUM_NODES);
 
+    printf("\nafter pointer update\n");
+    printf("inter1 = "); printArray(inter1, NUM_NODES);
+    printf("inter2 = "); printArray(inter2, NUM_NODES);
+
     // executor - execute the computation with modified arrays
     for (ii=0; ii<n_inter; ii++) {
-        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
-        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+        fx[inter1[ii]] += x[inter1[ii]]*0.1 + x[inter2[ii]]*0.3; 
+        fx[inter2[ii]] += x[inter1[ii]]*0.2 + x[inter2[ii]]*0.4; 
     }
 
 //=======================================================
 
-    // testing the inspector/executor
+    // debug output
     Hypergraph_dump(A_II0_to_X0);
+    
+    printf("sigma = ");
+    printArray(sigma, NUM_NODES);
+
+    printf("inter1 = ");
+    printArray(inter1, NUM_NODES);
+
+    printf("inter2 = ");
+    printArray(inter2, NUM_NODES);
+
+    printf("fx = ");
+    printRealArray(fx, NUM_NODES);
+
+    // testing the inspector/executor
+    // first reorder the original results using the same sigma
+    reorderArray((unsigned char *)original_fx, sizeof(double), NUM_NODES, sigma); 
     if (compareRealArrays(original_fx, fx, n_inter)) {
-        printf("Same result\n");
+        printf("\nSame result\n");
     } else {
-        printf("Different result\n");
+        printf("\nDifferent result\n");
     }
 
     return 0;

@@ -14,19 +14,22 @@
     \short Creates permutation of nodes in hypergraph based on hyperedge order.
 
     \param hg       Pointer to the hypergraph.
-    \param new2old  Array containing permutation of hypergraph nodes.
+    \param old2new  Maps old index to new index.
 
-    It is assumed that new2old points to an array of integers with
+    It is assumed that old2new points to an array of integers with
     one integer per node in the hypergraph.  This function will fill
-    the new2old array with a permutation of the hypergraph nodes.
-    Another way of thinking about it is that at index 0 in new2old there
-    will be the old id for a node.  Its new id will be 0 once
-    this reordering is used.
+    the old2new array with a mapping of old node to new node.  The mapping
+    will be a permutation. 
+    Another way of thinking about it is that at index 0 in old2new there
+    will be the new id for what was previously node 0.  
 
-    \author Kevin Depue, edited by Michelle Strout 6/2008
+    \author Kevin Depue, edited significantly by Michelle Strout 6/2008
 *//*----------------------------------------------------------------*/
-void CPackHyper(Hypergraph* hg, int* new2old)
+void CPackHyper(Hypergraph* hg, int* old2new)
 {
+    assert(old2new!=NULL);
+    assert(hg!=NULL);
+
     int  hedge, count, index;
     bool *taken;
 
@@ -38,14 +41,13 @@ void CPackHyper(Hypergraph* hg, int* new2old)
     for (index = 0; index < nnodes; index++) {
             taken[index] = false;
     }
-                
             
     // reorder nodes on a first-touch basis
     count = 0;
     FOREACH_hyperedge(hg,hedge) {
         FOREACH_node_in_hyperedge(hg,hedge,index) {
             if (!taken[index]) {
-                new2old[count] = index;
+                old2new[index] = count;
                 taken[index]   = true;
                 count++;
             }
@@ -56,7 +58,7 @@ void CPackHyper(Hypergraph* hg, int* new2old)
     if (count < nnodes) {
         for (index = 0; index < nnodes; index++) {
             if (taken[index] == false) {
-                new2old[count] = index;
+                old2new[index] = count;
                 count++;
             }
         }

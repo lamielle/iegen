@@ -23,6 +23,7 @@
 
 //! Print the values of the integer array as space delimited to stdout.
 void printArray(int *array, int num);
+void printRealArray(double *array, int num);
 
 //! Compare the values of two different double arrays and return true if equal.
 bool compareRealArrays(double *a1, double *a2, int num);
@@ -30,10 +31,10 @@ bool compareRealArrays(double *a1, double *a2, int num);
 // --------------------- Functionality for reordering data
 
 //! Makes index arrays point to new data locations.
-void pointerUpdate(int *index_array, int ia_size, int *new2old, int n_nodes);
+void pointerUpdate(int *index_array, int ia_size, int *old2new, int n_nodes);
 
-//! see function header in util.c
-void reorderArrays(int n, long (*repos)[2], int *new2old, int n_nodes);
+//! Reorder an array in place using the mapping in old2new array.
+void reorderArray(unsigned char *ptr, int elem_size, int n_nodes, int *old2new);
 
 
 #define REPOSITION(tmp, x, n_nodes, u_sz, ind) { \

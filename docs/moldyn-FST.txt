@@ -244,11 +244,13 @@ Generating the composed inspector
                                      [iag_spec.result.data_space.name] );
                     
             For this example:
-                    sigma = (int*)malloc(sizeof(int)*N);
+                    int *sigma;
+                    MALLOC(sigma,int,N);
                     IAG_cpack( A_II0_to_X0, sigma );
                     
          
         e) generate code that does data reordering
+        
         
         f) generate code that does pointer update
         

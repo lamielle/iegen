@@ -6,5 +6,5 @@
 
 */
 
-void CPackHyper(Hypergraph* hg, int* new2old);
+void CPackHyper(Hypergraph* hg, int* old2new);
 

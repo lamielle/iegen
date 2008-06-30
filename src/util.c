@@ -8,6 +8,8 @@
 
 #include "util.h"
 
+static bool debug = true;
+
 void printArray(int *array, int num)
 /*------------------------------------------------------------*//*!
   Integers are printed space delimited followed by a newline.  
@@ -25,6 +27,22 @@ void printArray(int *array, int num)
     printf("\n");
 }
 
+void printRealArray(double *array, int num)
+/*------------------------------------------------------------*//*!
+  Doubles are printed space delimited followed by a newline.  
+
+  \param  array     pointer to array
+  \param  num       number of doubles in the array
+
+  \author Michelle Strout 6/30/08
+*//*--------------------------------------------------------------*/
+{
+    int i;
+    for (i=0; i<num; i++) {
+        printf("%g ", array[i]);
+    }
+    printf("\n");
+}
 bool compareRealArrays(double *a1, double *a2, int num)
 /*------------------------------------------------------------*//*!
   Do an element-wise comparison of two double arrays.
@@ -46,21 +64,26 @@ bool compareRealArrays(double *a1, double *a2, int num)
     return retval;
 }
 
-void pointerUpdate(int *index_array, int ia_size, int *new2old, int n_nodes)
+void pointerUpdate(int *index_array, int ia_size, int *old2new, int n_nodes)
 /*------------------------------------------------------------*//*!
-  Takes the mapping specified by permutationi, 
-  new2old (maps new data position
-  to old), and modifies the index_array values so that they point
+  Takes the mapping specified by the reordering function old2new, which
+  maps old data positions to new positions
+  and modifies the index_array values so that they point
   to the new locations.
               
   \param  index_array   contains values that index into data arrays
   \param  ia_size   size of the index array
-  \param  new2old   mapping from new data position to old data position
+  \param  old2new   mapping from new data position to old data position
   \param  n_nodes   number of entries in all arrays
 
   \author Michelle Strout 6/30/08
 *//*--------------------------------------------------------------*/
 {
+    if (debug) {
+        printf("\nIn pointerUpdate: old2new = ");
+        printArray(old2new, ia_size);
+    }
+
     int *temp;
     MALLOC(temp, int, ia_size);
 
@@ -72,45 +95,52 @@ void pointerUpdate(int *index_array, int ia_size, int *new2old, int n_nodes)
         temp[i] = index_array[i];
     }
 
+    if (debug) {
+        printf("\nIn pointerUpdate: temp = ");
+        printArray(temp, ia_size);
+    }
+
     // do pointer update for original array
     for (i=0; i<ia_size; i++) {
-        index_array[i] = temp[new2old[i]]; 
+        index_array[i] = old2new[temp[i]]; 
     }
         
 }
 
-void reorderArrays(int n, long (*repos)[2], int *new2old, int n_nodes)
+void reorderArray(unsigned char *ptr, int elem_size, int n_nodes, int *old2new)
 /*------------------------------------------------------------*//*!
-  Takes the mapping specified by permutationi, 
-  new2old (maps new data position
-  to old), and remaps the n arrays pointed to in repos.  repos[i][0]
-  points to the array and repos[i][1] specifies the size of
-  each value in the array.
+  Takes the mapping specified by the reordering function old2new, which
+  maps old data positions
+  to new positions, and remaps the arrays pointed to by ptr.  
               
-  \param  n   number of arrays
-  \param  repos     info about arrays
-  \param  new2old   mapping from new data position to old data position
-  \param  n_nodes   number of entries in all arrays
+  \param  ptr           pointer to array
+  \param  elem_size     size of each element in array
+  \param  n_nodes       number of entries in all arrays
+  \param  old2new       mapping from old data position to new data position
 
-  \author Michelle Strout 6/30/08, more modifications
-          Michelle Strout 10/4/02, adapted from N_POSITION code
-          in Hwansoo Han's code MISC/misc.h
+  \author Michelle Strout 6/30/08
 *//*--------------------------------------------------------------*/
 {
-    int i, siz, siz0=0;
-    unsigned char *ptr, *tx;
-    if (repos != NULL) {   
-      for (i = 0; i < n; i++) {   
-        ptr = (unsigned char *)(repos[i][0]);            
-        siz = (int) (repos[i][1]);
-        if (siz > siz0) {
-            FREE(tx, unsigned char, n_nodes*siz0)
-            MALLOC (tx, unsigned char, n_nodes*siz)
-        }
-        REPOSITION(tx, ptr, n_nodes, siz, new2old)
-        siz0 = siz;
-      }
-      FREE(tx, unsigned char, n_nodes*siz0)
+    assert(elem_size>0);
+    assert(ptr!=NULL);
+    assert(old2new!=NULL);
+    assert(n_nodes>0);
+
+    // create a temporary array 
+    unsigned char * temp;
+    MALLOC (temp, unsigned char, n_nodes*elem_size)
+    
+    // call macro that does reordering.  It uses temp.
+    int * new2old;
+    MALLOC(new2old, int, n_nodes);
+    int i;
+    for (i=0; i<n_nodes; i++) {
+        new2old[old2new[i]] = i;
     }
+    REPOSITION(temp, ptr, n_nodes, elem_size, new2old)
+
+    // get rid of temporary arrays
+    FREE(new2old, int, n_nodes);
+    FREE(temp, unsigned char, n_nodes*elem_size);
 }
 
