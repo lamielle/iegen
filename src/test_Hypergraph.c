@@ -6,6 +6,7 @@
 
 #include "Hypergraph.h"
 #include "IAG.h"
+#include "util.h"
 
 #define NUM_HE 10
 #define NUM_NODES 5
@@ -50,13 +51,9 @@ int main()
     Hypergraph_dump(hg);
 
     int* new2old = (int*)malloc(sizeof(int)*hg->nv);
-    int i;
     CPackHyper(hg,new2old);
     printf("\nnew2old = ");
-    for (i=0; i<hg->nv; i++) {
-        printf("%d ", new2old[i]);
-    }
-    printf("\n");
+    printArray(new2old,hg->nv);
     
     free(new2old);
     Hypergraph_dtor(&hg);
