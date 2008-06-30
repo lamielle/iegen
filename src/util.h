@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <strings.h>    // needed for bcopy
+#include <assert.h>
 
 //! p is the pointer, typ is the data type, and sz is the number of that type
 #define MALLOC(p, typ, sz)  { if (!(p = (typ *)malloc((sz) * sizeof(typ)))) { \
@@ -23,7 +24,13 @@
 //! Print the values of the integer array as space delimited to stdout.
 void printArray(int *array, int num);
 
+//! Compare the values of two different double arrays and return true if equal.
+bool compareRealArrays(double *a1, double *a2, int num);
+
 // --------------------- Functionality for reordering data
+
+//! Makes index arrays point to new data locations.
+void pointerUpdate(int *index_array, int ia_size, int *new2old, int n_nodes);
 
 //! see function header in util.c
 void reorderArrays(int n, long (*repos)[2], int *new2old, int n_nodes);

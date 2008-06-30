@@ -9,8 +9,8 @@ SRCS_HYPER = Hypergraph.c test_Hypergraph.c IAG_cpack.c util.c
 test_Hypergraph: Hypergraph.h util.h $(SRCS_HYPER)
 	g++ -Wall -g  $(SRCS_HYPER) -o test_Hypergraph
 
-SRCS = driver_moldyn_FST_hand.c util.c
+SRCS = driver_moldyn_FST_hand.c util.c Hypergraph.c IAG_cpack.c
 
-driver_moldyn_FST_hand: util.h $(SRCS)
+driver_moldyn_FST_hand: util.h Hypergraph.h $(SRCS)
 	g++ -Wall -g  $(SRCS) -o driver_moldyn_FST_hand
 
