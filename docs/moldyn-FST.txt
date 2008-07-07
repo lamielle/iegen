@@ -95,15 +95,15 @@ Access Relations
     
     // summary access relations are the union of all access relations
     // to a particular data space
-    A_II0_to_X0 := name = "A_II0_to_X0", { [ii,1] -> [ inter1(ii) ] } 
+    A_I0_to_X0 := name = "A_I0_to_X0", { [ii,1] -> [ inter1(ii) ] } 
                    union { [ii,1] -> [ inter2(ii) ] }
                    
-    A_II0_to_FX0 := name = "A_II0_to_FX0", { [ii,1] -> [ inter1(ii) ] } 
+    A_I0_to_FX0 := name = "A_I0_to_FX0", { [ii,1] -> [ inter1(ii) ] } 
                    union { [ii,2] -> [ inter2(ii) ] }
 
 
 Data Dependences
-    Only reduction dependences.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically.
+    Only reduction dependences.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically if the loop is being parallelized.
 
 Composition and choice of RTRTs
     data reordering
@@ -111,20 +111,26 @@ Composition and choice of RTRTs
             data_reordering = { [ k ] -> [ sigma( k ) ] }
             iteration_space = I_0
             data_spaces = [ X_0, FX_0 ]
-            access_relation = A_II0_to_X0
+            access_relation = A_I0_to_X0
             iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
-            iag_func_name = IAG_cpack
+            iag_func_name = CPackHyper
             iag_type = IAG_Permute
-           
     
-
-    
+    Naming standards
+        After any transformation, we are going to assume that a space with the subscript n will be transformed into the same named space with the subscript n+1.  For example I_0 will become I_1.
     
     iteration reordering
+        IterPermuteRTRT
+            iter_reordering = { [ i ] -> [ delta( i ) ] }
+            iteration_space = I_1
+            access_relation = A_I0_to_X0
+            iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
+            iag_func_name = LexMin
+            iag_type = IAG_Permute
 
--------------------------
-ITOs and other automation
--------------------------
+------------------------------------------------------------
+Automatically Generating Straight-Forward Inspector/Executor
+------------------------------------------------------------
 
 Generating the composed inspector
 
@@ -146,14 +152,14 @@ Generating the composed inspector
                 
             For the example, output is the following:
                 access_relation_to_traverse = new AccessRelation
-                    name = "A_II0_to_X0"
+                    name = "A_I0_to_X0"
                     iter_space = { [ii] : 0 <= ii < n_inter  }
                     data_space = X0                    
                     iterspace_to_data := { [ii] -> [ inter1(ii) ] } 
                                        union { [ii] -> [ inter2(ii) ] }
                                  
                 
-        b) generate code that explicitly creates hypergraph and dual (if necessary) at runtime.
+        b) generate code that explicitly creates hypergraph representation of access relation at runtime.
             input:
                 access_relation_to_traverse (artt)
             output:
@@ -178,17 +184,17 @@ Generating the composed inspector
                     
            
             For the example, output is the following:
-                    // this macro captures A_II0_to_X0, count, and data_index
+                    // this macro captures A_I0_to_X0, count, and data_index
                     #define s1(t1) data_index = inter1[t1]; \
-                        Hypergraph_ordered_insert_node(A_II0_to_X0,count, \
+                        Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
                         data_index); \
                         data_index = inter2[t1]; \
-                        Hypergraph_ordered_insert_node(A_II0_to_X0,count, \
+                        Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
                         data_index); \
                         count++
                         
                     // initialize variables
-                    Hypergraph* A_II0_to_X0 = Hypergraph_ctor();
+                    Hypergraph* A_I0_to_X0 = Hypergraph_ctor();
                     int count=0;
                     int data_index=0;
                     
@@ -197,7 +203,7 @@ Generating the composed inspector
                         s1(t1);
                     }
 
-                    Hypergraph_finalize(A_II0_to_X0);
+                    Hypergraph_finalize(A_I0_to_X0);
                         
             algorithm:
                 1) use omega codegen to generate loop over iteration sub space
@@ -236,7 +242,7 @@ Generating the composed inspector
             For this example:
                 IAG_cpack = new IAG_Permute (
                     String name = "IAG_cpack"       // function name
-                    AccessRelation input = A_II0_to_X0
+                    AccessRelation input = A_I0_to_X0
                     IndexArray result = new IndexArray( 
                         data_space = "sigma", X_0.spec, index array,
                         index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
@@ -258,7 +264,7 @@ Generating the composed inspector
             For this example:
                     int *sigma;
                     MALLOC(sigma,int,N);
-                    CPackHyper( A_II0_to_X0, sigma );
+                    CPackHyper( A_I0_to_X0, sigma );
                     
          
         e) generate code that does data reordering
@@ -308,10 +314,219 @@ Generating the composed inspector
         
         
             output for this example:
-        
-         
-LEFTOFF: 
+                #define e1(ii,g)    if ((g)==1) { \
+                    fx[sigma[inter1[ii]]] += x[sigma[inter1[ii]]]*0.1 \
+                             + x[sigma[inter2[ii]]]*0.3; \
+                } else { \
+                    fx[sigma[inter2[ii]]] += x[sigma[inter1[ii]]]*0.2  \
+                             + x[sigma[inter2[ii]]]*0.4; \
+                }
 
-    - then we have to figure out whether to actually reorder the data or not and whether to do the pointer update.     
+                ...
+            
+                // executor - execute the computation with modified arrays
+                for(t1 = 0; t1 <= n_inter-1; t1++) {
+                    e1(t1,1);
+                    e1(t1,2);
+                }
+        
+    2) Modify iteration space and access functions based on previous transformation.
+    
+        I1 := I0    // iteration space was not modified
+        X1 := X0    // same size
+        FX1 := FX0    // same size
+        A_I1_to_X1 = data_reordering(A_I0_to_X0) 
+                   = { [ii,1] -> [ sigma(inter1(ii)) ] } 
+                     union { [ii,1] -> [ sigma(inter2(ii)) ] }
+                     
+        A_I1_to_FX1 = data_reordering(A_I0_to_FX0)
+                    = { [ii,1] -> [ sigma(inter1(ii)) ] } 
+                      union { [ii,1] -> [ sigma(inter2(ii)) ] }
+
+    3) IterPermuteRTRT
+        a) restrict access_relation to iteration subspace (same as 1a above)
+
+            For the example, output is the following:
+                access_relation_to_traverse = new AccessRelation
+                    name = "A_I1_to_X1"
+                    iter_space = { [ii] : 0 <= ii < n_inter  }
+                    data_space = X1                    
+                    iterspace_to_data := { [ii] -> [ sigma(inter1(ii)) ] } 
+                                       union { [ii] -> [ sigma(inter2(ii)) ] }
+                                 
+                
+        b) generate code that explicitly creates hypergraph generate code that explicitly creates hypergraph representation of access relation at runtime. (same as 1b above)
+        
+============= LEFT OFF
+            input:
+                access_relation_to_traverse (artt)
+            output:
+                code
+                    // data index calc for each disjunct in access relation
+                    #define s1(i_1, ..., i_d) data_index = ...; \
+                        Hypergraph_ordered_insert_node([artt.name], \
+                        count,data_index); \
+                        count++;
+                        
+                    // initialize variables
+                    Hypergraph* [artt.name] = Hypergraph_ctor();
+                    int count=0;
+                    int data_index=0;
+                    int t1, ..., ;  // declare index variables omega will use
+                    
+                    // loop that traverses [artt.iter_space]
+                    for ...
+                        s1(i_1, ..., i_d);
+                        
+                    Hypergraph_finalize([argtt.name]);
+                    
+           
+            For the example, output is the following:
+                    // this macro captures A_I0_to_X0, count, and data_index
+                    #define s1(t1) data_index = inter1[t1]; \
+                        Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
+                        data_index); \
+                        data_index = inter2[t1]; \
+                        Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
+                        data_index); \
+                        count++
+                        
+                    // initialize variables
+                    Hypergraph* A_I0_to_X0 = Hypergraph_ctor();
+                    int count=0;
+                    int data_index=0;
+                    
+                    // this specific example
+                    for(t1 = 0; t1 <= n_inter-1; t1++) {
+                        s1(t1);
+                    }
+
+                    Hypergraph_finalize(A_I0_to_X0);
+                        
+            algorithm:
+                1) use omega codegen to generate loop over iteration sub space
+                    codegen iter_sub_space;
+                    
+                2) generate a macro definition for the statement in the loop body from the relation_to_traverse
+                    a) for each conjunct in the DNF // seem omega lib docs
+                         -gen code that solves for the out variable, data_index, using the input iterator values
+                         -gen code that makes the following call:
+                            Hypergraph_ordered_insert_node( hgraph, iter_count, data_index )
+
+        c) Automatically generate the IndexArray specification for sigma
+            input:
+                DataPermuteRTRT instance
+                access_relation_to_traverse
+                
+            output:
+                iag_spec = new IAG_Permute(
+                    String name = rtrt.iag_func_name
+                    AccessRelation input = access_relation_to_traverse
+                    IndexArray result = new IndexArray(
+                        data_space = [name of uninterp func in data_reordering],
+                                     [specification from data space in RTRT],
+                                     index array,
+                        index_value_constraints = { [k] -> [ uninterp(k) ] : 
+                            not [k has same bounds as data space] || 
+                            [uninterp(k) has same bounds as data space] }   
+                    )
+                )
+                        
+            Initial Assumptions:
+                -only one interpreted function in data reordering
+                -that uninterpreted function has a domain with dimensionality 1
+                    
+        
+            For this example:
+                IAG_cpack = new IAG_Permute (
+                    String name = "IAG_cpack"       // function name
+                    AccessRelation input = A_I0_to_X0
+                    IndexArray result = new IndexArray( 
+                        data_space = "sigma", X_0.spec, index array,
+                        index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
+                    )
+
+                )        
+        
+        
+        d) generate code that passes hypergraph to IAG
+            input: 
+                iag_spec for sigma
+                
+            output:
+                code
+                    [iag_spec.result.data_space.name] = malloc( ... );
+                    [iag_spec.name]( [iag_spec.input.name],
+                                     [iag_spec.result.data_space.name] );
+                    
+            For this example:
+                    int *sigma;
+                    MALLOC(sigma,int,N);
+                    CPackHyper( A_I0_to_X0, sigma );
+                    
+         
+        e) generate code that does data reordering
+            input:
+                iag_spec for sigma
+                DataPermuteRTRT.data_spaces to be reordered
+                
+            output:
+                code that reorders the specified data spaces with sigma
+                // one call to reorderArray for each data space being reordered
+                reorderArray((unsigned char*) [data_space.name], 
+                             sizeof([data_space.datatype]), 
+                             [data_space.num_elem],
+                             [iag_spec.name])
+        
+            For this example:
+                reorderArray((unsigned char *)x, sizeof(double), NUM_NODES, sigma);
+                reorderArray((unsigned char *)fx, sizeof(double), NUM_NODES, sigma);
+
+        
+        f) generate executor code for data reordering only
+        Note: eventually we want to generate the composed inspector/executor only, but for testing we need to be able to do each individually.
+        
+            input:
+                DataPermuteRTRT.data_spaces
+                
+                
+            output:
+                // statement macros
+                #define s1(t1, ..., ) ...    
+        
+                ...
+                
+                // new executor loop
+                for ...
+        
+            algorithm:
+                for each statement in computation
+                    for each data access
+                        if accessing array that was reordered
+                            modify array access relation as per DataPermuteRTRT.data_reordering specification
+                            
+                for each statement in computation
+                    generate macro code for statement
+                    
+                have omega generate code for transformed iteration space
+        
+        
+            output for this example:
+                #define e1(ii,g)    if ((g)==1) { \
+                    fx[sigma[inter1[ii]]] += x[sigma[inter1[ii]]]*0.1 \
+                             + x[sigma[inter2[ii]]]*0.3; \
+                } else { \
+                    fx[sigma[inter2[ii]]] += x[sigma[inter1[ii]]]*0.2  \
+                             + x[sigma[inter2[ii]]]*0.4; \
+                }
+
+                ...
+            
+                // executor - execute the computation with modified arrays
+                for(t1 = 0; t1 <= n_inter-1; t1++) {
+                    e1(t1,1);
+                    e1(t1,2);
+                }
+ 
     
     

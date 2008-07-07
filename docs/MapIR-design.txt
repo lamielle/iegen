@@ -107,14 +107,14 @@ Transformation Specification:
         // IAG function and the IAGspec subclass (can you do this in python?).
         //IAGspec index_array_generator;
         String iag_func_name;
-        Type(?) iag_type;
+        Type(?) iag_type;      
         
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?
             - all data spaces being reordered should have the same bounds
     }
     
-    class IterReorderingRTRT extends RTRT {
+    class IterPermuteRTRT extends RTRT {
         // reordering specification
         OmegaRelation iter_reordering;
 
@@ -125,12 +125,18 @@ Transformation Specification:
         // AccessRelation, mapping of iterations to data that
         // needs to have hypergraph creation code generated
         AccessRelation access_relation;
+                
+        // Mapping of full iteration space to sub space of the 
+        // iteration space that inspector should 
+        // traverse when inspecting the access relation.
+        OmegaRelation iter_sub_space_relation;
         
         // Generator for the index arrays that are represented 
         // as uninterpreted functions 
         // in the iteration reordering specification.
         // For now ASSUMING there is only one.
-        IAGspec index_array_generator;
+        String iag_func_name;
+        Type(?) iag_type;
         
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?

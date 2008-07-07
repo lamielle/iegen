@@ -17,7 +17,7 @@ INTER1_0 := { [k] : 0 <= k <= (n_inter-1) };
 INTER2_0 := { [k] : 0 <= k <= (n_inter-1) };
 
 # access relation
-A_II0_to_X0 := { [ii,1] -> [ inter1(ii) ] } 
+A_I0_to_X0 := { [ii,1] -> [ inter1(ii) ] } 
                union { [ii,1] -> [ inter2(ii) ] };
 
 # DataPermuteRTRT.iter_sub_space_relation
@@ -25,7 +25,7 @@ iss_relation := { [ ii, 1 ] -> [ ii ] };
 
 # access relation to traverse
 iter_space := iss_relation ( I_0 );
-iterspace_to_data := inverse (iss_relation compose (inverse A_II0_to_X0));
+iterspace_to_data := inverse (iss_relation compose (inverse A_I0_to_X0));
 iterspace_to_data;
 
 # loop that traverses [artt.iter_space]

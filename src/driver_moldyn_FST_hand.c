@@ -17,14 +17,27 @@ static bool debug = true;
 //=======================================================
 // definitions that should be automatically generated
 
-// this macro captures A_II0_to_X0, count, and data_index
+// data reordering inspector hypergraph gen
+// this macro captures A_I0_to_X0, count, and data_index
 #define s1(t1) data_index = inter1[t1]; \
-                        Hypergraph_ordered_insert_node(A_II0_to_X0,count, \
+                        Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
                         data_index); \
                         data_index = inter2[t1]; \
-                        Hypergraph_ordered_insert_node(A_II0_to_X0,count, \
+                        Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
                         data_index); \
                         count++
+
+// executor after data reordering
+// this macro captures reordered x and fx, the index arrays inter1 and inter2,
+// and the newly generated index array sigma.
+#define e1(ii,g)    if ((g)==1) { \
+    fx[sigma[inter1[ii]]] += x[sigma[inter1[ii]]]*0.1 \
+                             + x[sigma[inter2[ii]]]*0.3; \
+  } else { \
+    fx[sigma[inter2[ii]]] += x[sigma[inter1[ii]]]*0.2  \
+                             + x[sigma[inter2[ii]]]*0.4; \
+  }
+
 //=======================================================
 
 int main() 
@@ -104,7 +117,7 @@ int main()
 
     // Inspector
     // initialize variables
-    Hypergraph* A_II0_to_X0 = Hypergraph_ctor();
+    Hypergraph* A_I0_to_X0 = Hypergraph_ctor();
     int count=0;
     int data_index=0;
     int t1;
@@ -115,12 +128,12 @@ int main()
         s1(t1);
     }
 
-    Hypergraph_finalize(A_II0_to_X0);
+    Hypergraph_finalize(A_I0_to_X0);
 
     // call the index array generator to create reordering function
     int *sigma;
     MALLOC(sigma,int,NUM_NODES);
-    CPackHyper( A_II0_to_X0, sigma );
+    CPackHyper( A_I0_to_X0, sigma );
 
     if (debug) {
         printf("\nAfter call to CPackHyper, sigma = ");
@@ -153,18 +166,16 @@ int main()
     */
 
     // executor - execute the computation with modified arrays
-    for (ii=0; ii<n_inter; ii++) {
-        fx[sigma[inter1[ii]]] += x[sigma[inter1[ii]]]*0.1 
-                                 + x[sigma[inter2[ii]]]*0.3; 
-        fx[sigma[inter2[ii]]] += x[sigma[inter1[ii]]]*0.2 
-                                 + x[sigma[inter2[ii]]]*0.4; 
+    for(t1 = 0; t1 <= n_inter-1; t1++) {
+        e1(t1,1);
+        e1(t1,2);
     }
 
 //=======================================================
 
     // debug output
     if (debug) {
-        Hypergraph_dump(A_II0_to_X0);
+        Hypergraph_dump(A_I0_to_X0);
     
         printf("sigma = ");
         printArray(sigma, NUM_NODES);
@@ -189,7 +200,7 @@ int main()
     }
 
     // cleanup
-    Hypergraph_dtor(&A_II0_to_X0);
+    Hypergraph_dtor(&A_I0_to_X0);
     FREE(original_fx, double, NUM_NODES);
     FREE(sigma,int,NUM_NODES);
     FREE(fx,double,NUM_NODES);
