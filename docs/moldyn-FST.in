@@ -20,14 +20,37 @@ INTER2_0 := { [k] : 0 <= k <= (n_inter-1) };
 A_II0_to_X0 := { [ii,1] -> [ inter1(ii) ] } 
                union { [ii,1] -> [ inter2(ii) ] };
 
+# DataPermuteRTRT.iter_sub_space_relation
 iss_relation := { [ ii, 1 ] -> [ ii ] };
 
-rel_to_traverse := { [ii] -> [ inter1(ii) ] } 
-                   union { [ii] -> [ inter2(ii) ] };
+# access relation to traverse
+iter_space := iss_relation ( I_0 );
+iterspace_to_data := inverse (iss_relation compose (inverse A_II0_to_X0));
+iterspace_to_data;
 
-iss := iss_relation ( I_0 );
+# loop that traverses [artt.iter_space]
+codegen iter_space;
 
-iss;
+##### generating the executor
 
-codegen iss;
+# the data spaces were transformed so the data access relations 
+# must be transformed
 
+# example original access relations
+ar_1_1 := { [ii,1] -> [ inter1(ii) ] };
+ar_1_3 := { [ii,1] -> [ inter2(ii) ] };
+# transforming them
+symbolic sigma(1);
+data_reordering := { [ k ] -> [ sigma( k ) ] };
+data_reordering(ar_1_1);
+data_reordering(ar_1_3);
+# ALAN: output of the above currently has an UNKNOWN.  This is due to the
+# compose with uninterpreted functions issue.  The results should be as
+# follows:
+#   {[ii,1] -> [Out_1] : Out_1 = sigma( inter1(ii) ) }
+#   {[ii,1] -> [Out_1] : Out_1 = sigma( inter2(ii) ) }
+
+
+
+# the original iteration space was not transformed
+codegen I_0;

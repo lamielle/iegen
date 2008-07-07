@@ -139,7 +139,9 @@ int main()
     }
 
     // update the index arrays
-    // MMS, 7/2/08, not for first time
+    // MMS, 7/2/08, not for first time because this is really
+    // a performance optimization.
+    /*
     pointerUpdate(inter1, n_inter, sigma, NUM_NODES);
     pointerUpdate(inter2, n_inter, sigma, NUM_NODES);
 
@@ -148,11 +150,14 @@ int main()
         printf("inter1 = "); printArray(inter1, NUM_NODES);
         printf("inter2 = "); printArray(inter2, NUM_NODES);
     }
+    */
 
     // executor - execute the computation with modified arrays
     for (ii=0; ii<n_inter; ii++) {
-        fx[inter1[ii]] += x[inter1[ii]]*0.1 + x[inter2[ii]]*0.3; 
-        fx[inter2[ii]] += x[inter1[ii]]*0.2 + x[inter2[ii]]*0.4; 
+        fx[sigma[inter1[ii]]] += x[sigma[inter1[ii]]]*0.1 
+                                 + x[sigma[inter2[ii]]]*0.3; 
+        fx[sigma[inter2[ii]]] += x[sigma[inter1[ii]]]*0.2 
+                                 + x[sigma[inter2[ii]]]*0.4; 
     }
 
 //=======================================================
