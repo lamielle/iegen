@@ -12,6 +12,8 @@
 
 #define NUM_NODES 5
 
+static bool debug = true;
+
 //=======================================================
 // definitions that should be automatically generated
 
@@ -47,19 +49,23 @@ int main()
         inter2[i] = (i+3)%NUM_NODES;
     }
  
-    printf("inter1 = "); 
-    printArray(inter1, NUM_NODES);
-    printf("inter2 = "); 
-    printArray(inter2, NUM_NODES);
+    if (debug) {
+        printf("inter1 = "); 
+        printArray(inter1, NUM_NODES);
+        printf("inter2 = "); 
+        printArray(inter2, NUM_NODES);
+    }
 
     // set up data values
     for (i=0; i<NUM_NODES; i++) {
         fx[i] = 0.0;
         x[i] = i;
     }    
-    printf("before original computation\n");
-    printf("x = "); printRealArray(x, NUM_NODES);
-    printf("fx = "); printRealArray(x, NUM_NODES);
+    if (debug) {
+        printf("before original computation\n");
+        printf("x = "); printRealArray(x, NUM_NODES);
+        printf("fx = "); printRealArray(x, NUM_NODES);
+    }
     
     //---------------- Original computation
     
@@ -71,8 +77,10 @@ int main()
     }
 
     // print fx values
-    printf("after original computation, fx = ");
-    printRealArray(fx, NUM_NODES);
+    if (debug) {
+        printf("after original computation, fx = ");
+        printRealArray(fx, NUM_NODES);
+    }
 
     // save off values of fx to enable later comparisons
     // also reset fx values to 0
@@ -86,9 +94,11 @@ int main()
 //=======================================================
 // Code that should be automatically generated
 
-    printf("\nbefore inspector/executor computation\n");
-    printf("x = "); printRealArray(x, NUM_NODES);
-    printf("fx = "); printRealArray(fx, NUM_NODES);
+    if (debug) {
+        printf("\nbefore inspector/executor computation\n");
+        printf("x = "); printRealArray(x, NUM_NODES);
+        printf("fx = "); printRealArray(fx, NUM_NODES);
+    }
 
     //---------------- Data reordering inspector/executor
 
@@ -112,25 +122,32 @@ int main()
     MALLOC(sigma,int,NUM_NODES);
     CPackHyper( A_II0_to_X0, sigma );
 
-    printf("\nAfter call to CPackHyper, sigma = ");
-    printArray(sigma, NUM_NODES);
+    if (debug) {
+        printf("\nAfter call to CPackHyper, sigma = ");
+        printArray(sigma, NUM_NODES);
+    }
 
 
     // reorder two data array based on reordering function
     reorderArray((unsigned char *)x, sizeof(double), NUM_NODES, sigma); 
     reorderArray((unsigned char *)fx, sizeof(double), NUM_NODES, sigma); 
 
-    printf("\nafter reordering arrays\n");
-    printf("x = "); printRealArray(x, NUM_NODES);
-    printf("fx = "); printRealArray(fx, NUM_NODES);
+    if (debug) {
+        printf("\nafter reordering arrays\n");
+        printf("x = "); printRealArray(x, NUM_NODES);
+        printf("fx = "); printRealArray(fx, NUM_NODES);
+    }
 
     // update the index arrays
+    // MMS, 7/2/08, not for first time
     pointerUpdate(inter1, n_inter, sigma, NUM_NODES);
     pointerUpdate(inter2, n_inter, sigma, NUM_NODES);
 
-    printf("\nafter pointer update\n");
-    printf("inter1 = "); printArray(inter1, NUM_NODES);
-    printf("inter2 = "); printArray(inter2, NUM_NODES);
+    if (debug) {
+        printf("\nafter pointer update\n");
+        printf("inter1 = "); printArray(inter1, NUM_NODES);
+        printf("inter2 = "); printArray(inter2, NUM_NODES);
+    }
 
     // executor - execute the computation with modified arrays
     for (ii=0; ii<n_inter; ii++) {
@@ -141,19 +158,21 @@ int main()
 //=======================================================
 
     // debug output
-    Hypergraph_dump(A_II0_to_X0);
+    if (debug) {
+        Hypergraph_dump(A_II0_to_X0);
     
-    printf("sigma = ");
-    printArray(sigma, NUM_NODES);
+        printf("sigma = ");
+        printArray(sigma, NUM_NODES);
 
-    printf("inter1 = ");
-    printArray(inter1, NUM_NODES);
+        printf("inter1 = ");
+        printArray(inter1, NUM_NODES);
 
-    printf("inter2 = ");
-    printArray(inter2, NUM_NODES);
+        printf("inter2 = ");
+        printArray(inter2, NUM_NODES);
 
-    printf("fx = ");
-    printRealArray(fx, NUM_NODES);
+        printf("fx = ");
+        printRealArray(fx, NUM_NODES);
+    }
 
     // testing the inspector/executor
     // first reorder the original results using the same sigma
