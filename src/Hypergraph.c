@@ -8,6 +8,12 @@
 
 #include "Hypergraph.h"
 
+//----------------------- Helper routines for internal use
+
+static void transpose_hypergraph(int hg_n, int *hg_idx, int *hg_list,
+                                 int dual_n, int *dual_idx, int *dual_list);
+
+Hypergraph* Hypergraph_ctor() 
 /*----------------------------------------------------------------*//*! 
   \short Construct Hypergraph structure and return a ptr to it.
 
@@ -17,7 +23,6 @@
 
   \author Michelle Strout 6/23/08
 *//*----------------------------------------------------------------*/
-Hypergraph* Hypergraph_ctor() 
 {
     Hypergraph* self = (Hypergraph*)malloc(sizeof(Hypergraph));
     
@@ -162,6 +167,8 @@ void Hypergraph_dump( Hypergraph* self )
     printf("\tfrom_size = %d\n", self->from_size);
     printf("\thgdata_size = %d\n", self->hgdata_size);
     
+    // nicely formated by hyperedge
+    printf("\thedge: nodes in hedge\n");
     for (he=0; he<self->ne; he++) {
         printf("\t%d: ", he);
         for (p=self->from[he]; p<self->from[he+1]; p++) {
@@ -169,6 +176,81 @@ void Hypergraph_dump( Hypergraph* self )
         }
         printf("\n");
     }
+
+    // rest of the raw data
+    printf("from = "); 
+    printArray(self->from, self->ne+1);
+    printf("hgdata = "); 
+    printArray(self->hgdata, self->from[self->ne]);
+    if (self->dual_built) {
+        printf("from2 = "); 
+        printArray(self->from2, self->nv+1);
+        printf("dualdata = "); 
+        printArray(self->dualdata, self->from2[self->nv]);
+    }
+
 }
 
+void construct_dual(Hypergraph* hg)
+/*------------------------------------------------------------*//*!
+  If the dual has not been constructed for this hypergraph,
+  then construct it.
+
+  \param  hg        Hypergraph pointer
+
+  \author Michelle Strout 7/9/08
+*//*--------------------------------------------------------------*/
+{
+    if (hg->dual_built==false) {
+        MALLOC(hg->from2,int,hg->nv+1); 
+
+        // the dualdata array will be the same size as the hgdata array
+        MALLOC(hg->dualdata,int,hg->from[hg->ne]); 
+
+        transpose_hypergraph(hg->ne, hg->from, hg->hgdata,
+                             hg->nv, hg->from2, hg->dualdata);
+        hg->dual_built=true;
+    }
+
+}
+
+static void transpose_hypergraph(int hg_n, int *hg_idx, int *hg_list, 
+                                 int dual_n, int *dual_idx, int *dual_list)
+/*------------------------------------------------------------*//*!
+  Forms the dual of a hypergraph.  Should only be used internal
+  to Hypergraph abstraction.
+
+  \param  hg_n      number of hyperedges in hypergraph
+  \param  hg_idx    indices into linearized hypergraph
+  \param  hg_list   linearized hypergraph
+                    hg_list[hg_idx[i]]->hg_list[hg_idx[i+1]]-1 lists 
+                    vertices in hyperedge i 
+  \param  dual_n    number of hyperedges in dual hypergraph
+  \param  dual_idx  indices into linearized dual hypergraph
+  \param  dual_list linearized dual hypergraph (same size as hg_list)
+
+  \author Paul Hovland 3/17/04
+*//*--------------------------------------------------------------*/
+{
+        int i,j;
+
+        for(i=0;i<=dual_n;i++)
+                dual_idx[i] = 0;
+
+        for(i=0;i<hg_idx[hg_n];i++)
+                dual_idx[hg_list[i]]++;
+
+        dual_idx[dual_n] = hg_idx[hg_n];
+        for(i = dual_n; i>0; i--)
+            dual_idx[i-1] = dual_idx[i] - dual_idx[i-1];
+
+        for(i=0;i<hg_n;i++)
+            for(j=hg_idx[i];j<hg_idx[i+1];j++)
+                      dual_list[dual_idx[hg_list[j]]++] = i;
+
+        for (i = dual_n; i > 0; i--)
+            dual_idx[i] = dual_idx[i-1];
+
+        dual_idx[0] = 0;
+}
 

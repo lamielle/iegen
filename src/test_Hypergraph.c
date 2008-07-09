@@ -55,10 +55,26 @@ int main()
     printf("\nnew2old = ");
     printArray(new2old,hg->nv);
     
+    // Iterate over the hyperedges and nodes in each hyperedge
+    int hedge, node;
+    printf("\nTraversing in order of hyperedges\n");
+    FOREACH_hyperedge(hg,hedge) {
+        FOREACH_node_in_hyperedge(hg,hedge,node) {
+            printf("\thedge = %d, node = %d\n", hedge, node);
+        }
+    }
+
+    printf("\nTraversing in order of nodes\n");
+    FOREACH_node(hg,node) {
+        FOREACH_hyperedge_for_node(hg,node,hedge) {
+            printf("\tnode = %d, hedge = %d\n", node, hedge);
+        }
+    }
+
+    Hypergraph_dump(hg);
+
     free(new2old);
     Hypergraph_dtor(&hg);
-
-
     
     // ok now do somewhat of a stress test of the memory management
     /* MMS, this takes a long time so only do it when MEM_ALLOC_INCREMENT

@@ -241,7 +241,7 @@ Generating the composed inspector
         
             For this example:
                 IAG_cpack = new IAG_Permute (
-                    String name = "IAG_cpack"       // function name
+                    String name = "CPackHyper"       // function name
                     AccessRelation input = A_I0_to_X0
                     IndexArray result = new IndexArray( 
                         data_space = "sigma", X_0.spec, index array,
@@ -357,89 +357,59 @@ Generating the composed inspector
                 
         b) generate code that explicitly creates hypergraph generate code that explicitly creates hypergraph representation of access relation at runtime. (same as 1b above)
         
-============= LEFT OFF
-            input:
-                access_relation_to_traverse (artt)
-            output:
-                code
-                    // data index calc for each disjunct in access relation
-                    #define s1(i_1, ..., i_d) data_index = ...; \
-                        Hypergraph_ordered_insert_node([artt.name], \
-                        count,data_index); \
-                        count++;
-                        
-                    // initialize variables
-                    Hypergraph* [artt.name] = Hypergraph_ctor();
-                    int count=0;
-                    int data_index=0;
-                    int t1, ..., ;  // declare index variables omega will use
-                    
-                    // loop that traverses [artt.iter_space]
-                    for ...
-                        s1(i_1, ..., i_d);
-                        
-                    Hypergraph_finalize([argtt.name]);
-                    
            
             For the example, output is the following:
-                    // this macro captures A_I0_to_X0, count, and data_index
-                    #define s1(t1) data_index = inter1[t1]; \
-                        Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
+                    // this macro captures A_I1_to_X1, 
+                    // count, sigma, inter1, inter2, and data_index
+                    #define s2(t1) data_index = sigma[inter1[t1]]; \
+                        Hypergraph_ordered_insert_node(A_I1_to_X1,count, \
                         data_index); \
-                        data_index = inter2[t1]; \
-                        Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
+                        data_index = sigma[inter2[t1]]; \
+                        Hypergraph_ordered_insert_node(A_I1_to_X1,count, \
                         data_index); \
                         count++
                         
                     // initialize variables
-                    Hypergraph* A_I0_to_X0 = Hypergraph_ctor();
+                    Hypergraph* A_I1_to_X1 = Hypergraph_ctor();
                     int count=0;
                     int data_index=0;
                     
                     // this specific example
                     for(t1 = 0; t1 <= n_inter-1; t1++) {
-                        s1(t1);
+                        s2(t1);
                     }
 
-                    Hypergraph_finalize(A_I0_to_X0);
+                    Hypergraph_finalize(A_I1_to_X1);
                         
-            algorithm:
-                1) use omega codegen to generate loop over iteration sub space
-                    codegen iter_sub_space;
-                    
-                2) generate a macro definition for the statement in the loop body from the relation_to_traverse
-                    a) for each conjunct in the DNF // seem omega lib docs
-                         -gen code that solves for the out variable, data_index, using the input iterator values
-                         -gen code that makes the following call:
-                            Hypergraph_ordered_insert_node( hgraph, iter_count, data_index )
 
-        c) Automatically generate the IndexArray specification for sigma
+        c) Automatically generate the IndexArray specification for delta.
+        Should this algorithm be a method associated with IterPermuteRTRT?
             input:
-                DataPermuteRTRT instance
+                IterPermuteRTRT instance
                 access_relation_to_traverse
                 
-            output:
+            output: (almost the same as 1c, just replace data space with iteration space)
                 iag_spec = new IAG_Permute(
                     String name = rtrt.iag_func_name
                     AccessRelation input = access_relation_to_traverse
                     IndexArray result = new IndexArray(
-                        data_space = [name of uninterp func in data_reordering],
-                                     [specification from data space in RTRT],
+                        data_space = [name of uninterp func in iter_reordering],
+                                     [rtrt.iter_space],
                                      index array,
                         index_value_constraints = { [k] -> [ uninterp(k) ] : 
-                            not [k has same bounds as data space] || 
-                            [uninterp(k) has same bounds as data space] }   
+                            not [k has same bounds as rtrt.iter_space] || 
+                            [uninterp(k) has same bounds as rtrt.iter_space] }   
                     )
                 )
                         
             Initial Assumptions:
-                -only one interpreted function in data reordering
+                -only one interpreted function in iteration reordering
                 -that uninterpreted function has a domain with dimensionality 1
                     
         
             For this example:
                 IAG_cpack = new IAG_Permute (
-                    String name = "IAG_cpack"       // function name
+                    String name = "LexMinHyper"       // function name
                     AccessRelation input = A_I0_to_X0
                     IndexArray result = new IndexArray( 
                         data_space = "sigma", X_0.spec, index array,

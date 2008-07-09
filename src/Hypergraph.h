@@ -48,6 +48,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include "util.h"
 
 #ifndef _Hypergraph_H
 #define _Hypergraph_H
@@ -112,11 +113,18 @@ void Hypergraph_finalize( Hypergraph* self );
 //! Output text representation of hypergraph to standard out.
 void Hypergraph_dump( Hypergraph* self );
 
+//----------------------- Helper routines for external use
+void construct_dual(Hypergraph* hg);
+
 //----------------------- Macros for iterating over nodes and hyperedges
 
 //! Iterate over the hyperedges in order.  
 #define FOREACH_hyperedge(hgraph, hedge) \
     for ((hedge)=0; (hedge)<(hgraph)->ne; (hedge)++) 
+
+//! Iterate over the nodes in order.  
+#define FOREACH_node(hgraph, node) \
+    for ((node)=0; (node)<(hgraph)->nv; (node)++) 
 
 //! Iterate over the nodes in a hyperedge
 // hgraph is the hypergraph
@@ -128,6 +136,17 @@ void Hypergraph_dump( Hypergraph* self );
          _FE_iter<(hgraph)->from[(hedge)+1]; \
          _FE_iter++,node=(hgraph)->hgdata[_FE_iter]) 
         
+//! Iterate over the hyperedges that contain the given nide.
+// hgraph is the hypergraph.  Will need the dual.
+// node is the node id.  
+// hedge is the hyperedge id. hedge is assigned in this macro.
+#define FOREACH_hyperedge_for_node(hgraph, node, hedge) \
+    construct_dual(hgraph); \
+    int _FE_iter;  \
+    for (_FE_iter=(hgraph)->from2[(node)],hedge=(hgraph)->dualdata[_FE_iter]; \
+         _FE_iter<(hgraph)->from2[(node)+1]; \
+         _FE_iter++,hedge=(hgraph)->dualdata[_FE_iter]) 
+ 
 
 #endif
 
