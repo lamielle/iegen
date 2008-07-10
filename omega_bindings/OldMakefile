@@ -1,0 +1,80 @@
+#Makefile for Omega Python Bindings
+#
+# Written by Alan LaMielle
+# December 18th, 2007
+#
+
+CC=g++
+CCC=${CC} -c
+LD=${CC}
+LDSHARED=${LD} -shared
+
+GEN_FLAGS=-fPIC -Wall
+#GEN_FLAGS=-fPIC -Wall -frepo
+PYTHON_PATH=/usr/include/python2.5
+BOOST_LIBS=-lboost_python
+
+#--------------------------------------------------
+#Omega Related Variables
+#--------------------------------------------------
+OMEGA_BASE=/s/europa/a/tmp/lamielle/omega/omega_csu
+BASIC_PATH=${OMEGA_BASE}/basic/include
+OMEGA_PATH=${OMEGA_BASE}/include
+OMEGA_LIB_PATH=${OMEGA_BASE}/omega_lib/include
+OMEGA_CODE_GEN_PATH=${OMEGA_BASE}/code_gen/include
+OMEGA_LIBRARY_PATH=./lib
+OMEGA_FLAGS=-DOMIT_QUANTIFY_CALLS -DSIG_HANDLER_HAS_ONE_ARG=1 -DSHUT_UP_ABOUT_STATEMENT_WITH_NO_EFFECT_IN_DYNAMIC_ARRAY_CREATION -DBATCH_ONLY_PETIT -DDAVEW_THESIS_REDUCTIONS -DSTUDY_KILL_USE -DPETIT_KILL_OBVIOUS -L${OMEGA_LIBRARY_PATH} -I${BASIC_PATH} -I${OMEGA_PATH} -I${OMEGA_LIB_PATH} -I${OMEGA_CODE_GEN_PATH}
+OMEGA_LIBS=-lomega -lcode_gen -lm
+#--------------------------------------------------
+
+UTIL_SRCS=OmegaException.cpp util.cpp
+FORMULA_SRCS=Var.cpp FreeVar.cpp FPart.cpp FVar.cpp FExpr.cpp FStmt.cpp FConj.cpp
+BINDINGS_SRCS=TupleCollection.cpp Set.cpp Relation.cpp omega_bindings.cpp
+
+PRES_BASE_SRCS=PresUtil.cpp IPresVisitable.cpp PresNode.cpp PresTypedNode.cpp
+PRES_FORMULA_SRCS=PresFormula.cpp PresSet.cpp PresRelation.cpp
+PRES_VAR_TUPLE_SRCS=PresVarTuple.cpp PresVarTupleSet.cpp PresVarTupleIn.cpp PresVarTupleOut.cpp
+PRES_VAR_SRCS=PresVar.cpp PresVarID.cpp PresVarUnnamed.cpp PresVarExpr.cpp PresVarRange.cpp PresVarStride.cp
+PRES_CONSTR_SRCS=PresConstr.cpp PresConstrAndOr.cpp PresConstrAnd.cpp PresConstrOr.cpp PresConstrNot.cpp PresConstrExistsForall.cpp PresConstrExists.cpp PresConstrForall.cpp PresConstrParen.cpp
+PRES_STMT_SRCS=PresStmt.cpp PresStmtEQ.cpp PresStmtNEQ.cpp PresStmtGT.cpp PresStmtGTE.cpp PresStmtLT.cpp PresStmtLTE.cpp
+PRES_EXPR_SRCS=PresExpr.cpp PresExprInt.cpp PresExprID.cpp PresExprFunc.cpp PresExprUnOp.cpp PresExprNeg.cpp PresExprBinOp.cpp PresExprAdd.cpp PresExprSub.cpp PresExprMult.cpp PresExprList.cpp PresExprParen.cpp
+PRES_AST_SRCS=${PRES_BASE_SRCS} ${PRES_FORMULA_SRCS} ${PRES_VAR_TUPLE_SRCS} ${PRES_VAR_SRCS} ${PRES_CONSTR_SRCS} ${PRES_STMT_SRCS} ${PRES_EXPR_SRCS} ast_bindings.cpp
+
+PRES_VISITOR_SRCS=${PRES_BASE_SRCS} ${PRES_FORMULA_SRCS} ${PRES_VAR_TUPLE_SRCS} ${PRES_VAR_SRCS} ${PRES_CONSTR_SRCS} ${PRES_STMT_SRCS} ${PRES_EXPR_SRCS} IPresVisitor.cpp PresDepthFirstVisitor.cpp PresReprVisitor.cpp visitor_bindings.cpp
+
+BINDINGS_OBJS=$(addsuffix .o,$(basename ${UTIL_SRCS})) $(addsuffix .o,$(basename ${FORMULA_SRCS})) $(addsuffix .o,$(basename ${BINDINGS_SRCS}))
+AST_OBJS=$(addsuffix .o,$(basename ${PRES_AST_SRCS}))
+VISITOR_OBJS=$(addsuffix .o,$(basename ${PRES_VISITOR_SRCS}))
+
+all: _omega.so _ast.so _visitor.so
+
+_omega.so: ${BINDINGS_OBJS}
+	${LDSHARED} ${BINDINGS_OBJS} lib/libomega.a lib/libcode_gen.a -L${OMEGA_LIBRARY_PATH} ${OMEGA_LIBS} ${BOOST_LIBS} -o omega/$@
+	strip omega/$@
+_ast.so: ${AST_OBJS}
+	${LDSHARED} ${AST_OBJS} lib/libomega.a lib/libcode_gen.a -L${OMEGA_LIBRARY_PATH} ${OMEGA_LIBS} ${BOOST_LIBS} -o omega/parser/ast/$@
+	strip omega/parser/ast/$@
+_visitor.so: ${VISITOR_OBJS}
+	${LDSHARED} ${VISITOR_OBJS} lib/libomega.a lib/libcode_gen.a -L${OMEGA_LIBRARY_PATH} ${OMEGA_LIBS} ${BOOST_LIBS} -o omega/parser/ast/visitor/$@
+	strip omega/parser/ast/visitor/$@
+
+# Rule for compiling source files to object files
+%.o : %.cpp %.hpp
+	${CCC} ${GEN_FLAGS} ${OMEGA_FLAGS} -I${PYTHON_PATH} $< -o $@
+omega_bindings.o : omega_bindings.cpp
+	${CCC} ${GEN_FLAGS} ${OMEGA_FLAGS} -I${PYTHON_PATH} $< -o $@
+ast_bindings.o : ast_bindings.cpp
+	${CCC} ${GEN_FLAGS} ${OMEGA_FLAGS} -I${PYTHON_PATH} $< -o $@
+visitor_bindings.o : visitor_bindings.cpp
+	${CCC} ${GEN_FLAGS} ${OMEGA_FLAGS} -I${PYTHON_PATH} $< -o $@
+
+clean:
+	rm -f ${BINDINGS_OBJS}
+	rm -f ${AST_OBJS}
+	rm -f ${VISITOR_OBJS}
+	find -name "*.pyc" | xargs rm -f
+
+depclean: clean
+	rm -f omega/_omega.so
+	rm -f omega/parser/ast/_ast.so
+	rm -f omega/parser/ast/visitor/_visitor.so

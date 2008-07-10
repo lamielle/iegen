@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+
+def set_options(opt):
+	opt.sub_options('omega')
+
+def configure(conf):
+	conf.sub_config('omega')
+
+def build(bld):
+	#This method doesnt appear to get called
+	raise Exception("I actually got called!")

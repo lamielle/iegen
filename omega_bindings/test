@@ -1,0 +1,1567 @@
+#!/usr/bin/env python
+
+from __future__ import with_statement
+import unittest
+from unittest import TestSuite,TestCase,defaultTestLoader,TextTestRunner
+from sys import argv
+
+#---------- Utility methods ----------
+def tuple_gen(num,from_string):
+	num=min(num,len(from_string))
+	chars=from_string[:num]
+	return (tuple(chars[:num]) for num in range(len(chars)+1))
+
+#Returns a generator that returns tuples in the following sequence:
+# () ('a',) ('a','b') ('a','b','c') ...
+# Up to a tuple of length min(num,len(lowercase))
+def lower_gen(num):
+	from string import lowercase
+	return tuple_gen(num,lowercase)
+
+#Returns a generator that returns tuples in the following sequence:
+# () ('A',) ('A','B') ('A','B','C') ...
+# Up to a tuple of length min(num,len(uppercase))
+def upper_gen(num):
+	from string import uppercase
+	return tuple_gen(num,uppercase)
+#--------------------------------------------------
+
+#---------- Test case classes ----------
+#Test importing of omega modules
+class ImportTestCase(TestCase):
+
+	#Test simple importing of the omega
+	def testOmegaImport(self):
+		try:
+			import omega
+		except Exception,e:
+			self.fail("'import omega' failed: "+str(e))
+
+	def testOmegaNameImport(self):
+		try:
+			from omega import TupleCollection,OldSet,OldRelation,TupleType,Var,FreeVar
+		except Exception,e:
+			self.fail("Importing classes from omega failed: "+str(e))
+
+	#Test simple importing of the parser module
+	def testParserImport(self):
+		try:
+			import omega.parser
+		except Exception,e:
+			self.fail("'import omega.parser' failed: "+str(e))
+
+	def testParserNameImport(self):
+		try:
+			from omega.parser import PresParser
+		except Exception,e:
+			self.fail("Importing classes from omega.parser failed: "+str(e))
+
+	#Test simple importing of the ast module
+	def testASTImport(self):
+		try:
+			import omega.parser.ast
+		except Exception,e:
+			self.fail("'import omega.parser.ast' failed: "+str(e))
+
+	def testASTNameImport(self):
+		try:
+			from omega.parser.ast import PresSet,PresRelation
+			from omega.parser.ast import PresVarTupleSet,PresVarTupleIn,PresVarTupleOut
+			from omega.parser.ast import PresVarID,PresVarUnnamed,PresVarRange,PresVarStride,PresVarExpr
+			from omega.parser.ast import PresConstrAnd,PresConstrOr,PresConstrNot,PresConstrForall,PresConstrExists
+			from omega.parser.ast import PresStmtEQ,PresStmtNEQ,PresStmtGT,PresStmtGTE,PresStmtLT,PresStmtLTE
+			from omega.parser.ast import PresExprInt,PresExprID,PresExprNeg,PresExprAdd,PresExprSub,PresExprMult,PresExprList,PresExprFunc,PresExprParen
+		except Exception,e:
+			self.fail("Importing classes from omega.parser.ast failed: "+str(e))
+
+	#Test simple importing of the visitor module
+	def testVisitorImport(self):
+		try:
+			import omega.parser.ast.visitor
+		except Exception,e:
+			self.fail("'import omega.parser.ast.visitor' failed: "+str(e))
+
+	def testVisitorNameImport(self):
+		try:
+			from omega.parser.ast.visitor import IPresVisitor,PresDepthFirstVisitor,PresReprVisitor
+		except Exception,e:
+			self.fail("Importing classes from omega.parser.ast.visitor failed: "+str(e))
+
+#Test OldSet functionality
+class OldSetTestCase(TestCase):
+
+	def check_name(self,pos,name,correct_name):
+		self.failUnless(name==correct_name,"Name '"+name+"' at position "+str(pos)+" does not match correct name '"+correct_name+"'")
+
+	def check_names(self,names,correct_names):
+		for pos in range(len(names)):
+			self.check_name(pos,names[pos],correct_names[pos])
+
+	#Test simple construction of an OldSet
+	def testOldSetConstruction(self):
+		from omega import OldSet
+		s=OldSet(1)
+		s=OldSet(0)
+		try:
+			s=OldSet(-100)
+			self.fail("Should not support creation of sets of arity <0")
+		except RuntimeError:pass
+		s=OldSet(100)
+
+	#Test arity of an OldSet
+	def testOldSetArity(self):
+		from omega import OldSet
+		for arity in range(102):
+			s=OldSet(arity)
+			self.failUnless(arity==s.arity())
+
+	#Test fancy constructors and corresponding arity
+	def testOldSetFancyConstructors(self):
+		from omega import OldSet
+		#Test single string constructor
+		s=OldSet("a")
+		self.failUnless(1==s.arity(),"OldSet('a').arity()="+str(s.arity())+" but should be 1")
+
+		#Test tuple of names constructor
+		for names in lower_gen(26):
+			s=OldSet(names)
+			self.failUnless(len(names)==s.arity(),"OldSet("+str(names)+").arity()="+str(s.arity())+" but should be "+str(len(names)))
+
+	#Test individual variable naming
+	def testOldSetManualNaming(self):
+		from omega import OldSet
+
+		for names in lower_gen(26):
+			arity=len(names)
+			s=OldSet(arity)
+			#Name the vars
+			for i in range(arity):
+				s.name(i+1,names[i])
+				self.check_name(i,s.name(i+1),names[i])
+			#Make sure the names are correct still
+			for i in range(arity):
+				self.check_name(i,s.name(i+1),names[i])
+			#Make sure the tuple of names matches as well
+			self.check_names(s.names(),names)
+
+	#Test tuple naming
+	def testOldSetTupleNaming(self):
+		from omega import OldSet
+
+		for names in lower_gen(26):
+			arity=len(names)
+			s=OldSet(arity)
+			#Name the vars
+			s.name(names)
+			#Make sure the names are correct
+			for i in range(arity):
+				self.check_name(i,s.name(i+1),names[i])
+			self.check_names(s.names(),names)
+
+	#Test constructor naming
+	def testOldSetConstructorNaming(self):
+		from omega import OldSet
+
+		for names in lower_gen(26):
+			arity=len(names)
+			s=OldSet(names)
+			#Make sure the names are correct
+			for i in range(arity):
+				self.check_name(i,s.name(i+1),names[i])
+			self.check_names(s.names(),names)
+
+	#Test variable renaming failure
+	def testOldSetRenaming(self):
+		from omega import OldSet
+
+		s=OldSet(("a","b"))
+		try:
+			s.name(2,"a")
+			self.fail("Renaming variable with another variable name should fail")
+		except RuntimeError:pass
+
+	#Test the with statement for automatically populating python variables
+	def testOldSetWithStatement(self):
+		from omega import OldSet
+
+		s=OldSet(("a","b"))
+		self.failIf("a" in globals(),"'a' variable should not be defined yet")
+		self.failIf("b" in globals(),"'b' variable should not be defined yet")
+
+		with s:
+			self.failUnless("a" in globals(),"'a' variable should be defined now")
+			self.failUnless("b" in globals(),"'b' variable should be defined now")
+			s.formula=((a==10)&(b==20))
+
+		self.failIf("a" in globals(),"'a' variable should not be defined anymore")
+		self.failIf("b" in globals(),"'b' variable should not be defined anymore")
+
+#Test OldRelation functionality
+class OldRelationTestCase(TestCase):
+
+	def check_name(self,pos,name,correct_name):
+		self.failUnless(name==correct_name,"Name '"+name+"' at position "+str(pos)+" does not match correct name '"+correct_name+"'")
+
+	def check_names(self,names,correct_names):
+		for pos in range(len(names)):
+			self.check_name(pos,names[pos],correct_names[pos])
+
+	#Test simple construction of an OldRelation
+	def testOldRelationConstruction(self):
+		from omega import OldRelation
+		r=OldRelation(1,1)
+		r=OldRelation(0,10)
+		r=OldRelation(0,7)
+		try:
+			r=OldRelation(1)
+			self.fail("OldRelations require an input and output arity")
+		except AssertionError,e:raise e
+		except Exception,e:pass
+		try:
+			r=OldRelation(-1,10)
+			self.fail("Should not support creation of sets with input or output arity <0")
+		except RuntimeError:pass
+		try:
+			r=OldRelation(7,-1)
+			self.fail("Should not support creation of sets with input or output arity <0")
+		except RuntimeError:pass
+		try:
+			r=OldRelation(-7,-100)
+			self.fail("Should not support creation of sets with input or output arity <0")
+		except RuntimeError:pass
+		r=OldRelation(10,10)
+		r=OldRelation(47,122)
+
+	#Test arities of an OldRelation
+	def testOldRelationArity(self):
+		from omega import OldRelation
+		for arity_in in range(102):
+			for arity_out in range(102):
+				r=OldRelation(arity_in,arity_out)
+				self.failUnless(arity_in==r.arity_in() and arity_out==r.arity_out(),"OldRelation("+str(arity_in)+","+str(arity_out)+").{in,out}_arity()=("+str(r.arity_in())+","+str(r.arity_out())+") but should be ("+str(arity_in)+","+str(arity_out)+")")
+
+	#Test fancy constructors and corresponding arity
+	def testOldRelationFancyConstructors(self):
+		from omega import OldRelation
+		#Test single string pair constructor
+		r=OldRelation("a","b")
+		self.failUnless(1==r.arity_in() and 1==r.arity_out(),"OldRelation('a','b').{in,out}_arity()=("+str(r.arity_in())+","+str(r.arity_out())+") but should be (1,1)")
+
+		#Test tuple of names constructor
+		for names_in in lower_gen(26):
+			for names_out in upper_gen(26):
+				r=OldRelation(names_in,names_out)
+				self.failUnless(len(names_in)==r.arity_in() and len(names_out)==r.arity_out(),"OldRelation("+str(names_in)+").arity()=("+str(r.arity_in())+","+str(r.arity_out())+") but should be ("+str(len(names_in))+","+str(len(names_out))+")")
+
+	#Test individual variable naming
+	def testOldRelationManualNaming(self):
+		from omega import OldRelation
+
+		for names_in in lower_gen(26):
+			arity_in=len(names_in)
+			for names_out in upper_gen(26):
+				arity_out=len(names_out)
+				r=OldRelation(arity_in,arity_out)
+				#Name the vars
+				for i in range(arity_in):
+					r.name_in(i+1,names_in[i])
+					self.check_name(i,r.name_in(i+1),names_in[i])
+				for i in range(arity_out):
+					r.name_out(i+1,names_out[i])
+					self.check_name(i,r.name_out(i+1),names_out[i])
+				#Make sure the names are correct still
+				for i in range(arity_in):
+					self.check_name(i,r.name_in(i+1),names_in[i])
+				for i in range(arity_out):
+					self.check_name(i,r.name_out(i+1),names_out[i])
+				self.check_names(r.names_in(),names_in)
+				self.check_names(r.names_out(),names_out)
+				self.check_names(r.names()[0],names_in)
+				self.check_names(r.names()[1],names_out)
+
+	#Test tuple naming
+	def testOldRelationTupleNaming(self):
+		from omega import OldRelation
+
+		for names_in in lower_gen(26):
+			arity_in=len(names_in)
+			for names_out in upper_gen(26):
+				arity_out=len(names_out)
+				r=OldRelation(arity_in,arity_out)
+				#Name the vars
+				r.name_in(names_in)
+				r.name_out(names_out)
+				#Make sure the names are correct still
+				for i in range(arity_in):
+					self.check_name(i,r.name_in(i+1),names_in[i])
+				for i in range(arity_out):
+					self.check_name(i,r.name_out(i+1),names_out[i])
+				self.check_names(r.names_in(),names_in)
+				self.check_names(r.names_out(),names_out)
+				self.check_names(r.names()[0],names_in)
+				self.check_names(r.names()[1],names_out)
+
+	#Test constructor naming
+	def testOldRelationConstructorNaming(self):
+		from omega import OldRelation
+
+		for names_in in lower_gen(26):
+			arity_in=len(names_in)
+			for names_out in upper_gen(26):
+				arity_out=len(names_out)
+				r=OldRelation(names_in,names_out)
+				#Make sure the names are correct still
+				for i in range(arity_in):
+					self.check_name(i,r.name_in(i+1),names_in[i])
+				for i in range(arity_out):
+					self.check_name(i,r.name_out(i+1),names_out[i])
+				self.check_names(r.names_in(),names_in)
+				self.check_names(r.names_out(),names_out)
+				self.check_names(r.names()[0],names_in)
+				self.check_names(r.names()[1],names_out)
+
+	#Test variable renaming failure
+	def testOldRelationRenaming(self):
+		from omega import OldRelation
+
+		r=OldRelation(("a","b"),("c","d"))
+		try:
+			r.name_in(2,"a")
+			self.fail("Renaming input variable with another input variable name should fail")
+		except RuntimeError:pass
+		try:
+			r.name_out(2,"c")
+			self.fail("Renaming output variable with another output variable name should fail")
+		except RuntimeError:pass
+		try:
+			r.name_in(1,"d")
+			self.fail("Renaming input variable with an output variable name name should fail")
+		except RuntimeError:pass
+		try:
+			r.name_out(1,"b")
+			self.fail("Renaming output variable with an input variable name name should fail")
+		except RuntimeError:pass
+
+	#Test the with statement for automatically populating python variables
+	def testOldRelationWithStatement(self):
+		from omega import OldRelation
+
+		r=OldRelation(("a","b"),("ap","bp"))
+		self.failIf("a" in globals(),"'a' variable should not be defined yet")
+		self.failIf("b" in globals(),"'b' variable should not be defined yet")
+		self.failIf("ap" in globals(),"'ap' variable should not be defined yet")
+		self.failIf("bp" in globals(),"'bp' variable should not be defined yet")
+		with r:
+			self.failUnless("a" in globals(),"'a' variable should be defined now")
+			self.failUnless("b" in globals(),"'b' variable should be defined now")
+			self.failUnless("ap" in globals(),"'ap' variable should be defined now")
+			self.failUnless("bp" in globals(),"'bp' variable should be defined now")
+			r.formula=((a==ap)&(b==bp))
+		self.failIf("a" in globals(),"'a' variable should not be defined anymore")
+		self.failIf("b" in globals(),"'b' variable should not be defined anymore")
+		self.failIf("ap" in globals(),"'ap' variable should not be defined anymore")
+		self.failIf("bp" in globals(),"'bp' variable should not be defined anymore")
+
+class VariableTestCase(TestCase):
+
+	def testVariableNames(self):
+		from omega import OldSet,OldRelation
+
+		s=OldSet(("a","b"))
+		a=s["a"]
+		b=s["b"]
+		fa=5*a
+		fb=5*b
+		self.failUnless(a.name()=="a","Incorrect variable name")
+		self.failUnless(b.name()=="b","Incorrect variable name")
+		self.failUnless(fa.name()=="a","Incorrect variable name")
+		self.failUnless(fb.name()=="b","Incorrect variable name")
+		r=OldRelation("a","b")
+		a=r["a"]
+		b=r["b"]
+		fa=5*a
+		fb=5*b
+		self.failUnless(a.name()=="a","Incorrect variable name")
+		self.failUnless(b.name()=="b","Incorrect variable name")
+		self.failUnless(fa.name()=="a","Incorrect variable name")
+		self.failUnless(fb.name()=="b","Incorrect variable name")
+
+class FormulaTestCase(TestCase):
+
+	def check_fvar(self,fvar,name,coeff,msg):
+		from omega import FVar
+
+		#Make sure the object given is actually an FVar
+		self.failUnless(isinstance(fvar,FVar),msg)
+		self.failUnless(fvar.name()==name,msg)
+		self.failUnless(fvar.coeff()==coeff,msg)
+
+	def check_fexpr(self,fexpr,name_coeff,const,msg):
+		from omega import FExpr
+
+		#Make sure the object given is actually an FExpr
+		self.failUnless(isinstance(fexpr,FExpr),msg)
+
+		#Gather the names of the FExpr's variables
+		fexpr_names=[]
+		for var in fexpr.vars():
+			fexpr_names.append(var.name())
+
+		#Make sure there are the same number of names as those given
+		self.failUnless(len(name_coeff)==len(fexpr_names),msg)
+
+		#Make sure the names match (This check assumes there are no duplicates as this is not allowed)
+		for name in name_coeff:
+			if not name in fexpr_names:
+				self.fail(msg)
+
+		#Make sure the coefficients match
+		for var in fexpr.vars():
+			self.failUnless(name_coeff[var.name()]==var.coeff(),msg)
+
+		#Finally, check that the FExpr constant value matches
+		self.failUnless(const==fexpr.const(),msg)
+
+	def check_fstmt(self,fstmt,stmt_type,name_coeff,const,msg):
+		from omega import FStmt
+
+		#Make sure the object given is actually an FStmt
+		self.failUnless(isinstance(fstmt,FStmt),msg)
+
+		#Make sure the statment is the correct type
+		self.failUnless(fstmt.type()==stmt_type,msg)
+
+		#Now just check the fexpr that this stmt contains
+		self.check_fexpr(fstmt.expr(),name_coeff,const,msg)
+
+	#Conjunction test
+	def check_fconj(self,fconj,conj_type,msg):
+		from omega import FConj
+
+		#Make sure the object given is actually an FConj
+		self.failUnless(isinstance(fconj,FConj),msg)
+
+		#Make sure the conjunction is the correct type
+		self.failUnless(fconj.type()==conj_type,msg)
+
+	#Test building formula variables (FVar) objects
+	def testFormulaVarBuilding(self):
+		from omega import OldRelation
+
+		r=OldRelation(("a","b"),("c","d"))
+		a=r["a"]; b=r["b"]; c=r["c"]; d=r["d"]
+
+		#Var*int and int*FVar
+		fvar=a*5
+		self.check_fvar(fvar,"a",5,"Var*5 should generate an FVar with coefficient 5")
+		fvar=5*a
+		self.check_fvar(fvar,"a",5,"5*Var should generate an FVar with coefficient 5")
+
+		#FVar*int and int*FVar
+		fvar=5*a
+		fvar=fvar*5
+		self.check_fvar(fvar,"a",25,"5*FVar with coefficient 5 should generate an FVar with coefficient 25")
+		fvar=5*a
+		fvar=5*fvar
+		self.check_fvar(fvar,"a",25,"FVar*5 with coefficient 5 should generate an FVar with coefficient 25")
+
+		#-Var and -FVar
+		fvar=-a
+		self.check_fvar(fvar,"a",-1,"-Var sould generate an FVar with coefficient -1")
+		fvar=5*a
+		fvar=-fvar
+		self.check_fvar(fvar,"a",-5,"-FVar with coefficient 5 should generate an FVar with coefficient -5")
+
+	#This test cases tests FExpr creation for 9 cases each with two operators: + -
+	def testFormulaExpressionBuilding(self):
+		from omega import OldRelation,FExpr
+
+		r=OldRelation(("a","b"),("c","d"))
+		a=r["a"]; b=r["b"]; c=r["c"]; d=r["d"]
+
+		#Var+-int and int+-Var
+		fexpr=a+5
+		self.check_fexpr(fexpr,{"a":1},5,"Var+5 should generate an FExpr with constant 5")
+		fexpr=5+a
+		self.check_fexpr(fexpr,{"a":1},5,"5+Var should generate an FExpr with constant 5")
+		fexpr=a-5
+		self.check_fexpr(fexpr,{"a":1},-5,"Var-5 should generate an FExpr with constant -5")
+		fexpr=5-a
+		self.check_fexpr(fexpr,{"a":-1},5,"5-Var should generate an FExpr with constant -5")
+
+		#FVar+-int and int+-FVar
+		fvar=5*a
+		fexpr=fvar+5
+		self.check_fexpr(fexpr,{"a":5},5,"FVar+5 should generate an FExpr with constant 5")
+		fexpr=5+fvar
+		self.check_fexpr(fexpr,{"a":5},5,"5+FVar should generate an FExpr with constant 5")
+		fexpr=fvar-5
+		self.check_fexpr(fexpr,{"a":5},-5,"FVar-5 should generate an FExpr with constant -5")
+		fexpr=5-fvar
+		self.check_fexpr(fexpr,{"a":-5},5,"5-FVar should generate an FExpr with constant -5")
+
+		#FExpr+-int and int+-FExpr
+		fexpr1=(5*a)+5
+		fexpr2=fexpr1+5
+		self.check_fexpr(fexpr2,{"a":5},10,"FExpr with constant 5+5 should generate an FExpr with constant 10")
+		fexpr2=5+fexpr1
+		self.check_fexpr(fexpr2,{"a":5},10,"5+FExpr with constant 5 should generate an FExpr with constant 10")
+		fexpr2=fexpr1-5
+		self.check_fexpr(fexpr2,{"a":5},0,"FExpr with constant 5-5 should generate an FExpr with constant 0")
+		fexpr2=5-fexpr1
+		self.check_fexpr(fexpr2,{"a":-5},0,"5-FExpr with constant 5 should generate an FExpr with constant 0")
+
+		#Var+-Var
+		fexpr=a+b
+		self.check_fexpr(fexpr,{"a":1,"b":1},0,"Var+Var should generate an FExpr with constant 0")
+		fexpr=a-b
+		self.check_fexpr(fexpr,{"a":1,"b":-1},0,"Var-Var should generate an FExpr with constant 0")
+
+		#FVar+-Var and Var+-FVar
+		fvar=5*a
+		fexpr=fvar+b
+		self.check_fexpr(fexpr,{"a":5,"b":1},0,"FVar+Var should generate an FExpr with constant 0")
+		fexpr=b+fvar
+		self.check_fexpr(fexpr,{"a":5,"b":1},0,"Var+FVar should generate an FExpr with constant 0")
+		fexpr=fvar-b
+		self.check_fexpr(fexpr,{"a":5,"b":-1},0,"FVar-Var should generate an FExpr with constant 0")
+		fexpr=b-fvar
+		self.check_fexpr(fexpr,{"a":-5,"b":1},0,"Var-FVar should generate an FExpr with constant 0")
+
+		#FExpr+-Var and Var+-FExpr
+		fexpr1=a+5
+		fexpr2=fexpr1+b
+		self.check_fexpr(fexpr2,{"a":1,"b":1},5,"FExpr with constant 5 +Var should generate an FExpr with constant 5")
+		fexpr2=b+fexpr1
+		self.check_fexpr(fexpr2,{"a":1,"b":1},5,"Var+FExpr with constant 5 should generate an FExpr with constant 5")
+		fexpr2=fexpr1-b
+		self.check_fexpr(fexpr2,{"a":1,"b":-1},5,"FExpr with constant 5 -Var should generate an FExpr with constant 5")
+		fexpr2=b-fexpr1
+		self.check_fexpr(fexpr2,{"a":-1,"b":1},-5,"Var-FExpr with constant 5 should generate an FExpr with constant -5")
+
+		#FVar+-FVar
+		fvar1=5*a
+		fvar2=7*b
+		fexpr=fvar1+fvar2
+		self.check_fexpr(fexpr,{"a":5,"b":7},0,"FVar+FVar should generate an FExpr with constant 0")
+		fexpr=fvar1-fvar2
+		self.check_fexpr(fexpr,{"a":5,"b":-7},0,"FVar-FVar should generate an FExpr with constant 0")
+
+		#FExpr+-FVar and FVar+-FExpr
+		fexpr1=a+5
+		fvar=5*b
+		fexpr2=fexpr1+fvar
+		self.check_fexpr(fexpr2,{"a":1,"b":5},5,"FExpr with constant 5 +FVar should generate an FExpr with constant 5")
+		fexpr2=fexpr1-fvar
+		self.check_fexpr(fexpr2,{"a":1,"b":-5},5,"FExpr with constant 5 -FVar should generate an FExpr with constant 5")
+		fexpr2=fvar+fexpr1
+		self.check_fexpr(fexpr2,{"a":1,"b":5},5,"FVar+FExpr with constant 5 should generate an FExpr with constant 5")
+		fexpr2=fvar-fexpr1
+		self.check_fexpr(fexpr2,{"a":-1,"b":5},-5,"FVar-FExpr with constant 5 should generate an FExpr with constant -5")
+
+		#FExpr+-FExpr
+		fexpr1=a+5
+		fexpr2=b+5
+		fexpr3=fexpr1+fexpr2
+		self.check_fexpr(fexpr3,{"a":1,"b":1},10,"FExpr with constant 5 + FExpr with constant 5 should generate an FExpr with constant 10")
+		fexpr3=fexpr1-fexpr2
+		self.check_fexpr(fexpr3,{"a":1,"b":-1},0,"FExpr with constant 5 - FExpr with constant 5 should generate an FExpr with constant 0")
+
+		#FExpr*int and int*FExpr
+		fexpr1=((5*a)+(6*b))+7
+		self.check_fexpr(fexpr1,{"a":5,"b":6},7,"(FVar+FVar)+7 should generate an FExpr with constant 7")
+		fexpr2=fexpr1*5
+		self.check_fexpr(fexpr2,{"a":25,"b":30},35,"FExpr with constant 7*5 should generate an FExpr with constant 35")
+		fexpr2=5*fexpr1
+		self.check_fexpr(fexpr2,{"a":25,"b":30},35,"5*FExpr with constant 7 should generate an FExpr with constant 35")
+		fexpr2=fexpr1*-5
+		self.check_fexpr(fexpr2,{"a":-25,"b":-30},-35,"FExpr with constant 7*-5 should generate an FExpr with constant -35")
+		fexpr2=-5*fexpr1
+		self.check_fexpr(fexpr2,{"a":-25,"b":-30},-35,"-5*FExpr with constant 7 should generate an FExpr with constant -35")
+
+		#-FExpr
+		fexpr=5*a+6*b+7
+		fexpr=-fexpr
+		self.check_fexpr(fexpr,{"a":-5,"b":-6},-7,"-FExpr with constant 7 should generate an FExpr with constant -7")
+
+	#This test case tests FStmt creation for 9 cases each with 5 operators: == > < >= <=
+	def testFormulaStatementBuilding(self):
+		from omega import OldRelation,StmtType
+
+		r=OldRelation(("a","b"),("c","d"))
+		a=r["a"]; b=r["b"]; c=r["c"]; d=r["d"]
+
+		#Var op int and int op Var
+		fstmt=a==5
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":1},-5,"Var==5 should generate an EQ FStmt")
+		fstmt=5==a
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":1},-5,"5==Var should generate an EQ FStmt")
+
+		fstmt=a>5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":1},-6,"Var>5 should generate a GEQ FStmt")
+		fstmt=5<a
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":1},-6,"5<Var should generate a GEQ FStmt")
+
+		fstmt=-5>a
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-1},-6,"-5>Var should generate a GEQ FStmt")
+		fstmt=a<-5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-1},-6,"Var<-5 should generate a GEQ FStmt")
+
+		fstmt=a>=5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":1},-5,"Var>=5 should generate a GEQ FStmt")
+		fstmt=5<=a
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":1},-5,"5<=Var should generate a GEQ FStmt")
+
+		fstmt=-5>=a
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-1},-5,"5>=Var should generate a GEQ FStmt")
+		fstmt=a<=-5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-1},-5,"Var<=5 should generate a GEQ FStmt")
+
+		#FVar op int
+		fvar=5*a
+		fstmt=fvar==5
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5},-5,"FVar==5 should generate an EQ FStmt")
+		fstmt=5==fvar
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5},-5,"5==FVar should generate an EQ FStmt")
+
+		fstmt=fvar>5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5},-6,"FVar>5 should generate a GEQ FStmt")
+		fstmt=5<fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5},-6,"5<FVar should generate a GEQ FStmt")
+
+		fstmt=-5>fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5},-6,"-5>FVar should generate a GEQ FStmt")
+		fstmt=fvar<-5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5},-6,"FVar<-5 should generate a GEQ FStmt")
+
+		fstmt=fvar>=5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5},-5,"FVar>=5 should generate a GEQ FStmt")
+		fstmt=5<=fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5},-5,"5<=FVar should generate a GEQ FStmt")
+
+		fstmt=-5>=fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5},-5,"5>=FVar should generate a GEQ FStmt")
+		fstmt=fvar<=-5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5},-5,"FVar<=5 should generate a GEQ FStmt")
+
+		#FExpr op int
+		fexpr=(5*a)+7
+		fstmt=fexpr==5
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5},2,"FExpr==5 should generate an EQ FStmt")
+		fstmt=5==fexpr
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5},2,"5==FExpr should generate an EQ FStmt")
+
+		fstmt=fexpr>5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5},1,"FExpr>5 should generate a GEQ FStmt")
+		fstmt=5<fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5},1,"5<FExpr should generate a GEQ FStmt")
+
+		fstmt=-5>fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5},-13,"-5>FExpr should generate a GEQ FStmt")
+		fstmt=fexpr<-5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5},-13,"FExpr<-5 should generate a GEQ FStmt")
+
+		fstmt=fexpr>=5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5},2,"FExpr>=5 should generate a GEQ FStmt")
+		fstmt=5<=fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5},2,"5<=FExpr should generate a GEQ FStmt")
+
+		fstmt=-5>=fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5},-12,"5>=FExpr should generate a GEQ FStmt")
+		fstmt=fexpr<=-5
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5},-12,"FExpr<=5 should generate a GEQ FStmt")
+
+		#Var op Var
+		fstmt=a==b
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":1,"b":-1},0,"Var==Var should generate an EQ FStmt")
+		fstmt=a>b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":1,"b":-1},-1,"Var>Var should generate a GEQ FStmt")
+		fstmt=a<b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-1,"b":1},-1,"Var<Var should generate a GEQ FStmt")
+		fstmt=a>=b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":1,"b":-1},0,"Var>=Var should generate a GEQ FStmt")
+		fstmt=a<=b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-1,"b":1},0,"Var<=Var should generate a GEQ FStmt")
+
+		#FVar op Var
+		fvar=5*a
+		fstmt=fvar==b
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5,"b":-1},0,"FVar==Var should generate an EQ FStmt")
+		fstmt=b==fvar
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5,"b":-1},0,"Var==FVar should generate an EQ FStmt")
+
+		fstmt=fvar>b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-1},-1,"FVar>Var should generate a GEQ FStmt")
+		fstmt=b<fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-1},-1,"Var<FVar should generate a GEQ FStmt")
+
+		fstmt=b>fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":1},-1,"Var>FVar should generate a GEQ FStmt")
+		fstmt=fvar<b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":1},-1,"FVar<Var should generate a GEQ FStmt")
+
+		fstmt=fvar>=b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-1},0,"FVar>=Var should generate a GEQ FStmt")
+		fstmt=b<=fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-1},0,"Var<=FVar should generate a GEQ FStmt")
+
+		fstmt=b>=fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":1},0,"Var>=FVar should generate a GEQ FStmt")
+		fstmt=fvar<=b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":1},0,"FVar<=Var should generate a GEQ FStmt")
+
+		#FExpr op Var
+		fexpr=(5*a)+7
+		fstmt=fexpr==b
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5,"b":-1},7,"FExpr==Var should generate an EQ FStmt")
+		fstmt=b==fexpr
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5,"b":-1},7,"Var==FExpr should generate an EQ FStmt")
+
+		fstmt=fexpr>b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-1},6,"FExpr>Var should generate a GEQ FStmt")
+		fstmt=b<fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-1},6,"Var<FExpr should generate a GEQ FStmt")
+
+		fstmt=b>fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":1},-8,"Var>FExpr should generate a GEQ FStmt")
+		fstmt=fexpr<b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":1},-8,"FExpr<Var should generate a GEQ FStmt")
+
+		fstmt=fexpr>=b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-1},7,"FExpr>=Var should generate a GEQ FStmt")
+		fstmt=b<=fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-1},7,"Var<=FExpr should generate a GEQ FStmt")
+
+		fstmt=b>=fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":1},-7,"Var>=FExpr should generate a GEQ FStmt")
+		fstmt=fexpr<=b
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":1},-7,"FExpr<=Var should generate a GEQ FStmt")
+
+		#FVar op FVar
+		fvar1=5*a
+		fvar2=7*b
+		fstmt=fvar1==fvar2
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5,"b":-7},0,"FVar==FVar should generate an EQ FStmt")
+		fstmt=fvar1>fvar2
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-7},-1,"FVar>FVar should generate a GEQ FStmt")
+		fstmt=fvar1<fvar2
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":7},-1,"FVar<FVar should generate a GEQ FStmt")
+		fstmt=fvar1>=fvar2
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-7},0,"FVar>=FVar should generate a GEQ FStmt")
+		fstmt=fvar1<=fvar2
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":7},0,"FVar<=FVar should generate a GEQ FStmt")
+
+		#FExpr op FVar
+		fexpr=(5*a)+7
+		fvar=7*b
+		fstmt=fexpr==fvar
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5,"b":-7},7,"FExpr==Var should generate an EQ FStmt")
+		fstmt=fvar==fexpr
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5,"b":-7},7,"Var==FExpr should generate an EQ FStmt")
+
+		fstmt=fexpr>fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-7},6,"FExpr>Var should generate a GEQ FStmt")
+		fstmt=fvar<fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-7},6,"Var<FExpr should generate a GEQ FStmt")
+
+		fstmt=fvar>fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":7},-8,"Var>FExpr should generate a GEQ FStmt")
+		fstmt=fexpr<fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":7},-8,"FExpr<Var should generate a GEQ FStmt")
+
+		fstmt=fexpr>=fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-7},7,"FExpr>=Var should generate a GEQ FStmt")
+		fstmt=fvar<=fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-7},7,"Var<=FExpr should generate a GEQ FStmt")
+
+		fstmt=fvar>=fexpr
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":7},-7,"Var>=FExpr should generate a GEQ FStmt")
+		fstmt=fexpr<=fvar
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":7},-7,"FExpr<=Var should generate a GEQ FStmt")
+
+		#FExpr op FExpr
+		fexpr1=(5*a)+5
+		fexpr2=(7*b)+7
+		fstmt=fexpr1==fexpr2
+		self.check_fstmt(fstmt,StmtType.EQ,{"a":5,"b":-7},-2,"FExpr==FExpr should generate an EQ FStmt")
+		fstmt=fexpr1>fexpr2
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-7},-3,"FExpr>FExpr should generate a GEQ FStmt")
+		fstmt=fexpr1<fexpr2
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":7},1,"FExpr<FExpr should generate a GEQ FStmt")
+		fstmt=fexpr1>=fexpr2
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":5,"b":-7},-2,"FExpr>=FExpr should generate a GEQ FStmt")
+		fstmt=fexpr1<=fexpr2
+		self.check_fstmt(fstmt,StmtType.GEQ,{"a":-5,"b":7},2,"FExpr<=FExpr should generate a GEQ FStmt")
+
+	#This test case tests FConj creation for 3 cases with two operators each: & |
+	#Also, != is tested  as it generates an FConj as well
+	def testFormulaConjunctionBuilding(self):
+		from omega import OldRelation,ConjType,StmtType
+
+		r=OldRelation(("a","b"),("c","d"))
+		a=r["a"]; b=r["b"]; c=r["c"]; d=r["d"]
+
+		#---------- | & Tests ----------
+		#FStmt|FStmt and FStmt&FStmt
+		fstmt1=(a+5)>=0
+		fstmt2=((5*b)+7)==0
+		fconj=fstmt1|fstmt2
+		self.check_fconj(fconj,ConjType.Or,"FStmt|FStmt should generate an OR FConj")
+		fconj=fstmt2&fstmt1
+		self.check_fconj(fconj,ConjType.And,"FStmt&FStmt should generate an AND FConj")
+
+		#FConj|FStmt and FStmt|FConj
+		fconj1=(((5*a)+5==0)&(a+b==0))
+		fstmt=(a+5)>=0
+		fconj2=fconj1|fstmt
+		self.check_fconj(fconj2,ConjType.Or,"FConj|FStmt should generate an OR FConj")
+		fconj2=fstmt|fconj1
+		self.check_fconj(fconj2,ConjType.Or,"FStmt|FConj should generate an OR FConj")
+
+		#FConj&FStmt and FStmt&FConj
+		fconj1=(((5*a)+5==0)&(a+b==0))
+		fstmt=(a+5)>=0
+		fconj2=fconj1&fstmt
+		self.check_fconj(fconj2,ConjType.And,"FConj&FStmt should generate an AND FConj")
+		fconj2=fstmt&fconj1
+		self.check_fconj(fconj2,ConjType.And,"FStmt&FConj should generate an AND FConj")
+
+		#FConj|FConj and FConj&FConj
+		fconj1=(((5*a)+5==0)&(a+b==0))
+		fconj2=(((6*a)+6==0)&(a+b==0))
+		fconj3=fconj1|fconj2
+		self.check_fconj(fconj3,ConjType.Or,"FConj|FConj should generate an OR FConj")
+		fconj3=fconj1&fconj2
+		self.check_fconj(fconj3,ConjType.And,"FConj&FConj should generate an AND FConj")
+
+		#---------- != Tests ----------
+		#Var!=int
+		fconj=a!=5
+		self.check_fconj(fconj,ConjType.Or,"Var!=int should generate an AND FConj")
+		fconj=5!=a
+		self.check_fconj(fconj,ConjType.Or,"Var!=int should generate an AND FConj")
+
+		#FVar!=int
+		fvar=5*a
+		fconj=fvar!=5
+		self.check_fconj(fconj,ConjType.Or,"FVar!=int should generate an AND FConj")
+		fconj=5!=fvar
+		self.check_fconj(fconj,ConjType.Or,"int!=FVar should generate an AND FConj")
+
+		#FExpr!=int
+		fexpr=5*a+7
+		fconj=fexpr!=5
+		self.check_fconj(fconj,ConjType.Or,"FExpr!=int should generate an AND FConj")
+		fconj=5!=fexpr
+		self.check_fconj(fconj,ConjType.Or,"int!=FExpr should generate an AND FConj")
+
+		#Var!=Var
+		fconj=a!=b
+		self.check_fconj(fconj,ConjType.Or,"Var!=Var should generate an AND FConj")
+
+		#FVar!=Var
+		fvar=5*a
+		fconj=fvar!=b
+		self.check_fconj(fconj,ConjType.Or,"FVar!=Var should generate an AND FConj")
+		fconj=5!=fvar
+		self.check_fconj(fconj,ConjType.Or,"Var!=FVar should generate an AND FConj")
+
+		#FExpr!=Var
+		fexpr=5*a+7
+		fconj=fexpr!=b
+		self.check_fconj(fconj,ConjType.Or,"FExpr!=Var should generate an AND FConj")
+		fconj=b!=fexpr
+		self.check_fconj(fconj,ConjType.Or,"Var!=FExpr should generate an AND FConj")
+
+		#FVar!=FVar
+		fvar1=5*a
+		fvar2=7*b
+		fconj=fvar1!=fvar2
+		self.check_fconj(fconj,ConjType.Or,"FVar!=FVar should generate an AND FConj")
+
+		#FExpr!=FVar
+		fexpr=5*a+7
+		fvar=7*b
+		fconj=fexpr!=fvar
+		self.check_fconj(fconj,ConjType.Or,"FExpr!=FVar should generate an AND FConj")
+		fconj=fvar!=fexpr
+		self.check_fconj(fconj,ConjType.Or,"FVar!=FExpr should generate an AND FConj")
+
+		#FExpr!=FExpr
+		fexpr1=5*a+7
+		fexpr2=7*a+5
+		fconj=fexpr!=fexpr
+		self.check_fconj(fconj,ConjType.Or,"FExpr!=FExpr should generate an AND FConj")
+
+class TransformationsTestCase(TestCase):
+
+	def testScale(self):
+		from omega import OldSet,OldRelation
+
+		max_range=11
+
+		#Make sure we can actually create the scaling transformations
+		for dim in range(1,26):
+			for factor in range(1,max_range):
+				r=OldRelation.scale(dim,factor)
+
+		#Make sure strange dimension values are not allowed
+		try:
+			OldRelation.scale(0,2)
+			self.fail("0 should not be a valid scale dimension")
+		except RuntimeError: pass
+		try:
+			OldRelation.scale(-10,5)
+			self.fail("-10 should not be a vaild scale dimension")
+		except RuntimeError: pass
+
+		#Test that they actually do what they should
+		orig_tuples=((1,1),(1,2),(1,3),(2,1),(2,2),(2,3),(3,1),(3,2),(3,3))
+		for factor in range(1,max_range):
+			#Generate scaled tuples for this scaling factor
+			scaled_tuples=()
+			for t in orig_tuples:
+				scaled_tuples=scaled_tuples+((t[0]*factor,t[1]*factor),)
+
+			#Create the set
+			s=OldSet(("a","b"))
+			with s: s.formula=((1<=a)&(a<=3)&(1<=b)&(b<=3))
+
+			#Make sure things are sane initially
+			count=0
+			for t in s:
+				self.failUnless(t in orig_tuples,"Tuple '"+str(t)+"' is not in original tuple collection")
+				count=count+1
+			self.failUnless(count==len(orig_tuples),"Number of tuples in set is different from length of original tuple collection")
+
+			#Apply the transformation
+			s.apply(OldRelation.scale(2,factor))
+
+			#Make sure the scaling worked properly
+			count=0
+			for t in s:
+				self.failUnless(t in scaled_tuples,"Tuple '"+str(t)+"' is not in scaled tuple collection")
+				count=count+1
+			self.failUnless(count==len(orig_tuples),"Number of tuples in scaled set is different from length of scaled tuple collection")
+
+	def testSkew(self):
+		from omega import OldRelation,OldSet
+
+		max_range=11
+
+		#Make sure we can actually create the skewing transformations
+		for dim in range(2,11):
+			for skew in range(1,dim+1):
+				for base in range(1,dim+1):
+					for factor in range(1,max_range):
+						r=OldRelation.skew(dim,skew,base,factor)
+
+		#Make sure strange dimension values are not allowed
+		try:
+			r=OldRelation.skew(0,1,2,1)
+			self.fail("0 should not be accepted as a skew dimension")
+		except RuntimeError: pass
+		try:
+			r=OldRelation.skew(1,1,2,1)
+			self.fail("1 should not be accepted as a skew dimension")
+		except RuntimeError: pass
+		try:
+			r=OldRelation.skew(2,0,1,1)
+			self.fail("0 should not be accepted as a skew dimension")
+		except RuntimeError: pass
+		try:
+			r=OldRelation.skew(2,1,0,1)
+			self.fail("0 should not be accepted as a skew dimension")
+		except RuntimeError: pass
+		try:
+			r=OldRelation.skew(2,3,1,1)
+			self.fail("3 should not be accepted as a skew dimension when the transformation dimension is 2")
+		except RuntimeError: pass
+		try:
+			r=OldRelation.skew(2,1,4,1)
+			self.fail("4 should not be accepted as a skew dimension when the transformation dimension is 2")
+		except RuntimeError: pass
+
+		#Make sure the skewing works properly
+		orig_tuples=((1,1),(1,2),(1,3),(2,1),(2,2),(2,3),(3,1),(3,2),(3,3))
+		for factor in range(0,max_range):
+			#Generate skewed tuples for this skewing
+			skewed_tuples=()
+			for t in orig_tuples:
+				skewed_tuples=skewed_tuples+((t[0],t[0]*factor+t[1]),)
+
+			s=OldSet(("a","b"))
+			with s: s.formula=((1<=a)&(a<=3)&(1<=b)&(b<=3))
+
+			#Make sure things are sane initially
+			count=0
+			for t in s:
+				self.failUnless(t in orig_tuples,"Tuple '"+str(t)+"' is not in original tuple collection")
+				count=count+1
+			self.failUnless(count==len(orig_tuples),"Number of tuples in set is different from length of original tuple collection")
+
+			#Apply the transformation
+			#Skew transformation with dimension 2, skewing dimension 2, with base dimension 1, and a factor of 'factor'
+			s.apply(OldRelation.skew(2,2,1,factor))
+
+			#Make sure the skewing worked properly
+			count=0
+			for t in s:
+				self.failUnless(t in skewed_tuples,"Tuple '"+str(t)+"' is not in skewed tuple collection")
+				count=count+1
+			self.failUnless(count==len(orig_tuples),"Number of tuples in skewed set is different from length of skewed tuple collection")
+
+#Test AST Node construction and printing
+class ASTNodeTestCase(TestCase):
+
+	def testASTNodeNames(self):
+		from omega.parser.ast import PresExprInt,PresExprID,PresExprNeg,PresExprAdd,PresExprSub,PresExprMult,PresExprList,PresExprFunc,PresExprParen
+		from omega.parser.ast import PresVarID,PresVarUnnamed,PresVarRange,PresVarStride,PresVarExpr
+		from omega.parser.ast import PresVarTupleSet,PresVarTupleIn,PresVarTupleOut
+		from omega.parser.ast import PresStmtEQ,PresStmtNEQ,PresStmtGT,PresStmtGTE,PresStmtLT,PresStmtLTE
+		from omega.parser.ast import PresConstrAnd,PresConstrOr,PresConstrNot,PresConstrExists,PresConstrForall,PresConstrParen
+		from omega.parser.ast import PresSet,PresRelation
+
+		e1=PresExprInt.new(1)
+		e2=PresExprInt.new(2)
+		e10=PresExprInt.new(10)
+		self.failUnless("PresExprInt"==PresExprInt.new(10).name())
+		self.failUnless("PresExprID"==PresExprID.new('a').name())
+		self.failUnless("PresExprNeg"==PresExprNeg.new(e10).name())
+		self.failUnless("PresExprAdd"==PresExprAdd.new(e1,e10).name())
+		self.failUnless("PresExprSub"==PresExprSub.new(e1,e10).name())
+		self.failUnless("PresExprMult"==PresExprMult.new(e1,e10).name())
+		self.failUnless("PresExprList"==PresExprList.new((e1,e10)).name())
+		self.failUnless("PresExprFunc"==PresExprFunc.new(PresVarID.new('f'),(PresVarID.new('x'),)).name())
+		self.failUnless("PresExprParen"==PresExprParen.new(e10).name())
+
+		self.failUnless("PresVarID"==PresVarID.new('a').name())
+		self.failUnless("PresVarUnnamed"==PresVarUnnamed.new().name())
+		self.failUnless("PresVarRange"==PresVarRange.new(e1,e10).name())
+		self.failUnless("PresVarStride"==PresVarStride.new(e1,e10,e2).name())
+		self.failUnless("PresVarExpr"==PresVarExpr.new(e10).name())
+
+		self.failUnless("PresVarTupleSet"==PresVarTupleSet.new(()).name())
+		self.failUnless("PresVarTupleIn"==PresVarTupleIn.new(()).name())
+		self.failUnless("PresVarTupleOut"==PresVarTupleOut.new(()).name())
+
+		self.failUnless("PresStmtEQ"==PresStmtEQ.new(e1,e10).name())
+		self.failUnless("PresStmtNEQ"==PresStmtNEQ.new(e1,e10).name())
+		self.failUnless("PresStmtGT"==PresStmtGT.new(e1,e10).name())
+		self.failUnless("PresStmtGTE"==PresStmtGTE.new(e1,e10).name())
+		self.failUnless("PresStmtLT"==PresStmtLT.new(e1,e10).name())
+		self.failUnless("PresStmtLTE"==PresStmtLTE.new(e1,e10).name())
+
+		s=PresStmtEQ.new(e1,e10)
+		c=PresConstrAnd.new((),())
+		self.failUnless("PresConstrAnd"==PresConstrAnd.new((),()).name())
+		self.failUnless("PresConstrOr"==PresConstrOr.new((),()).name())
+		self.failUnless("PresConstrNot"==PresConstrNot.new(c).name())
+		self.failUnless("PresConstrForall"==PresConstrForall.new((),c).name())
+		self.failUnless("PresConstrExists"==PresConstrExists.new((),c).name())
+		self.failUnless("PresConstrParen"==PresConstrParen.new(c).name())
+
+		self.failUnless("PresSet"==PresSet.new(PresVarTupleSet.new(()),c).name())
+		self.failUnless("PresRelation"==PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new(()),c).name())
+
+	def testExpressionNodes(self):
+		from omega.parser.ast import PresExprInt,PresExprID,PresExprNeg,PresExprAdd,PresExprSub,PresExprMult,PresExprList,PresExprFunc,PresExprParen
+		from omega.parser.ast import PresVarID
+
+		self.failUnless('10'==str(PresExprInt.new(10)))
+		self.failUnless('abcd'==str(PresExprID.new('abcd')))
+		self.failUnless('-6'==str(PresExprNeg.new(PresExprInt.new(6))))
+		self.failUnless('-a'==str(PresExprNeg.new(PresExprID.new('a'))))
+		self.failUnless('7+wxyz'==str(PresExprAdd.new(PresExprInt.new(7),PresExprID.new('wxyz'))))
+		self.failUnless('ab-23'==str(PresExprSub.new(PresExprID.new('ab'),PresExprInt.new(23))))
+		self.failUnless('rst*23'==str(PresExprMult.new(PresExprID.new('rst'),PresExprInt.new(23))))
+		self.failUnless(''==str(PresExprList.new(())))
+		self.failUnless('a'==str(PresExprList.new(((PresExprID.new('a'),)))))
+		self.failUnless('a,9'==str(PresExprList.new(((PresExprID.new('a'),PresExprInt.new(9))))))
+		self.failUnless('b,10,y'==str(PresExprList.new(((PresExprID.new('b'),PresExprInt.new(10),PresExprID.new('y'))))))
+		self.failUnless('func0()'==str(PresExprFunc.new(PresVarID.new('func0'),())))
+		self.failUnless('func1(arg1)'==str(PresExprFunc.new(PresVarID.new('func1'),(PresVarID.new('arg1'),))))
+		self.failUnless('func2(arg1,arg2)'==str(PresExprFunc.new(PresVarID.new('func2'),(PresVarID.new('arg1'),PresVarID.new('arg2')))))
+		self.failUnless('func3(arg1,arg2,arg3)'==str(PresExprFunc.new(PresVarID.new('func3'),(PresVarID.new('arg1'),PresVarID.new('arg2'),PresVarID.new('arg3')))))
+		self.failUnless('(a)'==str(PresExprParen.new(PresExprID.new('a'))))
+		self.failUnless('(8)'==str(PresExprParen.new(PresExprInt.new(8))))
+		self.failUnless('-(6)'==str(PresExprNeg.new(PresExprParen.new(PresExprInt.new(6)))))
+		self.failUnless('-(6+a)'==str(PresExprNeg.new(PresExprParen.new(PresExprAdd.new(PresExprInt.new(6),PresExprID.new('a'))))))
+		self.failUnless('--10+5'==str(PresExprNeg.new(PresExprAdd.new(PresExprNeg.new(PresExprInt.new(10)),PresExprInt.new(5)))))
+		self.failUnless('10+a-5*6'==str(PresExprAdd.new(PresExprInt.new(10),PresExprSub.new(PresExprID.new('a'),PresExprMult.new(PresExprInt.new(5),PresExprInt.new(6))))))
+		self.failUnless('-(-10+5)'==str(PresExprNeg.new(PresExprParen.new(PresExprAdd.new(PresExprNeg.new(PresExprInt.new(10)),PresExprInt.new(5))))))
+		self.failUnless('(10+a-5)*6'==str(PresExprMult.new(PresExprParen.new(PresExprAdd.new(PresExprInt.new(10),PresExprSub.new(PresExprID.new('a'),PresExprInt.new(5)))),PresExprInt.new(6))))
+		self.failUnless('((10+a)-5)*6'==str(PresExprMult.new(PresExprParen.new(PresExprSub.new(PresExprParen.new(PresExprAdd.new(PresExprInt.new(10),PresExprID.new('a'))),PresExprInt.new(5))),PresExprInt.new(6))))
+
+	def testVariableTupleNodes(self):
+		from omega.parser.ast import PresVarTupleSet,PresVarTupleIn,PresVarTupleOut
+		from omega.parser.ast import PresVarID
+
+		self.failUnless(''==str(PresVarTupleSet.new(())))
+		self.failUnless('a'==str(PresVarTupleSet.new((PresVarID.new('a'),))))
+		self.failUnless('a,b'==str(PresVarTupleSet.new((PresVarID.new('a'),PresVarID.new('b')))))
+		self.failUnless('a,b,c'==str(PresVarTupleSet.new((PresVarID.new('a'),PresVarID.new('b'),PresVarID.new('c')))))
+
+		self.failUnless(''==str(PresVarTupleIn.new(())))
+		self.failUnless('a'==str(PresVarTupleIn.new((PresVarID.new('a'),))))
+		self.failUnless('a,b'==str(PresVarTupleIn.new((PresVarID.new('a'),PresVarID.new('b')))))
+		self.failUnless('a,b,c'==str(PresVarTupleIn.new((PresVarID.new('a'),PresVarID.new('b'),PresVarID.new('c')))))
+
+		self.failUnless(''==str(PresVarTupleOut.new(())))
+		self.failUnless('a'==str(PresVarTupleOut.new((PresVarID.new('a'),))))
+		self.failUnless('a,b'==str(PresVarTupleOut.new((PresVarID.new('a'),PresVarID.new('b')))))
+		self.failUnless('a,b,c'==str(PresVarTupleOut.new((PresVarID.new('a'),PresVarID.new('b'),PresVarID.new('c')))))
+
+	def testVariableNodes(self):
+		from omega.parser.ast import PresVarID,PresVarUnnamed,PresVarRange,PresVarStride,PresVarExpr
+		from omega.parser.ast import PresExprInt,PresExprID
+
+		self.failUnless('var'==str(PresVarID.new('var')))
+		self.failUnless('*'==str(PresVarUnnamed.new()))
+		self.failUnless('1:10'==str(PresVarRange.new(PresExprInt.new(1),PresExprInt.new(10))))
+		self.failUnless('1:10:2'==str(PresVarStride.new(PresExprInt.new(1),PresExprInt.new(10),PresExprInt.new(2))))
+		self.failUnless('a'==str(PresVarExpr.new(PresExprID.new('a'))))
+
+	def testStatementNodes(self):
+		from omega.parser.ast import PresStmtEQ,PresStmtNEQ,PresStmtGT,PresStmtGTE,PresStmtLT,PresStmtLTE
+		from omega.parser.ast import PresExprInt,PresExprID,PresExprList
+
+		self.failUnless('5=10'==str(PresStmtEQ.new(PresExprInt.new(5),PresExprInt.new(10))))
+		self.failUnless('5!=10'==str(PresStmtNEQ.new(PresExprInt.new(5),PresExprInt.new(10))))
+		self.failUnless('5>10'==str(PresStmtGT.new(PresExprInt.new(5),PresExprInt.new(10))))
+		self.failUnless('5>=10'==str(PresStmtGTE.new(PresExprInt.new(5),PresExprInt.new(10))))
+		self.failUnless('5<10'==str(PresStmtLT.new(PresExprInt.new(5),PresExprInt.new(10))))
+		self.failUnless('5<=10'==str(PresStmtLTE.new(PresExprInt.new(5),PresExprInt.new(10))))
+
+		self.failUnless('5=10=5'==str(PresStmtEQ.new(PresExprInt.new(5),PresStmtEQ.new(PresExprInt.new(10),PresExprInt.new(5)))))
+		self.failUnless('5!=10!=5'==str(PresStmtNEQ.new(PresExprInt.new(5),PresStmtNEQ.new(PresExprInt.new(10),PresExprInt.new(5)))))
+		self.failUnless('5>10>5'==str(PresStmtGT.new(PresExprInt.new(5),PresStmtGT.new(PresExprInt.new(10),PresExprInt.new(5)))))
+		self.failUnless('5>=10>=5'==str(PresStmtGTE.new(PresExprInt.new(5),PresStmtGTE.new(PresExprInt.new(10),PresExprInt.new(5)))))
+		self.failUnless('5<10<5'==str(PresStmtLT.new(PresExprInt.new(5),PresStmtLT.new(PresExprInt.new(10),PresExprInt.new(5)))))
+		self.failUnless('5<=10<=5'==str(PresStmtLTE.new(PresExprInt.new(5),PresStmtLTE.new(PresExprInt.new(10),PresExprInt.new(5)))))
+
+		self.failUnless('1<=a,b<=10'==str(PresStmtLTE.new(PresExprInt.new(1),PresStmtLTE.new(PresExprList.new((PresExprID.new('a'),PresExprID.new('b'))),PresExprInt.new(10)))))
+
+	def testConstraintNodes(self):
+		from omega.parser.ast import PresConstrAnd,PresConstrOr,PresConstrNot,PresConstrExists,PresConstrForall,PresConstrParen
+		from omega.parser.ast import PresVarID
+		from omega.parser.ast import PresExprInt
+		from omega.parser.ast import PresStmtEQ,PresStmtNEQ
+
+		s1=PresStmtEQ.new(PresExprInt.new(5),PresExprInt.new(10))
+		s2=PresStmtNEQ.new(PresExprInt.new(5),PresExprInt.new(10))
+		c1=PresConstrAnd.new((),(s1,s2))
+		c2=PresConstrOr.new((),(s2,s1))
+
+		self.failUnless(''==str(PresConstrAnd.new((),())))
+		self.failUnless('5=10 AND 5!=10'==str(PresConstrAnd.new((c1,),())))
+		self.failUnless('5=10'==str(PresConstrAnd.new((),(s1,))))
+		self.failUnless('5=10 AND 5!=10 AND 5=10'==str(PresConstrAnd.new((c1,),(s1,))))
+		self.failUnless('5=10 AND 5!=10 AND 5!=10 OR 5=10'==str(PresConstrAnd.new((c1,c2),())))
+		self.failUnless('5=10 AND 5!=10'==str(PresConstrAnd.new((),(s1,s2))))
+		self.failUnless('5=10 AND 5!=10 AND 5!=10 OR 5=10 AND 5=10'==str(PresConstrAnd.new((c1,c2),(s1,))))
+		self.failUnless('5=10 AND 5!=10 AND 5=10 AND 5!=10'==str(PresConstrAnd.new((c1,),(s1,s2))))
+		self.failUnless('5=10 AND 5!=10 AND 5!=10 OR 5=10 AND 5=10 AND 5!=10'==str(PresConstrAnd.new((c1,c2),(s1,s2))))
+
+		self.failUnless(''==str(PresConstrOr.new((),())))
+		self.failUnless('5=10 AND 5!=10'==str(PresConstrOr.new((c1,),())))
+		self.failUnless('5=10'==str(PresConstrOr.new((),(s1,))))
+		self.failUnless('5=10 AND 5!=10 OR 5=10'==str(PresConstrOr.new((c1,),(s1,))))
+		self.failUnless('5=10 AND 5!=10 OR 5!=10 OR 5=10'==str(PresConstrOr.new((c1,c2),())))
+		self.failUnless('5=10 OR 5!=10'==str(PresConstrOr.new((),(s1,s2))))
+		self.failUnless('5=10 AND 5!=10 OR 5!=10 OR 5=10 OR 5=10'==str(PresConstrOr.new((c1,c2),(s1,))))
+		self.failUnless('5=10 AND 5!=10 OR 5=10 OR 5!=10'==str(PresConstrOr.new((c1,),(s1,s2))))
+		self.failUnless('5=10 AND 5!=10 OR 5!=10 OR 5=10 OR 5=10 OR 5!=10'==str(PresConstrOr.new((c1,c2),(s1,s2))))
+
+		self.failUnless(''==str(PresConstrNot.new(PresConstrAnd.new((),()))))
+		self.failUnless('NOT 5=10 AND 5!=10'==str(PresConstrNot.new(c1)))
+
+		self.failUnless(''==str(PresConstrExists.new((),PresConstrAnd.new((),()))))
+		self.failUnless('EXISTS([]:5=10 AND 5!=10)'==str(PresConstrExists.new((),c1)))
+		self.failUnless('EXISTS([a]:)'==str(PresConstrExists.new((PresVarID.new('a'),),PresConstrAnd.new((),()))))
+		self.failUnless('EXISTS([a,b]:)'==str(PresConstrExists.new((PresVarID.new('a'),PresVarID.new('b')),PresConstrAnd.new((),()))))
+		self.failUnless('EXISTS([a,b,c]:)'==str(PresConstrExists.new((PresVarID.new('a'),PresVarID.new('b'),PresVarID.new('c')),PresConstrAnd.new((),()))))
+		self.failUnless('EXISTS([a]:5=10 AND 5!=10)'==str(PresConstrExists.new((PresVarID.new('a'),),c1)))
+		self.failUnless('EXISTS([a,b]:5=10 AND 5!=10)'==str(PresConstrExists.new((PresVarID.new('a'),PresVarID.new('b')),c1)))
+		self.failUnless('EXISTS([a,b,c]:5=10 AND 5!=10)'==str(PresConstrExists.new((PresVarID.new('a'),PresVarID.new('b'),PresVarID.new('c')),c1)))
+
+		self.failUnless(''==str(PresConstrForall.new((),PresConstrAnd.new((),()))))
+		self.failUnless('FORALL([]:5=10 AND 5!=10)'==str(PresConstrForall.new((),c1)))
+		self.failUnless('FORALL([a]:)'==str(PresConstrForall.new((PresVarID.new('a'),),PresConstrAnd.new((),()))))
+		self.failUnless('FORALL([a,b]:)'==str(PresConstrForall.new((PresVarID.new('a'),PresVarID.new('b')),PresConstrAnd.new((),()))))
+		self.failUnless('FORALL([a,b,c]:)'==str(PresConstrForall.new((PresVarID.new('a'),PresVarID.new('b'),PresVarID.new('c')),PresConstrAnd.new((),()))))
+		self.failUnless('FORALL([a]:5=10 AND 5!=10)'==str(PresConstrForall.new((PresVarID.new('a'),),c1)))
+		self.failUnless('FORALL([a,b]:5=10 AND 5!=10)'==str(PresConstrForall.new((PresVarID.new('a'),PresVarID.new('b')),c1)))
+		self.failUnless('FORALL([a,b,c]:5=10 AND 5!=10)'==str(PresConstrForall.new((PresVarID.new('a'),PresVarID.new('b'),PresVarID.new('c')),c1)))
+
+		self.failUnless(''==str(PresConstrParen.new(PresConstrAnd.new((),()))))
+		self.failUnless('(5=10 AND 5!=10)'==str(PresConstrParen.new(PresConstrOr.new((c1,),()))))
+		self.failUnless('(5=10)'==str(PresConstrParen.new(PresConstrOr.new((),(s1,)))))
+		self.failUnless('(5=10 AND 5!=10 OR 5=10)'==str(PresConstrParen.new(PresConstrOr.new((c1,),(s1,)))))
+		self.failUnless('(5=10 AND 5!=10 OR 5!=10 OR 5=10)'==str(PresConstrParen.new(PresConstrOr.new((c1,c2),()))))
+		self.failUnless('(5=10 OR 5!=10)'==str(PresConstrParen.new(PresConstrOr.new((),(s1,s2)))))
+		self.failUnless('(5=10 AND 5!=10 OR 5!=10 OR 5=10 OR 5=10)'==str(PresConstrParen.new(PresConstrOr.new((c1,c2),(s1,)))))
+		self.failUnless('(5=10 AND 5!=10 OR 5=10 OR 5!=10)'==str(PresConstrParen.new(PresConstrOr.new((c1,),(s1,s2)))))
+		self.failUnless('(5=10 AND 5!=10 OR 5!=10 OR 5=10 OR 5=10 OR 5!=10)'==str(PresConstrParen.new(PresConstrOr.new((c1,c2),(s1,s2)))))
+		self.failUnless('((5=10 AND 5!=10) OR (5!=10 OR 5=10) OR 5=10 OR 5!=10)'==str(PresConstrParen.new(PresConstrOr.new((PresConstrParen.new(c1),PresConstrParen.new(c2)),(s1,s2)))))
+
+	def testFormulaNodes(self):
+		from omega.parser.ast import PresSet,PresRelation
+		from omega.parser.ast import PresVarTupleSet,PresVarTupleIn,PresVarTupleOut
+
+		from omega.parser.ast import PresVarID
+		v1=PresVarID.new('a')
+		v2=PresVarID.new('b')
+		v3=PresVarID.new('c')
+		v4=PresVarID.new("a'")
+		v5=PresVarID.new("b'")
+		v6=PresVarID.new("c'")
+
+		from omega.parser.ast import PresExprInt
+		e1=PresExprInt.new(6)
+		e2=PresExprInt.new(7)
+
+		from omega.parser.ast import PresStmtEQ,PresStmtNEQ
+		s1=PresStmtEQ.new(e1,e2)
+		s2=PresStmtNEQ.new(e1,e2)
+
+		from omega.parser.ast import PresConstrAnd
+		c1=PresConstrAnd.new((),(s1,s2))
+
+		for formula,ast_str in formulas.test_sets:
+			self.failUnless(formula==str(eval(ast_str)))
+		for formula,ast_str in formulas.test_relations:
+			self.failUnless(formula==str(eval(ast_str)))
+
+class formulas:
+
+	#Test formula strings with their associated strings for constructing them
+	test_sets=(
+		('{[]}',"PresSet.new(PresVarTupleSet.new(()),PresConstrAnd.new((),()))"),
+		('{[a]}',"PresSet.new(PresVarTupleSet.new((v1,)),PresConstrAnd.new((),()))"),
+		('{[a,b]}',"PresSet.new(PresVarTupleSet.new((v1,v2)),PresConstrAnd.new((),()))"),
+		('{[a,b,c]}',"PresSet.new(PresVarTupleSet.new((v1,v2,v3)),PresConstrAnd.new((),()))"),
+
+		('{[]:6=7 AND 6!=7}',"PresSet.new(PresVarTupleSet.new(()),c1)"),
+		('{[a]:6=7 AND 6!=7}',"PresSet.new(PresVarTupleSet.new((v1,)),c1)"),
+		('{[a,b]:6=7 AND 6!=7}',"PresSet.new(PresVarTupleSet.new((v1,v2)),c1)"),
+		('{[a,b,c]:6=7 AND 6!=7}',"PresSet.new(PresVarTupleSet.new((v1,v2,v3)),c1)"))
+
+	test_relations=(
+		('{[]->[]}',"PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new(()),PresConstrAnd.new((),()))"),
+		('{[a]->[]}',"PresRelation.new(PresVarTupleIn.new((v1,)),PresVarTupleOut.new(()),PresConstrAnd.new((),()))"),
+		('{[a,b]->[]}',"PresRelation.new(PresVarTupleIn.new((v1,v2)),PresVarTupleOut.new(()),PresConstrAnd.new((),()))"),
+		('{[a,b,c]->[]}',"PresRelation.new(PresVarTupleIn.new((v1,v2,v3)),PresVarTupleOut.new(()),PresConstrAnd.new((),()))"),
+		("{[]->[a']}","PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new((v4,)),PresConstrAnd.new((),()))"),
+		("{[]->[a',b']}","PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new((v4,v5)),PresConstrAnd.new((),()))"),
+		("{[]->[a',b',c']}","PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new((v4,v5,v6)),PresConstrAnd.new((),()))"),
+		("{[a]->[a']}","PresRelation.new(PresVarTupleIn.new((v1,)),PresVarTupleOut.new((v4,)),PresConstrAnd.new((),()))"),
+		("{[a,b]->[a',b']}","PresRelation.new(PresVarTupleIn.new((v1,v2)),PresVarTupleOut.new((v4,v5)),PresConstrAnd.new((),()))"),
+		("{[a,b,c]->[a',b',c']}","PresRelation.new(PresVarTupleIn.new((v1,v2,v3)),PresVarTupleOut.new((v4,v5,v6)),PresConstrAnd.new((),()))"),
+
+		('{[]->[]:6=7 AND 6!=7}',"PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new(()),c1)"),
+		('{[a]->[]:6=7 AND 6!=7}',"PresRelation.new(PresVarTupleIn.new((v1,)),PresVarTupleOut.new(()),c1)"),
+		('{[a,b]->[]:6=7 AND 6!=7}',"PresRelation.new(PresVarTupleIn.new((v1,v2)),PresVarTupleOut.new(()),c1)"),
+		('{[a,b,c]->[]:6=7 AND 6!=7}',"PresRelation.new(PresVarTupleIn.new((v1,v2,v3)),PresVarTupleOut.new(()),c1)"),
+		("{[]->[a']:6=7 AND 6!=7}","PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new((v4,)),c1)"),
+		("{[]->[a',b']:6=7 AND 6!=7}","PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new((v4,v5)),c1)"),
+		("{[]->[a',b',c']:6=7 AND 6!=7}","PresRelation.new(PresVarTupleIn.new(()),PresVarTupleOut.new((v4,v5,v6)),c1)"),
+		("{[a]->[a']:6=7 AND 6!=7}","PresRelation.new(PresVarTupleIn.new((v1,)),PresVarTupleOut.new((v4,)),c1)"),
+		("{[a,b]->[a',b']:6=7 AND 6!=7}","PresRelation.new(PresVarTupleIn.new((v1,v2)),PresVarTupleOut.new((v4,v5)),c1)"),
+		("{[a,b,c]->[a',b',c']:6=7 AND 6!=7}","PresRelation.new(PresVarTupleIn.new((v1,v2,v3)),PresVarTupleOut.new((v4,v5,v6)),c1)"))
+
+	#Tuple variable test formulas
+	tuple_var_sets=(
+		'{[]}','{[a]}','{[*]}',
+		'{[1:10]}','{[1:10:2]}','{[2*a]}')
+	var_list_sets=(
+		'{[a]}','{[a,b]}','{[a,b,c]}','{[a,b,c,d]}',
+		'{[a,*,1:10,1:10:2,2*a]}','{[i,1,j,2,k,4,*]}','{[i,1:4,j,1:8:2,k,2*a]}')
+	tuple_var_relations=(
+		'{[]->[]}',"{[]->[a']}",'{[a]->[]}',"{[a]->[a']}",
+		'{[*]->[]}','{[]->[*]}','{[*]->[*]}',
+		'{[]->[1:10]}','{[1:10]->[]}','{[1:10]->[1:10]}',
+		'{[]->[1:10:2]}','{[1:10:2]->[]}','{[1:10:2]->[1:10:2]}',
+		'{[]->[2*a]}','{[2*a]->[]}','{[2*a]->[2*a]}')
+	var_list_relations=(
+		'{[a]->[]}','{[a,b]->[c]}','{[a,b,c]->[a,b]}','{[a,b,c,d]->[a,b,c]}','{[a,b,c]->[a,b,c,d]}',
+		'{[]->[a,*,1:10,1:10:2,2*a]}','{[a,*,1:10,1:10:2,2*a]->[]}','{[a,*,1:10,1:10:2,2*a]->[a,*,1:10,1:10:2,2*a]}',
+		'{[]->[i,1,j,2,k,4,*]}','{[i,1,j,2,k,4,*]->[]}','{[i,1,j,2,k,4,*]->[i,1,j,2,k,4,*]}',
+		'{[]->[i,1:4,j,1:8:2,k,2*a]}','{[i,1:4,j,1:8:2,k,2*a]->[]}','{[i,1:4,j,1:8:2,k,2*a]->[i,1:4,j,1:8:2,k,2*a]}',
+		'{[a,b,c]->[a,1,b,2,c,3]}','{[a,1,b,2,c,3]->[a,b,c]}',
+		"{[a,*,10,1:10,1:10:2]->[a',*,10,1:10,1:10:2]}",'{[10:1]->[10:11:5]}',
+		'{[a,(2*a)]->[4-(a+3),b]}')
+
+	#Expression test formulas
+	simple_expression_sets=(
+		'{[1]}','{[a]}','{[-6]}','{[6+2]}','{[2+6]}','{[5*4]}',
+		'{[f(a)]}','{[f(a,b)]}','{[f(a,b,c)]}','{[(6)]}','{[5+((4+3)+(6-2)*8)]}')
+
+	#These sets and relations were taken mostly from the Omega documentation to be used for testing the parser
+	real_sets=(
+		'{[i,j]:1<=i<=10}',
+		'{[i,j]:1<=i,j<=10}',
+		'{[i,j,k]:1<=i,j,k<=10}',
+		'{[i,j,k,l]:1<=i,j,k,l<=10}',
+		'{[i,j]:1<=i<j<=n}',
+		'{[i]:1<=i<=9}',
+		'{[i]:2<=i<=10}',
+		'{[i]:5<=i<=25}',
+		'{[i]:EXISTS([alpha]:2*alpha=i AND 10<=i<=16)}',
+		'{[i]:1<=i<=11 AND EXISTS([a]:i=-2a)}',
+		'{[i]:EXISTS([alpha]:2*alpha=i AND 2<=i<=10)}',
+		'{[i,j]:1<=i+j,j<=10}',
+		'{[i]:2<=i<=n}',
+		'{[i,j]:2<=i<=n AND 1<=j<=i-1}',
+		'{[ir,jr]:1<=ir<=n AND i<=jr<=m}',
+		'{[iw,jw]:1<=iw<=n AND i<=jw<=m AND p(Set)>=0}',
+		'{[iw,jw]:1<=iw<=n AND i<=jw<=m AND p(Set)<0}',
+		'{[t]:1<=t<=n}',
+		'{[x]:0<=x<=100 AND EXISTS([y]:2*n<=y<=x AND x=2y+1)}',
+		'{[a,b,c]:1=1}')
+
+	real_relations=(
+		'{[i]->[i,j]:1<=i<j<=10}',
+		"{[i,j]->[j,j']:1<=i<j<j'<=n}",
+		"{[a,b]->[a',b']}",
+		"{[i,j]->[j,j']:1<=i<j<j'<=n}",
+		'{[i,j]->[i]:1<=i,j<=2}',
+		"{[i,j]->[i]:1<=i<=n AND 1<=j<=m}",
+		'{[p]->[2p,q]}',
+		"{[i,j]->[i]}",
+		"{[i,j]->[2i,q]}",
+		"{[i]->[i']:1<=i,i'<=10 AND i'=i+1}",
+		'{[i]->[i+1]:1<=i<=9}',
+		'{[i]->[i-1]:2<=i<=10}',
+		'{[i]->[i+2]:1<=i<=8}',
+		"{[i]->[i']:1<=i<i'<=10}",
+		"{[i]->[i']:i<=0}",
+		"{[i]->[i']:10<=i}",
+		"{[i]->[i']:1<=i<=9,i'-2}",
+		"{[i]->[i']:1,i'<=i<=9}",
+		'{[4]->[5]}',
+		"{[i]->[i']:5<=i<=25 AND 5<=i'<=25}",
+		"{[i]->[i']:5<=i,i'<=25}",
+		'{[9:16:2]->[17:19]}',
+		'{[i,j,k]->[t,x,z]:2*i+3*j<=5*k,p<=3*x-z=t}',
+		'{[i]->[0,i,0,0]}',
+		'{[i,j]->[1,j,0,i]}',
+		'{[i]->[1,i-1,1,0]}',
+		'{[i]->[j]:1<=i=j<=100 AND f(In)<=f(Out)}',
+		'{[i]->[j]:1<=i<=j<=100 AND f(In)=f(Out)}',
+		'{[i]->[j]:f(j)=f(i) AND 1<=i<j<=100}',
+		"{[i,j]->[i',j']:1<=i<=i'<=n AND NOT (F(i)=F(i')) AND 1<-j,j'<=m}",
+		'{[3a]->[b]}')
+
+#Test parser functionality
+class PresParserTestCase(TestCase):
+
+	def formula_test(self,formulas,parse):
+		for formula in formulas:
+			try:
+				result=str(parse(formula))
+			except SyntaxError,e:
+				self.fail("Syntax error while parsing string '%s': %s"%(formula,str(e)))
+
+			self.failUnless(formula==result,"Result string '%s' does not match parsed string '%s'"%(result,formula))
+
+	def testSetVarTuples(self):
+		from omega.parser import PresParser
+		self.formula_test(formulas.tuple_var_sets,PresParser.parse_set)
+		self.formula_test(formulas.var_list_sets,PresParser.parse_set)
+
+	def testRelationVarTuples(self):
+		from omega.parser import PresParser
+		self.formula_test(formulas.tuple_var_relations,PresParser.parse_relation)
+		self.formula_test(formulas.var_list_relations,PresParser.parse_relation)
+
+	def testExpressionParser(self):
+		from omega.parser import PresParser
+
+		self.formula_test(formulas.simple_expression_sets,PresParser.parse_set)
+
+	def testRealSetsRelations(self):
+		from omega.parser import PresParser
+
+		self.formula_test(formulas.real_sets,PresParser.parse_set)
+		self.formula_test(formulas.real_relations,PresParser.parse_relation)
+
+class PresVisitorTestCase(TestCase):
+
+	def formula_test(self,formulas,formula_with_ast,parse):
+		from omega.parser.ast.visitor import PresReprVisitor
+
+		from omega.parser.ast import PresSet,PresRelation
+		from omega.parser.ast import PresVarTupleSet,PresVarTupleIn,PresVarTupleOut
+		from omega.parser.ast import PresVarID,PresVarUnnamed,PresVarRange,PresVarStride,PresVarExpr
+		from omega.parser.ast import PresConstrAnd,PresConstrOr,PresConstrNot,PresConstrForall,PresConstrExists,PresConstrParen
+		from omega.parser.ast import PresStmtEQ,PresStmtNEQ,PresStmtGT,PresStmtGTE,PresStmtLT,PresStmtLTE
+		from omega.parser.ast import PresExprInt,PresExprID,PresExprNeg,PresExprAdd,PresExprSub,PresExprMult,PresExprList,PresExprFunc,PresExprParen
+
+		for formula in formulas:
+			if formula_with_ast:
+				formula=formula[0]
+			try:
+				ast=parse(formula)
+			except SyntaxError,e:
+				self.fail("Syntax error while parsing string '%s': %s"%(formula,str(e)))
+
+			v=PresReprVisitor()
+			v.visit(ast)
+
+			try:
+				eval_ast=eval(str(v))
+			except SyntaxError,e:
+				self.fail("Syntax error while evaluating repr of ast for string '%s': %s"%(formula,str(e)))
+#			except ArgumentError,e:
+#				self.fail("Argument error while evaluating repr of ast for string '%s': %s"%(formula,str(e)))
+
+			self.failUnless(str(ast)==formula,"AST string '%s' does not match parsed string '%s'"%(str(ast),formula))
+			self.failUnless(str(eval_ast)==formula,"Evaluated AST string '%s' does not match parsed string '%s'"%(str(eval_ast),formula))
+
+	def testDFV(self):
+		from omega.parser import PresParser
+
+		self.formula_test(formulas.simple_expression_sets,False,PresParser.parse_set)
+		self.formula_test(formulas.tuple_var_sets,False,PresParser.parse_set)
+		self.formula_test(formulas.var_list_sets,False,PresParser.parse_set)
+		self.formula_test(formulas.tuple_var_relations,False,PresParser.parse_relation)
+		self.formula_test(formulas.var_list_relations,False,PresParser.parse_relation)
+
+		self.formula_test(formulas.test_sets,True,PresParser.parse_set)
+		self.formula_test(formulas.test_relations,True,PresParser.parse_relation)
+		self.formula_test(formulas.real_sets,False,PresParser.parse_set)
+		self.formula_test(formulas.real_relations,False,PresParser.parse_relation)
+
+class SetTestCase(TestCase):
+
+	def testSet(self):
+		from omega import Set
+
+		Set('{[a,b,a]}')
+		Set('{[a,b,*,c]}')
+		Set('{[a,b]:1=1}')
+		Set('{[a,b]:a=1}')
+		Set('{[a,b]:b=1}')
+		Set('{[a,b]:b=1 && b=a}')
+		Set('{[a]:a>=1}')
+		Set('{[a]:a>=n}')
+		Set('{[a]:a>=f(x)}')
+
+		Set('{[a]:a=0}')
+		Set('{[a]:a!=0}')
+		Set('{[a]:a>0}')
+		Set('{[a]:a>=0}')
+		Set('{[a]:a<0}')
+		Set('{[a]:a<=0}')
+
+		Set('{[a,b]:1<=a<=10<=15}')
+
+#	def testOmega(self):
+#		from omega import OmegaSet
+#		set=OmegaSet(1)
+#		set.test_omega()
+
+	def testMoldyn(self):
+		from omega import Set,Relation
+		print
+
+		#Iteration Space
+		II_0=Set('{ [ii,stmt] : 0 <= ii <= (n_inter-1) && stmt=1 }').union( Set('{ [ii,stmt] : 0 <= ii <= (n_inter-1) && stmt=2 }') )
+
+		#or better
+		#II_0a=Set('{ [ii,1] : 0 <= ii <= (n_inter-1)  }')
+		#II_0b=Set('{ [ii,2] : 0 <= ii <= (n_inter-1)  }')
+		#or even better
+		#II_0=Set('{ [ii,1:2] : 0 <= ii <= (n_inter-1)  }')
+
+		#Data Spaces
+		import time
+		time.sleep(15)
+		X_0=Set('{ [k] : 0 <= k <= (N-1) }')
+		FX_0=Set('{ [k] : 0 <= k <= (N-1) }')
+		print FX_0
+
+		#Index Arrays
+		INTER1_0=Set('{ [k] : 0 <= ii <= (n_inter-1) }')
+		INTER2_0=Set('{ [k] : 0 <= ii <= (n_inter-1) }')
+
+		#Index Array Value Constraints
+		Relation('{ [ii] -> [inter_func] : inter_func=inter1(i) && not (0 <= ii <= (n_inter-1)) || (0 <= inter1(i) <= (N-1)) }')
+		Relation('{ [ii] -> [inter_func] : inter_func=inter2(i) && not (0 <= ii <= (n_inter-1)) || (0 <= inter2(i) <= (N-1)) }')
+
+		#Data Mappings
+		M_II0_to_X0a=Relation('{ [ii,1] -> [inter_func] : inter_func=inter1(i) && 1 <= j <= T  && 1 <= i <= N }')
+		M_II0_to_X0b=Relation('{ [j,1,i,1] -> [ idx_func ] : idx_func=idx2(i) && 1<=j<= T  && 1<=i<= N }')
+
+class RelationTestCase(TestCase):
+
+	def testRelation(self):
+		from omega import Relation
+
+		Relation("{[a,b]->[a',b']: a=1}")
+		Relation("{[a,b]->[a',b']: b=1}")
+		Relation("{[a,b]->[a',b']: a'=1}")
+		Relation("{[a,b]->[a',b']: b'=1}")
+		Relation("{[a,b]->[a',b']: a=b}")
+		Relation("{[a,b]->[a',b']: a'=b'}")
+		Relation("{[a,b]->[a',b']: a=a' && b=b'}")
+		Relation("{[a,b]->[a',b']: a=b' && b=a'}")
+		Relation("{[a,b]->[a',b']: a=b && a=a' && a'=b'}")
+		Relation("{[a,b]->[a',b']: a=b && a=a' && a'=b' && a=1}")
+
+		Relation("{[a]->[b,c]: a=b && a=a' && a'=b' && a=1}")
+		Relation("{[a,b]->[c,*]: 1<=a<=b<=10}")
+		Relation("{[a,b]->[a',b']: a>=b && (a'>=b' || a=b)}")
+
+		Relation("{[ii] -> [inter_func]: ii>=f(x)}")
+#--------------------------------------------------
+
+#---------- Routines for running the script itself ----------
+def build_test_suite(test_cases):
+	#Build a large test suite by collecting test from each test case specified
+	suite=defaultTestLoader.loadTestsFromTestCase(test_cases[0])
+	for test_case in test_cases[1:]:
+		suite.addTest(defaultTestLoader.loadTestsFromTestCase(test_case))
+	return suite
+
+if '__main__'==__name__:
+	#Test case categories
+	all_test_cases=(ImportTestCase,OldSetTestCase,OldRelationTestCase,VariableTestCase,FormulaTestCase,TransformationsTestCase,ASTNodeTestCase,PresParserTestCase,PresVisitorTestCase,SetTestCase,RelationTestCase)
+	old_test_cases=(ImportTestCase,OldSetTestCase,OldRelationTestCase,VariableTestCase,FormulaTestCase,TransformationsTestCase)
+	ast_test_cases=(ASTNodeTestCase,)
+	parser_test_cases=(PresParserTestCase,)
+	visitor_test_cases=(PresVisitorTestCase,)
+	formula_test_cases=(SetTestCase,RelationTestCase)
+
+	#Determine what test cases to run based on the given arguments
+	test_cases=()
+	if len(argv)==1:
+		test_cases=test_cases+all_test_cases
+	else:
+		for arg in argv[1:]:
+			if 'all'==arg:
+				test_cases=test_cases+all_test_cases
+			elif 'old'==arg:
+				test_cases=test_cases+old_test_cases
+			elif 'ast'==arg:
+				test_cases=test_cases+ast_test_cases
+			elif 'parser'==arg:
+				test_cases=test_cases+parser_test_cases
+			elif 'visitor'==arg:
+				test_cases=test_cases+visitor_test_cases
+			elif 'formula'==arg:
+				test_cases=test_cases+formula_test_cases
+			else:
+				test_cases=test_cases+(globals()[arg],)
+
+	#Remove duplicate test cases
+	final_test_cases=()
+	for test_case in test_cases:
+		if test_case not in final_test_cases:
+			final_test_cases=final_test_cases+(test_case,)
+
+	#Get the test suite to run and run it
+	suite=build_test_suite(final_test_cases)
+	TextTestRunner(verbosity=2).run(suite)
+#--------------------------------------------------

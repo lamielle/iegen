@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+import os
+from waftools import *
+
+def set_options(opt):
+	pass
+
+def configure(conf):
+
+	env=conf.env
+
+	env['CPPPATH_AST']+=['../../../../../include/omega/parser/ast/visitor']
+
+def build(bld):
+
+	env=bld.env_of_name('default')
+
+	inst_dir='omega/parser/ast/visitor'
+
+	create_obj_common(bld,
+	               '''IPresVisitor.cpp
+	                  PresDepthFirstVisitor.cpp
+	                  PresReprVisitor.cpp
+	                  PresTransVisitor.cpp
+	                  PresTransSetVisitor.cpp
+	                  PresTransRelationVisitor.cpp''',
+	                 'visitors',5)
+
+	create_shlib_common(bld,
+	                   'visitor_bindings.cpp',
+	                   'visitor',
+	                 '''visitors
+	                    omega_util
+	                    omega_formula_building
+	                    omega_formulas
+	                    ast_constr_nodes
+	                    ast_stmt_nodes
+	                    ast_expr_nodes
+	                    ast_var_nodes
+	                    ast_formula_nodes
+	                    ast_root_nodes
+	                    ast_util''',
+	                    inst_dir,5)
+
+	install_files('PREFIX',inst_dir,'__init__.py')
