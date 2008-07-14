@@ -8,7 +8,7 @@ class MapIR(object):
 		self.m_dataspaces={}
 		self.m_index_arrays={}
 
-util.define_properties('MapIR',('iterspaces','dataspaces','index_arrays'))
+iegen.util.define_properties(MapIR,('iterspaces','dataspaces','index_arrays'))
 
 class IterationSpace(object):
 	__slots__=('_name','_spec')
@@ -17,7 +17,7 @@ class IterationSpace(object):
 		self.m_name=name
 		self.m_spec=spec
 
-util.define_properties('IterationSpace',('name','spec'))
+iegen.util.define_properties(IterationSpace,('name','spec'))
 
 class DataSpace(object):
 	__slots__=('_name','_spec','_is_index_array')
@@ -27,7 +27,7 @@ class DataSpace(object):
 		self.m_spec=spec
 		self.m_is_index_array=is_index_array
 
-util.define_properties('DataSpace',('name','spec','is_index_array'))
+iegen.util.define_properties(DataSpace,('name','spec','is_index_array'))
 
 class IndexArray(object):
 	__slots__=('_dataspace','_index_value_constraints')
@@ -37,13 +37,13 @@ class IndexArray(object):
 		self.m_index_value_constraints=index_value_constraints
 
 		#Checking
-		if self.m_index_value_constraints.arity_in()!=self.m_dataspace.arity():
-			raise util.DimensionalityError('The dimensionality of the domain (%d) should match the dimensionality of the associated index array DataSpace (%d).'%(self.m_index_value_constraints.arity_in(),self.m_dataspace.arity())
+		if self.m_index_value_constraints.arity_in()!=self.m_dataspace.m_spec.arity():
+			raise iegen.util.DimensionalityError('The dimensionality of the domain (%d) should match the dimensionality of the associated index array DataSpace (%d).'%(self.m_index_value_constraints.arity_in(),self.m_dataspace.m_spec.arity()))
 
 		if 1!=self.m_index_value_constraints.arity_out():
-        raise util.DimensionalityError('The dimensionality of the range of the index array (%d) should be 1.'%self.m_index_value_constraints.arity_out())
+			raise iegen.util.DimensionalityError('The dimensionality of the range of the index array (%d) should be 1.'%self.m_index_value_constraints.arity_out())
 
-util.define_properties('IndexArray',('dataspace','index_value_constraints'))
+iegen.util.define_properties(IndexArray,('dataspace','index_value_constraints'))
 
 class AccessRelation(object):
 	__slots__=('_name','_iterspace','_dataspace','_iterspace_to_dataspace')
@@ -55,12 +55,12 @@ class AccessRelation(object):
 		self.m_iterspace_to_dataspace=iterspace_to_dataspace
 
 		if self.m_iterspace.arity()!=self.m_iterspace_to_dataspace.arity_in():
-			raise util.DimensionalityError('The input arity of the access relation (%d) should be the arity of the iteration space (%d).'%(self.m_iterspace_to_dataspace.arity_in(),self.m_iterspace.arity())
+			raise iegen.util.DimensionalityError('The input arity of the access relation (%d) should be the arity of the iteration space (%d).'%(self.m_iterspace_to_dataspace.arity_in(),self.m_iterspace.arity()))
 
 		if self.m_dataspace.arity()!=self.m_iterspace_to_dataspace.arity_out():
-			raise util.DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.m_iterspace_to_dataspace.arity_out(),self.m_dataspace.arity())
+			raise iegen.util.DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.m_iterspace_to_dataspace.arity_out(),self.m_dataspace.arity()))
 
-util.define_properties('AccessRelation',('name','iterspace','dataspace','iterspace_to_dataspace'))
+iegen.util.define_properties(AccessRelation,('name','iterspace','dataspace','iterspace_to_dataspace'))
 
 class DataDependence(object):
 	__slots__=('_iterspace','_dataspace','_data_dependence')
@@ -70,7 +70,7 @@ class DataDependence(object):
 		self.m_dataspace=dataspace
 		self.m_data_dependence=data_dependence
 
-util.define_properties('DataDependence',('iterspace','dataspace','data_dependence'))
+iegen.util.define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
 		#Checking
 		#Can we check that given the iteration space, data spaces, and access functions, the given data dependence is valid?  Is it overly conservative?  optimistic?
 

@@ -1,5 +1,7 @@
+#!/usr/bin/env python
+
 from omega import Set,Relation
-from iegen import IterationSpace,DataSpace
+from iegen import IterationSpace,DataSpace,IndexArray
 
 #Code
 #    for (ii=0; ii<n_inter; ii++) {
@@ -10,7 +12,7 @@ from iegen import IterationSpace,DataSpace
 
 #Iteration Space
 I_0=IterationSpace('I_0',
-    Set('{ [ii,stmt] : stmt=1 && 0 <= ii <= (n_inter-1)  }'.union(Set('{ [ii,stmt] : stmt=2 && 0 <= ii <= (n_inter-1)  }'))))
+    Set('{ [ii,stmt] : stmt=1 && 0 <= ii <= (n_inter-1)  }').union(Set('{ [ii,stmt] : stmt=2 && 0 <= ii <= (n_inter-1)  }')))
 
 #Data Spaces
 X_0=DataSpace('x',Set('{ [k] : 0 <= k <= (N-1) }'),False)
