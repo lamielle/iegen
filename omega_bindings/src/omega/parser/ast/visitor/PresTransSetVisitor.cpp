@@ -13,6 +13,8 @@ namespace omega { namespace bindings { namespace parser { namespace ast { namesp
 		return *this;
 	}
 
+	int PresTransSetVisitor::arity() const {return this->set()->arity();}
+
 	sptr<Set> PresTransSetVisitor::set() const {return this->m_set;}
 	sptr<Formula> PresTransSetVisitor::formula() const {return this->m_set;}
 	void PresTransSetVisitor::set(sptr<Set> const& set) {this->m_set=set;}

@@ -15,6 +15,12 @@ namespace omega { namespace bindings { namespace parser { namespace ast { namesp
 			PresTransRelationVisitor(PresTransRelationVisitor const& o);
 			PresTransRelationVisitor& operator=(PresTransRelationVisitor const& o);
 
+			void compose(PresTransRelationVisitor const& o);
+			void inverse();
+
+			int arity_in() const;
+			int arity_out() const;
+
 			//Relation nodes
 			virtual void inPresRelation(PresRelation const& v);
 			virtual void outPresRelation(PresRelation const& v);

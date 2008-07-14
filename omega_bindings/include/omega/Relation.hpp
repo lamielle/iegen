@@ -18,6 +18,9 @@ namespace omega { namespace bindings {
 			int arity_in() const;
 			int arity_out() const;
 
+			void compose(sptr<Relation> const& o);
+			void inverse();
+
 			void name_in(int i,std::string const& name);
 			std::string name_in(int i);
 			void name_out(int i,std::string const& name);

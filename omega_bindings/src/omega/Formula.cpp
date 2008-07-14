@@ -49,13 +49,11 @@ namespace omega { namespace bindings {
 
 	void Formula::union_(sptr<Formula> const& o)
 	{
-		cout<<"before union: "<<this->str()<<endl;
 		omega::Relation this_copy=omega::copy(this->const_relation());
 		omega::Relation o_copy=omega::copy(o->const_relation());
 		omega::Relation unioned=omega::Union(this_copy,o_copy);
 
 		this->relation(omega::Relation(unioned));
-		cout<<"after union: "<<this->str()<<endl;
 	}
 
 	omega::Relation const& Formula::const_relation() const {return this->m_relation;}

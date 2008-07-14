@@ -1464,7 +1464,6 @@ class SetTestCase(TestCase):
 
 	def testMoldyn(self):
 		from omega import Set,Relation
-		print
 
 		#Iteration Space
 		II_0=Set('{ [ii,stmt] : 0 <= ii <= (n_inter-1) && stmt=1 }').union( Set('{ [ii,stmt] : 0 <= ii <= (n_inter-1) && stmt=2 }') )
@@ -1478,7 +1477,6 @@ class SetTestCase(TestCase):
 		#Data Spaces
 		X_0=Set('{ [k] : 0 <= k <= (N-1) }')
 		FX_0=Set('{ [k] : 0 <= k <= (N-1) }')
-		print FX_0
 
 		#Index Arrays
 		INTER1_0=Set('{ [k] : 0 <= ii <= (n_inter-1) }')

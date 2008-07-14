@@ -1,5 +1,5 @@
 class Formula(object):
-	__slots__=('_formula','_ast','_visitor')
+	__slots__=('_formula','_ast','_visitor','_unioned')
 
 	def __init__(self,formula,ast,visitor):
 		if Formula==type(self):
@@ -24,8 +24,17 @@ class Formula(object):
 	def _set_visitor(self,value): self._visitor=value
 	m_visitor=property(_get_visitor,_set_visitor)
 
+	#Unioned getters/setters
+	def _get_unioned(self): return self._unioned
+	def _set_unioned(self,value): self._unioned=value
+	m_unioned=property(_get_unioned,_set_unioned)
+
 	def union(self,other_formula):
 		self.m_visitor.union(other_formula.m_visitor)
+		if hasattr(self,"_unioned"):
+			self._unioned+=[other_formula]
+		else:
+			self._unioned=[other_formula]
 		return self
 
 class Set(Formula):
@@ -38,14 +47,16 @@ class Set(Formula):
 		Formula.__init__(self,set,PresParser.parse_set(set),PresTransSetVisitor())
 
 	def __str__(self):
-		print "In Set.__str__"
 		return '(Set: formula: %s ast: %s set: %s)'%(self.m_formula,self.m_ast,self.m_visitor)
 
 	def __repr__(self):
 		return 'Set("%s")'%self.m_formula
 
+	def arity(self):
+		return self.m_visitor.arity()
+
 class Relation(Formula):
-	__slots__=()
+	__slots__=('_composed')
 
 	def __init__(self,relation):
 		from omega.parser import PresParser
@@ -58,3 +69,21 @@ class Relation(Formula):
 
 	def __repr__(self):
 		return 'Relation("%s")'%self.m_formula
+
+	def compose(self,other_formula):
+		self.m_visitor.compose(other_formula.m_visitor)
+		if hasattr(self,"_composed"):
+			self._composed+=[other_formula]
+		else:
+			self._composed=[other_formula]
+		return self
+
+	def inverse(self):
+		self.m_visitor.inverse()
+		return self
+
+	def arity_in(self):
+		return self.m_visitor.arity_in()
+
+	def arity_out(self):
+		return self.m_visitor.arity_out()

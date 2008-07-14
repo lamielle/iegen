@@ -2,7 +2,7 @@
 
 namespace omega { namespace bindings { namespace parser { namespace ast { namespace visitor {
 
-	PresTransRelationVisitor::PresTransRelationVisitor() : PresTransVisitor() {}
+	PresTransRelationVisitor::PresTransRelationVisitor() : PresTransVisitor(),m_relation() {}
 
 	PresTransRelationVisitor::PresTransRelationVisitor(PresTransRelationVisitor const& o) : m_relation(o.relation()) {}
 
@@ -12,6 +12,19 @@ namespace omega { namespace bindings { namespace parser { namespace ast { namesp
 		this->relation(o.relation());
 		return *this;
 	}
+
+	void PresTransRelationVisitor::compose(PresTransRelationVisitor const& o)
+	{
+		this->relation()->compose(o.relation());
+	}
+
+	void PresTransRelationVisitor::inverse()
+	{
+		this->relation()->inverse();
+	}
+
+	int PresTransRelationVisitor::arity_in() const {return this->relation()->arity_in();}
+	int PresTransRelationVisitor::arity_out() const {return this->relation()->arity_out();}
 
 	sptr<Relation> PresTransRelationVisitor::relation() const {return this->m_relation;}
 	sptr<Formula> PresTransRelationVisitor::formula() const {return this->m_relation;}

@@ -15,6 +15,8 @@ namespace omega { namespace bindings { namespace parser { namespace ast { namesp
 			PresTransSetVisitor(PresTransSetVisitor const& o);
 			PresTransSetVisitor& operator=(PresTransSetVisitor const& o);
 
+			int arity() const;
+
 			//Set nodes
 			virtual void inPresSet(PresSet const& v);
 			virtual void outPresSet(PresSet const& v);

@@ -101,16 +101,11 @@ def configure(conf):
 	                        'include/omega/parser/ast',
 	                        'include/omega/parser/ast/visitor']
 
-#	print_env(env)
-	print Params.g_options.prefix
-	print Params.g_options.destdir
-
 	conf.sub_config('parser')
 
 def build(bld):
 
 	env=bld.env_of_name('default')
-#	print_env(env)
 
 	inst_dir='omega'
 

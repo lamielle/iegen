@@ -33,8 +33,9 @@ namespace omega { namespace bindings {
 			omega::Relation const& const_relation() const;
 			omega::Relation& relation();
 
-		private:
 			void relation(omega::Relation const& relation);
+
+		private:
 			omega::Relation m_relation;
 
 		//---------- Variable members ----------

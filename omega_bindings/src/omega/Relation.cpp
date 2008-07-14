@@ -22,6 +22,25 @@ namespace omega { namespace bindings {
 	int Relation::arity_in() const {return this->const_relation().n_inp();}
 	int Relation::arity_out() const {return this->const_relation().n_out();}
 
+	//Composition of this relation with the given relation
+	void Relation::compose(sptr<Relation> const& o)
+	{
+		omega::Relation this_copy=omega::copy(this->const_relation());
+		omega::Relation o_copy=omega::copy(o->const_relation());
+		omega::Relation composed=omega::Composition(this_copy,o_copy);
+
+		this->relation(omega::Relation(composed));
+	}
+
+	//Inverse of this relation
+	void Relation::inverse()
+	{
+		omega::Relation this_copy=omega::copy(this->const_relation());
+		omega::Relation inversed=omega::Inverse(this_copy);
+
+		this->relation(omega::Relation(inversed));
+	}
+
 	//Name the input variable at position i
 	void Relation::name_in(int i,std::string const& name)
 	{

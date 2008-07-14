@@ -73,6 +73,9 @@ namespace omega { namespace bindings { namespace parser { namespace ast {
 		class IPresVisitor;
 		class IPresVisitable;
 		class PresDepthFirstVisitor;
+		class PresTransVisitor;
+		class PresTransSetVisitor;
+		class PresTransRelationVisitor;
 	}//end namespace visitor
 
 	//Define types for vectors of various nodes

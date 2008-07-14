@@ -33,10 +33,15 @@ namespace omega { namespace bindings { namespace parser { namespace ast { namesp
 			.def("union",&PresTransVisitor::union_);
 
 		class_<PresTransSetVisitor,bases<PresTransVisitor> >("PresTransSetVisitor",init<>())
-			.def("set",(sptr<Set> (PresTransSetVisitor::*)(void) const)&PresTransSetVisitor::set);
+			.def("set",(sptr<Set> (PresTransSetVisitor::*)(void) const)&PresTransSetVisitor::set)
+			.def("arity",&PresTransSetVisitor::arity);
 
 		class_<PresTransRelationVisitor,bases<PresTransVisitor> >("PresTransRelationVisitor",init<>())
-			.def("relation",(sptr<Relation> (PresTransRelationVisitor::*)(void) const)&PresTransRelationVisitor::relation);
+			.def("relation",(sptr<Relation> (PresTransRelationVisitor::*)(void) const)&PresTransRelationVisitor::relation)
+			.def("compose",&PresTransRelationVisitor::compose)
+			.def("inverse",&PresTransRelationVisitor::inverse)
+			.def("arity_in",&PresTransRelationVisitor::arity_in)
+			.def("arity_out",&PresTransRelationVisitor::arity_out);
 	}
 
 	BOOST_PYTHON_MODULE(_visitor)
