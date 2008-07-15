@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from omega import Set,Relation
-from iegen import IterationSpace,DataSpace,IndexArray
+from iegen import IterationSpace,DataSpace,IndexArray,AccessRelation,Statement,DataPermuteRTRT,IterPermuteRTRT
 
 #Code
 #    for (ii=0; ii<n_inter; ii++) {
@@ -25,49 +25,41 @@ IA1_0=IndexArray(INTER1_0,Relation('{ [ii] -> [inter_func] : inter_func=inter1(i
 IA2_0=IndexArray(INTER1_0,Relation('{ [ii] -> [inter_func] : inter_func=inter2(i) && not (0 <= ii <= (n_inter-1)) || (0 <= inter2(i) <= (N-1)) }'))
 
 #Access Relations
-#Not sure what we want here...
-#    statement   access#     DataSpace   AccessRelation
-#    [ii,1]      1           FX_0        { [ii,1] -> [ inter1(ii) ] }
-#    [ii,1]      2           X_0         { [ii,1] -> [ inter1(ii) ] }
-#    [ii,1]      3           X_0         { [ii,1] -> [ inter2(ii) ] }
-#    [ii,2]      1           FX_0        { [ii,1] -> [ inter2(ii) ] }
-#    [ii,2]      2           X_0         { [ii,1] -> [ inter1(ii) ] }
-#    [ii,2]      3           X_0         { [ii,1] -> [ inter2(ii) ] }
-#
-#    // summary access relations are the union of all access relations
-#    // to a particular data space
-#    A_I0_to_X0 := name = "A_I0_to_X0", { [ii,1] -> [ inter1(ii) ] } 
-#                   union { [ii,1] -> [ inter2(ii) ] }
-#
-#    A_I0_to_FX0 := name = "A_I0_to_FX0", { [ii,1] -> [ inter1(ii) ] } 
-#                   union { [ii,2] -> [ inter2(ii) ] }
+STMT1_A1=AccessRelation('STMT1_A1',I_0,FX_0,Relation('{ [ii,1] -> [ inter_func ] : inter_func=inter1(ii) }'))
+STMT1_A2=AccessRelation('STMT1_A2',I_0,X_0,Relation('{ [ii,1] -> [ inter_func ] : inter_func=inter1(ii) }'))
+STMT1_A3=AccessRelation('STMT1_A3',I_0,X_0,Relation('{ [ii,1] -> [ inter_func ] : inter_func=inter2(ii) }'))
 
+STMT2_A1=AccessRelation('STMT1_A1',I_0,FX_0,Relation('{ [ii,1] -> [ inter_func ] : inter_func=inter2(ii) }'))
+STMT2_A2=AccessRelation('STMT1_A2',I_0,X_0,Relation('{ [ii,1] -> [ inter_func ] : inter_func=inter1(ii) }'))
+STMT2_A3=AccessRelation('STMT1_A3',I_0,X_0,Relation('{ [ii,1] -> [ inter_func ] : inter_func=inter2(ii) }'))
+
+STMT1=Statement('STMT1',(STMT1_A1,STMT1_A2,STMT1_A3))
+STMT2=Statement('STMT2',(STMT2_A1,STMT2_A2,STMT2_A3))
+
+A_I0_to_X0=AccessRelation('A_I0_to_X0',I_0,X_0,Relation('{ [ii,1] -> [ inter_func ] : inter_func=inter1(ii) }').union(Relation('{ [ii,2] -> [ inter_func ] : inter_func=inter2(ii) }')))
+A_I0_to_FX0=AccessRelation('A_I0_to_FX0',I_0,FX_0,Relation('{ [ii,1] -> [ inter_func ] : inter_func=inter1(ii) }').union(Relation('{ [ii,2] -> [ inter_func ] : inter_func=inter2(ii)}')))
 
 #Data Dependences
 #    Only reduction dependences.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically if the loop is being parallelized.
 
-#Composition and choice of RTRTs
-#    data reordering
-#        DataPermuteRTRT
-#            data_reordering = { [ k ] -> [ sigma( k ) ] }
-#            iteration_space = I_0
-#            data_spaces = [ X_0, FX_0 ]
-#            access_relation = A_I0_to_X0
-#            iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
-#            iag_func_name = CPackHyper
-#            iag_type = IAG_Permute
-#
-#    Naming standards
-#        After any transformation, we are going to assume that a space with the subscript n will be transformed into the same named space with the subscript n+1.  For example I_0 will become I_1.
-#
-#    iteration reordering
-#        IterPermuteRTRT
-#            iter_reordering = { [ i ] -> [ delta( i ) ] }
-#            iteration_space = I_1
-#            access_relation = A_I0_to_X0
-#            iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
-#            iag_func_name = LexMin
-#            iag_type = IAG_Permute
+#What is the best way that this should be specified using the MapIR specification?
+
+
+DataPermuteRTRT(
+	Relation('{ [ k ] -> [ sigma ] : sigma=sigma(k) }'),
+	(X_0,FX_0),
+	A_I0_to_X0,
+	Relation('{ [ ii, j ] -> [ ii ] }'),
+	'CPackHyper',
+	'IAG_Permute')
+
+IterPermuteRTRT(
+	Relation('{ [ i ] -> [ delta ] : delta=delta( i ) }'),
+	(I_0,),
+	A_I0_to_X0,
+	Relation('{ [ ii, j ] -> [ ii ] }'),
+	'LexMin',
+	'IAG_Permute')
 
 #------------------------------------------------------------
 #Automatically Generating Straight-Forward Inspector/Executor

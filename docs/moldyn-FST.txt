@@ -96,7 +96,7 @@ Access Relations
     // summary access relations are the union of all access relations
     // to a particular data space
     A_I0_to_X0 := name = "A_I0_to_X0", { [ii,1] -> [ inter1(ii) ] } 
-                   union { [ii,1] -> [ inter2(ii) ] }
+                   union { [ii,2] -> [ inter2(ii) ] }
                    
     A_I0_to_FX0 := name = "A_I0_to_FX0", { [ii,1] -> [ inter1(ii) ] } 
                    union { [ii,2] -> [ inter2(ii) ] }
