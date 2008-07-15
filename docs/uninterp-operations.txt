@@ -1,0 +1,152 @@
+uninterp-operations.txt
+
+Notes on the various presburger set and relation options and how we can implement them if we are manipulating presburger sets with uninterpreted functions.
+
+==================================================== Algorithms =======
+--------
+Notation
+--------
+w, x, y, z - integer variable tuples, or vectors
+c# - constraints
+
+---------------------------------------------
+Comparison between two uninterp function uses
+---------------------------------------------
+f(a_1, a_2, ..., a_p) =?= g(b_1, b_2, ..., b_k)
+It is possible to indicate that two uninterp function uses are equal if the same function is being called (f==g), the same number of parameters are being passed (p==k), and all of the actual parameters are the same (a_i==b_i).  If that is not the case then their equality is unknown.
+
+
+---------------------------------
+Composition between two relations
+---------------------------------
+R1 := { x -> y : c1 }
+R2 := { w -> z : c2 }
+R2 compose R1 = R2(R1) = { x -> z : w = y && c1 && c2 }
+
+Correctness
+    - arity(w) = arity(y)
+Assumptions
+    - c1 and c2 do not involve existentially quantified variables
+
+
+--------------
+Pointer Update
+--------------
+Motivation: makes it so explicit construction of the data mapping is cheaper and improves the performance in the executor code
+
+Given two index arrays, pointer update creates a new index array that is the composition of the two index arrays.
+new_iag = iag1[ iag2[ i ] ]
+
+Correctness
+    - Bounds on values for iag2 should like within bounds on input values for iag1.
+    
+Could we use code gen for Relations to implement the construction of new_iag?
+{[i] -> [j] : j = iag1( iag2( i ) ) && bounds for input to iag2 };
+If so this would be another example like Hypergraph construction that needs us to generate the loop to iterate over the input tuples and then generate code to provide the output tuple results for a given input tuple value. 
+
+Implementation of pointer update
+    1) create relation
+    2) generate code to generate new_iag
+    3) use definition of new_iag to replace compositions of two index arrays in any sets and/or relations
+
+
+---------------------
+Iteration Permutation
+---------------------
+Look at all access relations that involve the loop being permuted.
+FIXME: we need access relations for index arrays as well as data arrays
+For all access relations where the access relation is the identity function, implement the iteration permutation with a data permutation.  If there are any where the access relation is not the identity, then create the iag which is the inverse of the iteration reordering, and modify the access relation to use that instead.
+
+----------------
+Code Gen for Set
+----------------
+
+---------------------
+Code Gen for Relation
+---------------------
+
+    
+--------------
+Simplification
+--------------
+After we do any of the above specified operations, we are going to have some free variables in the resulting constraints.  These free variables are implicitly existentially quantified.  
+
+We think we need to get rid of them, because they complicate code gen if they are in sets and the complicate further operations if they are in relations.
+FIXME: need some examples of these two things
+
+S1) Removing equalities between vars
+    For each equality involving only two variables, a=b
+        Select one variable to be representative, a, make sure to use tuple var if one is a tuple var
+            replace the other variable with the representative in all constraints
+
+S2) Removing equalities between a variable and a constant.
+    For each equality involving a variable and a constant, v=k, k is constant
+    where v is NOT a tuple variable
+        Replace v with the constant in the rest of the constraints
+        Remove v=k from constraints
+
+S3) Removing inequalities between a variable and an expr (subsumes S1 and S2)
+    For each equality involving a variable and a constant, v=e or e=v
+    What to do this for all non-tuple variables
+        Replace v with the expression in the rest of the constraints.
+        Remove v=e from the constraints
+
+==================================================== Examples =========
+
+---------
+Example 1: composition with relations 
+---------
+// from moldyn-FST.txt, restricting iteration space in access relation
+R1 := { [ a, b ] -> [ c ] : c=a }
+R2 := { [ k ] -> [ ii, 1 ] : k=inter1(ii) } union ...
+
+R1 ( R2 ) = { [ k ] -> [ c ] : a=ii && b=1 && c=a && k=inter1(ii) }
+            union ...
+            
+// applying S3 to a=ii, expr=ii
+R1 ( R2 ) = { [ k ] -> [ c ] : b=1 && c=a && k=inter1(a) }
+            union ...
+            
+// applying S3 to c=a, expr=a
+R1 ( R2 ) = { [ k ] -> [ c ] : b=1 && k=inter1(c) }
+            union ...
+
+// applying S3 to b=1, expr=1
+R1 ( R2 ) = { [ k ] -> [ c ] : k=inter1(c) }
+            union ...
+
+
+---------
+Example 2: composition with relations
+---------
+// from moldyn-FST.txt, applying data reordering to access relation              
+data_reordering := {[j] -> [f] : f = sigma(j) }
+A_I0_to_X0 := {  [ ii, 1 ] -> [ k ] : k=inter1(ii) } union ...
+        
+data_reordering(A_I0_to_X0) = { [ii,1] -> [f] : j=k && f = sigma(j) && k=inter1(ii) } union ...
+        
+// applying S3 to j=k, expr=k
+data_reordering(A_I0_to_X0) = { [ii,1] -> [f] :  f = sigma(j) && j=inter1(ii) } union ...
+        
+// applying S3 to j=inter1(ii), expr=inter1(ii)       
+data_reordering(A_I0_to_X0) = { [ii,1] -> [f] :  f = sigma(inter1(ii)) } union ...
+        
+// applying pointer update, inter1'(i) = sigma(inter1(i))
+data_reordering(A_I0_to_X0) = { [ii,1] -> [f] :  f = inter1'(i) } union ...
+
+
+---------
+Example 3: composition with relations
+---------
+// from moldyn-FST.txt, iteration reordering example
+iter_reordering := { [i,j] -> [k,j] : k=delta(i) };
+I_1 := { [ii,1] : 0 <= ii <= (n_inter-1)  } union ...
+                   
+iter_reordering( I_1 ) = {[k,j] : i=ii && j=1 && 0 <= ii <= (n_inter-1) &&  k=delta(i) } union ...
+
+// applying S3 to remove i==ii
+iter_reordering( I_1 ) = {[k,j] : j=1 && 0 <= i <= (n_inter-1) &&  k=delta(i) } union ...
+
+        //FIXME
+        // ok now the problem is that ii is existentially quantified, 
+        // it is involved in inequalities and in an uninterp equality

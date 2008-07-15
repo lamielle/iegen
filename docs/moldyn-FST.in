@@ -54,3 +54,65 @@ data_reordering(ar_1_3);
 
 # the original iteration space was not transformed
 codegen I_0;
+
+##### iteration reordering
+symbolic delta(1);
+
+            I_1 := { [ii,1] : 0 <= ii <= (n_inter-1)  }
+                   union { [ii,2] : 0 <= ii <= (n_inter-1)  };
+                   
+            iter_reordering := { [ i ] -> [ delta( i ) ] };
+            #iter_reordering := { [ i ] -> [ 2*i ] };
+            
+            iter_ssr := { [ ii, j ] -> [ ii ] };
+        
+            #I_2 := (inverse iter_ssr) compose iter_reordering(iter_ssr(I_1)) ;
+            #I_2;
+
+    ## Compose problem
+    #../src/Relations.c:805: failed assertion `0 && "Can't compose relation and #set with function symbols"'
+    #Abort
+
+            I_2 := { [ii',j] : Exists (ii: ii'=delta(ii) && 0 <= ii <= (n_inter-1)) && 1 <= j <=2 };
+            I_2;
+            # put ii in the front of this?
+            
+    ## prefix problem
+    # arguments to function must be prefix of input or output tuple
+
+
+# Iteration Space
+    symbolic n_atom;
+    I_0 := { [1,i,1] : 0 <= i <= (n_atom-1)  }
+           union { [2,ii,1] : 0 <= ii <= (n_inter-1)  }
+           union { [2,ii,2] : 0 <= ii <= (n_inter-1)  };
+
+# Iteration Reordering
+
+    #iter_reordering := { [ i ] -> [ delta( i ) ] };
+    iter_reordering := { [ i ] -> [ di ] };
+            
+    iter_ssr := { [ k, ii, j ] -> [ ii ] : k=2 };
+    
+    iter_ssr(I_0);
+    
+    (inverse iter_ssr) compose iter_reordering(iter_ssr(I_0));
+    
+    
+#Hmmmm, now I am thinking that the iteration reorderings need to be specified as #transformations on the whole iteration space.  Even if the access relation used #to compute the index array only involves a subspace of the iteration space.
+
+    iter_reordering := { [1,i,1] -> [1,i,1] } 
+                       union { [2,ii,j] -> [2,di,j] };
+    iter_reordering;      
+   
+    iter_reordering(I_0);
+ 
+    # wow, omega calculator actually did this wrong!
+    #     iter_reordering(I_0);
+
+    #{[In_1,In_2,1]: In_1 = 1 && 0 <= In_2 < n_atom} union
+    #{[In_1,In_2,1]: In_1 = 2 && 1 <= n_inter} union
+    #{[In_1,In_2,2]: In_1 = 2 && 1 <= n_inter}
+
+    
+    

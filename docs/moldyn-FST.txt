@@ -95,8 +95,8 @@ Access Relations
     
     // summary access relations are the union of all access relations
     // to a particular data space
-    A_I0_to_X0 := name = "A_I0_to_X0", { [ii,1] -> [ inter1(ii) ] } 
-                   union { [ii,2] -> [ inter2(ii) ] }
+    A_I0_to_X0 := name = "A_I0_to_X0", { [ii,j] -> [ inter1(ii) ] : 1<=j<=2 } 
+                   union { [ii,j] -> [ inter2(ii) ] : 1<=j<=2 }
                    
     A_I0_to_FX0 := name = "A_I0_to_FX0", { [ii,1] -> [ inter1(ii) ] } 
                    union { [ii,2] -> [ inter2(ii) ] }
@@ -286,7 +286,7 @@ Generating the composed inspector
 
         
         f) generate executor code for data reordering only
-        Note: eventually we want to generate the composed inspector/executor only, but for testing we need to be able to do each individually.
+        Note: eventually we want to generate the composed inspector/executor only, but for testing we need to be able to test as we go.
         
             input:
                 DataPermuteRTRT.data_spaces
@@ -408,95 +408,85 @@ Generating the composed inspector
                     
         
             For this example:
-                IAG_cpack = new IAG_Permute (
-                    String name = "LexMinHyper"       // function name
-                    AccessRelation input = A_I0_to_X0
+                IAG_lexmin = new IAG_Permute (
+                    String name = "IAG_lexmin"       // function name
+                    AccessRelation input = A_I1_to_X1
                     IndexArray result = new IndexArray( 
-                        data_space = "sigma", X_0.spec, index array,
-                        index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
+                        data_space = "delta", I_1.spec, index array,
+                        index_value_constraints = { [k] -> [delta(k)] : not (0 <= k <= (n_iter-1)) || (0 <= delta(k) <= (N-1)) }
                     )
 
                 )        
         
         
-        d) generate code that passes hypergraph to IAG
-            input: 
-                iag_spec for sigma
-                
-            output:
-                code
-                    [iag_spec.result.data_space.name] = malloc( ... );
-                    [iag_spec.name]( [iag_spec.input.name],
-                                     [iag_spec.result.data_space.name] );
-                    
+        d) generate code that passes hypergraph to IAG (same as 1d)
+
             For this example:
-                    int *sigma;
-                    MALLOC(sigma,int,N);
-                    CPackHyper( A_I0_to_X0, sigma );
+                    int *delta;
+                    MALLOC(delta,int,n_iter);
+                    IAG_lexmin( A_I1_to_X1, delta );
                     
          
-        e) generate code that does data reordering
-            input:
-                iag_spec for sigma
-                DataPermuteRTRT.data_spaces to be reordered
-                
-            output:
-                code that reorders the specified data spaces with sigma
-                // one call to reorderArray for each data space being reordered
-                reorderArray((unsigned char*) [data_space.name], 
-                             sizeof([data_space.datatype]), 
-                             [data_space.num_elem],
-                             [iag_spec.name])
+        e) generate code that does iteration reordering, which in this case is just a data reordering of the index arrays (same as 1e)
         
             For this example:
-                reorderArray((unsigned char *)x, sizeof(double), NUM_NODES, sigma);
-                reorderArray((unsigned char *)fx, sizeof(double), NUM_NODES, sigma);
+                reorderArray((unsigned char *)inter1, sizeof(int), NUM_NODES, delta);        
+                reorderArray((unsigned char *)inter2, sizeof(int), NUM_NODES, delta);
 
         
-        f) generate executor code for data reordering only
-        Note: eventually we want to generate the composed inspector/executor only, but for testing we need to be able to do each individually.
+        f) generate executor code for data reordering followed by iteration reordering
+        If we treat this like a data reordering of the index arrays inter1 and inter2, then we can avoid extra indirection?  It really is an iteration reordering though.  So we need to calculate the new iteration space and generate code for it.
         
-            input:
-                DataPermuteRTRT.data_spaces
-                
-                
-            output:
-                // statement macros
-                #define s1(t1, ..., ) ...    
-        
-                ...
-                
-                // new executor loop
-                for ...
-        
-            algorithm:
-                for each statement in computation
-                    for each data access
-                        if accessing array that was reordered
-                            modify array access relation as per DataPermuteRTRT.data_reordering specification
-                            
-                for each statement in computation
-                    generate macro code for statement
-                    
-                have omega generate code for transformed iteration space
-        
-        
-            output for this example:
-                #define e1(ii,g)    if ((g)==1) { \
-                    fx[sigma[inter1[ii]]] += x[sigma[inter1[ii]]]*0.1 \
-                             + x[sigma[inter2[ii]]]*0.3; \
-                } else { \
-                    fx[sigma[inter2[ii]]] += x[sigma[inter1[ii]]]*0.2  \
-                             + x[sigma[inter2[ii]]]*0.4; \
-                }
-
-                ...
+            I_1 := { [ii,1] : 0 <= ii <= (n_inter-1)  }
+                   union { [ii,2] : 0 <= ii <= (n_inter-1)  }
+                   
+            iter_reordering := { [ i ] -> [ delta( i ) ] }
             
-                // executor - execute the computation with modified arrays
-                for(t1 = 0; t1 <= n_inter-1; t1++) {
-                    e1(t1,1);
-                    e1(t1,2);
+            iter_sub_space_relation := { [ ii, j ] -> [ ii ] }
+        
+            I_2 = (inverse iter_sub_space_relation) compose iter_reordering(iter_sub_space_relation(I_1)) 
+                = { [ii',j] : Exists (ii: ii'=delta(ii) && 0 <= ii <= (n_inter-1)) && 1 <= j <=2 };
+        
+                Naive code gen for above
+                for (ii=0; ii<n_iter; i++) {
+                    ii' = delta[ii];
+                    ...
                 }
- 
+        
+Now what if we extend the iteration space to the following:
+
+Code
+    for (i=0; i<n_atom; i++) {
+        x[i] = i*5;
+    }
     
+    for (ii=0; ii<n_inter; ii++) {
+        // simplified computations
+        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+    }
+
+Iteration Space
+    I_0 := { [1,i,1] : 0 <= i <= (n_atom-1)  }
+           union { [2,ii,1] : 0 <= ii <= (n_inter-1)  }
+           union { [2,ii,2] : 0 <= ii <= (n_inter-1)  }
+
+Iteration Reordering
+
+    iter_reordering := { [ i ] -> [ delta( i ) ] }
+            
+    iter_sub_space_relation := { [ k, ii, j ] -> [ ii ] : k==2 }
+    
+
+#Hmmmm, now I am thinking that the iteration reorderings need to be specified as #transformations on the whole iteration space.  Even if the access relation used #to compute the index array only involves a subspace of the iteration space.
+
+    iter_reordering := { [1,i,1] -> [1,i,1] } 
+                       union { [2,ii,j] -> [2,delta(ii),j] };
+                       
+    full_sparse_tiling := { [s1,i,s2] -> [t,s1,i,s2] : t = tile(s1,i) };
+    
+    full_sparse_tiling(iter_reordering) = { [t,1,i,1] : t = tile(1,i) }
+                                          union { [t,2,ii',j] : (Exists ii: ii' = delta(i) and t = tile(2,ii')) };
+                                          
+                                          =======
     
