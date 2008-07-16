@@ -53,9 +53,21 @@ Implementation of pointer update
 ---------------------
 Iteration Permutation
 ---------------------
+Turn an iteration reordering into a data reordering.
 Look at all access relations that involve the loop being permuted.
-FIXME: we need access relations for index arrays as well as data arrays
-For all access relations where the access relation is the identity function, implement the iteration permutation with a data permutation.  If there are any where the access relation is not the identity, then create the iag which is the inverse of the iteration reordering, and modify the access relation to use that instead.
+FIXME: Currently this incorporates data alignment as well as doing iteration permutation.  See log-RTRTJournal for how I should fix this.
+
+Algorithm:
+    IP1) For all access relations where the access relation is the identity function, implement the iteration permutation with a data permutation on the target data spaces.   
+    
+    IP2) For each of these, create an identity 
+            new_iag(i) = old_iag( delta_inv( i ) ).
+    
+    IP3) If there are any where the access relation is not the identity, then create the iag which is the inverse of the iteration reordering, and replace the iterator in the access relation with the iteration reordering inverse of that iterator.
+    IOW, replace all uses of iterator i for loop being permuted with delta_inv(i).
+    
+    IP4) Wherever possible use the new_iag equalities created in step (1) to simplify the resulting access relations.
+    
 
 ----------------
 Code Gen for Set
@@ -150,3 +162,39 @@ iter_reordering( I_1 ) = {[k,j] : j=1 && 0 <= i <= (n_inter-1) &&  k=delta(i) } 
         //FIXME
         // ok now the problem is that ii is existentially quantified, 
         // it is involved in inequalities and in an uninterp equality
+        
+// Possible solution: iteration permutation 
+iter_reordering := { [i,j] -> [k,j] : k=delta(i) };
+I_1 := { [ii,1] : 0 <= ii <= (n_inter-1)  } union ...
+A_I1_to_INTER1_0 := name = "A_I1_to_INTER1_0", { [ii,1] -> [ ii ] } 
+                   union { [ii,2] -> [ ii ] }
+A_I1_to_X1 := name = "A_I1_to_X1", { [ii,j] -> [ sigma(inter1(ii)) ] : 1<=j<=2 } 
+              union { [ii,j] -> [ sigma(inter2(ii)) ] : 1<=j<=2 }
+                   
+// do step IP1
+for A_I1_to_INTER1_0 and A_I1_to_INTER1_1
+create DataPermuteRTRT
+        data_reordering = {[k] -> [delta(k)] }
+        iteration_space = I_1
+        data_spaces = [ INTER1_0, INTER2_0 ]
+        access_relation = none
+        iter_sub_space_relation = none
+        iag_func_name = none
+        iag_type = none
+        
+// step IP2
+    inter1_1(i) = inter1(delta_inv(i))
+    inter2_1(i) = inter2(delta_inv(i))
+
+// step IP3
+for A_I1_to_X1 and A_I1_to_FX1
+    A_I2_to_X1 := name = "A_I2_to_X1", { [ii,j] -> [ sigma(inter1(delta_inv(ii))) ] : 1<=j<=2 } 
+              union { [ii,j] -> [ sigma(inter2(delta_inv(ii))) ] : 1<=j<=2 }
+
+// step IP4
+    A_I2_to_X1 := name = "A_I2_to_X1", 
+              { [ii,j] -> [ sigma(inter1_1(ii)) ] : 1<=j<=2 } 
+              union { [ii,j] -> [ sigma(inter2_1(ii)) ] : 1<=j<=2 }
+              
+
+    
