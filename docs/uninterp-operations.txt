@@ -45,9 +45,10 @@ Could we use code gen for Relations to implement the construction of new_iag?
 If so this would be another example like Hypergraph construction that needs us to generate the loop to iterate over the input tuples and then generate code to provide the output tuple results for a given input tuple value. 
 
 Implementation of pointer update
-    1) create relation
-    2) generate code to generate new_iag
-    3) use definition of new_iag to replace compositions of two index arrays in any sets and/or relations
+    PU0) find access relations with nested uninterpreted functions 
+    PU1) create relation for each nest
+    PU2) generate code to generate new_iag
+    PU3) use definition of new_iag to replace compositions of two index arrays in any sets and/or relations
 
 
 ---------------------
@@ -76,8 +77,21 @@ Code Gen for Set
 ---------------------
 Code Gen for Relation
 ---------------------
+For pointer graph and explicit generation of a Hypergraph, we need to be able to generate code that iterates over the input tuples in a relation and generates the corresponding output tuple values.
 
-    
+    Algorithm:
+        - simplify relation
+        - gather all affine inequality constraints for input tuple variables
+        - send constraints to omega or Cloog code gen for loop code gen (ALAN?)
+        - for each output tuple variable use equality constraints to generate code that calculates their values in terms of the input variables and put in statement macro
+        
+    Might want to break the above into two pieces:
+        - generating code that iterates over the input tuple vars
+        - generate code that given the input tuple vars calculates the output tuple vars
+        
+    FIXME
+        - if there are 2+ conjuncts, can we always assume that the input tuple for each of those in the conjunct are the same?
+        
 --------------
 Simplification
 --------------
@@ -86,22 +100,14 @@ After we do any of the above specified operations, we are going to have some fre
 We think we need to get rid of them, because they complicate code gen if they are in sets and the complicate further operations if they are in relations.
 FIXME: need some examples of these two things
 
-S1) Removing equalities between vars
-    For each equality involving only two variables, a=b
-        Select one variable to be representative, a, make sure to use tuple var if one is a tuple var
-            replace the other variable with the representative in all constraints
-
-S2) Removing equalities between a variable and a constant.
-    For each equality involving a variable and a constant, v=k, k is constant
-    where v is NOT a tuple variable
-        Replace v with the constant in the rest of the constraints
-        Remove v=k from constraints
-
-S3) Removing inequalities between a variable and an expr (subsumes S1 and S2)
+S1) Removing equalities between a variable and an expr
     For each equality involving a variable and a constant, v=e or e=v
     What to do this for all non-tuple variables
         Replace v with the expression in the rest of the constraints.
         Remove v=e from the constraints
+
+S2) Removing inequalities. v <= e or v >= e
+    If v is only involved in inequalities where e is constant or a scalar symbolic constant, then remove all inequalities involving v.
 
 ==================================================== Examples =========
 
@@ -115,15 +121,15 @@ R2 := { [ k ] -> [ ii, 1 ] : k=inter1(ii) } union ...
 R1 ( R2 ) = { [ k ] -> [ c ] : a=ii && b=1 && c=a && k=inter1(ii) }
             union ...
             
-// applying S3 to a=ii, expr=ii
+// applying S1 to a=ii, expr=ii
 R1 ( R2 ) = { [ k ] -> [ c ] : b=1 && c=a && k=inter1(a) }
             union ...
             
-// applying S3 to c=a, expr=a
+// applying S1 to c=a, expr=a
 R1 ( R2 ) = { [ k ] -> [ c ] : b=1 && k=inter1(c) }
             union ...
 
-// applying S3 to b=1, expr=1
+// applying S1 to b=1, expr=1
 R1 ( R2 ) = { [ k ] -> [ c ] : k=inter1(c) }
             union ...
 
@@ -137,10 +143,10 @@ A_I0_to_X0 := {  [ ii, 1 ] -> [ k ] : k=inter1(ii) } union ...
         
 data_reordering(A_I0_to_X0) = { [ii,1] -> [f] : j=k && f = sigma(j) && k=inter1(ii) } union ...
         
-// applying S3 to j=k, expr=k
+// applying S1 to j=k, expr=k
 data_reordering(A_I0_to_X0) = { [ii,1] -> [f] :  f = sigma(j) && j=inter1(ii) } union ...
         
-// applying S3 to j=inter1(ii), expr=inter1(ii)       
+// applying S1 to j=inter1(ii), expr=inter1(ii)       
 data_reordering(A_I0_to_X0) = { [ii,1] -> [f] :  f = sigma(inter1(ii)) } union ...
         
 // applying pointer update, inter1'(i) = sigma(inter1(i))
@@ -156,7 +162,7 @@ I_1 := { [ii,1] : 0 <= ii <= (n_inter-1)  } union ...
                    
 iter_reordering( I_1 ) = {[k,j] : i=ii && j=1 && 0 <= ii <= (n_inter-1) &&  k=delta(i) } union ...
 
-// applying S3 to remove i==ii
+// applying S1 to remove i==ii
 iter_reordering( I_1 ) = {[k,j] : j=1 && 0 <= i <= (n_inter-1) &&  k=delta(i) } union ...
 
         //FIXME
