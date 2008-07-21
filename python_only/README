@@ -1,0 +1,4 @@
+This works.
+>>> import pres_parser
+>>> parser = pres_parser.PresParser('set')
+>>> parser.parse_set('{[i,j,k]}')
