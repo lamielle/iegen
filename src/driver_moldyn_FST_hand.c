@@ -38,6 +38,28 @@ static bool debug = true;
                              + x[sigma[inter2[ii]]]*0.4; \
   }
 
+// iteration reordering inspector hypergraph gen
+// this macro captures A_I1_to_X1, count, and data_index
+#define s2(t1) data_index = sigma[inter1[t1]]; \
+                        Hypergraph_ordered_insert_node(A_I1_to_X1,count, \
+                        data_index); \
+                        data_index = sigma[inter2[t1]]; \
+                        Hypergraph_ordered_insert_node(A_I1_to_X1,count, \
+                        data_index); \
+                        count++ 
+
+// executor after data reordering and iteration reordering
+// this macro captures reordered x and fx, the index arrays inter1 and inter2,
+// and the newly generated index array sigma.
+#define e2(ii,g)    if ((g)==1) { \
+    fx[sigma[inter1[ii]]] += x[sigma[inter1[ii]]]*0.1 \
+                             + x[sigma[inter2[ii]]]*0.3; \
+  } else { \
+    fx[sigma[inter2[ii]]] += x[sigma[inter1[ii]]]*0.2  \
+                             + x[sigma[inter2[ii]]]*0.4; \
+  }
+
+
 //=======================================================
 
 int main() 
@@ -105,9 +127,11 @@ int main()
     }
     
 //=======================================================
+// data reordering
 // Code that should be automatically generated
 
     if (debug) {
+        printf("\n===== Data Reordering =====\n");
         printf("\nbefore inspector/executor computation\n");
         printf("x = "); printRealArray(x, NUM_NODES);
         printf("fx = "); printRealArray(fx, NUM_NODES);
@@ -199,10 +223,71 @@ int main()
         printf("\nDifferent result\n");
     }
 
+//=======================================================
+// iteration reordering
+// Code that should be automatically generated
+
+    if (debug) {
+        printf("\nbefore inspector/executor computation\n");
+        printf("inter1 = "); printArray(inter1, NUM_NODES);
+        printf("inter2 = "); printArray(inter2, NUM_NODES);
+    }
+
+    //---------------- Iteration reordering inspector/executor
+
+    // Inspector
+    // initialize variables
+    {  // put in a block to simplify code between inspectors
+        Hypergraph* A_I1_to_X1 = Hypergraph_ctor();
+        int count=0;
+        int data_index=0;
+        int t1;
+                    
+        // build the hypergraph representing the access relation explicitly
+        for(t1 = 0; t1 <= n_inter-1; t1++) {
+            // see top of file for definition of s1 macro
+            s2(t1);
+        }
+
+        Hypergraph_finalize(A_I1_to_X1);
+
+        // call the index array generator to create reordering function
+        int *delta;
+        MALLOC(delta,int,NUM_NODES);
+        IAG_lexmin( A_I1_to_X1, delta );
+
+        if (debug) {
+            printf("\nAfter call to IAG_lexmin, delta = ");
+            printArray(delta, NUM_NODES);
+        }
+
+        // reorder two index arrays based on reordering function
+        reorderArray((unsigned char *)inter1, sizeof(int), NUM_NODES, delta); 
+        reorderArray((unsigned char *)inter2, sizeof(int), NUM_NODES, delta); 
+
+        if (debug) {
+            printf("\nafter reordering arrays\n");
+            printf("inter1 = "); printArray(inter1, NUM_NODES);
+            printf("inter2 = "); printArray(inter2, NUM_NODES);
+        }
+
+// Haven't figured this out yet for iteration reordering
+        // executor - execute the computation with modified arrays
+//        for(t1 = 0; t1 <= n_inter-1; t1++) {
+//            e2(t1,1);
+//            e2(t1,2);
+//        }
+    }
+
+//=======================================================
+
+
     // cleanup
     Hypergraph_dtor(&A_I0_to_X0);
-    FREE(original_fx, double, NUM_NODES);
+    Hypergraph_dtor(&A_I1_to_X1);
     FREE(sigma,int,NUM_NODES);
+    FREE(delta,int,NUM_NODES);
+    FREE(original_fx, double, NUM_NODES);
     FREE(fx,double,NUM_NODES);
     FREE(x,double,NUM_NODES);
     FREE(inter1,int,NUM_NODES);

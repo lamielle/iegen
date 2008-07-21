@@ -30,9 +30,15 @@ Assumptions
 
 
 --------------
-Pointer Update
+Collapsing Index Arrays
 --------------
-Motivation: makes it so explicit construction of the data mapping is cheaper and improves the performance in the executor code
+Examples include pointer update and array alignment.
+
+Pointer update motivation: makes it so explicit construction of the data mapping is cheaper and improves the performance in the executor code.
+
+Array alignment: same motivation.
+If an array (either data and/or index) is directly accessed by a loop iterator and that loop is permuted, then data alignment applied afterwards essentially turns an iteration reordering into a data reordering.
+
 
 Given two index arrays, pointer update creates a new index array that is the composition of the two index arrays.
 new_iag = iag1[ iag2[ i ] ]
@@ -54,9 +60,16 @@ Implementation of pointer update
 ---------------------
 Iteration Permutation
 ---------------------
-Turn an iteration reordering into a data reordering.
-Look at all access relations that involve the loop being permuted.
-FIXME: Currently this incorporates data alignment as well as doing iteration permutation.  See log-RTRTJournal for how I should fix this.
+Implement an iteration permutation by modifying the data access relations with the inverse iteration permutation.  An iteration permutation can be performed on some subspace of the iteration space, but for now we are assuming that that subspace only has one iterator.
+
+    IP1) For all instances of the iterator being permuted in the access relations replace the iterator with delta_inv(i), where i is the iterator and delta_inv is the inverse of the loop permutation.
+
+
+---------------------
+Data Alignment
+---------------------
+Data alignment can be more general than that however.  Actually pointer update and data alignment are the same ITO (inter-transformation optimization).  They both take nested index array accesses and collapse them by one or more levels.
+
 
 Algorithm:
     IP1) For all access relations where the access relation is the identity function, implement the iteration permutation with a data permutation on the target data spaces.   
@@ -108,6 +121,9 @@ S1) Removing equalities between a variable and an expr
 
 S2) Removing inequalities. v <= e or v >= e
     If v is only involved in inequalities where e is constant or a scalar symbolic constant, then remove all inequalities involving v.
+    
+S3) Remove variable by creating the inverse of a permutation.
+    If have an existential variable that is input to two or more uninterpreted function symbols and at least one of them is a non-nested uninterp function where the associated index array is a permutation, then solve for existential variable using the inverse of the permutation.  Then apply S1 to eliminate existential variable in other places where it is an input.
 
 ==================================================== Examples =========
 

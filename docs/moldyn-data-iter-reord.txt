@@ -244,6 +244,7 @@ Generating the composed inspector
                 CPackHyper( A_I0_to_X0, sigma );
 
     e) generate code that does data reordering
+    FIXME: eventually all the data reordering will be done only once per composition.  This example has only one data reordering, so this is somewhat mute.
         input:
             iag_spec for sigma
             DataPermuteRTRT.data_spaces to be reordered
@@ -281,7 +282,7 @@ Generating the composed inspector
                     union { [ii,2] -> [ k ] : k=sigma(inter2(ii)) }
 
     
-3) (optional) pointer update optimization
+3) (optional) pointer update optimization, or collapsing index arrays
 After performing a data reordering, if index arrays that access the reordered data arrays are updated with the new locations of data elements then later inspectors and the final executor will require fewer indirect accesses.
     PU0) note that A_I_0_to_X_1 and A_I_0_to_FX_1 contain sigma(inter1(ii)) and sigma(inter2(ii))
     PU1) { [ii] -> [k] : k=sigma(inter1(ii)) && bounds for inter1 input } 
@@ -294,7 +295,7 @@ After performing a data reordering, if index arrays that access the reordered da
         }
         // similar for inter2_1
             
-    PU3) modify all access relations by replacing sigma[inter1[t1]] with inter1_1[t1]
+    PU3) modify all access relations by replacing sigma(inter1(t1)) with inter1_1(t1)
 
 4) generate executor code for data reordering only (only for testing)
    Note: eventually we want to generate the composed inspector/executor only, but for testing we need to be able to test as we go.
@@ -426,5 +427,29 @@ After performing a data reordering, if index arrays that access the reordered da
                 int *delta;
                 MALLOC(delta,int,n_iter);
                 IAG_lexmin( A_I_0_to_X_1, delta );
+                
+4) Modify iteration space and access functions based on previous transformation.
+Since doing a loop permutation, going to modify access relations and NOT the iteration space.  However, going to rename iteration space to indicate that in essence it has been reordered.
 
-LEFTOFF: time to apply loop permutation I think                    
+    I_1 = I_0       // use same bounds for newly permuted iteration space
+    X_1 and FX_1    // were not modified
+    A_I_1_to_X_1 =  A_I_1_to_X_1 compose (inverse iter_permute)
+                 = { [ii,j] -> [r] : r=sigma( inter1(ii) ) && 1<=j<=2 } ... compose ( [a,b] -> [i,b] : a = delta(i) }
+                    // compose 2 relations
+                = { [a,b] -> [r] : ii=i && b=j && r=sigma(inter1(ii)) && 1 <=j<=2 && a=delta(i) }
+                    // apply S1
+                = { [a,b] -> [r] : r=sigma(inter1(i)) && 1 <=b<=2 && a=delta(i)}
+                    // apply S3
+                = { [a,b] -> [r] : r=sigma(inter1(i)) && 1 <=b<=2 && i=delta_inv(a)}
+                    // apply S1 on i = delta_inv(a)
+                = { [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2}
+
+5) (optional) collapsing index arrays, pointer update and array alignment 
+
+    Generate code to create new_iag().                    
+
+    Update access relations.
+    { [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2 && i=delta_inv(a)}
+        // apply collapsing index arrays to sigma(inter1(delta_inv(a)))
+    { [a,b] -> [r] : r=new_iag(a) && 1 <=b<=2 }   
+
