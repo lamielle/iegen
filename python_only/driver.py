@@ -2,6 +2,13 @@
 # 
 # Driver to test the python only parsing and representation of Presburger sets 
 # and relations with uninterpreted function symbols.
+
+# Initial testing of the ast
+from ast import *
+
+root = PresSet(VarTuple(['a','b']),Conjunction([Inequality(IdExp('a'),IntExp('5'))]))
+
+# Testing of the presburger set and relation parser.
 import pres_parser
 
 parser = pres_parser.PresParser('set')
@@ -48,3 +55,5 @@ rparser.parse_relation('{ [k] -> [a] : a=ii && b=j && k=inter1(ii) && 1<=j<=2 }'
 rparser.parse_relation('{ [k] -> [a] : k=inter1(a) && 1<=j<=2 }')
 rparser.parse_relation('{ [k] -> [a] : k=inter1(a) }')
 rparser.parse_relation('{ [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2}')
+
+

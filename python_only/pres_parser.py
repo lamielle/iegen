@@ -4,6 +4,8 @@
 # MMS 7/21/08
 # 
 
+from ast import *
+
 #---------- Presburger Formula Parser Class ----------
 class PresParser(object):
 	def __init__(self,parser_type):
@@ -207,7 +209,7 @@ class PresParser(object):
 			t[0]=t[2]
 		else:
 			#Empty constraints
-			t[0]=[]
+			t[0]=Conjunction([])
 			
 	def p_constraints(self,t):
 		'''constraints : constraint_and
@@ -218,17 +220,17 @@ class PresParser(object):
 	#And/Paren productions
 	def p_constraint_and(self,t):
 		'''constraint_and : constraints AND constraints'''
-		t[0]=[t[1],t[2],t[3]]
+		t[0]=Conjunction(t[1],t[2])
 
 	def p_constraint_paren(self,t):
 		'''constraint_paren : LPAREN constraints RPAREN'''
-		t[0]=[t[1],t[2],t[3]]
+		t[0]=t[2]
 
 	#Statement productions
 	def p_statement_chain(self,t):
 		'''statement_chain : expr_list statement_relational_operator expr_list
 		                   | expr_list statement_relational_operator statement_chain'''
-		t[0] = [t[1],t[2],t[3]]
+		t[0] = Conjunction([])  # for now ignoring
 
 	def p_statement_relational_operator(self,t):
 		'''statement_relational_operator : EQ
@@ -237,7 +239,14 @@ class PresParser(object):
 		                                 | GTE
 		                                 | LT
 		                                 | LTE'''
-		t[0]=t[1]
+		if EQ==t[2]:
+			t[0]=Equality(
+		elif '-'==str(t[2]):
+			t[0]=PresExprSub.new(t[1],t[3])
+		elif '*'==str(t[2]):
+			t[0]=PresExprMult.new(t[1],t[3])
+		else:
+			assert False
 		
 	def p_expr_list(self,t):
 		'''expr_list : expr_list COMMA expression
@@ -259,21 +268,28 @@ class PresParser(object):
 		
 	def p_expression_int(self,t):
 		'''expression_int : INT'''
-		t[0]=t[1]
+		t[0]=IntExp(t[1])
 		
 	def p_expression_unop(self,t):
 		'''expression_unop : DASH expression %prec UMINUS'''
-		t[0]=[t[1],t[2]]
+		t[0]=UMinusExp(t[2])
 		
 	def p_expression_binop(self,t):
 		'''expression_binop : expression PLUS expression
 								  | expression DASH expression
 								  | expression STAR expression'''
-		t[0]=[t[1],t[2],t[3]]
+		if '+'==str(t[2]):
+			t[0]=PlusExp(t[1],t[3])
+		elif '-'==str(t[2]):
+			t[0]=MinusExp(t[1],t[3])
+		elif '*'==str(t[2]):
+			t[0]=MulExp(t[1],t[3])
+		else:
+			assert False
 
 	def p_expression_int_mult(self,t):
 		'''expression_int_mult : INT expression_simple'''
-		t[0]=[t[1],t[2]]
+		t[0]=IntMulExp[t[1],t[2]]
 		
 	def p_expression_simple(self,t):
 		'''expression_simple : expression_id
@@ -283,15 +299,15 @@ class PresParser(object):
 		
 	def p_expression_id(self,t):
 		'''expression_id : ID'''
-		t[0]=t[1]
+		t[0]=IdExp(t[1])
 		
 	def p_expression_func(self,t):
 		'''expression_func : tuple_variable_id LPAREN expr_list RPAREN'''
-		t[0]=[t[1],t[2],t[3],t[4]]
+		t[0]=FuncExp(t[1],t[3])
 		
 	def p_expression_paren(self,t):
 		'''expression_paren : LPAREN expression RPAREN'''
-		t[0]=[t[1],t[2],t[3]]
+		t[0]=t[2]
 	#--------------------------------------------------
 
 #-------------------------------------------------------------------------
