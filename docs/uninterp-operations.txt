@@ -32,7 +32,7 @@ Assumptions
 --------------
 Collapsing Index Arrays
 --------------
-Examples include pointer update and array alignment.
+Examples include pointer update and array alignment.  Actually pointer update and data alignment are the same ITO (inter-transformation optimization).  They both take nested index array accesses and collapse them by one or more levels.
 
 Pointer update motivation: makes it so explicit construction of the data mapping is cheaper and improves the performance in the executor code.
 
@@ -68,7 +68,7 @@ Implement an iteration permutation by modifying the data access relations with t
 ---------------------
 Data Alignment
 ---------------------
-Data alignment can be more general than that however.  Actually pointer update and data alignment are the same ITO (inter-transformation optimization).  They both take nested index array accesses and collapse them by one or more levels.
+Data alignment can be more general than that however.  
 
 
 Algorithm:

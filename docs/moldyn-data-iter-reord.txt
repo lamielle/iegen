@@ -21,8 +21,8 @@ Notes
 What the user specifies
 -----------------------
 Iteration Space
-    I_0 := { [ii,1] : 0 <= ii <= (n_inter-1)  }
-           union { [ii,2] : 0 <= ii <= (n_inter-1)  }
+    I_0 := { [ii,j] : j=1 && 0 <= ii <= (n_inter-1)  }
+           union { [ii,j] : j=2 && 0 <= ii <= (n_inter-1)  }
 
 Symbolic Constants
     N                   // number of atoms
@@ -53,13 +53,13 @@ Access Relations
     These actually need to be specified per data access in each statement.
 
     statement   access#     DataSpace   AccessRelation
-    [ii,1]      a1           FX_0        { [ii,1] -> [ inter1(ii) ] }
-    [ii,1]      a2           X_0         { [ii,1] -> [ inter1(ii) ] }
-    [ii,1]      a3           X_0         { [ii,1] -> [ inter2(ii) ] }
+    [ii,1]      a1           FX_0        { [ii,j] -> [k] :j=1 && k=inter1(ii) }
+    [ii,1]      a2           X_0         { [ii,j] -> [k] :j=1 && k=inter1(ii) }
+    [ii,1]      a3           X_0         { [ii,j] -> [k] :j=1 && k=inter2(ii) }
     
-    [ii,2]      a4           FX_0        { [ii,1] -> [ inter2(ii) ] }
-    [ii,2]      a5           X_0         { [ii,1] -> [ inter1(ii) ] }
-    [ii,2]      a6           X_0         { [ii,1] -> [ inter2(ii) ] }
+    [ii,2]      a4           FX_0        { [ii,j] -> [k] :j=2 && k=inter2(ii) }
+    [ii,2]      a5           X_0         { [ii,j] -> [k] :j=2 && k=inter1(ii) }
+    [ii,2]      a6           X_0         { [ii,j] -> [k] :j=2 && k=inter2(ii) }
     
     // summary access relations are the union of all access relations
     // to a particular data space
@@ -87,7 +87,7 @@ Data Dependences
 Composition and choice of RTRTs
     data reordering
         DataPermuteRTRT
-            data_reordering = { [ k ] -> [ r ] : r=sigma( k ) ] }
+            data_reordering = { [ k ] -> [ r ] : r=sigma( k ) }
             iteration_space = I_0
             data_spaces = [ X_0, FX_0 ]
             access_relation = A_I0_to_X0
@@ -100,7 +100,7 @@ Composition and choice of RTRTs
     
     iteration reordering
         IterPermuteRTRT
-            iter_reordering = { [ i ] -> [ delta( i ) ] }
+            iter_reordering = { [ i ] -> [ k ] : k = delta( i ) }
             iteration_space = I_0
             access_relation = A_I_0_to_X_1
             iag_func_name = LexMin

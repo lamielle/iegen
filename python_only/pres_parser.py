@@ -53,7 +53,10 @@ class PresParser(object):
 	#---------- Lexer methods/members ----------
 	#Token definitions
 	keywords={
-		}
+		'and':'AND','AND':'AND',
+		'union':'UNION','UNION':'UNION'
+    }
+
 
 	tokens=('LBRACE','RBRACE','LBRACKET','RBRACKET','LPAREN','RPAREN','COMMA','COLON','STAR','PLUS','DASH','EQ','NEQ','GT','GTE','LT','LTE','ARROW','ID','INT')+tuple(set(keywords.values()))
 
@@ -109,34 +112,42 @@ class PresParser(object):
 		t.lexer.skip(1)
 
 	#---------- Parser methods/members ----------
-#	precedence=(
-#		('left','PLUS','DASH'),
-#		('left','STAR'),
-#		('left','UMINUS'),
-#		('left','OR'),
-#		('left','AND'),
-#		('right','NOT'),
-#	)
-
+	precedence=(
+		('left','PLUS','DASH'),
+		('left','STAR'),
+		('left','UMINUS'),
+		('left','AND'),
+		('left','UNION')
+	)
+	
 	#Parser error routine
 	def p_error(self,t):
 		from ply import yacc
 		raise SyntaxError("Syntax error at '%s' [%d,%d]" %(t.value,t.lineno,t.lexpos))
 
 	def p_set(self,t):
-		'''set : LBRACE variable_tuple_set RBRACE'''
-		t[0] = t[2]
-		print "in p_set, t = ", t
+		'''set : LBRACE variable_tuple_set optional_constraints RBRACE
+				           | set UNION set'''
+		if 5==len(t):
+			t[0] = [t[1],t[2],t[3],t[4]]
+		else:
+			t[0] = [t[1],t[2],t[3]]
+		print "in p_set, t[0] = ", t[0]
         
 
 	def p_relation(self,t):
-		'''relation : LBRACE variable_tuple_in ARROW variable_tuple_out RBRACE'''
-		print "in p_relation, t = ", t
+		'''relation : LBRACE variable_tuple_in ARROW variable_tuple_out optional_constraints RBRACE
+				           | relation UNION relation'''
+		if 7==len(t):
+			t[0] = [t[1],t[2],t[3],t[4],t[5],t[6]]
+		else:
+			t[0] = [t[1],t[2],t[3]]
+		print "in p_relation, t[0] = ", t[0]
 
 	#epsilon (empty production)
-#	def p_epsilon(self,t):
-#		'''epsilon :'''
-#		t[0]=None
+	def p_epsilon(self,t):
+		'''epsilon :'''
+		t[0]=["epsilon"]
 
 	def p_var_id_list(self,t):
 		'''var_id_list : var_id_list COMMA tuple_variable_id
@@ -150,15 +161,15 @@ class PresParser(object):
 	#---------- Variable Tuple Productions ----------
 	def p_variable_tuple_set(self,t):
 		'''variable_tuple_set : variable_tuple'''
-		print "in p_variable_tuple_set, t = ", t
+		t[0] = t[1]
 
 	def p_variable_tuple_in(self,t):
 		'''variable_tuple_in : variable_tuple'''
-		print "in p_variable_tuple_in, t = ", t
+		t[0] = t[1]
 		
 	def p_variable_tuple_out(self,t):
 		'''variable_tuple_out : variable_tuple'''
-		print "in p_variable_tuple_out, t = ", t
+		t[0] = t[1]
 
 	def p_variable_tuple(self,t):
 		'''variable_tuple : LBRACKET tuple_variable_list RBRACKET
@@ -185,10 +196,102 @@ class PresParser(object):
 		
 	def p_tuple_variable_id(self,t):
 		'''tuple_variable_id : ID'''
-		print "in p_tuple_variable_id, t = ", t
 		t[0] = t[1]
 
 	#--------------------------------------------------
+	#---------- Constraint Productions ----------
+	def p_optional_constraints(self,t):
+		'''optional_constraints : COLON constraints
+		                        | epsilon'''
+		if 3==len(t):
+			t[0]=t[2]
+		else:
+			#Empty constraints
+			t[0]=[]
+			
+	def p_constraints(self,t):
+		'''constraints : constraint_and
+		               | constraint_paren		            
+		               | statement_chain'''
+		t[0]=t[1]
 
+	#And/Paren productions
+	def p_constraint_and(self,t):
+		'''constraint_and : constraints AND constraints'''
+		t[0]=[t[1],t[2],t[3]]
+
+	def p_constraint_paren(self,t):
+		'''constraint_paren : LPAREN constraints RPAREN'''
+		t[0]=[t[1],t[2],t[3]]
+
+	#Statement productions
+	def p_statement_chain(self,t):
+		'''statement_chain : expr_list statement_relational_operator expr_list
+		                   | expr_list statement_relational_operator statement_chain'''
+		t[0] = [t[1],t[2],t[3]]
+
+	def p_statement_relational_operator(self,t):
+		'''statement_relational_operator : EQ
+		                                 | NEQ
+		                                 | GT
+		                                 | GTE
+		                                 | LT
+		                                 | LTE'''
+		t[0]=t[1]
+		
+	def p_expr_list(self,t):
+		'''expr_list : expr_list COMMA expression
+		             | expression'''
+		if 4==len(t):
+			t[1].append(t[3])
+			t[0]=t[1]
+		else:
+			t[0]=[t[1]]
+	#--------------------------------------------------
+	#---------- Expression Productions ----------
+	def p_expression(self,t):
+		'''expression : expression_int
+		              | expression_unop
+		              | expression_binop
+		              | expression_int_mult
+		              | expression_simple'''
+		t[0]=t[1]
+		
+	def p_expression_int(self,t):
+		'''expression_int : INT'''
+		t[0]=t[1]
+		
+	def p_expression_unop(self,t):
+		'''expression_unop : DASH expression %prec UMINUS'''
+		t[0]=[t[1],t[2]]
+		
+	def p_expression_binop(self,t):
+		'''expression_binop : expression PLUS expression
+								  | expression DASH expression
+								  | expression STAR expression'''
+		t[0]=[t[1],t[2],t[3]]
+
+	def p_expression_int_mult(self,t):
+		'''expression_int_mult : INT expression_simple'''
+		t[0]=[t[1],t[2]]
+		
+	def p_expression_simple(self,t):
+		'''expression_simple : expression_id
+		                     | expression_func
+		                     | expression_paren'''
+		t[0]=t[1]
+		
+	def p_expression_id(self,t):
+		'''expression_id : ID'''
+		t[0]=t[1]
+		
+	def p_expression_func(self,t):
+		'''expression_func : tuple_variable_id LPAREN expr_list RPAREN'''
+		t[0]=[t[1],t[2],t[3],t[4]]
+		
+	def p_expression_paren(self,t):
+		'''expression_paren : LPAREN expression RPAREN'''
+		t[0]=[t[1],t[2],t[3]]
+	#--------------------------------------------------
 
 #-------------------------------------------------------------------------
