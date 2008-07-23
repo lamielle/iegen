@@ -1,6 +1,14 @@
 #
 # Attempting a python only manipulation of presburger sets and relations.
 # Copied and trimmed from omega_bindings/src/omega/parser/pres_parser.py.
+#
+# Assumptions and set and relation language restrictions
+#   - All constraints must be written as binary operations. 
+#     For example, 1<=i<=10 must be written as 1<=i && i<=10.  
+#   - The constraints will all be part of a conjunction.  For disjunction
+#     union separate sets. 
+#   - This grammar does NOT include Exists, Forall, or not keywords.
+#
 # MMS 7/21/08
 # 
 
@@ -131,7 +139,7 @@ class PresParser(object):
 		'''set : LBRACE variable_tuple_set optional_constraints RBRACE
 				           | set UNION set'''
 		if 5==len(t):
-			t[0] = [t[1],t[2],t[3],t[4]]
+			t[0] = PresSet(t[2],t[3])
 		else:
 			t[0] = [t[1],t[2],t[3]]
 		print "in p_set, t[0] = ", t[0]
@@ -151,14 +159,14 @@ class PresParser(object):
 		'''epsilon :'''
 		t[0]=["epsilon"]
 
-	def p_var_id_list(self,t):
-		'''var_id_list : var_id_list COMMA tuple_variable_id
-		           | tuple_variable_id'''
-		if 4==len(t):
-			t[1].append(t[3])
-			t[0]=t[1]
-		else:
-			t[0]=[t[1]]
+#	def p_var_id_list(self,t):
+#		'''var_id_list : var_id_list COMMA tuple_variable_id
+#		           | tuple_variable_id'''
+#		if 4==len(t):
+#			t[1].append(t[3])
+#			t[0]=t[1]
+#		else:
+#			t[0]=[t[1]]
 
 	#---------- Variable Tuple Productions ----------
 	def p_variable_tuple_set(self,t):
@@ -177,9 +185,9 @@ class PresParser(object):
 		'''variable_tuple : LBRACKET tuple_variable_list RBRACKET
 		                  | LBRACKET RBRACKET'''
 		if 4==len(t):
-			t[0]=t[2]
+			t[0]=VarTuple(t[2])
 		else:
-			t[0]=[]
+			t[0]=VarTuple([])
 			
 	def p_tuple_variable_list(self,t):
 		'''tuple_variable_list : tuple_variable
@@ -203,59 +211,72 @@ class PresParser(object):
 	#--------------------------------------------------
 	#---------- Constraint Productions ----------
 	def p_optional_constraints(self,t):
-		'''optional_constraints : COLON constraints
+		'''optional_constraints : COLON constraint_list
 		                        | epsilon'''
 		if 3==len(t):
-			t[0]=t[2]
+			t[0]=Conjunction(t[2])
 		else:
 			#Empty constraints
 			t[0]=Conjunction([])
 			
-	def p_constraints(self,t):
-		'''constraints : constraint_and
-		               | constraint_paren		            
-		               | statement_chain'''
-		t[0]=t[1]
-
-	#And/Paren productions
-	def p_constraint_and(self,t):
-		'''constraint_and : constraints AND constraints'''
-		t[0]=Conjunction(t[1],t[2])
-
-	def p_constraint_paren(self,t):
-		'''constraint_paren : LPAREN constraints RPAREN'''
-		t[0]=t[2]
-
-	#Statement productions
-	def p_statement_chain(self,t):
-		'''statement_chain : expr_list statement_relational_operator expr_list
-		                   | expr_list statement_relational_operator statement_chain'''
-		t[0] = Conjunction([])  # for now ignoring
-
-	def p_statement_relational_operator(self,t):
-		'''statement_relational_operator : EQ
-		                                 | NEQ
-		                                 | GT
-		                                 | GTE
-		                                 | LT
-		                                 | LTE'''
-		if EQ==t[2]:
-			t[0]=Equality(
-		elif '-'==str(t[2]):
-			t[0]=PresExprSub.new(t[1],t[3])
-		elif '*'==str(t[2]):
-			t[0]=PresExprMult.new(t[1],t[3])
+	def p_constraint_list(self,t):
+		'''constraint_list : constraint
+		                   | constraint_list AND constraint'''
+		#Starting a new list
+		if 2==len(t):
+			t[0]=[t[1]]
+		#Adding to an existing list
 		else:
-			assert False
-		
-	def p_expr_list(self,t):
-		'''expr_list : expr_list COMMA expression
-		             | expression'''
-		if 4==len(t):
 			t[1].append(t[3])
 			t[0]=t[1]
-		else:
-			t[0]=[t[1]]
+
+
+	def p_constraint(self,t):
+		'''constraint :  constraint_paren		            
+		               | constraint_eq
+		               | constraint_neq
+		               | constraint_gt
+		               | constraint_gte
+		               | constraint_lt
+		               | constraint_lte'''
+		t[0]=t[1]
+	
+
+	def p_constraint_paren(self,t):
+		'''constraint_paren : LPAREN constraint RPAREN'''
+		t[0]=t[2]
+
+	def p_constraint_eq(self,t):
+		'''constraint_eq : expression EQ expression'''
+		t[0]=Equality(t[1],t[3])
+
+	def p_constraint_neq(self,t):
+		'''constraint_neq : expression NEQ expression'''
+		# (t[1]!=t[3]) = (t[1]<t[3] && t[3]<t[1]) 
+		#              = (t[1]<=t[3]-1 && t[3]<=t[1]-1)
+		t[0]=Conjunction(Inequality(t[1],MinusExp(t[3],IntExp('1'))),
+		                 Inequality(t[3],MinusExp(t[1],IntExp('1'))))
+
+	def p_constraint_gt(self,t):
+		'''constraint_gt : expression GT expression'''
+		# (t[1] > t[3]) = (t[3] < t[1]) = (t[3] <= t[1]-1)  
+		t[0]=Inequality(PlusExp(t[3],IntExp('1')),t[1])
+
+	def p_constraint_gte(self,t):
+		'''constraint_gte : expression GTE expression'''
+		# (t[1] >= t[3]) = (t[3] =< t[1])  
+		t[0]=Inequality(t[3],t[1])
+
+	def p_constraint_lt(self,t):
+		'''constraint_lt : expression LT expression'''
+		# (t[1] < t[3]) = (t[1] <= t[3]-1)  
+		t[0]=Inequality(t[1],MinusExp(t[3],IntExp('1')))
+
+	def p_constraint_lte(self,t):
+		'''constraint_lte : expression LTE expression'''
+		t[0]=Inequality(t[1],t[3])
+
+
 	#--------------------------------------------------
 	#---------- Expression Productions ----------
 	def p_expression(self,t):
@@ -308,6 +329,16 @@ class PresParser(object):
 	def p_expression_paren(self,t):
 		'''expression_paren : LPAREN expression RPAREN'''
 		t[0]=t[2]
+		
+	def p_expr_list(self,t):
+		'''expr_list : expr_list COMMA expression
+		             | expression'''
+		if 4==len(t):
+			t[1].append(t[3])
+			t[0]=t[1]
+		else:
+			t[0]=[t[1]]
+
 	#--------------------------------------------------
 
 #-------------------------------------------------------------------------

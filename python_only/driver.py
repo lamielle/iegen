@@ -17,10 +17,10 @@ parser = pres_parser.PresParser('set')
 parser.parse_set('{[i,j,k]}')
 
 # set with simple conditions
-parser.parse_set('{[i,j,k]: 1 <= i <= 45 }')
+parser.parse_set('{[i,j,k]: 1 <= i && i <= 45 }')
 
 # set with more complex conditions
-parser.parse_set('{[i,j,k]: 1 <= i,j,k <= 45 }')
+parser.parse_set('{[i,j,k]: 1 <= i && 1<=j && 1<=k && i<= 45 && j<=45 && k<=45 }')
 
 # Parsing relations
 rparser = pres_parser.PresParser('relation')
@@ -39,21 +39,21 @@ rparser.parse_relation('{[i] -> [j] : i = sigma(delta(j)) }')
 
 # Checking that we can parse all examples from 
 # iegen/docs/moldyn-data-iter-reord.txt
-parser.parse_set('{ [ii,j] : j=1 && 0 <= ii <= (n_inter-1)  } union { [ii,j] : j=2 && 0 <= ii <= (n_inter-1)  }')
-parser.parse_set('{ [k] : 0 <= k <= (N-1) }')
-parser.parse_set('{ [k] : 0 <= k <= (n_inter-1) }')
+parser.parse_set('{ [ii,j] : j=1 && 0 <= ii && ii <= (n_inter-1)  } union { [ii,j] : j=2 && 0 <= ii && ii <= (n_inter-1)  }')
+parser.parse_set('{ [k] : 0 <= k && k <= (N-1) }')
+parser.parse_set('{ [k] : 0 <= k && k <= (n_inter-1) }')
 
-parser.parse_set('{ [k] : 0 <= k <= (n_inter-1) }')
+parser.parse_set('{ [k] : 0 <= k && k <= (n_inter-1) }')
 
 rparser.parse_relation('{ [ii,j] -> [k] :j=2 && k=inter2(ii) }')
-rparser.parse_relation('{ [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 } union { [ii,j] -> [ k ] : k=inter2(ii) && 1<=j<=2 }')
+rparser.parse_relation('{ [ii,j] -> [ k ] : k=inter1(ii) && 1<=j && j<=2 } union { [ii,j] -> [ k ] : k=inter2(ii) && 1<=j && j<=2 }')
 rparser.parse_relation('{ [ k ] -> [ r ] : r=sigma( k ) }')
 rparser.parse_relation('{ [ ii, j ] -> [ ii ] }')
 rparser.parse_relation('{ [ i ] -> [ k ] : k = delta( i ) }')
 rparser.parse_relation('{ [a] -> [ k ] : k=inter1(a) } union { [a] -> [ k ] : k=inter2(a) }')
-rparser.parse_relation('{ [k] -> [a] : a=ii && b=j && k=inter1(ii) && 1<=j<=2 }')
-rparser.parse_relation('{ [k] -> [a] : k=inter1(a) && 1<=j<=2 }')
+rparser.parse_relation('{ [k] -> [a] : a=ii && b=j && k=inter1(ii) && 1<=j && j<=2 }')
+rparser.parse_relation('{ [k] -> [a] : k=inter1(a) && 1<=j && j<=2 }')
 rparser.parse_relation('{ [k] -> [a] : k=inter1(a) }')
-rparser.parse_relation('{ [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2}')
+rparser.parse_relation('{ [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b && b<=2}')
 
 

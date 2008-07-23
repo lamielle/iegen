@@ -70,10 +70,6 @@ class Conjunction(Node):
 	def __init__(self, constraintList):
 		self._constraintList = constraintList
 
-	def __init__(self, conj1, conj2):
-		self._constraintList = conj1._constraintList.append(conj2._constraintList)
-
-
 # Interface for constraints.
 class IConstraint(Node):
 	pass
