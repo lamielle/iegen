@@ -153,7 +153,7 @@ class IdExp(IExp):
 	def __repr__(self):
 		return 'IdExp("%s")'%(self._id)
 
-
+# Unary Minus
 class UMinusExp(IExp):
 	__slots__=('_exp')
 	
@@ -163,6 +163,7 @@ class UMinusExp(IExp):
 	def __repr__(self):
 		return 'UMinusExp("%s")'%(self._exp)
 
+# Binary multiplication
 class MulExp(IExp):
 	__slots__=('_lhs','_rhs')
 	
@@ -173,7 +174,7 @@ class MulExp(IExp):
 	def __repr__(self):
 		return 'MulExp("%s,%s")'%(self._lhs,self._rhs)
 
-
+# Binary Addition
 class PlusExp(IExp):
 	__slots__=('_lhs','_rhs')
 	
@@ -184,7 +185,7 @@ class PlusExp(IExp):
 	def __repr__(self):
 		return 'PlusExp("%s,%s")'%(self._lhs,self._rhs)
 
-
+# Binary Subtraction
 class MinusExp(IExp):
 	__slots__=('_lhs','_rhs')
 	
@@ -195,7 +196,7 @@ class MinusExp(IExp):
 	def __repr__(self):
 		return 'MinusExp("%s,%s")'%(self._lhs,self._rhs)
 
-
+# Multiplication by a constant integer
 class IntMulExp(IExp):
 	__slots__=('_int','_exp')
 	
@@ -206,6 +207,7 @@ class IntMulExp(IExp):
 	def __repr__(self):
 		return 'IntMulExp("%s,%s")'%(self._int,self._exp)
 
+# Uninterpreted function calls
 class FuncExp(IExp):
 	__slots__=('_func','_expList')
 	
