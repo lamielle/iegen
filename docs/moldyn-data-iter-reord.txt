@@ -195,6 +195,7 @@ Generating the composed inspector
          
          
     c) Automatically generate the IndexArray specification for sigma
+    FIXME: what if we declare uninterp functions with input and output bounds?
         input:
             DataPermuteRTRT instance
             access_relation_to_traverse
@@ -207,7 +208,7 @@ Generating the composed inspector
                     data_space = [name of uninterp func in data_reordering],
                                  [specification from data space in RTRT],
                                  index array,
-                    index_value_constraints = { [k] -> [ uninterp(k) ] : 
+                    index_value_constraints = { [k] -> [ j ] : j=uninterp(k) 
                         not [k has same bounds as data space] || 
                         [uninterp(k) has same bounds as data space] }   
                 )
@@ -387,6 +388,7 @@ After performing a data reordering, if index arrays that access the reordered da
 
     c) Automatically generate the IndexArray specification for delta.
     Should this algorithm be a method associated with IterPermuteRTRT?
+    FIXME: think we might want to change this by declaring uninterp functions with in and out bounds
         input:
             IterPermuteRTRT instance
             access_relation_to_traverse
