@@ -1,6 +1,9 @@
 #
+# pres_parser.py
+#
 # Attempting a python only manipulation of presburger sets and relations.
-# Copied and trimmed from omega_bindings/src/omega/parser/pres_parser.py.
+# Copied and trimmed from omega_bindings/src/omega/parser/pres_parser.py,
+# which was written by Alan LaMielle.
 #
 # Assumptions and set and relation language restrictions
 #   - All constraints must be written as binary operations. 
@@ -13,6 +16,7 @@
 # 
 
 from ast import *
+import types
 
 #---------- Presburger Formula Parser Class ----------
 class PresParser(object):
@@ -66,8 +70,6 @@ class PresParser(object):
 		'and':'AND','AND':'AND',
 		'union':'UNION','UNION':'UNION'
     }
-
-
 	tokens=('LBRACE','RBRACE','LBRACKET','RBRACKET','LPAREN','RPAREN','COMMA','COLON','STAR','PLUS','DASH','EQ','NEQ','GT','GTE','LT','LTE','ARROW','ID','INT')+tuple(set(keywords.values()))
 
 	t_LBRACE=r'\{'
@@ -101,21 +103,6 @@ class PresParser(object):
 		t.type='AND'
 		return t
 
-#	def t_AMP(self,t):
-#		r'\&'
-#		t.type='AND'
-#		return t
-
-#	def t_DOUBLE_PIPE(self,t):
-#		r'\|\|'
-#		t.type='OR'
-#		return t
-
-#	def t_PIPE(self,t):
-#		r'\|'
-#		t.type='OR'
-#		return t
-
 	#Lexer error routine
 	def t_error(self,t):
 		print "Illegal character '%s'" % t.value[0]
@@ -141,7 +128,7 @@ class PresParser(object):
 		if 5==len(t):
 			t[0] = PresSet(t[2],t[3])
 		else:
-			t[0] = [t[1],t[2],t[3]]
+			t[0] = t[1].union(t[3])
 		print "in p_set, t[0] = ", t[0]
         
 
@@ -158,15 +145,6 @@ class PresParser(object):
 	def p_epsilon(self,t):
 		'''epsilon :'''
 		t[0]=["epsilon"]
-
-#	def p_var_id_list(self,t):
-#		'''var_id_list : var_id_list COMMA tuple_variable_id
-#		           | tuple_variable_id'''
-#		if 4==len(t):
-#			t[1].append(t[3])
-#			t[0]=t[1]
-#		else:
-#			t[0]=[t[1]]
 
 	#---------- Variable Tuple Productions ----------
 	def p_variable_tuple_set(self,t):
@@ -227,7 +205,10 @@ class PresParser(object):
 			t[0]=[t[1]]
 		#Adding to an existing list
 		else:
-			t[1].append(t[3])
+			if (isinstance(t[3],types.ListType)):
+				t[1].extend(t[3])
+			else:
+				t[1].append(t[3])
 			t[0]=t[1]
 
 
@@ -254,8 +235,8 @@ class PresParser(object):
 		'''constraint_neq : expression NEQ expression'''
 		# (t[1]!=t[3]) = (t[1]<t[3] && t[3]<t[1]) 
 		#              = (t[1]<=t[3]-1 && t[3]<=t[1]-1)
-		t[0]=Conjunction(Inequality(t[1],MinusExp(t[3],IntExp('1'))),
-		                 Inequality(t[3],MinusExp(t[1],IntExp('1'))))
+		t[0]=[Inequality(t[1],MinusExp(t[3],IntExp('1'))),
+		      Inequality(t[3],MinusExp(t[1],IntExp('1')))]
 
 	def p_constraint_gt(self,t):
 		'''constraint_gt : expression GT expression'''

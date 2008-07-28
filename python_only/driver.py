@@ -19,6 +19,9 @@ parser.parse_set('{[i,j,k]}')
 # set with simple conditions
 parser.parse_set('{[i,j,k]: 1 <= i && i <= 45 }')
 
+# set with simple conditions
+parser.parse_set('{[i,j,k]: i!=54 }')
+
 # set with more complex conditions
 parser.parse_set('{[i,j,k]: 1 <= i && 1<=j && 1<=k && i<= 45 && j<=45 && k<=45 }')
 
@@ -39,6 +42,7 @@ rparser.parse_relation('{[i] -> [j] : i = sigma(delta(j)) }')
 
 # Checking that we can parse all examples from 
 # iegen/docs/moldyn-data-iter-reord.txt
+print "========================= moldyn-data-iter-reord.txt ===="
 parser.parse_set('{ [ii,j] : j=1 && 0 <= ii && ii <= (n_inter-1)  } union { [ii,j] : j=2 && 0 <= ii && ii <= (n_inter-1)  }')
 parser.parse_set('{ [k] : 0 <= k && k <= (N-1) }')
 parser.parse_set('{ [k] : 0 <= k && k <= (n_inter-1) }')
