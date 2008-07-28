@@ -60,4 +60,26 @@ rparser.parse_relation('{ [k] -> [a] : k=inter1(a) && 1<=j && j<=2 }')
 rparser.parse_relation('{ [k] -> [a] : k=inter1(a) }')
 rparser.parse_relation('{ [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b && b<=2}')
 
+print
+print "========================= Testing equality of uninterp func ===="
+f = FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
+g = FuncExp('g',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
+print "f= ", f
+print "g= ", g
+print "f==g should be false, f==g => ", f==g 
+
+g= FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
+print "f= ", f
+print "g= ", g
+print "f==g should be true, f==g => ", f==g
+
+g= FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('c'),IdExp('b'))])
+print "f= ", f
+print "g= ", g
+print "f==g should be true, f==g => ", f==g
+
+g= FuncExp('f',[IdExp('a'),MulExp(IdExp('c'),IdExp('b'))])
+print "f= ", f
+print "g= ", g
+print "f==g should be false, f==g => ", f==g
 

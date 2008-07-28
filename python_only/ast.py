@@ -143,6 +143,14 @@ class IntExp(IExp):
 	def __repr__(self):
 		return 'IntExp("%s")'%(self._val)
 
+	def __eq__(self, other):
+		# An IntExp is not equal to any other object instance type.
+		if (isinstance(other,IntExp)==False):
+			return False		
+		# Check equality when other is a IntExp.
+		if (self._val==other._val): return True
+		else: return False
+
 		
 class IdExp(IExp):
 	__slots__=('_id')
@@ -152,6 +160,16 @@ class IdExp(IExp):
 
 	def __repr__(self):
 		return 'IdExp("%s")'%(self._id)
+
+	def __eq__(self, other):
+		# An IdExp is not equal to any other object instance type.
+		if (isinstance(other,IdExp)==False):
+			return False		
+		# Check equality when other is a IdExp.
+		if (self._id==other._id): return True
+		else: return False
+
+
 
 # Unary Minus
 class UMinusExp(IExp):
@@ -163,6 +181,16 @@ class UMinusExp(IExp):
 	def __repr__(self):
 		return 'UMinusExp("%s")'%(self._exp)
 
+	def __eq__(self, other):
+		# A UMinusExp is not equal to any other object instance type.
+		if (isinstance(other,UMinusExp)==False):
+			return False		
+		# Check equality when other is a UMinusExp.
+		# Multiplication is associative.
+		if (self._exp==other._exp): return True
+		else: return False
+
+
 # Binary multiplication
 class MulExp(IExp):
 	__slots__=('_lhs','_rhs')
@@ -170,9 +198,22 @@ class MulExp(IExp):
 	def __init__(self, lhs, rhs):
 		self._lhs = lhs
 		self._rhs = rhs
+		# FIXME: should canonicalize to an IntMulExp if 
+		# the lhs or rhs is an IntExp
 
 	def __repr__(self):
 		return 'MulExp("%s,%s")'%(self._lhs,self._rhs)
+
+	def __eq__(self, other):
+		# A MulExp is not equal to any other object instance type.
+		if (isinstance(other,MulExp)==False):
+			return False		
+		# Check equality when other is a MulExp.
+		# Multiplication is associative.
+		if (self._lhs==other._lhs and self._rhs==other._rhs): return True
+		elif (self._lhs==other._rhs and self._rhs==other._lhs): return True
+		else: return False
+
 
 # Binary Addition
 class PlusExp(IExp):
@@ -185,6 +226,17 @@ class PlusExp(IExp):
 	def __repr__(self):
 		return 'PlusExp("%s,%s")'%(self._lhs,self._rhs)
 
+	def __eq__(self, other):
+		# A PlusExp is not equal to any other object instance type.
+		if (isinstance(other,PlusExp)==False):
+			return False		
+		# Check equality when other is a PlusExp.
+		# Addition is associative.
+		if (self._lhs==other._lhs and self._rhs==other._rhs): return True
+		elif (self._lhs==other._rhs and self._rhs==other._lhs): return True
+		else: return False
+
+
 # Binary Subtraction
 class MinusExp(IExp):
 	__slots__=('_lhs','_rhs')
@@ -195,6 +247,15 @@ class MinusExp(IExp):
 
 	def __repr__(self):
 		return 'MinusExp("%s,%s")'%(self._lhs,self._rhs)
+
+	def __eq__(self, other):
+		# A MinusExp is not equal to any other object instance type.
+		if (isinstance(other,MinusExp)==False):
+			return False		
+		# check equality when other is a MinusExp
+		if (self._lhs==other._lhs and self._rhs==other._rhs): return True
+		else: return False
+
 
 # Multiplication by a constant integer
 class IntMulExp(IExp):
@@ -207,6 +268,17 @@ class IntMulExp(IExp):
 	def __repr__(self):
 		return 'IntMulExp("%s,%s")'%(self._int,self._exp)
 
+	def __eq__(self, other):
+		# A IntMulExp is not equal to any other object instance type
+		# We are assuming that a MulExp will be canonicalized to an
+		# IntMulExp upon construction if appropriate.
+		if (isinstance(other,IntMulExp)==False):
+			return False		
+		# check equality when other is a IntMulExp
+		if (self._int==other._int and self._exp==other._exp): return True
+		else: return False
+
+
 # Uninterpreted function calls
 class FuncExp(IExp):
 	__slots__=('_func','_expList')
@@ -218,5 +290,18 @@ class FuncExp(IExp):
 	def __repr__(self):
 		return 'FuncExp("%s,%s")'%(self._func,self._expList)
 
-
+	# Compare this uninterpreted function expression with another
+	# uninterpreted function expression.  If the same function is
+	# being called on equivalent parameters, then we know this expression
+	# is equal, otherwise, we don't know whether it is equal or not.
+	def __eq__(self, other):
+		# A FuncExp is not equal to any other object instance type
+		if (isinstance(other,FuncExp)==False):
+			return False		
+		# check equality when other is a FuncExp
+		if (self._func==other._func and self._expList==other._expList):
+			return True
+		else:
+			return False
+	
 	

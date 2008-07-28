@@ -10,7 +10,7 @@ w, x, y, z - integer variable tuples, or vectors
 c# - constraints
 
 ---------------------------------------------
-Comparison between two uninterp function uses
+Comparison between two uninterp function uses (Implemented 7/28/08)
 ---------------------------------------------
 f(a_1, a_2, ..., a_p) =?= g(b_1, b_2, ..., b_k)
 It is possible to indicate that two uninterp function uses are equal if the same function is being called (f==g), the same number of parameters are being passed (p==k), and all of the actual parameters are the same (a_i==b_i).  If that is not the case then their equality is unknown.
