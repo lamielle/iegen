@@ -100,7 +100,7 @@ Composition and choice of RTRTs
     
     iteration reordering
         IterPermuteRTRT
-            iter_reordering = { [ i ] -> [ k ] : k = delta( i ) }
+            iter_reordering = { [ i,x ] -> [ k,x ] : k = delta( i ) }
             iteration_space = I_0
             access_relation = A_I_0_to_X_1
             iag_func_name = LexMin

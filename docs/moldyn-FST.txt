@@ -2,7 +2,6 @@ moldyn-FST.txt
 --------------
 NOTE: see moldyn-FST.in for omega calculator commands used to play with example in this file.
 
-
 Goals
 1) How would the composed inspector and executor be generated if we use a library approach where data dependences and data mappings are explicitly generated as hypergraphs?
     Subgoal:

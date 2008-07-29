@@ -15,6 +15,26 @@ Comparison between two uninterp function uses (Implemented 7/28/08)
 f(a_1, a_2, ..., a_p) =?= g(b_1, b_2, ..., b_k)
 It is possible to indicate that two uninterp function uses are equal if the same function is being called (f==g), the same number of parameters are being passed (p==k), and all of the actual parameters are the same (a_i==b_i).  If that is not the case then their equality is unknown.
 
+---------------------------
+Comparison between two sets
+---------------------------
+S1 = { x : c1 }
+S2 = { y : c2 }
+
+For S1 and S2 to be equal, the following must hold:
+    arity(x) == arity(y)
+    bounds(x_i) == bounds(y_i) for all i in arity(x)
+The variable names in the x and y tuples do not have to be identical.  The bounds are all of the equalities and inequalities in c1 and c2.
+FIXME: this still needs to be fleshed out a bit.
+
+FIXME: what about when a set is a list of set unions?
+
+
+--------------------------------
+Comparison between two relations
+--------------------------------
+Similar to the comparison between sets.
+
 ---------------------
 Inverse of a relation
 ---------------------
@@ -33,6 +53,19 @@ Correctness
     - arity(w) = arity(y)
 Assumptions
     - c1 and c2 do not involve existentially quantified variables
+
+---------------------------
+Union between two relations
+---------------------------
+R1 := { x -> y : c1 }
+R2 := { w -> z : c2 }
+R2 union R1 = { x -> y : c1 } union { w -> z : c2 }
+
+Correctness
+    - arity(x) = arity(w)
+    - arity(y) = arity(z)
+    
+See simplification rules starting at S4.
 
 
 --------------
@@ -57,6 +90,9 @@ S3) Remove variable by creating the inverse of a permutation.
         Example: a = delta(i), where i is not in input, output, or set tuple
         If delta is a permutation iag (FIXME: note that index array specifications will need a flag indicating if they are a permutation), then replace "a=delta(i)" with "i=delta_inv(a)".
 
+We also should simplify across disjunction (IOW the list of relation or set unons).  We use this when coming up with summary access relations for an iteration subspace or summary data dependences between two subspaces.
+
+S4) If two relations in the union list are equivalent, then remove one of them.
 
 ---------------------
 Code Gen for Relation
