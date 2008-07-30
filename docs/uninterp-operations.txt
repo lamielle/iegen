@@ -15,26 +15,6 @@ Comparison between two uninterp function uses (Implemented 7/28/08)
 f(a_1, a_2, ..., a_p) =?= g(b_1, b_2, ..., b_k)
 It is possible to indicate that two uninterp function uses are equal if the same function is being called (f==g), the same number of parameters are being passed (p==k), and all of the actual parameters are the same (a_i==b_i).  If that is not the case then their equality is unknown.
 
----------------------------
-Comparison between two sets
----------------------------
-S1 = { x : c1 }
-S2 = { y : c2 }
-
-For S1 and S2 to be equal, the following must hold:
-    arity(x) == arity(y)
-    bounds(x_i) == bounds(y_i) for all i in arity(x)
-The variable names in the x and y tuples do not have to be identical.  The bounds are all of the equalities and inequalities in c1 and c2.
-FIXME: this still needs to be fleshed out a bit.
-
-FIXME: what about when a set is a list of set unions?
-
-
---------------------------------
-Comparison between two relations
---------------------------------
-Similar to the comparison between sets.
-
 ---------------------
 Inverse of a relation
 ---------------------
@@ -259,4 +239,24 @@ for A_I1_to_X1 and A_I1_to_FX1
               union { [ii,j] -> [ sigma(inter2_1(ii)) ] : 1<=j<=2 }
               
 
-    
+---------------------------
+Comparison between two sets
+---------------------------
+S1 = { x : c1 }
+S2 = { y : c2 }
+
+For S1 and S2 to be equal, the following must hold:
+    arity(x) == arity(y)
+    bounds(x_i) == bounds(y_i) for all i in arity(x)
+The variable names in the x and y tuples do not have to be identical.  The bounds are all of the equalities and inequalities in c1 and c2.
+FIXME: this still needs to be fleshed out a bit.
+
+FIXME: what about when a set is a list of set unions?
+
+
+--------------------------------
+Comparison between two relations
+--------------------------------
+Similar to the comparison between sets.
+
+
