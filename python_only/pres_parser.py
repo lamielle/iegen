@@ -6,14 +6,14 @@
 # which was written by Alan LaMielle.
 #
 # Assumptions and set and relation language restrictions
-#   - All constraints must be written as binary operations. 
-#     For example, 1<=i<=10 must be written as 1<=i && i<=10.  
+#   - All constraints must be written as binary operations.
+#     For example, 1<=i<=10 must be written as 1<=i && i<=10.
 #   - The constraints will all be part of a conjunction.  For disjunction
-#     union separate sets. 
+#     union separate sets.
 #   - This grammar does NOT include Exists, Forall, or not keywords.
 #
 # MMS 7/21/08
-# 
+#
 
 from ast import *
 import types
@@ -107,6 +107,7 @@ class PresParser(object):
 	def t_error(self,t):
 		print "Illegal character '%s'" % t.value[0]
 		t.lexer.skip(1)
+	#-------------------------------------------
 
 	#---------- Parser methods/members ----------
 	precedence=(
@@ -116,7 +117,7 @@ class PresParser(object):
 		('left','AND'),
 		('left','UNION')
 	)
-	
+
 	#Parser error routine
 	def p_error(self,t):
 		from ply import yacc
@@ -130,21 +131,22 @@ class PresParser(object):
 		else:
 			t[0] = t[1].union(t[3])
 		print "in p_set, t[0] = ", t[0]
-        
+
 
 	def p_relation(self,t):
 		'''relation : LBRACE variable_tuple_in ARROW variable_tuple_out optional_constraints RBRACE
 				           | relation UNION relation'''
 		if 7==len(t):
-			t[0] = [t[1],t[2],t[3],t[4],t[5],t[6]]
+			t[0] = PresRelation(t[2],t[4],t[5])
 		else:
-			t[0] = [t[1],t[2],t[3]]
+			t[0] = t[1].union(t[3])
 		print "in p_relation, t[0] = ", t[0]
 
 	#epsilon (empty production)
 	def p_epsilon(self,t):
 		'''epsilon :'''
 		t[0]=["epsilon"]
+	#--------------------------------------------
 
 	#---------- Variable Tuple Productions ----------
 	def p_variable_tuple_set(self,t):
@@ -154,7 +156,7 @@ class PresParser(object):
 	def p_variable_tuple_in(self,t):
 		'''variable_tuple_in : variable_tuple'''
 		t[0] = t[1]
-		
+
 	def p_variable_tuple_out(self,t):
 		'''variable_tuple_out : variable_tuple'''
 		t[0] = t[1]
@@ -166,7 +168,7 @@ class PresParser(object):
 			t[0]=VarTuple(t[2])
 		else:
 			t[0]=VarTuple([])
-			
+
 	def p_tuple_variable_list(self,t):
 		'''tuple_variable_list : tuple_variable
 		                       | tuple_variable_list COMMA tuple_variable'''
@@ -181,12 +183,12 @@ class PresParser(object):
 	def p_tuple_variable(self,t):
 		'''tuple_variable : tuple_variable_id'''
 		t[0]=t[1]
-		
+
 	def p_tuple_variable_id(self,t):
 		'''tuple_variable_id : ID'''
 		t[0] = t[1]
-
 	#--------------------------------------------------
+
 	#---------- Constraint Productions ----------
 	def p_optional_constraints(self,t):
 		'''optional_constraints : COLON constraint_list
@@ -196,7 +198,7 @@ class PresParser(object):
 		else:
 			#Empty constraints
 			t[0]=Conjunction([])
-			
+
 	def p_constraint_list(self,t):
 		'''constraint_list : constraint
 		                   | constraint_list AND constraint'''
@@ -211,9 +213,8 @@ class PresParser(object):
 				t[1].append(t[3])
 			t[0]=t[1]
 
-
 	def p_constraint(self,t):
-		'''constraint :  constraint_paren		            
+		'''constraint :  constraint_paren
 		               | constraint_eq
 		               | constraint_neq
 		               | constraint_gt
@@ -221,7 +222,6 @@ class PresParser(object):
 		               | constraint_lt
 		               | constraint_lte'''
 		t[0]=t[1]
-	
 
 	def p_constraint_paren(self,t):
 		'''constraint_paren : LPAREN constraint RPAREN'''
@@ -233,32 +233,31 @@ class PresParser(object):
 
 	def p_constraint_neq(self,t):
 		'''constraint_neq : expression NEQ expression'''
-		# (t[1]!=t[3]) = (t[1]<t[3] && t[3]<t[1]) 
+		# (t[1]!=t[3]) = (t[1]<t[3] && t[3]<t[1])
 		#              = (t[1]<=t[3]-1 && t[3]<=t[1]-1)
 		t[0]=[Inequality(t[1],MinusExp(t[3],IntExp('1'))),
 		      Inequality(t[3],MinusExp(t[1],IntExp('1')))]
 
 	def p_constraint_gt(self,t):
 		'''constraint_gt : expression GT expression'''
-		# (t[1] > t[3]) = (t[3] < t[1]) = (t[3] <= t[1]-1)  
+		# (t[1] > t[3]) = (t[3] < t[1]) = (t[3] <= t[1]-1)
 		t[0]=Inequality(PlusExp(t[3],IntExp('1')),t[1])
 
 	def p_constraint_gte(self,t):
 		'''constraint_gte : expression GTE expression'''
-		# (t[1] >= t[3]) = (t[3] =< t[1])  
+		# (t[1] >= t[3]) = (t[3] =< t[1])
 		t[0]=Inequality(t[3],t[1])
 
 	def p_constraint_lt(self,t):
 		'''constraint_lt : expression LT expression'''
-		# (t[1] < t[3]) = (t[1] <= t[3]-1)  
+		# (t[1] < t[3]) = (t[1] <= t[3]-1)
 		t[0]=Inequality(t[1],MinusExp(t[3],IntExp('1')))
 
 	def p_constraint_lte(self,t):
 		'''constraint_lte : expression LTE expression'''
 		t[0]=Inequality(t[1],t[3])
-
-
 	#--------------------------------------------------
+
 	#---------- Expression Productions ----------
 	def p_expression(self,t):
 		'''expression : expression_int
@@ -267,15 +266,15 @@ class PresParser(object):
 		              | expression_int_mult
 		              | expression_simple'''
 		t[0]=t[1]
-		
+
 	def p_expression_int(self,t):
 		'''expression_int : INT'''
 		t[0]=IntExp(t[1])
-		
+
 	def p_expression_unop(self,t):
 		'''expression_unop : DASH expression %prec UMINUS'''
 		t[0]=UMinusExp(t[2])
-		
+
 	def p_expression_binop(self,t):
 		'''expression_binop : expression PLUS expression
 								  | expression DASH expression
@@ -285,32 +284,37 @@ class PresParser(object):
 		elif '-'==str(t[2]):
 			t[0]=MinusExp(t[1],t[3])
 		elif '*'==str(t[2]):
-			t[0]=MulExp(t[1],t[3])
+			if isinstance(t[1],IntExp):
+				t[0]=IntMultExp(t[1],t[3])
+			elif isinstance(t[3],IntExp):
+				t[0]=IntMultExp(t[3],t[1])
+			else:
+				t[0]=MulExp(t[1],t[3])
 		else:
 			assert False
 
 	def p_expression_int_mult(self,t):
 		'''expression_int_mult : INT expression_simple'''
 		t[0]=IntMulExp[t[1],t[2]]
-		
+
 	def p_expression_simple(self,t):
 		'''expression_simple : expression_id
 		                     | expression_func
 		                     | expression_paren'''
 		t[0]=t[1]
-		
+
 	def p_expression_id(self,t):
 		'''expression_id : ID'''
 		t[0]=IdExp(t[1])
-		
+
 	def p_expression_func(self,t):
 		'''expression_func : tuple_variable_id LPAREN expr_list RPAREN'''
 		t[0]=FuncExp(t[1],t[3])
-		
+
 	def p_expression_paren(self,t):
 		'''expression_paren : LPAREN expression RPAREN'''
 		t[0]=t[2]
-		
+
 	def p_expr_list(self,t):
 		'''expr_list : expr_list COMMA expression
 		             | expression'''
@@ -319,7 +323,6 @@ class PresParser(object):
 			t[0]=t[1]
 		else:
 			t[0]=[t[1]]
-
 	#--------------------------------------------------
 
 #-------------------------------------------------------------------------

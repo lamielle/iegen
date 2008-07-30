@@ -7,13 +7,13 @@
 #
 #    IPresSet -> VarTuple Conjunction    // PresSet
 #             -> PresSet*                // PresSetUnion
-#    
+#
 #    VarTuple -> ID*
 #    Conjunction -> IConstraint*
-#    
+#
 #    IConstraint -> IExp:lhs IExp:rhs // Inequality (LTE assummed)
 #                -> IExp:lhs IExp:rhs // Equality
-#    
+#
 #    IExp  -> INT                // IntExp
 #          -> IExp:operand       // UMinusExp
 #          -> IExp:lhs Expr:rhs  // MulExp, PlusExp, MinusExp
@@ -34,23 +34,22 @@
 class Node:
 	pass
 
-##### Presburger Sets
-
+#---------- Presburger Sets ----------
 # Presburger set interface
 class IPresSet(Node):
 	pass
 
 # A single presburger set.
 class PresSet(IPresSet):
-	__slots__=('_tuple','_conjunct')
-	
+	__slots__=('_set_tuple','_conjunct')
+
 	def __init__(self, tuple, conjunct):
-		self._tuple = tuple
+		self._set_tuple = tuple
 		self._conjunct = conjunct
 
 	def __repr__(self):
-		return 'PresSet("%s,%s")'%(self._tuple,self._conjunct)
-		
+		return 'PresSet("%s,%s")'%(self._set_tuple,self._conjunct)
+
 	def union(self, other):
 		if (isinstance(other,PresSet)):
 			return PresSetUnion([self,other])
@@ -62,8 +61,8 @@ class PresSet(IPresSet):
 # A list of presburger sets involved in a union.
 class PresSetUnion(IPresSet):
 	__slots__=('_presSetList')
-	
-	def __init__(self, presSetList): 
+
+	def __init__(self, presSetList):
 		self._presSetList = presSetList
 
 	def __repr__(self):
@@ -71,72 +70,121 @@ class PresSetUnion(IPresSet):
 
 	def union(self, other):
 		if (isinstance(other,PresSet)):
-			self._presSetList.append(other)	
+			self._presSetList.append(other)
 			return self
 		elif (isinstance(other,PresSetUnion)):
 			self._presSetList.extend(other._presSetList)
 			return self
 		else:
 			assert(0)
-	
+#-------------------------------------
+
+#---------- Presburger Relations ----------
+# Presburger relation interface
+class IPresRelation(Node):
+	pass
+
+# A single presburger relation
+class PresRelation(IPresRelation):
+	__slots__=('_in_tuple','_out_tuple','_conjunct')
+
+	def __init__(self, in_tuple, out_tuple, conjunct):
+		self._in_tuple = tuple
+		self._out_tuple = tuple
+		self._conjunct = conjunct
+
+	def __repr__(self):
+		return 'PresRelation("%s,%s,%s")'%(self._in_tuple,self._out_tuple,self._conjunct)
+
+	def union(self, other):
+		if (isinstance(other,PresRelation)):
+			return PresRelationUnion([self,other])
+		elif (isinstance(other,PresRelationUnion)):
+			return other.union(self)
+		else:
+			assert(0)
+
+# A list of presburger relations involved in a union.
+class PresRelationUnion(IPresRelation):
+	__slots__=('_presRelationList')
+
+	def __init__(self, presRelationList):
+		self._presRelationList = presRelationList
+
+	def __repr__(self):
+		return "PresRelationUnion(%s)"%(self._presRelationList)
+
+	def union(self, other):
+		if (isinstance(other,PresRelation)):
+			self._presRelationList.append(other)
+			return self
+		elif (isinstance(other,PresRelationUnion)):
+			self._presRelationList.extend(other._presRelationList)
+			return self
+		else:
+			assert(0)
+#------------------------------------------
+
+#---------- Variable Nodes ----------
 # Tuple of variables.
 class VarTuple(Node):
 	__slots__=('_idList')
-	
+
 	def __init__(self, idList):
 		self._idList = idList
 
 	def __repr__(self):
 		return 'VarTuple("%s")'%(self._idList)
+#------------------------------------
 
-
-		
-# A set of constraints that are all part of a conjunction (IOW ANDed together).		
+#---------- Conjunction Nodes ----------
+# A set of constraints that are all part of a conjunction (IOW ANDed together).
 class Conjunction(Node):
 	__slots__=('_constraintList')
-	
+
 	def __init__(self, constraintList):
 		self._constraintList = constraintList
 
 	def __repr__(self):
 		return 'Conjunction("%s")'%(self._constraintList)
+#---------------------------------------
 
-
+#---------- Constraint Nodes ----------
 # Interface for constraints.
 class IConstraint(Node):
 	pass
-	
+
 # It is assummed that all constraints are converted to LTE
 # inequalities.
 class Inequality(IConstraint):
 	__slots__=('_lhs','_rhs')
-	
+
 	def __init__(self, lhs, rhs):
 		self._lhs = lhs
 		self._rhs = rhs
-		
+
 	def __repr__(self):
 		return 'Inequality("%s,%s")'%(self._lhs,self._rhs)
 
-
 class Equality(IConstraint):
 	__slots__=('_lhs','_rhs')
-	
+
 	def __init__(self, lhs, rhs):
 		self._lhs = lhs
 		self._rhs = rhs
 
 	def __repr__(self):
 		return 'Equality("%s,%s")'%(self._lhs,self._rhs)
+#--------------------------------------
 
-
-##### Expressions
+#---------- Expression Nodes ----------
 class IExp(Node):
 	pass
 
+# Integer expressions
 class IntExp(IExp):
 	__slots__=('_val')
-	
+
 	def __init__(self, val):
 		self._val = val
 
@@ -146,15 +194,15 @@ class IntExp(IExp):
 	def __eq__(self, other):
 		# An IntExp is not equal to any other object instance type.
 		if (isinstance(other,IntExp)==False):
-			return False		
+			return False
 		# Check equality when other is a IntExp.
 		if (self._val==other._val): return True
 		else: return False
 
-		
+# Identifier expressions
 class IdExp(IExp):
 	__slots__=('_id')
-	
+
 	def __init__(self, id):
 		self._id = id
 
@@ -164,17 +212,16 @@ class IdExp(IExp):
 	def __eq__(self, other):
 		# An IdExp is not equal to any other object instance type.
 		if (isinstance(other,IdExp)==False):
-			return False		
+			return False
 		# Check equality when other is a IdExp.
 		if (self._id==other._id): return True
 		else: return False
 
 
-
 # Unary Minus
 class UMinusExp(IExp):
 	__slots__=('_exp')
-	
+
 	def __init__(self, exp):
 		self._exp = exp
 
@@ -184,7 +231,7 @@ class UMinusExp(IExp):
 	def __eq__(self, other):
 		# A UMinusExp is not equal to any other object instance type.
 		if (isinstance(other,UMinusExp)==False):
-			return False		
+			return False
 		# Check equality when other is a UMinusExp.
 		# Multiplication is associative.
 		if (self._exp==other._exp): return True
@@ -194,11 +241,11 @@ class UMinusExp(IExp):
 # Binary multiplication
 class MulExp(IExp):
 	__slots__=('_lhs','_rhs')
-	
+
 	def __init__(self, lhs, rhs):
 		self._lhs = lhs
 		self._rhs = rhs
-		# FIXME: should canonicalize to an IntMulExp if 
+		# FIXME: should canonicalize to an IntMulExp if
 		# the lhs or rhs is an IntExp
 
 	def __repr__(self):
@@ -207,7 +254,7 @@ class MulExp(IExp):
 	def __eq__(self, other):
 		# A MulExp is not equal to any other object instance type.
 		if (isinstance(other,MulExp)==False):
-			return False		
+			return False
 		# Check equality when other is a MulExp.
 		# Multiplication is associative.
 		if (self._lhs==other._lhs and self._rhs==other._rhs): return True
@@ -218,7 +265,7 @@ class MulExp(IExp):
 # Binary Addition
 class PlusExp(IExp):
 	__slots__=('_lhs','_rhs')
-	
+
 	def __init__(self, lhs, rhs):
 		self._lhs = lhs
 		self._rhs = rhs
@@ -229,7 +276,7 @@ class PlusExp(IExp):
 	def __eq__(self, other):
 		# A PlusExp is not equal to any other object instance type.
 		if (isinstance(other,PlusExp)==False):
-			return False		
+			return False
 		# Check equality when other is a PlusExp.
 		# Addition is associative.
 		if (self._lhs==other._lhs and self._rhs==other._rhs): return True
@@ -240,7 +287,7 @@ class PlusExp(IExp):
 # Binary Subtraction
 class MinusExp(IExp):
 	__slots__=('_lhs','_rhs')
-	
+
 	def __init__(self, lhs, rhs):
 		self._lhs = lhs
 		self._rhs = rhs
@@ -251,7 +298,7 @@ class MinusExp(IExp):
 	def __eq__(self, other):
 		# A MinusExp is not equal to any other object instance type.
 		if (isinstance(other,MinusExp)==False):
-			return False		
+			return False
 		# check equality when other is a MinusExp
 		if (self._lhs==other._lhs and self._rhs==other._rhs): return True
 		else: return False
@@ -260,7 +307,7 @@ class MinusExp(IExp):
 # Multiplication by a constant integer
 class IntMulExp(IExp):
 	__slots__=('_int','_exp')
-	
+
 	def __init__(self, int, exp):
 		self._int = int
 		self._exp = exp
@@ -273,7 +320,7 @@ class IntMulExp(IExp):
 		# We are assuming that a MulExp will be canonicalized to an
 		# IntMulExp upon construction if appropriate.
 		if (isinstance(other,IntMulExp)==False):
-			return False		
+			return False
 		# check equality when other is a IntMulExp
 		if (self._int==other._int and self._exp==other._exp): return True
 		else: return False
@@ -282,7 +329,7 @@ class IntMulExp(IExp):
 # Uninterpreted function calls
 class FuncExp(IExp):
 	__slots__=('_func','_expList')
-	
+
 	def __init__(self, func, expList):
 		self._func = func
 		self._expList = expList
@@ -297,11 +344,10 @@ class FuncExp(IExp):
 	def __eq__(self, other):
 		# A FuncExp is not equal to any other object instance type
 		if (isinstance(other,FuncExp)==False):
-			return False		
+			return False
 		# check equality when other is a FuncExp
 		if (self._func==other._func and self._expList==other._expList):
 			return True
 		else:
 			return False
-	
-	
+#---------------------------------------
