@@ -7,16 +7,16 @@ Showing all the details of how to automatically generate the inspector and execu
 
     for (ii=0; ii<n_inter; ii++) {
         // simplified computations
-        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
-        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]];
+        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]];
     }
 
 Notes
     - moldyn-FST.txt is an earlier version of this.  Main difference is that now we have the transformations clearly separated from optimization such as pointer update and array alignment.
-    
+
     - detail for the algorithms referenced in here can be found in uninterp-operations.txt
-    
-    
+
+
 -----------------------
 What the user specifies
 -----------------------
@@ -27,16 +27,16 @@ Iteration Space
 Symbolic Constants
     N                   // number of atoms
     n_inter             // number of interactions between atoms
-    
-    // uninterp functions for index arrays, 
+
+    // uninterp functions for index arrays,
     // [0..(n_inter-1)] indicates range of possible parameter values
     // [0:N] indicates range of possible values
     // FIXME: might want to use this approach of representing IndexArray
     // constraints versus using the OmegaRelation that we currently have
     // in the MapIR design.
-    inter1([0..(n_inter-1)]):[0..N]    
-    inter2([0..(n_inter-1)]):[0..N]    
-                        
+    inter1([0..(n_inter-1)]):[0..N]
+    inter2([0..(n_inter-1)]):[0..N]
+
 
 Data Spaces
     X_0 := name = "x", { [k] : 0 <= k <= (N-1) }, data array
@@ -45,8 +45,8 @@ Data Spaces
     INTER2_0 := name = "inter2", { [k] : 0 <= k <= (n_inter-1) }, index array
 
 Statements
-    [ii,1]  "`a1 += `a2 - `a3;" 
-    [ii,2]  "`a4 += `a5 - `a6;" 
+    [ii,1]  "`a1 += `a2 - `a3;"
+    [ii,2]  "`a4 += `a5 - `a6;"
 
 
 Access Relations
@@ -56,28 +56,28 @@ Access Relations
     [ii,1]      a1           FX_0        { [ii,j] -> [k] :j=1 && k=inter1(ii) }
     [ii,1]      a2           X_0         { [ii,j] -> [k] :j=1 && k=inter1(ii) }
     [ii,1]      a3           X_0         { [ii,j] -> [k] :j=1 && k=inter2(ii) }
-    
+
     [ii,2]      a4           FX_0        { [ii,j] -> [k] :j=2 && k=inter2(ii) }
     [ii,2]      a5           X_0         { [ii,j] -> [k] :j=2 && k=inter1(ii) }
     [ii,2]      a6           X_0         { [ii,j] -> [k] :j=2 && k=inter2(ii) }
-    
+
     // summary access relations are the union of all access relations
     // to a particular data space
     // These can actually be generated automatically by using unions
     // between access relations that access the same data array.
     A_I_0_to_X_0 := name = "A_I_0_to_X_0",
-                    { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 } 
+                    { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }
                     union { [ii,j] -> [ k ] : k=inter2(ii) && 1<=j<=2 }
-                   
-    A_I_0_to_FX_0 := name = "A_I_0_to_FX_0",                     
-                     { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 } 
+
+    A_I_0_to_FX_0 := name = "A_I_0_to_FX_0",
+                     { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }
                      union { [ii,j] -> [ k ] : k=inter2(ii) && 1<=j<=2 }
 
     // Do we also want summary access relations for the index arrays?
-    A_I_0_to_INTER1_0 := name = "A_I_0_to_INTER1_0", { [ii,1] -> [ ii ] } 
+    A_I_0_to_INTER1_0 := name = "A_I_0_to_INTER1_0", { [ii,1] -> [ ii ] }
                        union { [ii,2] -> [ ii ] }
-                       
-    A_I_0_to_INTER2_0 := name = "A_I_0_to_INTER2_0", { [ii,1] -> [ ii ] } 
+
+    A_I_0_to_INTER2_0 := name = "A_I_0_to_INTER2_0", { [ii,1] -> [ ii ] }
                        union { [ii,2] -> [ ii ] }
 
 Data Dependences
@@ -94,10 +94,10 @@ Composition and choice of RTRTs
             iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
             iag_func_name = CPackHyper
             iag_type = IAG_Permute
-    
+
     Naming standards
         After any transformation, we are going to assume that a space with the subscript n will be transformed into the same named space with the subscript n+1.  For example I_0 will become I_1.
-    
+
     iteration reordering
         IterPermuteRTRT
             iter_reordering = { [ i,x ] -> [ k,x ] : k = delta( i ) }
@@ -105,7 +105,7 @@ Composition and choice of RTRTs
             access_relation = A_I_0_to_X_1
             iag_func_name = LexMin
             iag_type = IAG_Permute
-            
+
 ------------------------------------------------------------
 Automatically Generating Straight-Forward Inspector/Executor
 ------------------------------------------------------------
@@ -121,21 +121,21 @@ Generating the composed inspector
         output:
             access_relation_to_traverse = new AccessRelation
                 name = access_relation.name
-                iter_space = iter_sub_space_relation (     
+                iter_space = iter_sub_space_relation (
                                 [access_relation.iter_space] )
                 data_space = access_relation.data_space
-                iterspace_to_data =  inverse                  
+                iterspace_to_data =  inverse
                 ( iter_sub_space_relation compose (inverse access_relation))
-                
-                
+
+
         For the example, output is the following:
           access_relation_to_traverse = new AccessRelation
                 name = "A_I_0_sub_to_X_0"
                 iter_space = { [ii] : 0 <= ii < n_inter  }
-                data_space = X0                    
-                iterspace_to_data := { [a] -> [ k ] : k=inter1(a) } 
+                data_space = X0
+                iterspace_to_data := { [a] -> [ k ] : k=inter1(a) }
                                      union { [a] -> [ k ] : k=inter2(a) }
-                
+
           How we calculated iterspace_to_data:
             access_relation = { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }  ...
             iter_sub_space_relation = { [ a, b ] -> [ a ] }
@@ -146,7 +146,7 @@ Generating the composed inspector
             { [k] -> [a] : k=inter1(a) && 1<=j<=2 } // j is existentially quantified
                 // apply S2
             { [k] -> [a] : k=inter1(a) } ...
-            
+
     b) generate code that explicitly creates hypergraph representation of access relation at runtime.
         input:
             access_relation_to_traverse, artt
@@ -156,21 +156,21 @@ Generating the composed inspector
                 #define s1(i_1, ..., i_d) data_index = ...; \
                     Hypergraph_ordered_insert_node([artt.name], \                     count,data_index);
                     count++;
-                
+
                 {
                 // initialize variables
                 Hypergraph* [artt.name] = Hypergraph_ctor();
                 int count=0;
                 int data_index=0;
                 int t1, ..., ;  // declare index variables omega will use
-                    
+
                 // loop that traverses [artt.iter_space]
                 for ...
                     s1(i_1, ..., i_d);
-                        
+
                 Hypergraph_finalize([argtt.name]);
                 }
-                
+
           For the example, output is the following:
                 // this macro captures A_I0_to_X0, count, and data_index
                 #define s1(t1) data_index = inter1[t1]; \
@@ -180,26 +180,26 @@ Generating the composed inspector
                     Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
                     data_index); \
                     count++
-                        
+
                 // initialize variables
                 Hypergraph* A_I0_to_X0 = Hypergraph_ctor();
                 int count=0;
                 int data_index=0;
-                    
+
                 // this specific example
                 for(t1 = 0; t1 <= n_inter-1; t1++) {
                     s1(t1);
                 }
 
                 Hypergraph_finalize(A_I0_to_X0);
-         
-         
+
+
     c) Automatically generate the IndexArray specification for sigma
     FIXME: what if we declare uninterp functions with input and output bounds?
         input:
             DataPermuteRTRT instance
             access_relation_to_traverse
-                
+
         output:
             iag_spec = new IAG_Permute(
                 String name = rtrt.iag_func_name
@@ -208,37 +208,37 @@ Generating the composed inspector
                     data_space = [name of uninterp func in data_reordering],
                                  [specification from data space in RTRT],
                                  index array,
-                    index_value_constraints = { [k] -> [ j ] : j=uninterp(k) 
-                        not [k has same bounds as data space] || 
-                        [uninterp(k) has same bounds as data space] }   
+                    index_value_constraints = { [k] -> [ j ] : j=uninterp(k)
+                        not [k has same bounds as data space] ||
+                        [uninterp(k) has same bounds as data space] }
                 )
             )
-            
+
         Initial Assumptions:
             -only one interpreted function in data reordering
             -that uninterpreted function has a domain with dimensionality 1
-                    
+
         For this example:
             IAG_cpack = new IAG_Permute (
                 String name = "CPackHyper"       // function name
                 AccessRelation input = A_I0_to_X0
-                IndexArray result = new IndexArray( 
+                IndexArray result = new IndexArray(
                     data_space = "sigma", X_0.spec, index array,
                     index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
                 )
 
-            ) 
-                
+            )
+
     d) generate code that passes hypergraph to IAG
-        input: 
+        input:
             iag_spec for sigma
-                
+
         output:
             code
                 [iag_spec.result.data_space.name] = malloc( ... );
                 [iag_spec.name]( [iag_spec.input.name],
                                  [iag_spec.result.data_space.name] );
-                    
+
         For this example:
                 int *sigma;
                 MALLOC(sigma,int,N);
@@ -249,15 +249,15 @@ Generating the composed inspector
         input:
             iag_spec for sigma
             DataPermuteRTRT.data_spaces to be reordered
-                
+
         output:
             code that reorders the specified data spaces with sigma
             // one call to reorderArray for each data space being reordered
-            reorderArray((unsigned char*) [data_space.name], 
-                         sizeof([data_space.datatype]), 
+            reorderArray((unsigned char*) [data_space.name],
+                         sizeof([data_space.datatype]),
                          [data_space.num_elem],
                          [iag_spec.name])
-        
+
         For this example:
             reorderArray((unsigned char *)x, sizeof(double), NUM_NODES, sigma);
             reorderArray((unsigned char *)fx, sizeof(double), NUM_NODES, sigma);
@@ -265,61 +265,61 @@ Generating the composed inspector
 
 
 2) Modify iteration space and access functions based on previous transformation.
-    
+
     I_0     // iteration space was not modified
     X_1 := X_0    // same size
     FX_1 := FX_0    // same size
-    A_I_0_to_X_1 = data_reordering(A_I_0_to_X_0) 
+    A_I_0_to_X_1 = data_reordering(A_I_0_to_X_0)
                  = { [ k ] -> [ r ] : r=sigma( k ) ] } compose { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }
                       // compose two relations
                  = { [ii,j] -> [r] : r=sigma( k ) && k=inter1(ii) && 1<=j<=2}
                       // apply S1
                  = { [ii,j] -> [r] : r=sigma( inter1(ii) ) && 1<=j<=2 } union
                    { [ii,j] -> [r] : r=sigma( inter2(ii) ) && 1<=j<=2 }
-                   
-                     
+
+
     A_I_0_to_FX_1 = data_reordering(A_I_0_to_FX_0)
-                  = { [ii,1] -> [ k ] : k= sigma(inter1(ii)) } 
+                  = { [ii,1] -> [ k ] : k= sigma(inter1(ii)) }
                     union { [ii,2] -> [ k ] : k=sigma(inter2(ii)) }
 
-    
+
 3) (optional) pointer update optimization, or collapsing index arrays
 After performing a data reordering, if index arrays that access the reordered data arrays are updated with the new locations of data elements then later inspectors and the final executor will require fewer indirect accesses.
     PU0) note that A_I_0_to_X_1 and A_I_0_to_FX_1 contain sigma(inter1(ii)) and sigma(inter2(ii))
-    PU1) { [ii] -> [k] : k=sigma(inter1(ii)) && bounds for inter1 input } 
-         { [ii] -> [k] : k=sigma(inter2(ii)) && bounds for inter2 input } 
-             
+    PU1) { [ii] -> [k] : k=sigma(inter1(ii)) && bounds for inter1 input }
+         { [ii] -> [k] : k=sigma(inter2(ii)) && bounds for inter2 input }
+
     PU2) Do Code Gen for Relation to generate inter1_1 and inter2_1
         #define pu1(t1) inter1_1[t1] = sigma[inter1[t1]]
         for (t1=bounds for inter1 input) {
             pu1(t1)
         }
         // similar for inter2_1
-            
+
     PU3) modify all access relations by replacing sigma(inter1(t1)) with inter1_1(t1)
 
 4) generate executor code for data reordering only (only for testing)
    Note: eventually we want to generate the composed inspector/executor only, but for testing we need to be able to test as we go.
-        
+
     input:
         Statements and transformed statement access relations
-               
+
     output:
         // statement macros
-        #define s1(t1, ..., ) ...    
-        
+        #define s1(t1, ..., ) ...
+
         ...
-                
+
         // new executor loop
         for ...
-        
-    algorithm:                
+
+    algorithm:
         for each statement in computation
             generate macro code for statement using transformed access relations
-                    
+
         have omega or Cloog generate code for current iteration space (ALAN?)
-        
-        
+
+
     output for this example:
         // without pointer update
         #define e1(ii,g)    if ((g)==1) { \
@@ -339,13 +339,13 @@ After performing a data reordering, if index arrays that access the reordered da
         }
 
         ...
-           
+
         // executor - execute the computation with modified arrays
         for(t1 = 0; t1 <= n_inter-1; t1++) {
             e1(t1,1);
             e1(t1,2);
         }
-          
+
 3) IterPermuteRTRT  (for now done assuming no pointer update has occurred)
     a) restrict access_relation to iteration subspace (same as 1a above)
 
@@ -353,15 +353,15 @@ After performing a data reordering, if index arrays that access the reordered da
             access_relation_to_traverse = new AccessRelation
                 name = "A_I_0_to_X_1"
                 iter_space = { [ii] : 0 <= ii < n_inter  }
-                data_space = X_1                    
-                iterspace_to_data := { [ii] -> [ sigma(inter1(ii)) ] } 
+                data_space = X_1
+                iterspace_to_data := { [ii] -> [ sigma(inter1(ii)) ] }
                                      union { [ii] -> [ sigma(inter2(ii)) ] }
-                                 
+
     b) generate code that explicitly creates hypergraph generate code that explicitly creates hypergraph representation of access relation at runtime. (same as 1b above)
-        
-           
+
+
         For the example, output is the following:
-                // this macro captures A_I_0_to_X_1, 
+                // this macro captures A_I_0_to_X_1,
                 // count, sigma, inter1, inter2, and data_index
                 #define s2(t1) data_index = sigma[inter1[t1]]; \
                         Hypergraph_ordered_insert_node(A_I1_to_X1,count, \
@@ -370,21 +370,21 @@ After performing a data reordering, if index arrays that access the reordered da
                         Hypergraph_ordered_insert_node(A_I1_to_X1,count, \
                         data_index); \
                         count++
-                 
+
                 {
                 // initialize variables
                 Hypergraph* A_I_0_to_X_1 = Hypergraph_ctor();
                 int count=0;
                 int data_index=0;
-                    
+
                 // this specific example
                 for(t1 = 0; t1 <= n_inter-1; t1++) {
                     s2(t1);
                 }
 
                 Hypergraph_finalize(A_I_0_to_X_1);
-                }        
-                
+                }
+
 
     c) Automatically generate the IndexArray specification for delta.
     Should this algorithm be a method associated with IterPermuteRTRT?
@@ -392,7 +392,7 @@ After performing a data reordering, if index arrays that access the reordered da
         input:
             IterPermuteRTRT instance
             access_relation_to_traverse
-                
+
         output: (almost the same as 1c, just replace data space with iteration space)
             iag_spec = new IAG_Permute(
                 String name = rtrt.iag_func_name
@@ -401,35 +401,35 @@ After performing a data reordering, if index arrays that access the reordered da
                     data_space = [name of uninterp func in iter_reordering],
                                  [rtrt.iter_space],
                                  index array,
-                    index_value_constraints = { [k] -> [ uninterp(k) ] : 
-                        not [k has same bounds as rtrt.iter_space] || 
-                       [uninterp(k) has same bounds as rtrt.iter_space] }   
+                    index_value_constraints = { [k] -> [ uninterp(k) ] :
+                        not [k has same bounds as rtrt.iter_space] ||
+                       [uninterp(k) has same bounds as rtrt.iter_space] }
                 )
             )
-                        
+
         Initial Assumptions:
             -only one interpreted function in iteration reordering
             -that uninterpreted function has a domain with dimensionality 1
-                    
-        
+
+
         For this example:
             IAG_lexmin = new IAG_Permute (
                 String name = "IAG_lexmin"       // function name
                 AccessRelation input = A_I_0_to_X_1
-                IndexArray result = new IndexArray( 
+                IndexArray result = new IndexArray(
                     data_space = "delta", I_0.spec, index array,
                     index_value_constraints = { [k] -> [delta(k)] : not (0 <= k <= (n_iter-1)) || (0 <= delta(k) <= (N-1)) }
                 )
 
-            ) 
-            
+            )
+
     d) generate code that passes hypergraph to IAG (same as 1d)
 
         For this example:
                 int *delta;
                 MALLOC(delta,int,n_iter);
                 IAG_lexmin( A_I_0_to_X_1, delta );
-                
+
 4) Modify iteration space and access functions based on previous transformation.
 Since doing a loop permutation, going to modify access relations and NOT the iteration space.  However, going to rename iteration space to indicate that in essence it has been reordered.
 
@@ -446,12 +446,12 @@ Since doing a loop permutation, going to modify access relations and NOT the ite
                     // apply S1 on i = delta_inv(a)
                 = { [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2}
 
-5) (optional) collapsing index arrays, pointer update and array alignment 
+5) (optional) collapsing index arrays, pointer update and array alignment
 
-    Generate code to create new_iag().                    
+    Generate code to create new_iag().
 
     Update access relations.
     { [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2 && i=delta_inv(a)}
         // apply collapsing index arrays to sigma(inter1(delta_inv(a)))
-    { [a,b] -> [r] : r=new_iag(a) && 1 <=b<=2 }   
+    { [a,b] -> [r] : r=new_iag(a) && 1 <=b<=2 }
 
