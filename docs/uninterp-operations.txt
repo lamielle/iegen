@@ -10,17 +10,29 @@ w, x, y, z - integer variable tuples, or vectors
 c# - constraints
 
 ---------------------------------------------
-Comparison between two uninterp function uses (Implemented 7/28/08)
+Comparison between two uninterp function uses (Implemented 7/28/08 MMS)
 ---------------------------------------------
 f(a_1, a_2, ..., a_p) =?= g(b_1, b_2, ..., b_k)
 It is possible to indicate that two uninterp function uses are equal if the same function is being called (f==g), the same number of parameters are being passed (p==k), and all of the actual parameters are the same (a_i==b_i).  If that is not the case then their equality is unknown.
 
 ---------------------
-Inverse of a relation
+Inverse of a relation (Implemented 7/31/2008 AML)
 ---------------------
 R1 := { x -> y : c1 }
 inverse R1 = { y -> x : c1 }
 
+---------------------------
+Union between two relations
+---------------------------
+R1 := { x -> y : c1 }
+R2 := { w -> z : c2 }
+R2 union R1 = { x -> y : c1 } union { w -> z : c2 }
+
+Correctness
+    - arity(x) = arity(w)
+    - arity(y) = arity(z)
+
+See simplification rules starting at S4.
 
 ---------------------------------
 Composition between two relations
@@ -35,17 +47,23 @@ Assumptions
     - c1 and c2 do not involve existentially quantified variables
 
 ---------------------------
-Union between two relations
+Comparison between two sets
 ---------------------------
-R1 := { x -> y : c1 }
-R2 := { w -> z : c2 }
-R2 union R1 = { x -> y : c1 } union { w -> z : c2 }
+S1 = { x : c1 }
+S2 = { y : c2 }
 
-Correctness
-    - arity(x) = arity(w)
-    - arity(y) = arity(z)
-    
-See simplification rules starting at S4.
+For S1 and S2 to be equal, the following must hold:
+    arity(x) == arity(y)
+    bounds(x_i) == bounds(y_i) for all i in arity(x)
+The variable names in the x and y tuples do not have to be identical.  The bounds are all of the equalities and inequalities in c1 and c2.
+FIXME: this still needs to be fleshed out a bit.
+
+FIXME: what about when a set is a list of set unions?
+
+--------------------------------
+Comparison between two relations
+--------------------------------
+Similar to the comparison between sets.
 
 
 --------------
@@ -64,7 +82,7 @@ S1) Removing equalities between a variable and an expr
 
 S2) Removing inequalities. v <= e or v >= e
     If v is only involved in inequalities where e is constant or a scalar symbolic constant, then remove all inequalities involving v.
-    
+
 S3) Remove variable by creating the inverse of a permutation.
     If have an existential variable that is input to two or more uninterpreted function symbols and at least one of them is a non-nested uninterp function where the associated index array is a permutation, then solve for existential variable using the inverse of the permutation.  Then apply S1 to eliminate existential variable in other places where it is an input.
         Example: a = delta(i), where i is not in input, output, or set tuple
@@ -85,7 +103,7 @@ Examples in moldyn-data-iter-reord.txt include 1b, 4, 3b
         - gather all affine inequality constraints for input tuple variables
         - send constraints to omega or Cloog code gen for loop code gen (ALAN?)
         - for each output tuple variable use equality constraints to generate code that calculates their values in terms of the input variables and put in statement macro
-        
+
     Might want to break the above into two pieces:
         - generating code that iterates over the input tuple vars
         - generate code that given the input tuple vars calculates the output tuple vars
@@ -93,7 +111,7 @@ Examples in moldyn-data-iter-reord.txt include 1b, 4, 3b
                 -generating memory accesses
                 -generating memory indices for hypergraph creation
                 -generating code that collapses index arrays
-        
+
     FIXME
         - if there are 2+ conjuncts, can we always assume that the input tuple for each of those in the conjunct are the same?
 
@@ -120,35 +138,35 @@ new_iag = iag1[ iag2[ i ] ]
 
 Correctness
     - Bounds on values for iag2 should like within bounds on input values for iag1.
-    
+
 Could we use code gen for Relations to implement the construction of new_iag?
 {[i] -> [j] : j = iag1( iag2( i ) ) && bounds for input to iag2 };
-If so this would be another example like Hypergraph construction that needs us to generate the loop to iterate over the input tuples and then generate code to provide the output tuple results for a given input tuple value. 
+If so this would be another example like Hypergraph construction that needs us to generate the loop to iterate over the input tuples and then generate code to provide the output tuple results for a given input tuple value.
 
 Implementation of collapsing index arrays
-    PU0) find access relations with nested uninterpreted functions 
-    
+    PU0) find access relations with nested uninterpreted functions
+
     PU1) create relation for each nest
         For example, assume we find the nest a(b(c(i))).
         Create the relation {[i] -> [j] : j=a(b(c(i))) }
-        
+
     PU2) generate code to generate new_iag
         Use Code Gen for Relation algorithms.
             // loop that iterates over all input tuple vars
             for i=...
-                // Which output tuple is first param and 
+                // Which output tuple is first param and
                 // input tuple value is other param.
                 new_iag[i] = a[b[c[i]]];
-                
+
     PU3) use definition of new_iag to replace compositions of two index arrays in any sets and/or relations
 
 
-        
+
 
 ==================================================== Examples =========
 
 ---------
-Example 1: composition with relations 
+Example 1: composition with relations
 ---------
 // from moldyn-FST.txt, restricting iteration space in access relation
 R1 := { [ a, b ] -> [ c ] : c=a }
@@ -156,11 +174,11 @@ R2 := { [ k ] -> [ ii, 1 ] : k=inter1(ii) } union ...
 
 R1 ( R2 ) = { [ k ] -> [ c ] : a=ii && b=1 && c=a && k=inter1(ii) }
             union ...
-            
+
 // applying S1 to a=ii, expr=ii
 R1 ( R2 ) = { [ k ] -> [ c ] : b=1 && c=a && k=inter1(a) }
             union ...
-            
+
 // applying S1 to c=a, expr=a
 R1 ( R2 ) = { [ k ] -> [ c ] : b=1 && k=inter1(c) }
             union ...
@@ -173,18 +191,18 @@ R1 ( R2 ) = { [ k ] -> [ c ] : k=inter1(c) }
 ---------
 Example 2: composition with relations
 ---------
-// from moldyn-FST.txt, applying data reordering to access relation              
+// from moldyn-FST.txt, applying data reordering to access relation
 data_reordering := {[j] -> [f] : f = sigma(j) }
 A_I0_to_X0 := {  [ ii, 1 ] -> [ k ] : k=inter1(ii) } union ...
-        
+
 data_reordering(A_I0_to_X0) = { [ii,1] -> [f] : j=k && f = sigma(j) && k=inter1(ii) } union ...
-        
+
 // applying S1 to j=k, expr=k
 data_reordering(A_I0_to_X0) = { [ii,1] -> [f] :  f = sigma(j) && j=inter1(ii) } union ...
-        
-// applying S1 to j=inter1(ii), expr=inter1(ii)       
+
+// applying S1 to j=inter1(ii), expr=inter1(ii)
 data_reordering(A_I0_to_X0) = { [ii,1] -> [f] :  f = sigma(inter1(ii)) } union ...
-        
+
 // applying pointer update, inter1'(i) = sigma(inter1(i))
 data_reordering(A_I0_to_X0) = { [ii,1] -> [f] :  f = inter1'(i) } union ...
 
@@ -195,24 +213,24 @@ Example 3: composition with relations
 // from moldyn-FST.txt, iteration reordering example
 iter_reordering := { [i,j] -> [k,j] : k=delta(i) };
 I_1 := { [ii,1] : 0 <= ii <= (n_inter-1)  } union ...
-                   
+
 iter_reordering( I_1 ) = {[k,j] : i=ii && j=1 && 0 <= ii <= (n_inter-1) &&  k=delta(i) } union ...
 
 // applying S1 to remove i==ii
 iter_reordering( I_1 ) = {[k,j] : j=1 && 0 <= i <= (n_inter-1) &&  k=delta(i) } union ...
 
         //FIXME
-        // ok now the problem is that ii is existentially quantified, 
+        // ok now the problem is that ii is existentially quantified,
         // it is involved in inequalities and in an uninterp equality
-        
-// Possible solution: iteration permutation 
+
+// Possible solution: iteration permutation
 iter_reordering := { [i,j] -> [k,j] : k=delta(i) };
 I_1 := { [ii,1] : 0 <= ii <= (n_inter-1)  } union ...
-A_I1_to_INTER1_0 := name = "A_I1_to_INTER1_0", { [ii,1] -> [ ii ] } 
+A_I1_to_INTER1_0 := name = "A_I1_to_INTER1_0", { [ii,1] -> [ ii ] }
                    union { [ii,2] -> [ ii ] }
-A_I1_to_X1 := name = "A_I1_to_X1", { [ii,j] -> [ sigma(inter1(ii)) ] : 1<=j<=2 } 
+A_I1_to_X1 := name = "A_I1_to_X1", { [ii,j] -> [ sigma(inter1(ii)) ] : 1<=j<=2 }
               union { [ii,j] -> [ sigma(inter2(ii)) ] : 1<=j<=2 }
-                   
+
 // do step IP1
 for A_I1_to_INTER1_0 and A_I1_to_INTER1_1
 create DataPermuteRTRT
@@ -223,40 +241,21 @@ create DataPermuteRTRT
         iter_sub_space_relation = none
         iag_func_name = none
         iag_type = none
-        
+
 // step IP2
     inter1_1(i) = inter1(delta_inv(i))
     inter2_1(i) = inter2(delta_inv(i))
 
 // step IP3
 for A_I1_to_X1 and A_I1_to_FX1
-    A_I2_to_X1 := name = "A_I2_to_X1", { [ii,j] -> [ sigma(inter1(delta_inv(ii))) ] : 1<=j<=2 } 
+    A_I2_to_X1 := name = "A_I2_to_X1", { [ii,j] -> [ sigma(inter1(delta_inv(ii))) ] : 1<=j<=2 }
               union { [ii,j] -> [ sigma(inter2(delta_inv(ii))) ] : 1<=j<=2 }
 
 // step IP4
-    A_I2_to_X1 := name = "A_I2_to_X1", 
-              { [ii,j] -> [ sigma(inter1_1(ii)) ] : 1<=j<=2 } 
+    A_I2_to_X1 := name = "A_I2_to_X1",
+              { [ii,j] -> [ sigma(inter1_1(ii)) ] : 1<=j<=2 }
               union { [ii,j] -> [ sigma(inter2_1(ii)) ] : 1<=j<=2 }
-              
-
----------------------------
-Comparison between two sets
----------------------------
-S1 = { x : c1 }
-S2 = { y : c2 }
-
-For S1 and S2 to be equal, the following must hold:
-    arity(x) == arity(y)
-    bounds(x_i) == bounds(y_i) for all i in arity(x)
-The variable names in the x and y tuples do not have to be identical.  The bounds are all of the equalities and inequalities in c1 and c2.
-FIXME: this still needs to be fleshed out a bit.
-
-FIXME: what about when a set is a list of set unions?
 
 
---------------------------------
-Comparison between two relations
---------------------------------
-Similar to the comparison between sets.
 
 
