@@ -31,8 +31,9 @@
 # base Node class
 # Not an interface, because might have a generic child list in the Node class
 # later.
-class Node:
-	pass
+class Node(object):
+	def apply(self,visitor):
+		raise NotImplementedError('All node types should override the apply method.')
 
 #---------- Presburger Sets ----------
 # Presburger set interface
@@ -41,14 +42,17 @@ class IPresSet(Node):
 
 # A single presburger set.
 class PresSet(IPresSet):
-	__slots__=('_set_tuple','_conjunct')
+	__slots__=('_setTuple','_conjunct')
 
-	def __init__(self, tuple, conjunct):
-		self._set_tuple = tuple
+	def __init__(self, setTuple, conjunct):
+		self._setTuple = setTuple
 		self._conjunct = conjunct
 
 	def __repr__(self):
-		return 'PresSet("%s,%s")'%(self._set_tuple,self._conjunct)
+		return 'PresSet("%s,%s")'%(self._setTuple,self._conjunct)
+
+	def apply(self,visitor):
+		v.visitPresSet(self)
 
 	def union(self, other):
 		if (isinstance(other,PresSet)):
@@ -60,20 +64,23 @@ class PresSet(IPresSet):
 
 # A list of presburger sets involved in a union.
 class PresSetUnion(IPresSet):
-	__slots__=('_presSetList')
+	__slots__=('_sets')
 
-	def __init__(self, presSetList):
-		self._presSetList = presSetList
+	def __init__(self, sets):
+		self._sets = sets
 
 	def __repr__(self):
-		return "PresSetUnion(%s)"%(self._presSetList)
+		return "PresSetUnion(%s)"%(self._sets)
+
+	def apply(self,visitor):
+		v.visitPresSetUnion(self)
 
 	def union(self, other):
 		if (isinstance(other,PresSet)):
-			self._presSetList.append(other)
+			self._sets.append(other)
 			return self
 		elif (isinstance(other,PresSetUnion)):
-			self._presSetList.extend(other._presSetList)
+			self._sets.extend(other._sets)
 			return self
 		else:
 			assert(0)
@@ -86,15 +93,18 @@ class IPresRelation(Node):
 
 # A single presburger relation
 class PresRelation(IPresRelation):
-	__slots__=('_in_tuple','_out_tuple','_conjunct')
+	__slots__=('_inTuple','_outTuple','_conjunct')
 
-	def __init__(self, in_tuple, out_tuple, conjunct):
-		self._in_tuple = tuple
-		self._out_tuple = tuple
+	def __init__(self, inTuple, outTuple, conjunct):
+		self._inTuple = tuple
+		self._outTuple = tuple
 		self._conjunct = conjunct
 
 	def __repr__(self):
-		return 'PresRelation("%s,%s,%s")'%(self._in_tuple,self._out_tuple,self._conjunct)
+		return 'PresRelation("%s,%s,%s")'%(self._inTuple,self._outTuple,self._conjunct)
+
+	def apply(self,visitor):
+		v.visitPresRelation(self)
 
 	def union(self, other):
 		if (isinstance(other,PresRelation)):
@@ -106,20 +116,23 @@ class PresRelation(IPresRelation):
 
 # A list of presburger relations involved in a union.
 class PresRelationUnion(IPresRelation):
-	__slots__=('_presRelationList')
+	__slots__=('_relations')
 
-	def __init__(self, presRelationList):
-		self._presRelationList = presRelationList
+	def __init__(self, relations):
+		self._relations = relations
 
 	def __repr__(self):
-		return "PresRelationUnion(%s)"%(self._presRelationList)
+		return "PresRelationUnion(%s)"%(self._relations)
+
+	def apply(self,visitor):
+		v.visitPresRelationUnion(self)
 
 	def union(self, other):
 		if (isinstance(other,PresRelation)):
-			self._presRelationList.append(other)
+			self._relations.append(other)
 			return self
 		elif (isinstance(other,PresRelationUnion)):
-			self._presRelationList.extend(other._presRelationList)
+			self._relations.extend(other._relations)
 			return self
 		else:
 			assert(0)
@@ -135,6 +148,9 @@ class VarTuple(Node):
 
 	def __repr__(self):
 		return 'VarTuple("%s")'%(self._idList)
+
+	def apply(self,visitor):
+		v.visitVarTuple(self)
 #------------------------------------
 
 #---------- Conjunction Nodes ----------
@@ -147,6 +163,9 @@ class Conjunction(Node):
 
 	def __repr__(self):
 		return 'Conjunction("%s")'%(self._constraintList)
+
+	def apply(self,visitor):
+		v.visitConjunction(self)
 #---------------------------------------
 
 #---------- Constraint Nodes ----------
@@ -166,6 +185,9 @@ class Inequality(IConstraint):
 	def __repr__(self):
 		return 'Inequality("%s,%s")'%(self._lhs,self._rhs)
 
+	def apply(self,visitor):
+		v.visitInequality(self)
+
 class Equality(IConstraint):
 	__slots__=('_lhs','_rhs')
 
@@ -175,6 +197,9 @@ class Equality(IConstraint):
 
 	def __repr__(self):
 		return 'Equality("%s,%s")'%(self._lhs,self._rhs)
+
+	def apply(self,visitor):
+		v.visitEquality(self)
 #--------------------------------------
 
 #---------- Expression Nodes ----------
@@ -199,6 +224,9 @@ class IntExp(IExp):
 		if (self._val==other._val): return True
 		else: return False
 
+	def apply(self,visitor):
+		v.visitIntExp(self)
+
 # Identifier expressions
 class IdExp(IExp):
 	__slots__=('_id')
@@ -216,6 +244,9 @@ class IdExp(IExp):
 		# Check equality when other is a IdExp.
 		if (self._id==other._id): return True
 		else: return False
+
+	def apply(self,visitor):
+		v.visitIdExp(self)
 
 
 # Unary Minus
@@ -236,6 +267,9 @@ class UMinusExp(IExp):
 		# Multiplication is associative.
 		if (self._exp==other._exp): return True
 		else: return False
+
+	def apply(self,visitor):
+		v.visitUMinusExp(self)
 
 
 # Binary multiplication
@@ -261,6 +295,9 @@ class MulExp(IExp):
 		elif (self._lhs==other._rhs and self._rhs==other._lhs): return True
 		else: return False
 
+	def apply(self,visitor):
+		v.visitMulExp(self)
+
 
 # Binary Addition
 class PlusExp(IExp):
@@ -283,6 +320,9 @@ class PlusExp(IExp):
 		elif (self._lhs==other._rhs and self._rhs==other._lhs): return True
 		else: return False
 
+	def apply(self,visitor):
+		v.visitPlusExp(self)
+
 
 # Binary Subtraction
 class MinusExp(IExp):
@@ -302,6 +342,9 @@ class MinusExp(IExp):
 		# check equality when other is a MinusExp
 		if (self._lhs==other._lhs and self._rhs==other._rhs): return True
 		else: return False
+
+	def apply(self,visitor):
+		v.visitMinusExp(self)
 
 
 # Multiplication by a constant integer
@@ -324,6 +367,9 @@ class IntMulExp(IExp):
 		# check equality when other is a IntMulExp
 		if (self._int==other._int and self._exp==other._exp): return True
 		else: return False
+
+	def apply(self,visitor):
+		v.visitIntMulExp(self)
 
 
 # Uninterpreted function calls
@@ -350,4 +396,7 @@ class FuncExp(IExp):
 			return True
 		else:
 			return False
+
+	def apply(self,visitor):
+		v.visitFuncExp(self)
 #---------------------------------------
