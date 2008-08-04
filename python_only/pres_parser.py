@@ -291,7 +291,7 @@ class PresParser(object):
 			else:
 				t[0]=MulExp(t[1],t[3])
 		else:
-			assert False
+			raise ValueError("Unsupported binary operator '%s'."%t[2])
 
 	def p_expression_int_mult(self,t):
 		'''expression_int_mult : INT expression_simple'''
