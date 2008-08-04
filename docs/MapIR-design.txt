@@ -15,6 +15,8 @@ Need a MapIR specification.
             DataSpace getDataSpace(String);
             
             IndexArray getIndexArray(String);
+            
+            Symbolic getSymbolic(String);
                
         }
 
@@ -22,10 +24,15 @@ Need a MapIR specification.
             - do we actually need to index the DataSpaces, IterSpaces, etc. by name?  Won't other data structures just have the data spaces in there?  I guess in the final representation that will be the case, but when parsing, need to treat the name like a symbol table, so a DataSpace can be referenced in other contexts.
 
 
+    -Symbolic Constants.  The PresSet and PresRelation parser should look up ids to determine if they are for symbolic constants.  These should be created and put into the symbol table, or environment, before the PresSets and PresRelations that use them are created.
+        class Symbolic {
+            String name;
+        }
+
     -One iteration space set.
         class IterSpace {
             String name;
-            OmegaSet spec;
+            PresSet spec;
         }
         
         
@@ -33,18 +40,24 @@ Need a MapIR specification.
         class DataSpace {
             String name;
             bool is_index_array;
-            OmegaSet spec;
+            PresSet spec;
         }
         
     
-    -Each index array, which is mathematically represented with an uninterpreted function symbol, is specified with a relation where the domain  represents the uninterpreted function parameters and the single dimensional range represents the value of the uninterpreted function.  The relation constraints should indicate that if the parameters lie within certain boundaries, then the value of the uninterpreted function is also bounded.
+    -Each index array, which is mathematically represented with an uninterpreted function symbol.  The Range data structure for specifying the input and output value bounds will need to be capable of holding any affine expression.
+    
+    These should be created and put into the symbol table, or environment, before the PresSets and PresRelations that use them are created.
 
         class IndexArray {
             DataSpace dataspace;    // reference to associated dataspace
-            OmegaRelation index_value_constraints;
+            boolean isPermutation;  // is this index array a permutation?
+            
+            // boundary can be constant or sym const
+            List<Range> input_value_bounds; 
+            Range   output_value_bounds;
         }
     Checking
-        - The dimensionality of the domain should match the dimensionality of the associated index array DataSpace.
+        - The dimensionality of the input domain should match the dimensionality of the associated index array DataSpace.
         - For now we are assuming that the dimensionality of the range of the index array is one.
         
     -Access relations (used to be called data mappings) are relations where the domain is an iteration space (subspaces are specified with constraints) and the range is a data space.  Initially thought we might want to rename this to "access functions", but they are not functions.  We can have the same iteration mapping to multiple places in one array.  Decided to call it a relation versus a mapping, because mappings are usually synonymous with functions (http://en.wikipedia.org/wiki/Function_(mathematics)).  Using the term access to more clearly indicate the relationship between iterations and data.  Each iteration accesses various data locations.
@@ -53,7 +66,7 @@ Need a MapIR specification.
             String name;            // need a name so can name hypergraph
             IterSpace iter_space;
             DataSpace data_space;
-            OmegaRelation iterspace_to_data;
+            PresRelation iterspace_to_data;
         }
 
     Checking
@@ -64,7 +77,7 @@ Need a MapIR specification.
     
         class DataDependence {
             IterSpace iter_space;
-            OmegaRelation dd;
+            PresRelation dd;
             DataSpace data_space;
         }
         
@@ -76,7 +89,9 @@ Transformation Specification:
 
     All of the run-time reordering transformations (RTRTs) should derive from this base class.  For now just for conceptual organization.  We might need functionality or interface specifications later.
     
-    An IAGspec is different than an RTRT because an IAGspec is a specification of a library routine that takes hypergraphs as input and generates indexed permutations and/or groupings.  The IAGspec could eventually have pre and post conditions.  The RTRT needs to keep track of data and iteration spaces involved in the reordering, and the RTRT will be responsible for generating the code that generates the hypergraph data structures that will be passed to the IAG library routine at runtime.
+    An IAGspec is different than an RTRT because an IAGspec is a specification of a library routine that takes hypergraphs as input and generates indexed permutations and/or groupings.  The IAGspec could eventually have pre and post conditions.  Also an IAG_spec need not be directly associated with a reordering.  For example, a seed partitioning may not result in a reordering, but could then be used by a sparse tiling.
+        
+    The RTRT needs to keep track of data and iteration spaces involved in the reordering, and the RTRT will be responsible for generating the code that generates the hypergraph data structures that will be passed to the IAG library routine at runtime.
 
     
     class RTRT {
@@ -84,7 +99,7 @@ Transformation Specification:
     
     class DataPermuteRTRT extends RTRT {
         // reordering specification
-        OmegaRelation data_reordering;
+        PresRelation data_reordering;
 
         // DataSpaces that should all be permuted in the same way.
         List<DataSpace> data_spaces;
@@ -96,18 +111,14 @@ Transformation Specification:
         // Mapping of full iteration space to sub space of the 
         // iteration space that inspector should 
         // traverse when inspecting the access relation.
-        OmegaRelation iter_sub_space_relation;
+        PresRelation iter_sub_space_relation;
         
         // Generator for the index arrays that are represented 
         // as uninterpreted functions 
         // in the data reordering specification.
         // For now ASSUMING there is only one.
-        // When DataPermuteRTRT is created don't have all the info needed
-        // for the IAGspec instance.  Instead, just store the name of the 
-        // IAG function and the IAGspec subclass (can you do this in python?).
-        //IAGspec index_array_generator;
         String iag_func_name;
-        Type(?) iag_type;      
+        //IndexArray ia_spec;   // this will be generated automatically    
         
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?
@@ -116,32 +127,59 @@ Transformation Specification:
     
     class IterPermuteRTRT extends RTRT {
         // reordering specification
-        OmegaRelation iter_reordering;
-
-        // Iteration space that inspector should traverse and also that
-        // is being reordered
-        IterSpace iter_space;
+        PresRelation iter_reordering;
         
         // AccessRelation, mapping of iterations to data that
         // needs to have hypergraph creation code generated
-        AccessRelation access_relation;
-                
+        //AccessRelation access_relation;
+        // FIXME: maybe just indicate dataspace for which we should
+        // inspect all access relations coming from the iteration 
+        // subspace in question?
+          
         // Mapping of full iteration space to sub space of the 
         // iteration space that inspector should 
         // traverse when inspecting the access relation.
-        OmegaRelation iter_sub_space_relation;
+        PresRelation iter_sub_space_relation;
         
         // Generator for the index arrays that are represented 
         // as uninterpreted functions 
         // in the iteration reordering specification.
         // For now ASSUMING there is only one.
         String iag_func_name;
-        Type(?) iag_type;
         
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?
     }       
     
+
+    // uses data dependences in iter space and a seed partitioning
+    // on a subspace of the iter space
+    class RTRTSparseTiling extends RTRT {
+        // reordering specification
+        PresRelation iter_reordering;
+                
+        // Mapping of full iteration space to seed partition subspace.
+        PresRelation iter_space_to_seed_space;
+        
+        // Mapping of full iteration space to sub space of the 
+        // iteration space that inspector should 
+        // traverse when inspecting the data dependences.
+        PresRelation iter_sub_space_relation;
+        
+        // index array generator specification for seed partition
+        IAG_Spec seed_part_gen; 
+   
+        // Generator for the index arrays that are represented 
+        // as uninterpreted functions 
+        // in the iteration reordering specification.
+        // For now ASSUMING there is only one.
+        String sparse_tile_func_name;
+
+        // Index array to use for seed partition.
+        //IndexArray seed_partition;
+        // FIXME: don't need to keep this because we can just create a name
+
+    }
 
     // Base class
     // Index array generator specifications.
@@ -152,46 +190,51 @@ Transformation Specification:
     //      IAG_Permute - specification for an IAG that 
     //          takes a hypergraph (and possibly use its dual) and 
     //          creates an index array containing a 
-    //          permutation of either the nodes or hyperedges in 
-    //          the hypergraph.
+    //          permutation of the nodes in the hypergraph.
+    //          The access relation maps hyperedges to nodes.
     
     class IAG_Permute extends IAGspec {
         AccessRelation input;
-        String name;
+        String iag_name;
         IndexArray result;
     }
 
-FIXME: MMS, 5/23/08, only need IAG_Permute to work on the first part of the moldyn-FST composed transformation, so the rest of this still needs thought out
-
-    //      IAG_Group - creates an index array that groups the space
-    //          used to access the index array.
-    //          Assuming for now that we are only applying these to iteration
-    //          spaces.
+    //      IAG_Group - creates an index array that groups a subspace by
+    //          creating a many-to-one mapping between points in the subspace
+    //          to groups.
     //      Don't want to make this abstract.  Instead, it can be used by
     //      any grouping that does not inspect access relations or data
     //      dependences.
     class IAG_Group {
-        // return the space being grouped
-        IterSpace getInputIterSpace();
+        // the space being grouped
+        PresRelation iter_sub_space_relation;
         
-        // return heuristic being used to perform the grouping
-        Heuristic getHeuristic();
-        
-        // Return specification for the index array that will be the 
-        // result of the grouping.  Won't know name but will know 
-        // input and output constraints for the uninterpreted function.
-        // Is this something that the IAG should be able to compute from
-        // its various pieces of info, the input space being grouped,
-        // and the Heuristic info?  What do we really want here?
-        OmegaRelation getIndexArraySpec();
-        
-        // might have these members in the base class, 
-        // but might just have this be an interface
-        IterSpace input;
-        Heuristic heuristic;
+        // function being used to perform the grouping
+        String iag_name;
+
+        // specification for resulting index array        
         IndexArray result;
     }
-    
+
+    //      IAG_Graph_Part - creates an index array maps points in a subspace
+    //          to partitions using an underlying graph representation 
+    //          that represents a relationship between points in the subspace.
+LEFTOFF: use hypergraph as input?
+    class IAG_Graph_Part {
+        // the space being grouped
+        PresRelation iter_sub_space_relation;
+        
+        // function being used to perform the grouping
+        String iag_name;
+
+        // specification for resulting index array        
+        IndexArray result;
+    }
+
+
+FIXME: MMS, 8/4/08, still working on moldy-FST-v2.txt
+
+
     // uses data dependences in iteration space
     class IAG_Wavefront : public IAG_Group {
         // Wavefront needs the set of data dependences between the
@@ -200,15 +243,6 @@ FIXME: MMS, 5/23/08, only need IAG_Permute to work on the first part of the mold
         
     }
     
-    // uses data dependences in iter space and a seed partitioning
-    // on a subspace of the iter space
-    class IAG_SparseTiling : public IAG_Group {
-        // take dependences, a mapping from iter to seed space 
-        // and a partitioning of the seed space
-        DataDeps input_dd;
-        OmegaRelation iter_space_to_seed_space;
-        IndexArray seed_partition;
-    }
     
     
 Initial assumptions:

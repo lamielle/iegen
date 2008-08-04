@@ -107,6 +107,7 @@ S1) Removing equalities between a variable and an expr
         Remove v=e from the constraints
 
 S2) Removing inequalities. v <= e or v >= e
+    v is a scalar variable.
     If v is only involved in inequalities where e is constant or a scalar symbolic constant, then remove all inequalities involving v.
 
 S3) Remove variable by creating the inverse of a permutation.

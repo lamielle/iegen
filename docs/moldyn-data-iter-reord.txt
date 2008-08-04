@@ -195,7 +195,6 @@ Generating the composed inspector
 
 
     c) Automatically generate the IndexArray specification for sigma
-    FIXME: what if we declare uninterp functions with input and output bounds?
         input:
             DataPermuteRTRT instance
             access_relation_to_traverse
@@ -208,9 +207,9 @@ Generating the composed inspector
                     data_space = [name of uninterp func in data_reordering],
                                  [specification from data space in RTRT],
                                  index array,
-                    index_value_constraints = { [k] -> [ j ] : j=uninterp(k)
-                        not [k has same bounds as data space] ||
-                        [uninterp(k) has same bounds as data space] }
+                    isPermutation = true,
+                    input_value_bounds = [ (same bounds as for data space) ],
+                    output_value_bounds = (same bounds as for data space)
                 )
             )
 
@@ -224,7 +223,9 @@ Generating the composed inspector
                 AccessRelation input = A_I0_to_X0
                 IndexArray result = new IndexArray(
                     data_space = "sigma", X_0.spec, index array,
-                    index_value_constraints = { [k] -> [sigma(k)] : not (0 <= k <= (N-1)) || (0 <= sigma(k) <= (N-1)) }
+                    isPermutation = true,
+                    input_value_bounds = [(0 .. (N-1))],
+                    output_value_bounds = (0 .. (N-1))
                 )
 
             )
@@ -387,8 +388,7 @@ After performing a data reordering, if index arrays that access the reordered da
 
 
     c) Automatically generate the IndexArray specification for delta.
-    Should this algorithm be a method associated with IterPermuteRTRT?
-    FIXME: think we might want to change this by declaring uninterp functions with in and out bounds
+    FIXME: Should this algorithm be a method associated with IterPermuteRTRT?
         input:
             IterPermuteRTRT instance
             access_relation_to_traverse
@@ -401,9 +401,9 @@ After performing a data reordering, if index arrays that access the reordered da
                     data_space = [name of uninterp func in iter_reordering],
                                  [rtrt.iter_space],
                                  index array,
-                    index_value_constraints = { [k] -> [ uninterp(k) ] :
-                        not [k has same bounds as rtrt.iter_space] ||
-                       [uninterp(k) has same bounds as rtrt.iter_space] }
+                    isPermutation = true,
+                    input_value_bounds = [ (same bounds as for data space) ],
+                    output_value_bounds = (same bounds as for data space)               
                 )
             )
 
@@ -418,7 +418,9 @@ After performing a data reordering, if index arrays that access the reordered da
                 AccessRelation input = A_I_0_to_X_1
                 IndexArray result = new IndexArray(
                     data_space = "delta", I_0.spec, index array,
-                    index_value_constraints = { [k] -> [delta(k)] : not (0 <= k <= (n_iter-1)) || (0 <= delta(k) <= (N-1)) }
+                    isPermutation = true,
+                    input_value_bounds = [(0 .. (n_iter-1))],
+                    output_value_bounds = (0 .. (N-1))
                 )
 
             )
