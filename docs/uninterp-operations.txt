@@ -22,7 +22,7 @@ R1 := { x -> y : c1 }
 inverse R1 = { y -> x : c1 }
 
 ---------------------------
-Union between two relations
+Union between two relations (Implemented 7/31/2008 AML)
 ---------------------------
 R1 := { x -> y : c1 }
 R2 := { w -> z : c2 }
@@ -35,7 +35,7 @@ Correctness
 See simplification rules starting at S4.
 
 ---------------------------------
-Composition between two relations
+Composition between two relations (Implemented 8/1/2008)
 ---------------------------------
 R1 := { x -> y : c1 }
 R2 := { w -> z : c2 }
@@ -45,6 +45,32 @@ Correctness
     - arity(w) = arity(y)
 Assumptions
     - c1 and c2 do not involve existentially quantified variables
+
+---------------------------------
+Composition between unions of relations (Implemented 8/4/2008)
+---------------------------------
+R1 := { q -> r : c1 } R2 := { s -> t : c2 } R3 := { u -> v : c3 }
+R4 := { w -> x : c4 } R5 := { y -> z : c5 }
+RU1 := R1 union R2 union R3
+RU2 := R4 union R5
+RU2 compose RU1 = RU2(RU1) = R4(R1) union R4(R2) union R4(R3) union
+                             R5(R1) union R5(R2) union R5(R3)
+where relation composition is defined as above.
+
+Correctness
+   - arity(w,y)=arity(r,t,v)
+Assumptions
+   - c1 and c2 do not involve existentially quantified variables
+
+---------------------------------
+Application of a relation to a set
+---------------------------------
+S := { x : c2 }
+R := { y -> z : c1 }
+R(S) = { z : y=x && c1 && c2 }
+
+Correctness
+   - arity(x)=arity(y)
 
 ---------------------------
 Comparison between two sets
@@ -69,14 +95,14 @@ Similar to the comparison between sets.
 --------------
 Simplification
 --------------
-After we do an operation such as composition, we are going to have some free variables in the resulting constraints.  These free variables are implicitly existentially quantified.  We think we need to get rid of them, because they complicate code gen if they are in sets and the complicate further operations if they are in relations.
+After we do an operation such as composition, we are going to have some free variables in the resulting constraints.  These free variables are implicitly existentially quantified.  We think we need to get rid of them, because they complicate code gen if they are in sets and they complicate further operations if they are in relations.
 FIXME: need some examples of these two things (see moldyn-data-iter-reord.txt for some)
 
 These simplification rules can be applied in a loop until none of them are relevant.
 
 S1) Removing equalities between a variable and an expr
     For each equality involving a variable and a constant, v=e or e=v
-    What to do this for all non-tuple variables
+    Want to do this for all non-tuple variables
         Replace v with the expression in the rest of the constraints.
         Remove v=e from the constraints
 
@@ -88,7 +114,7 @@ S3) Remove variable by creating the inverse of a permutation.
         Example: a = delta(i), where i is not in input, output, or set tuple
         If delta is a permutation iag (FIXME: note that index array specifications will need a flag indicating if they are a permutation), then replace "a=delta(i)" with "i=delta_inv(a)".
 
-We also should simplify across disjunction (IOW the list of relation or set unons).  We use this when coming up with summary access relations for an iteration subspace or summary data dependences between two subspaces.
+We also should simplify across disjunction (IOW the list of relation or set unions).  We use this when coming up with summary access relations for an iteration subspace or summary data dependences between two subspaces.
 
 S4) If two relations in the union list are equivalent, then remove one of them.
 
