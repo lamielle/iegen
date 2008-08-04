@@ -32,8 +32,8 @@
 # Not an interface, because might have a generic child list in the Node class
 # later.
 class Node(object):
-	def apply(self,visitor):
-		raise NotImplementedError('All node types should override the apply method.')
+	def apply_visitor(self,visitor):
+		raise NotImplementedError('All node types should override the apply_visitor method.')
 
 #---------- Presburger Sets ----------
 # Presburger set interface
@@ -51,16 +51,19 @@ class PresSet(IPresSet):
 	def __repr__(self):
 		return 'PresSet("%s,%s")'%(self._setTuple,self._conjunct)
 
-	def apply(self,visitor):
+	def arity(self):
+		return len(self._setTuple._idList)
+
+	def apply_visitor(self,visitor):
 		v.visitPresSet(self)
 
 	def union(self, other):
-		if (isinstance(other,PresSet)):
+		if isinstance(other,PresSet):
 			return PresSetUnion([self,other])
-		elif (isinstance(other,PresSetUnion)):
+		elif isinstance(other,PresSetUnion):
 			return other.union(self)
 		else:
-			assert(0)
+			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 
 # A list of presburger sets involved in a union.
 class PresSetUnion(IPresSet):
@@ -68,22 +71,46 @@ class PresSetUnion(IPresSet):
 
 	def __init__(self, sets):
 		self._sets = sets
+		self._arity_check()
 
 	def __repr__(self):
 		return "PresSetUnion(%s)"%(self._sets)
 
-	def apply(self,visitor):
+	def _arity_check(self):
+		if len(self._sets)>0:
+			set_arity=self._sets[0].arity()
+		for set in self._sets[1:]:
+			if set.arity()!=set_arity:
+				raise ValueError('All sets in a PresSetUnion must have the same arity.')
+
+	def _add_set(self,set):
+		if not isinstance(set,PresSet):
+			raise ValueError("Cannot add object of type '%s' to PresSetUnion."%type(set))
+		self._sets.append(set)
+
+	def _add_union(self,union):
+		if not isinstance(set,PresSetUnion):
+			raise ValueError("Cannot add sets from object of type '%s' to PresSetUnion."%type(set))
+		self._sets.extend(union._sets)
+
+	def arity(self):
+		if len(self._sets)>0:
+			return self._sets[0].arity()
+		else:
+			raise ValueError('Cannot determine arity of a PresSetUnion that contains no sets.')
+
+	def apply_visitor(self,visitor):
 		v.visitPresSetUnion(self)
 
 	def union(self, other):
-		if (isinstance(other,PresSet)):
-			self._sets.append(other)
+		if isinstance(other,PresSet):
+			self._add_set(other)
 			return self
-		elif (isinstance(other,PresSetUnion)):
-			self._sets.extend(other._sets)
+		elif isinstance(other,PresSetUnion):
+			self._add_union(other)
 			return self
 		else:
-			assert(0)
+			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 #-------------------------------------
 
 #---------- Presburger Relations ----------
@@ -96,23 +123,64 @@ class PresRelation(IPresRelation):
 	__slots__=('_inTuple','_outTuple','_conjunct')
 
 	def __init__(self, inTuple, outTuple, conjunct):
-		self._inTuple = tuple
-		self._outTuple = tuple
+		self._inTuple = inTuple
+		self._outTuple = outTuple
 		self._conjunct = conjunct
 
 	def __repr__(self):
 		return 'PresRelation("%s,%s,%s")'%(self._inTuple,self._outTuple,self._conjunct)
 
-	def apply(self,visitor):
+	def arity_in(self):
+		return len(self._inTuple._idList)
+	def arity_out(self):
+		return len(self._outTuple._idList)
+
+	def apply_visitor(self,visitor):
 		v.visitPresRelation(self)
 
 	def union(self, other):
-		if (isinstance(other,PresRelation)):
-			return PresRelationUnion([self,other])
-		elif (isinstance(other,PresRelationUnion)):
+		if isinstance(other,PresRelation):
+			result=PresRelationUnion([self])
+			result.union(other)
+			return result
+		elif isinstance(other,PresRelationUnion):
 			return other.union(self)
 		else:
-			assert(0)
+			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+
+	def inverse(self):
+		outTemp=self._outTuple
+		self._outTuple=self._inTuple
+		self._inTuple=outTemp
+		return self
+
+	#Relation composition: self(other)
+	def compose(self,other):
+		#Composing two relations?
+		if isinstance(other,PresRelation):
+			#Make sure the arities are valid
+			if other.arity_out()!=self.arity_in():
+				raise ValueError('Output arity of first relation (%d) does not match input arity of second relation (%d)'%(other.arity_out(),self.arity_in()))
+
+			#Add equalities of tuple variables
+			#We know there are the same number of variables since we checked above
+			for i in xrange(self.arity_in()):
+				constraint=Equality(IdExp(other._inTuple[i]),IdExp(self._outTuple[i]))
+				self._conjunct._constraintList.append(constraint)
+
+			#Add the other's constraints to this relation
+			self._conjunct.extend(other._conjunct._constraintList)
+
+			return self
+		#Composing a relation with union of relations?
+		elif isinstance(other,PresRelationUnion):
+			new_union=PresRelationUnion([])
+			for relation in other._relations:
+				new_union._add_relation(self.compose(relation))
+			return new_union
+		else:
+			raise ValueError("Unsupported argument of type '%s' for operation compose."%type(other))
+
 
 # A list of presburger relations involved in a union.
 class PresRelationUnion(IPresRelation):
@@ -120,22 +188,97 @@ class PresRelationUnion(IPresRelation):
 
 	def __init__(self, relations):
 		self._relations = relations
+		self._arity_check()
 
 	def __repr__(self):
 		return "PresRelationUnion(%s)"%(self._relations)
 
-	def apply(self,visitor):
+	def _arity_check(self):
+		if len(self._relations)>0:
+			in_arity=self._relations[0].arity_in()
+			out_arity=self._relations[0].arity_out()
+		for relation in self._relations[1:]:
+			if relation.arity_in()!=arity_in:
+				raise ValueError('All relations in a PresRelationUnion must have the same input arity.')
+			if relation.arity_out()!=arity_out:
+				raise ValueError('All relations in a PresRelationUnion must have the same output arity.')
+
+	def _add_relation(self,relation):
+		if not isinstance(relation,PresRelation):
+			raise ValueError("Cannot add object of type '%s' to PresRelationUnion."%type(relation))
+		self._relations.append(relation)
+
+	def _add_union(self,union):
+		if not isinstance(relation,PresRelationUnion):
+			raise ValueError("Cannot add relations from object of type '%s' to PresRelationUnion."%type(relation))
+		self._relations.extend(union._relations)
+
+	def arity_in(self):
+		if len(self._relations)>0:
+			return self._relations[0].arity_in()
+		else:
+			raise ValueError('Cannot determine input arity of a PresRelationUnion that contains no relations.')
+
+	def arity_out(self):
+		if len(self._relations)>0:
+			return self._relations[0].arity_out()
+		else:
+			raise ValueError('Cannot determine output arity of a PresRelationUnion that contains no relations.')
+
+	def apply_visitor(self,visitor):
 		v.visitPresRelationUnion(self)
 
 	def union(self, other):
-		if (isinstance(other,PresRelation)):
-			self._relations.append(other)
+		#Unioning a single relation?
+		if isinstance(other,PresRelation):
+			if 0==len(self._relations):
+				self._add_relation(other)
+			else:
+				#Assuming that all relations already within the union
+				#have matching arities
+				if self._relations[0].arity_in()==other.arity_in() and \
+				   self._relations[0].arity_out()==other.arity_out():
+					self._add_relation(other)
+				else:
+					raise ValueError('Cannot union relations with differing in or out arity')
 			return self
-		elif (isinstance(other,PresRelationUnion)):
-			self._relations.extend(other._relations)
+		#Unioning another union?
+		elif isinstance(other,PresRelationUnion):
+			if 0==len(self._relations) or 0==len(other._relations):
+				self._add_union(other)
+			else:
+				#Assuming that all relations already within the unions
+				#have matching arities
+				if self._relations[0].arity_in()==other._relations[0].arity_in() and \
+				   self._relations[0].arity_out()==other._relations[0].arity_out():
+					self._add_union(other)
+				else:
+					raise ValueError('Cannot union relations with differing in or out arity')
 			return self
 		else:
-			assert(0)
+			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+
+	def inverse(self):
+		for relation in self._relations:
+			relation.inverse()
+		return self
+
+	def compose(self,other):
+		#Composing with a single relation?
+		if isinstance(other,PresRelation):
+			new_union=PresRelationUnion([])
+			for relation in self._relations:
+				new_union._add_relation(relation.compose(other))
+			return new_union
+		#Composing two unions?
+		elif isinstance(other,PresRelationUnion):
+			new_union=PresRelationUnion([])
+			for self_relation in self._relations:
+				for other_relation in other._relations:
+					new_union._add_relation(self_relation.compose(other_relation))
+			return new_union
+		else:
+			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 #------------------------------------------
 
 #---------- Variable Nodes ----------
@@ -149,7 +292,7 @@ class VarTuple(Node):
 	def __repr__(self):
 		return 'VarTuple("%s")'%(self._idList)
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitVarTuple(self)
 #------------------------------------
 
@@ -164,7 +307,7 @@ class Conjunction(Node):
 	def __repr__(self):
 		return 'Conjunction("%s")'%(self._constraintList)
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitConjunction(self)
 #---------------------------------------
 
@@ -185,7 +328,7 @@ class Inequality(IConstraint):
 	def __repr__(self):
 		return 'Inequality("%s,%s")'%(self._lhs,self._rhs)
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitInequality(self)
 
 class Equality(IConstraint):
@@ -198,7 +341,7 @@ class Equality(IConstraint):
 	def __repr__(self):
 		return 'Equality("%s,%s")'%(self._lhs,self._rhs)
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitEquality(self)
 #--------------------------------------
 
@@ -218,13 +361,13 @@ class IntExp(IExp):
 
 	def __eq__(self, other):
 		# An IntExp is not equal to any other object instance type.
-		if (isinstance(other,IntExp)==False):
+		if isinstance(other,IntExp)==False:
 			return False
 		# Check equality when other is a IntExp.
 		if (self._val==other._val): return True
 		else: return False
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitIntExp(self)
 
 # Identifier expressions
@@ -239,13 +382,13 @@ class IdExp(IExp):
 
 	def __eq__(self, other):
 		# An IdExp is not equal to any other object instance type.
-		if (isinstance(other,IdExp)==False):
+		if isinstance(other,IdExp)==False:
 			return False
 		# Check equality when other is a IdExp.
 		if (self._id==other._id): return True
 		else: return False
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitIdExp(self)
 
 
@@ -261,14 +404,14 @@ class UMinusExp(IExp):
 
 	def __eq__(self, other):
 		# A UMinusExp is not equal to any other object instance type.
-		if (isinstance(other,UMinusExp)==False):
+		if isinstance(other,UMinusExp)==False:
 			return False
 		# Check equality when other is a UMinusExp.
 		# Multiplication is associative.
 		if (self._exp==other._exp): return True
 		else: return False
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitUMinusExp(self)
 
 
@@ -287,7 +430,7 @@ class MulExp(IExp):
 
 	def __eq__(self, other):
 		# A MulExp is not equal to any other object instance type.
-		if (isinstance(other,MulExp)==False):
+		if isinstance(other,MulExp)==False:
 			return False
 		# Check equality when other is a MulExp.
 		# Multiplication is associative.
@@ -295,7 +438,7 @@ class MulExp(IExp):
 		elif (self._lhs==other._rhs and self._rhs==other._lhs): return True
 		else: return False
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitMulExp(self)
 
 
@@ -312,7 +455,7 @@ class PlusExp(IExp):
 
 	def __eq__(self, other):
 		# A PlusExp is not equal to any other object instance type.
-		if (isinstance(other,PlusExp)==False):
+		if isinstance(other,PlusExp)==False:
 			return False
 		# Check equality when other is a PlusExp.
 		# Addition is associative.
@@ -320,7 +463,7 @@ class PlusExp(IExp):
 		elif (self._lhs==other._rhs and self._rhs==other._lhs): return True
 		else: return False
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitPlusExp(self)
 
 
@@ -337,13 +480,13 @@ class MinusExp(IExp):
 
 	def __eq__(self, other):
 		# A MinusExp is not equal to any other object instance type.
-		if (isinstance(other,MinusExp)==False):
+		if isinstance(other,MinusExp)==False:
 			return False
 		# check equality when other is a MinusExp
 		if (self._lhs==other._lhs and self._rhs==other._rhs): return True
 		else: return False
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitMinusExp(self)
 
 
@@ -362,13 +505,13 @@ class IntMulExp(IExp):
 		# A IntMulExp is not equal to any other object instance type
 		# We are assuming that a MulExp will be canonicalized to an
 		# IntMulExp upon construction if appropriate.
-		if (isinstance(other,IntMulExp)==False):
+		if isinstance(other,IntMulExp)==False:
 			return False
 		# check equality when other is a IntMulExp
 		if (self._int==other._int and self._exp==other._exp): return True
 		else: return False
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitIntMulExp(self)
 
 
@@ -389,7 +532,7 @@ class FuncExp(IExp):
 	# is equal, otherwise, we don't know whether it is equal or not.
 	def __eq__(self, other):
 		# A FuncExp is not equal to any other object instance type
-		if (isinstance(other,FuncExp)==False):
+		if isinstance(other,FuncExp)==False:
 			return False
 		# check equality when other is a FuncExp
 		if (self._func==other._func and self._expList==other._expList):
@@ -397,6 +540,6 @@ class FuncExp(IExp):
 		else:
 			return False
 
-	def apply(self,visitor):
+	def apply_visitor(self,visitor):
 		v.visitFuncExp(self)
 #---------------------------------------
