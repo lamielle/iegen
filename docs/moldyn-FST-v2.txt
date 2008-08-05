@@ -89,21 +89,57 @@ Composition and choice of RTRTs
             iag_func_name = CPackHyper
             iag_type = IAG_Permute
     
-    iteration reordering
+    iteration reordering // permuting the ii loop
         IterPermuteRTRT
-            iter_reordering = { [ s,x,i,y ] -> [ s,x,k,y ] : k = delta( i ) }
-            iteration_space = I_0
+            iter_reordering = { [ s,x,i,y ] -> [ s,x,k,y ] : k = delta( i )  && x=2 }
             access_relation = A_I_0_to_X_1
             iag_func_name = LexMin
             iag_type = IAG_Permute
             
     iteration reordering: FST
-        IterGroupRTRT (FIXME: what are the other fields for this guy?)
+    	seedpart = IAG_Group	// not an RTRT so no reordering occurs 
+    		iter_sub_space_relation = { [ s,x,i,y ] -> [ i ] : x=2 }
+    		iag_name = "Block"
+    		params = [num_blocks]
+    		result = new IndexArray(
+                    data_space = "part", subspace PresSet, index array,
+                    isPermutation = false,
+                    input_value_bounds = [(0 .. (n_iter-1))],
+                    output_value_bounds = (0 .. (num_blocks-1))
+                )
+    		
+        IterGroupRTRT
             iter_reordering = { [ s,x,i,y ] -> [ s,v,t,x,i,y ] : v=1 && x=1 && y=1 && t=theta(x,i) } 
                 union { [ s,x,ii,y ] -> [ s,v,t,x,ii,y ] : v=1 && x=2 && 1<=y && y<=2 && t=theta(x,ii) }
-            iteration_space = I_1
-            access_relation = A_I_1_to_X_1
+                // split because of different y's
+            
+            // seed partition the ii loop
+            iter_space_to_seed_space = { [ s,x,i,y ] -> [ i ] : x=2 }
+            
+            // only inspect the dependences within one s iteration
+            iter_sub_space_relation = { [ s,x,i,y ] -> [ s,x,i,y ] : s=0 }
+            
+            seed_part_gen = seedpart
             iag_func_name = FST
-            iag_type = IAG_Group
             
     iteration reordering: tilepack
+    
+
+------------------------------------------------------------
+Automatically Generating Straight-Forward Inspector/Executor
+------------------------------------------------------------
+
+For data and iteration reordering see moldyn-data-iter-reord.txt.  Inputs have changed somewhat, but all code generation algorithms should still work.
+
+
+8) seedpart = IAG_Group
+	a) restrict iteration space to iteration sub space that will be grouped
+	b) Automatically generate the IndexArray specification for part
+	c) Generate code that calls IAG algorithm Block to generate values for part
+
+9) IterGroupRTRT
+	a) Calculate dependences between the seed space and the other part of the sub space to be tiled.
+	b) Generate code to explicitly inspect those dependences.
+	c) Pass the dependences into FST.
+	d) Generate sparse schedule. (ITO so should plan with and without)
+	e) Generate executor.

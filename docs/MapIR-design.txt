@@ -178,7 +178,9 @@ Transformation Specification:
         // Index array to use for seed partition.
         //IndexArray seed_partition;
         // FIXME: don't need to keep this because we can just create a name
-
+        
+        // correctness
+        // - seed space should be a sub space of the sub space to be tiled
     }
 
     // Base class
@@ -206,8 +208,29 @@ Transformation Specification:
     //      any grouping that does not inspect access relations or data
     //      dependences.
     class IAG_Group {
-        // the space being grouped
+        // Mapping from full iteration space to the space being grouped.
         PresRelation iter_sub_space_relation;
+        
+        // function being used to perform the grouping
+        String iag_name;
+        
+        // Scalar parameters to the grouping algorithm.
+        List<Symbolic> params;
+
+        // specification for resulting index array        
+        IndexArray result;
+    }
+
+    //      IAG_Part - creates an index array maps points in a subspace
+    //          to partitions using a relation that maps points in the subspace
+    //          to other points in the subspace 
+    //          indicating a relationship exists.
+    class IAG_Part extends IAG_Group {
+        // Mapping from full iteration space to the space being grouped.
+        PresRelation iter_sub_space_relation;
+        
+        // Relation between points in the subspace.
+        PresRelation point_relationship;
         
         // function being used to perform the grouping
         String iag_name;
@@ -216,23 +239,8 @@ Transformation Specification:
         IndexArray result;
     }
 
-    //      IAG_Graph_Part - creates an index array maps points in a subspace
-    //          to partitions using an underlying graph representation 
-    //          that represents a relationship between points in the subspace.
-LEFTOFF: use hypergraph as input?
-    class IAG_Graph_Part {
-        // the space being grouped
-        PresRelation iter_sub_space_relation;
-        
-        // function being used to perform the grouping
-        String iag_name;
 
-        // specification for resulting index array        
-        IndexArray result;
-    }
-
-
-FIXME: MMS, 8/4/08, still working on moldy-FST-v2.txt
+FIXME: MMS, 8/4/08, still working on moldyn-FST-v2.txt
 
 
     // uses data dependences in iteration space

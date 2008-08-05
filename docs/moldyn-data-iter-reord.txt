@@ -347,7 +347,7 @@ After performing a data reordering, if index arrays that access the reordered da
             e1(t1,2);
         }
 
-3) IterPermuteRTRT  (for now done assuming no pointer update has occurred)
+5) IterPermuteRTRT  (for now done assuming no pointer update has occurred)
     a) restrict access_relation to iteration subspace (same as 1a above)
 
         For the example, output is the following:
@@ -432,7 +432,7 @@ After performing a data reordering, if index arrays that access the reordered da
                 MALLOC(delta,int,n_iter);
                 IAG_lexmin( A_I_0_to_X_1, delta );
 
-4) Modify iteration space and access functions based on previous transformation.
+6) Modify iteration space and access functions based on previous transformation.
 Since doing a loop permutation, going to modify access relations and NOT the iteration space.  However, going to rename iteration space to indicate that in essence it has been reordered.
 
     I_1 = I_0       // use same bounds for newly permuted iteration space
@@ -448,7 +448,7 @@ Since doing a loop permutation, going to modify access relations and NOT the ite
                     // apply S1 on i = delta_inv(a)
                 = { [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2}
 
-5) (optional) collapsing index arrays, pointer update and array alignment
+7) (optional) collapsing index arrays, pointer update and array alignment
 
     Generate code to create new_iag().
 
