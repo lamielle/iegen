@@ -1,0 +1,26 @@
+# ---------------------- CONTEXT ----------------------
+c # language is C
+
+# Context (constraints on two parameters)
+1 4
+1 0 0 0
+
+1 # We want to set manually the parameter names
+n m # parameter names
+
+# --------------------- STATEMENTS --------------------
+1 # Number of statements
+1 # First statement: one domain
+
+4 6
+1  1  0  0  0 -6
+1 -1  0  1  0 -1
+1  0  1  0  0  9
+1  0 -1  0 -1 -1
+0 0 0
+
+1
+i j
+
+# --------------------- SCATTERING --------------------
+0 # No scattering functions
