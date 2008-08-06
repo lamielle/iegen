@@ -6,13 +6,13 @@ Now that we have data and iteration reordering figured out in moldyn-data-iter-r
 
   for (s=0; s<T; s++) {
 	for (i=0; i<N; i++) {
-		x[i] = fx[i]*1.25;
+s1:     x[i] = fx[i]*1.25;
 	}
 
     for (ii=0; ii<n_inter; ii++) {
         // simplified computations
-        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
-        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+s2:     fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+s3:     fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
     }
   }
 
@@ -72,8 +72,22 @@ Access Relations
     [s,2,ii,2]  a6          X_0        	{ [s,x,ii,j] -> [k] : x=2 && j=2 && k=inter2(ii) }
     
 
-Data Dependences
-	x[i] to x[inter1[ii]]: { [s,x,i,j] -> [s,y,ii,k] : x=1 && y=2 && ...
+Data Dependences 
+(only direct dependences for now and those not carried by s loop)
+    s1:x[i] to s2:x[inter1[ii]]: 
+        { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=1 
+                                    && i=inter1(ii) }
+    s1:x[i] to s3:x[inter1[ii]]: 
+        { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=2 
+                                    && i=inter1(ii) }
+		                            
+    s1:x[i] to s2:x[inter2[ii]]: 
+        { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=1 
+                                    && i=inter2(ii) }
+                                    
+    s1:x[i] to s3:x[inter2[ii]]: 
+        { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=2 
+                                    && i=inter2(ii) }
 
     Reduction dependences in ii loop.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically if the loop is being parallelized.
     FIXME: how will we indicate reduction dependences?
@@ -100,13 +114,9 @@ Composition and choice of RTRTs
     	seedpart = IAG_Group	// not an RTRT so no reordering occurs 
     		iter_sub_space_relation = { [ s,x,i,y ] -> [ i ] : x=2 }
     		iag_name = "Block"
-    		params = [num_blocks]
-    		result = new IndexArray(
-                    data_space = "part", subspace PresSet, index array,
-                    isPermutation = false,
-                    input_value_bounds = [(0 .. (n_iter-1))],
-                    output_value_bounds = (0 .. (num_blocks-1))
-                )
+    		num_groups = num_blocks
+    		ia_name = "part"
+
     		
         IterGroupRTRT
             iter_reordering = { [ s,x,i,y ] -> [ s,v,t,x,i,y ] : v=1 && x=1 && y=1 && t=theta(x,i) } 
@@ -133,13 +143,73 @@ For data and iteration reordering see moldyn-data-iter-reord.txt.  Inputs have c
 
 
 8) seedpart = IAG_Group
-	a) restrict iteration space to iteration sub space that will be grouped
-	b) Automatically generate the IndexArray specification for part
-	c) Generate code that calls IAG algorithm Block to generate values for part
+	a) Automatically generate the IndexArray specification for "part" index array.
+	Very much like 1c.  Should be implemented as a call to the IAG_Group constructor, which should just be in the user specification for the sequence of transformations.  See MapIR-design.txt for more info.
+	
+	    input:
+            iter_sub_space_relation
+            iag_name
+            num_groups 
+            ia_name
+
+        output:
+        	seedpart = IAG_Group (
+        		iter_sub_space_relation = iter_sub_space_relation,
+        		iag_name = iag_name,
+        		params = params,
+        		result = new IndexArray(
+                  data_space = [ia_name],
+                               [iter_sub_space_relation( I_0 )],
+                               index array,
+                  isPermutation = false,
+                  input_value_bounds = [ iter_sub_space_relation( I_0 ) ],
+                  output_value_bounds = (0 .. (num_groups-1))
+                )
+            )
+           
+
+	b) Generate code that calls IAG algorithm Block to generate values for part.
+	This should probably be implemented as a method in IAG_Group.
+	
+        input:
+            seedpart
+
+        output:
+            code
+            	// will need size_calc as input to malloc size computation
+            	// as well
+                [seedpart.result.data_space.name] = malloc( ... );
+                [iag_spec.iag_name]( 
+                	[size_calc(iag_spec.result.input_value_bounds[0])], [iag_spec.result.data_space.name] );
+
+				// NOTE: see uninterp-operations.txt for definition of size_calc
+
+        For this example:
+                int *part;
+                MALLOC(part,int,(n_inter-1) - (0) + 1);
+                Block( (n_inter-1) - (0) + 1, part );
+	
 
 9) IterGroupRTRT
-	a) Calculate dependences between the seed space and the other part of the sub space to be tiled.
-	b) Generate code to explicitly inspect those dependences.
+	a) Calculate dependences that are only within the iteration space that is going to be reordered.  We can skip this step initially because we are only specifying those dependences.
+	
+	b) Calculate dependences between the seed space and the other part of the sub space to be tiled.
+	    seed_space = iter_sub_space_relation( I_0 )
+	
+	    Apply restriction to the data dependences and their inverses.  Whatever is left are the data dependences to and from the seed subspace.
+	                iter_sub_space_relation compose (inverse access_relation)
+
+	    output:
+	        to_deps_relation
+	        from_deps_relation
+	
+	b) Generate code to explicitly inspect those dependences and create  to_deps and from_deps hypergraphs.
+	
 	c) Pass the dependences into FST.
+	
 	d) Generate sparse schedule. (ITO so should plan with and without)
+	
 	e) Generate executor.
+	    Unoptimized: Have cloog generate all loop bounds using affine constraints.  Put a guard around statements for constraints involving uninterpreted function symbols.
+	    
+	    Optimized: Have cloog generate code for all of the outer loops and we will generate innermost loop.  Innermost loop will iterate over a sparse set of some kind.

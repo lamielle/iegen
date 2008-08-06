@@ -72,6 +72,19 @@ R(S) = { z : y=x && c1 && c2 }
 Correctness
    - arity(x)=arity(y)
 
+--------------------
+Set Size Calculation
+--------------------
+Anytime we need to allocate an index array, we need to generate code that at runtime will determine the size of the index array.  See (8b), (1d), and (5d) as examples where this will be needed.
+
+input: PresSet
+output: string for expression that calculates size of PresSet
+    Essentially subtract lower bound for index from upper bound for index and add one.
+    FIXME: need to do some examples before implementing this
+
+Assumptions: Initially the PresSet can only be one-dimensional.  We do not have any short term plans to extend this, because at this point it doesn't appear necessary.
+
+
 ---------------------------
 Comparison between two sets
 ---------------------------

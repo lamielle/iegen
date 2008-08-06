@@ -195,6 +195,7 @@ Generating the composed inspector
 
 
     c) Automatically generate the IndexArray specification for sigma
+    This algorithm should be implemented by passing the appropriate parameters to the IAG_Permute constructor.  See MapIR-design.txt for more info.
         input:
             DataPermuteRTRT instance
             access_relation_to_traverse

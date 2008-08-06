@@ -196,9 +196,17 @@ Transformation Specification:
     //          The access relation maps hyperedges to nodes.
     
     class IAG_Permute extends IAGspec {
+        // members
         AccessRelation input;
-        String iag_name;
+        String iag_name;  // function name to be called to generate index array
         IndexArray result;
+        
+        // Constructor
+        // The constructor should create the IndexArray instance as is shown
+        // in (1c) of moldyn-data-iter-reord.txt.
+        IAG_Permute( AccessRelation input, String iag_name, String ia_name);
+        
+        
     }
 
     //      IAG_Group - creates an index array that groups a subspace by
@@ -207,6 +215,9 @@ Transformation Specification:
     //      Don't want to make this abstract.  Instead, it can be used by
     //      any grouping that does not inspect access relations or data
     //      dependences.
+    //      Assumptions: For now assuming that the subspace is only one
+    //          dimensional, because the index array generators can then
+    //          just use the size of the subspace as a parameter.
     class IAG_Group {
         // Mapping from full iteration space to the space being grouped.
         PresRelation iter_sub_space_relation;
@@ -214,11 +225,22 @@ Transformation Specification:
         // function being used to perform the grouping
         String iag_name;
         
-        // Scalar parameters to the grouping algorithm.
-        List<Symbolic> params;
+        // Scalar variable that will indicate number of groups.
+        // NOTE: this used to be a more generic list of parameters, which
+        // we might need again in the future for other algorithms that
+        // fall under this category.  Or we could subclass to add more 
+        // parameters.
+        Symbolic num_groups;
 
         // specification for resulting index array        
         IndexArray result;
+        
+        // Constructor
+        // The constructor should create the IndexArray instance as is shown 
+        // in (8a) in moldyn-FST-v2.txt.
+        IAG_Group(PresRelation iter_sub_space_relation, String iag_name, 
+                  List<Symbolic> params, String ia_name);       
+        
     }
 
     //      IAG_Part - creates an index array maps points in a subspace
