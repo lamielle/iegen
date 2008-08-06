@@ -10,8 +10,13 @@ CC = gcc
 LDLIBS= -lcloog
 CFLAGS= -I $(POLYLIB_INC) -L $(POLYLIB_LIB) -I $(CLOOG_INC) -L $(CLOOG_LIB)
 
+all: simple pycloog
+
 simple: simple.c
 	$(CC) simple.c -o simple $(CFLAGS) $(LDLIBS)
+
+pycloog: pycloog.c
+	$(CC) pycloog.c -o pycloog.so -shared -fPIC $(CFLAGS) $(LDLIBS)
 
 clean:
 	-rm -f simple
