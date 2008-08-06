@@ -19,4 +19,4 @@ pycloog: pycloog.c
 	$(CC) pycloog.c -o pycloog.so -shared -fPIC $(CFLAGS) $(LDLIBS)
 
 clean:
-	-rm -f simple
+	-rm -f simple pycloog.so
