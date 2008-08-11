@@ -1,0 +1,55 @@
+# Generates an equivalent of the following:
+# for(i=1;i<=N;i++)
+#   for(j=1;j<=N;j++)
+#     S1;
+#   for(j=1;j<=N;j++)
+#     S2;
+#
+# ---------------------- CONTEXT ----------------------
+c # language is C
+
+# Context (constraints on one parameter)
+1 3
+1 0 0
+
+1 # We want to set manually the parameter names
+n # parameter names
+
+# --------------------- STATEMENTS --------------------
+2 # Number of statements
+
+1
+4 5
+1  1  0 0 -1 # i >= 1
+1 -1  0 1  0 # i <= n
+1  0  1 0 -1 # j >= 1
+1  0 -1 1  0 # j <= n
+0 0 0
+
+1
+4 5
+1  1  0 0 -1 # i >= 1
+1 -1  0 1  0 # i <= n
+1  0  1 0 -1 # j >= 1
+1  0 -1 1  0 # j <= n
+0 0 0
+
+1
+i j
+
+# --------------------- SCATTERING --------------------
+2 # One scattering function
+4 9
+0 1 0 0 0 -1  0 0 0 #i
+0 0 1 0 0  0  0 0 0 #0
+0 0 0 1 0  0 -1 0 0 #j
+0 0 0 0 1  0  0 0 0 #0
+
+4 9
+0 1 0 0 0 -1  0 0  0 #i
+0 0 1 0 0  0  0 0 -1 #1
+0 0 0 1 0  0 -1 0  0 #j
+0 0 0 0 1  0  0 0  0 #0
+
+1
+c1 c2 c3 c4
