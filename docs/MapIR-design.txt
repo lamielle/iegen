@@ -154,7 +154,7 @@ Transformation Specification:
 
     // uses data dependences in iter space and a seed partitioning
     // on a subspace of the iter space
-    class RTRTSparseTiling extends RTRT {
+    class SparseTileRTRT extends RTRT {
         // reordering specification
         PresRelation iter_reordering;
                 

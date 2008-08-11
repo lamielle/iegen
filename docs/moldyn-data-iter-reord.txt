@@ -47,10 +47,18 @@ Data Spaces
 Statements
     [ii,1]  "`a1 += `a2 - `a3;"
     [ii,2]  "`a4 += `a5 - `a6;"
+    
+    Iteration Space for each statement
+    {[ii,j] : j=1 && 0 <= ii <= (n_inter-1)}
+    or
+    original iter space for statement = {[ii] : 0 <= ii <= (n_inter-1) } 
+    // never changes
+    
+    and scattering function {[ii] -> [ii,1]}
+        theta_s(ii) = (ii,1)
 
-
-Access Relations
-    These actually need to be specified per data access in each statement.
+    Access Relations
+        These actually need to be specified per data access in each statement.
 
     statement   access#     DataSpace   AccessRelation
     [ii,1]      a1           FX_0        { [ii,j] -> [k] :j=1 && k=inter1(ii) }
@@ -66,7 +74,9 @@ Access Relations
     // These can actually be generated automatically by using unions
     // between access relations that access the same data array.
     A_I_0_to_X_0 := name = "A_I_0_to_X_0",
-                    { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }
+                    iter_space = I_0,
+                    data_space = X_0,
+                    iterspace_to_data = { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }
                     union { [ii,j] -> [ k ] : k=inter2(ii) && 1<=j<=2 }
 
     A_I_0_to_FX_0 := name = "A_I_0_to_FX_0",
@@ -115,12 +125,12 @@ Generating the composed inspector
 1) DataPermuteRTRT
     a) restrict access_relation to iteration subspace
         input:
-            access_relation
+            access_relation (for example, A_I_0_to_X_0)
             iter_sub_space_relation
 
         output:
-            access_relation_to_traverse = new AccessRelation
-                name = access_relation.name
+            access_relation_to_traverse, artt = new AccessRelation
+                name = access_relation.name // rename?
                 iter_space = iter_sub_space_relation (
                                 [access_relation.iter_space] )
                 data_space = access_relation.data_space
@@ -129,7 +139,7 @@ Generating the composed inspector
 
 
         For the example, output is the following:
-          access_relation_to_traverse = new AccessRelation
+          access_relation_to_traverse, artt = new AccessRelation
                 name = "A_I_0_sub_to_X_0"
                 iter_space = { [ii] : 0 <= ii < n_inter  }
                 data_space = X0
@@ -304,7 +314,7 @@ After performing a data reordering, if index arrays that access the reordered da
    Note: eventually we want to generate the composed inspector/executor only, but for testing we need to be able to test as we go.
 
     input:
-        Statements and transformed statement access relations
+        Statement scattering functions and transformed statement access relations
 
     output:
         // statement macros

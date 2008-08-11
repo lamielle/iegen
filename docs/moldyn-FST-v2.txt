@@ -74,18 +74,18 @@ Access Relations
 
 Data Dependences 
 (only direct dependences for now and those not carried by s loop)
-    s1:x[i] to s2:x[inter1[ii]]: 
+D1    s1:x[i] to s2:x[inter1[ii]]: 
         { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=1 
                                     && i=inter1(ii) }
-    s1:x[i] to s3:x[inter1[ii]]: 
+D2    s1:x[i] to s3:x[inter1[ii]]: 
         { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=2 
                                     && i=inter1(ii) }
 		                            
-    s1:x[i] to s2:x[inter2[ii]]: 
+D3    s1:x[i] to s2:x[inter2[ii]]: 
         { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=1 
                                     && i=inter2(ii) }
                                     
-    s1:x[i] to s3:x[inter2[ii]]: 
+D4    s1:x[i] to s3:x[inter2[ii]]: 
         { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=2 
                                     && i=inter2(ii) }
 
@@ -118,7 +118,7 @@ Composition and choice of RTRTs
     		ia_name = "part"
 
     		
-        IterGroupRTRT
+        SparseTileRTRT
             iter_reordering = { [ s,x,i,y ] -> [ s,v,t,x,i,y ] : v=1 && x=1 && y=1 && t=theta(x,i) } 
                 union { [ s,x,ii,y ] -> [ s,v,t,x,ii,y ] : v=1 && x=2 && 1<=y && y<=2 && t=theta(x,ii) }
                 // split because of different y's
@@ -127,7 +127,9 @@ Composition and choice of RTRTs
             iter_space_to_seed_space = { [ s,x,i,y ] -> [ i ] : x=2 }
             
             // only inspect the dependences within one s iteration
-            iter_sub_space_relation = { [ s,x,i,y ] -> [ s,x,i,y ] : s=0 }
+            // essentially this relation computes the arity of the tiling
+            // function itself
+            iter_sub_space_relation = { [ s,x,i,y ] -> [ x,i ] }
             
             seed_part_gen = seedpart
             iag_func_name = FST
@@ -193,17 +195,49 @@ For data and iteration reordering see moldyn-data-iter-reord.txt.  Inputs have c
 9) IterGroupRTRT
 	a) Calculate dependences that are only within the iteration space that is going to be reordered.  We can skip this step initially because we are only specifying those dependences.
 	
-	b) Calculate dependences between the seed space and the other part of the sub space to be tiled.
-	    seed_space = iter_sub_space_relation( I_0 )
+	    output:
+	        data_deps
 	
-	    Apply restriction to the data dependences and their inverses.  Whatever is left are the data dependences to and from the seed subspace.
-	                iter_sub_space_relation compose (inverse access_relation)
+	b) Calculate dependences between the seed space and the other part of the sub space to be tiled.
+	    input:
+	        IterGroupRTRT
+	
+	    Algorithm:
+	        Apply restriction to the data dependences and their inverses so that only keep dependences to and from see subspace.  
+
+                to_deps_relation = empty
+                from_deps_relation = empty
+                for each data_dep in data_deps:
+                    // the initial composition should result in an empty
+                    // relation if data_dep does not end in the seed space
+	                temp_dd = iter_space_to_seed_space( data_dep )
+	                if (temp_dd is not empty)
+	                    to_deps_relation = to_deps_relation union temp_dd
+	                        
+                    // the initial composition should result in an empty
+                    // relation if data_dep does not start in the seed space
+	                temp_dd = iter_space_to_seed_space( inverse data_dep )
+	                if (temp_dd is not empty)
+	                    from_deps_relation = from_deps_relation union temp_dd
 
 	    output:
 	        to_deps_relation
 	        from_deps_relation
+	        
+	        
+	    For this example:
+	        D1 = { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=1 
+                                    && i=inter1(ii) }
+                iter_space_to_seed_space compose D1
+                // rename tuple vars in iter_space_to_seed_space to 
+                // avoid confusion
+                = { [ a,b,c,d ] -> [ c ] : b=2 } compose D1
+                = { [s,z,i,j] -> [c] : a=s && b=y && c=ii && d=k && b=2 && z=1 && j=1 && y=2 && k=1 && i=inter1(ii) }
+                // after S1 is applied multiple times
+                = { [s,z,i,j] -> [c] : z=1 && j=1 && i=inter1(c) }                
+	            
 	
-	b) Generate code to explicitly inspect those dependences and create  to_deps and from_deps hypergraphs.
+	b) Generate code to explicitly inspect those dependences and create  to_deps and from_deps hypergraphs. (possible ITO for later: if to_deps and from_deps are the same but inverse of each other then only have to make one hypergraph?  would probably need inverse operation on hypergraph data structure)
 	
 	c) Pass the dependences into FST.
 	

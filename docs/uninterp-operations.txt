@@ -153,7 +153,7 @@ Examples in moldyn-data-iter-reord.txt include 1b, 4, 3b
                 -generating code that collapses index arrays
 
     FIXME
-        - if there are 2+ conjuncts, can we always assume that the input tuple for each of those in the conjunct are the same?
+        - if there are 2+ conjuncts, can we always assume that the input tuple for each of those in the conjunct are the same?  we probably need to take their union.  Hmmm that is ugly, maybe we should have one loop for each conjunct in the relation?
 
 
 ----------------
