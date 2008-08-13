@@ -17,7 +17,7 @@ simple: simple.c
 
 pycloog: pycloog.c
 #	$(CC) pycloog.c -o pycloog.dylib -dynamic -fPIC $(CFLAGS) $(LDLIBS)
-	$(CC) pycloog.c -o pycloog.so -shared -fPIC $(CFLAGS) $(LDLIBS)
+	$(CC) pycloog.c -o _pycloog.so -shared -fPIC $(CFLAGS) $(LDLIBS)
 
 clean:
-	-rm -f simple pycloog.so
+	-rm -f simple _pycloog.so
