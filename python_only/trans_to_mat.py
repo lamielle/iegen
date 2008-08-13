@@ -58,15 +58,13 @@ def trans_to_mat(set,params):
 
 	return mat
 
-set_parser=PresParser('set')
-set=set_parser.parse_set('{[a,b]:a=1 && 1<=b}')
+set=PresParser.parse_set('{[a,b]:a=1 && 1<=b}')
 params=['n']
 mat=trans_to_mat(set,params)
 
 set_string='{[i,j]:i>=1 && i<=n && j>=1 && j<=n}'
 print 'Set:',set_string
-set_parser=PresParser('set')
-set=set_parser.parse_set(set_string)
+set=PresParser.parse_set(set_string)
 params=['n']
 mat=trans_to_mat(set,params)
 
