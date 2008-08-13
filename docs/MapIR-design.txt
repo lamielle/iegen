@@ -104,14 +104,14 @@ Transformation Specification:
         // DataSpaces that should all be permuted in the same way.
         List<DataSpace> data_spaces;
         
-        // AccessRelation, mapping of iterations to data that
-        // needs to have hypergraph creation code generated
-        AccessRelation access_relation;
-        
         // Mapping of full iteration space to sub space of the 
         // iteration space that inspector should 
-        // traverse when inspecting the access relation.
+        // traverse when inspecting calculated access relation.
         PresRelation iter_sub_space_relation;
+        
+        // Data space that will be the target of the inspected access
+        // relation.
+        DataSpace target_data_space;
         
         // Generator for the index arrays that are represented 
         // as uninterpreted functions 
@@ -122,7 +122,14 @@ Transformation Specification:
         
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?
-            - all data spaces being reordered should have the same bounds
+        // Possible Error Checks
+        //    - all data spaces being reordered should have the same bounds
+            
+        // 8/13/08, MMS, deprecating
+        // AccessRelation, mapping of iterations to data that
+        // needs to have hypergraph creation code generated
+        //AccessRelation access_relation;
+        
     }
     
     class IterPermuteRTRT extends RTRT {

@@ -7,8 +7,8 @@ Showing all the details of how to automatically generate the inspector and execu
 
     for (ii=0; ii<n_inter; ii++) {
         // simplified computations
-        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]];
-        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]];
+S1        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]];
+S2        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]];
     }
 
 Notes
@@ -48,26 +48,26 @@ Statements
     [ii,1]  "`a1 += `a2 - `a3;"
     [ii,2]  "`a4 += `a5 - `a6;"
     
-    Iteration Space for each statement
-    {[ii,j] : j=1 && 0 <= ii <= (n_inter-1)}
-    or
-    original iter space for statement = {[ii] : 0 <= ii <= (n_inter-1) } 
-    // never changes
+    Original Iteration Space for each statement
+        S1: IS_{S1} = {[ii] : 0 <= ii <= (n_inter-1) }  // never changes
+        S2: IS_{S2} = {[ii] : 0 <= ii <= (n_inter-1) }  // never changes
     
-    and scattering function {[ii] -> [ii,1]}
-        theta_s(ii) = (ii,1)
+    Scattering function, which represents original schedule for statement
+        S1: scatter_{S1} = {[ii] -> [ii,j] : j=1}    // theta_s(ii) = (ii,1)
+        S2: scatter_{S2} = {[ii] -> [ii,j] : j=2}    // theta_s(ii) = (ii,1)
+
 
     Access Relations
         These actually need to be specified per data access in each statement.
 
     statement   access#     DataSpace   AccessRelation
-    [ii,1]      a1           FX_0        { [ii,j] -> [k] :j=1 && k=inter1(ii) }
-    [ii,1]      a2           X_0         { [ii,j] -> [k] :j=1 && k=inter1(ii) }
-    [ii,1]      a3           X_0         { [ii,j] -> [k] :j=1 && k=inter2(ii) }
+    S1          a1           FX_0        { [ii] -> [k] : k=inter1(ii) }
+    S1          a2           X_0         { [ii] -> [k] : k=inter1(ii) }
+    S1          a3           X_0         { [ii] -> [k] : k=inter2(ii) }
 
-    [ii,2]      a4           FX_0        { [ii,j] -> [k] :j=2 && k=inter2(ii) }
-    [ii,2]      a5           X_0         { [ii,j] -> [k] :j=2 && k=inter1(ii) }
-    [ii,2]      a6           X_0         { [ii,j] -> [k] :j=2 && k=inter2(ii) }
+    S2          a4           FX_0        { [ii] -> [k] : k=inter2(ii) }
+    S2          a5           X_0         { [ii] -> [k] : k=inter1(ii) }
+    S2          a6           X_0         { [ii] -> [k] : k=inter2(ii) }
 
     // summary access relations are the union of all access relations
     // to a particular data space
@@ -98,12 +98,10 @@ Composition and choice of RTRTs
     data reordering
         DataPermuteRTRT
             data_reordering = { [ k ] -> [ r ] : r=sigma( k ) }
-            iteration_space = I_0
             data_spaces = [ X_0, FX_0 ]
-            access_relation = A_I0_to_X0
-            iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
+            iter_sub_space_relation = { [ ii, j ] -> [ ii ] }            
+            target_data_space = X_0
             iag_func_name = CPackHyper
-            iag_type = IAG_Permute
 
     Naming standards
         After any transformation, we are going to assume that a space with the subscript n will be transformed into the same named space with the subscript n+1.  For example I_0 will become I_1.
@@ -122,40 +120,81 @@ Automatically Generating Straight-Forward Inspector/Executor
 
 Generating the composed inspector
 
+0) Generate PresSet that represents the full iteration space based on all of the statement scattering functions.
+    input:
+        statements with their scattering functions
+        
+    output:
+        I_0 = Union_{over all statements S}  scatter_S compose IS_S 
+        
+    For this example:
+        I_0 = (scatter_{S1} compose IS_{S1})
+              union (scatter_{S2} compose IS_{S2})
+            = ({[ii] -> [ii,j] : j=1} compose {[a] : 0 <= a <= (n_inter-1) })
+              union ({[ii] -> [ii,j] : j=2} compose {[a] : 0 <= a <= (n_inter-1) })
+                // apply composition
+            = {[ii,j] : ii=a && j=1 && 0 <= a <= (n_inter-1)}
+              union {[ii,j] : ii=a && j=2 && 0 <= a <= (n_inter-1)}
+                // apply S1
+            = {[ii,j] : j=1 && 0 <= ii <= (n_inter-1)}
+              union {[ii,j] : j=2 && 0 <= ii <= (n_inter-1)}
+                // ALAN: could do one more simplification set across
+                // union, but not sure it is initially worth it.
+            = {[ii,j] : 1<=j && j<=2 && 0 <= ii <= (n_inter-1)}
+   
+    Note:
+        This is output that we will want to share with a user of our system to help them in the specification of RTRTs.
+
 1) DataPermuteRTRT
-    a) restrict access_relation to iteration subspace
+    a) generate AccessRelation that will be input for data reordering
         input:
-            access_relation (for example, A_I_0_to_X_0)
-            iter_sub_space_relation
-
+            MapIR, or statement specifications
+            DataPermuteRTRT
+        
         output:
-            access_relation_to_traverse, artt = new AccessRelation
-                name = access_relation.name // rename?
-                iter_space = iter_sub_space_relation (
-                                [access_relation.iter_space] )
-                data_space = access_relation.data_space
-                iterspace_to_data =  inverse
-                ( iter_sub_space_relation compose (inverse access_relation))
-
+            AccessRelation artt;    // access_relation_to_traverse
+            
+        algorithm:
+            Intuitively we want to take each access relation to the target data space and expand its domain to the full iteration space using the statements scattering function.  The restrict the iteration space to the subspace on which the data reordering will depend.  If the original iteration space domain for the access relation does not overlap with the subspace for the transformation, then the access relation will be empty.
+            
+            artt = new AccessRelation (
+                name = "A_I_sub_to_TARGET", 
+                iter_space = iter_sub_space_relation ( I_0 ),
+                data_space = DataPermuteRTRT.target_data_space,
+                iterspace_to_data = 
+                    Union_{over all statements S} 
+                        Union_{over each access relation A to DataPermuteRTRT.target_data_space}
+                            inverse (DataPermuteRTRT.iter_sub_space_relation compose (scatter_S compose (inverse A)))
 
         For the example, output is the following:
-          access_relation_to_traverse, artt = new AccessRelation
-                name = "A_I_0_sub_to_X_0"
-                iter_space = { [ii] : 0 <= ii < n_inter  }
-                data_space = X0
-                iterspace_to_data := { [a] -> [ k ] : k=inter1(a) }
-                                     union { [a] -> [ k ] : k=inter2(a) }
+          access_relation_to_traverse, artt = new AccessRelation (
+                name = "A_I_0_sub_to_X_0",
+                iter_space = { [ii] : 0 <= ii < n_inter  },
+                data_space = X0,
+                iterspace_to_data = { [a] -> [ k ] : k=inter1(a) }
+                                    union { [a] -> [ k ] : k=inter2(a) }
+          )
 
           How we calculated iterspace_to_data:
-            access_relation = { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }  ...
-            iter_sub_space_relation = { [ a, b ] -> [ a ] }
-            iter_sub_space_relation compose (inverse access_relation)
-                // using Compositions between two relations
-            { [k] -> [a] : a=ii && b=j && k=inter1(ii) && 1<=j<=2 }
+            inverse ({ [ ii, j ] -> [ ii ] } compose (scatter_{S1} compose (inverse a2)))
+            union
+            inverse ({ [ ii, j ] -> [ ii ] } compose (scatter_{S1} compose (inverse a3)))
+            union
+            inverse ({ [ ii, j ] -> [ ii ] } compose (scatter_{S2} compose (inverse a5)))
+            union
+            inverse ({ [ ii, j ] -> [ ii ] } compose (scatter_{S2} compose (inverse a6))) 
+            
+                // apply inverse and then composition
+            = inverse ({ [ ii, j ] -> [ ii ] } compose {[k]->[ii,j] : j=1 && k=inter1(ii)})
+            union
+            ...
+                // apply compose and then inverse
+            = {[ii] -> [k] : j=1 && k=inter1(ii)}
+            ...
                 // apply S1
-            { [k] -> [a] : k=inter1(a) && 1<=j<=2 } // j is existentially quantified
-                // apply S2
-            { [k] -> [a] : k=inter1(a) } ...
+            = {[ii] -> [k] : k=inter1(ii)}
+              
+
 
     b) generate code that explicitly creates hypergraph representation of access relation at runtime.
         input:
