@@ -55,7 +55,7 @@ class PresSet(IPresSet):
 		return len(self._setTuple)
 
 	def apply_visitor(self,visitor):
-		v.visitPresSet(self)
+		visitor.visitPresSet(self)
 
 	def union(self, other):
 		if isinstance(other,PresSet):
@@ -64,6 +64,7 @@ class PresSet(IPresSet):
 			return other.union(self)
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+
 
 # A list of presburger sets involved in a union.
 class PresSetUnion(IPresSet):
@@ -100,7 +101,7 @@ class PresSetUnion(IPresSet):
 			raise ValueError('Cannot determine arity of a PresSetUnion that contains no sets.')
 
 	def apply_visitor(self,visitor):
-		v.visitPresSetUnion(self)
+		visitor.visitPresSetUnion(self)
 
 	def union(self, other):
 		if isinstance(other,PresSet):
@@ -136,7 +137,7 @@ class PresRelation(IPresRelation):
 		return len(self._outTuple)
 
 	def apply_visitor(self,visitor):
-		v.visitPresRelation(self)
+		visitor.visitPresRelation(self)
 
 	def union(self, other):
 		if isinstance(other,PresRelation):
@@ -226,7 +227,7 @@ class PresRelationUnion(IPresRelation):
 			raise ValueError('Cannot determine output arity of a PresRelationUnion that contains no relations.')
 
 	def apply_visitor(self,visitor):
-		v.visitPresRelationUnion(self)
+		visitor.visitPresRelationUnion(self)
 
 	def union(self, other):
 		#Unioning a single relation?
@@ -296,7 +297,7 @@ class VarTuple(Node):
 		return len(self._idList)
 
 	def apply_visitor(self,visitor):
-		v.visitVarTuple(self)
+		visitor.visitVarTuple(self)
 #------------------------------------
 
 #---------- Conjunction Nodes ----------
@@ -311,13 +312,14 @@ class Conjunction(Node):
 		return 'Conjunction(%s)'%(self._constraintList)
 
 	def apply_visitor(self,visitor):
-		v.visitConjunction(self)
+		visitor.visitConjunction(self)
 #---------------------------------------
 
 #---------- Constraint Nodes ----------
 # Interface for constraints.
 class IConstraint(Node):
 	pass
+
 
 # It is assummed that all constraints are converted to GTE
 # inequalities.
@@ -332,7 +334,8 @@ class Inequality(IConstraint):
 		return 'Inequality(%s,%s)'%(self._lhs,self._rhs)
 
 	def apply_visitor(self,visitor):
-		v.visitInequality(self)
+		visitor.visitInequality(self)
+
 
 class Equality(IConstraint):
 	__slots__=('_lhs','_rhs')
@@ -345,12 +348,13 @@ class Equality(IConstraint):
 		return 'Equality(%s,%s)'%(self._lhs,self._rhs)
 
 	def apply_visitor(self,visitor):
-		v.visitEquality(self)
+		visitor.visitEquality(self)
 #--------------------------------------
 
 #---------- Expression Nodes ----------
 class IExp(Node):
 	pass
+
 
 # Integer expressions
 class IntExp(IExp):
@@ -371,7 +375,8 @@ class IntExp(IExp):
 		else: return False
 
 	def apply_visitor(self,visitor):
-		v.visitIntExp(self)
+		visitor.visitIntExp(self)
+
 
 # Identifier expressions
 class IdExp(IExp):
@@ -392,7 +397,7 @@ class IdExp(IExp):
 		else: return False
 
 	def apply_visitor(self,visitor):
-		v.visitIdExp(self)
+		visitor.visitIdExp(self)
 
 
 # Unary Minus
@@ -415,7 +420,7 @@ class UMinusExp(IExp):
 		else: return False
 
 	def apply_visitor(self,visitor):
-		v.visitUMinusExp(self)
+		visitor.visitUMinusExp(self)
 
 
 # Binary multiplication
@@ -442,7 +447,7 @@ class MulExp(IExp):
 		else: return False
 
 	def apply_visitor(self,visitor):
-		v.visitMulExp(self)
+		visitor.visitMulExp(self)
 
 
 # Binary Addition
@@ -467,7 +472,7 @@ class PlusExp(IExp):
 		else: return False
 
 	def apply_visitor(self,visitor):
-		v.visitPlusExp(self)
+		visitor.visitPlusExp(self)
 
 
 # Binary Subtraction
@@ -490,7 +495,7 @@ class MinusExp(IExp):
 		else: return False
 
 	def apply_visitor(self,visitor):
-		v.visitMinusExp(self)
+		visitor.visitMinusExp(self)
 
 
 # Multiplication by a constant integer
@@ -515,7 +520,7 @@ class IntMulExp(IExp):
 		else: return False
 
 	def apply_visitor(self,visitor):
-		v.visitIntMulExp(self)
+		visitor.visitIntMulExp(self)
 
 
 # Uninterpreted function calls
@@ -544,5 +549,5 @@ class FuncExp(IExp):
 			return False
 
 	def apply_visitor(self,visitor):
-		v.visitFuncExp(self)
+		visitor.visitFuncExp(self)
 #---------------------------------------

@@ -293,7 +293,7 @@ class PresParser(object):
 
 	def p_expression_int_mult(self,t):
 		'''expression_int_mult : INT expression_simple'''
-		t[0]=IntMulExp[t[1],t[2]]
+		t[0]=IntMulExp(IntExp(t[1]),t[2])
 
 	def p_expression_simple(self,t):
 		'''expression_simple : expression_id
