@@ -130,8 +130,6 @@ class PresParser(object):
 			t[0] = PresSet(t[2],t[3])
 		else:
 			t[0] = t[1].union(t[3])
-		print "in p_set, t[0] = ", t[0]
-
 
 	def p_relation(self,t):
 		'''relation : LBRACE variable_tuple_in ARROW variable_tuple_out optional_constraints RBRACE
@@ -140,7 +138,6 @@ class PresParser(object):
 			t[0] = PresRelation(t[2],t[4],t[5])
 		else:
 			t[0] = t[1].union(t[3])
-		print "in p_relation, t[0] = ", t[0]
 
 	#epsilon (empty production)
 	def p_epsilon(self,t):
