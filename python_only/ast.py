@@ -11,7 +11,7 @@
 #    VarTuple -> ID*
 #    Conjunction -> IConstraint*
 #
-#    IConstraint -> IExp:lhs IExp:rhs // Inequality (LTE assummed)
+#    IConstraint -> IExp:lhs IExp:rhs // Inequality (GTE assummed)
 #                -> IExp:lhs IExp:rhs // Equality
 #
 #    IExp  -> INT                // IntExp
@@ -319,7 +319,7 @@ class Conjunction(Node):
 class IConstraint(Node):
 	pass
 
-# It is assummed that all constraints are converted to LTE
+# It is assummed that all constraints are converted to GTE
 # inequalities.
 class Inequality(IConstraint):
 	__slots__=('_lhs','_rhs')
