@@ -226,34 +226,36 @@ class PresParser(object):
 
 	def p_constraint_eq(self,t):
 		'''constraint_eq : expression EQ expression'''
-		t[0]=Equality(t[1],t[3])
+		# (t[1] = t[3]) = (t[1]-t[3]=0)
+		t[0]=Equality(MinusExp(t[1],t[3]))
 
 	def p_constraint_neq(self,t):
 		'''constraint_neq : expression NEQ expression'''
 		# (t[1]!=t[3]) = (t[3]>t[1] && t[1]>t[3])
 		#              = (t[3]>=t[1]+1 && t[1]>=t[3]+1)
-		t[0]=[Inequality(t[3],PlusExp(t[1],IntExp('1'))),
-		      Inequality(t[1],PlusExp(t[3],IntExp('1')))]
+		raise Exception('This should be || and not &&!  Need to fix!')
+		t[0]=[Inequality(MinusExp(t[3],PlusExp(t[1],IntExp('1')))),
+		      Inequality(MinusExp(t[1],PlusExp(t[3],IntExp('1'))))]
 
 	def p_constraint_gt(self,t):
 		'''constraint_gt : expression GT expression'''
-		# (t[1] > t[3]) = (t[1] >= t[3]+1)
-		t[0]=Inequality(t[1],PlusExp(t[3],IntExp('1')))
+		# (t[1] > t[3]) = (t[1] >= t[3]+1) = (t[1]-(t[3]+1) >= 0)
+		t[0]=Inequality(MinusExp(t[1],PlusExp(t[3],IntExp('1'))))
 
 	def p_constraint_gte(self,t):
 		'''constraint_gte : expression GTE expression'''
-		# (t[1] >= t[3])
-		t[0]=Inequality(t[1],t[3])
+		# (t[1] >= t[3]) = (t[1]-t[3] >= 0)
+		t[0]=Inequality(MinusExp(t[1],t[3]))
 
 	def p_constraint_lt(self,t):
 		'''constraint_lt : expression LT expression'''
-		# (t[1] < t[3]) = (t[3] > t[1]) = (t[3] >= t[1]+1)
-		t[0]=Inequality(t[3],PlusExp(t[1],IntExp('1')))
+		# (t[1] < t[3]) = (t[3] > t[1]) = (t[3] >= t[1]+1) = (t[3]-(t[1]+1) >= 0)
+		t[0]=Inequality(MinusExp(t[3],PlusExp(t[1],IntExp('1'))))
 
 	def p_constraint_lte(self,t):
 		'''constraint_lte : expression LTE expression'''
-		# (t[1] <= t[3]) = (t[3] >= t[1])
-		t[0]=Inequality(t[3],t[1])
+		# (t[1] <= t[3]) = (t[3] >= t[1]) = (t[3]-t[1] >= 0)
+		t[0]=Inequality(MinusExp(t[3],t[1]))
 	#--------------------------------------------------
 
 	#---------- Expression Productions ----------

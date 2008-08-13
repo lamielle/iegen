@@ -137,14 +137,12 @@ class DFVisitor(object):
 
 	def visitInequality(self,node):
 		self.inInequality(node)
-		node._lhs.apply_visitor(self)
-		node._rhs.apply_visitor(self)
+		node._exp.apply_visitor(self)
 		self.outInequality(node)
 
 	def visitEquality(self,node):
 		self.inEquality(node)
-		node._lhs.apply_visitor(self)
-		node._rhs.apply_visitor(self)
+		node._exp.apply_visitor(self)
 		self.outEquality(node)
 
 	def visitIntExp(self,node):

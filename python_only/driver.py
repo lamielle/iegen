@@ -8,7 +8,7 @@
 # Initial testing of the ast
 from ast import *
 
-root = PresSet(VarTuple(['a','b']),Conjunction([Inequality(IdExp('a'),IntExp('5'))]))
+root = PresSet(VarTuple(['a','b']),Conjunction([Inequality(MinusExp(IdExp('a'),IntExp('5')))]))
 
 # Testing of the presburger set and relation parser.
 from pres_parser import PresParser
@@ -20,7 +20,7 @@ PresParser.parse_set('{[i,j,k]}')
 PresParser.parse_set('{[i,j,k]: 1 <= i && i <= 45 }')
 
 # set with simple conditions
-PresParser.parse_set('{[i,j,k]: i!=54 }')
+#PresParser.parse_set('{[i,j,k]: i!=54 }')
 
 # set with more complex conditions
 PresParser.parse_set('{[i,j,k]: 1 <= i && 1<=j && 1<=k && i<= 45 && j<=45 && k<=45 }')

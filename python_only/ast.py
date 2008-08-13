@@ -68,7 +68,7 @@ class PresSet(IPresSet):
 
 # A list of presburger sets involved in a union.
 class PresSetUnion(IPresSet):
-	__slots__=('_sets')
+	__slots__=('_sets',)
 
 	def __init__(self, sets):
 		self._sets = sets
@@ -166,7 +166,7 @@ class PresRelation(IPresRelation):
 			#Add equalities of tuple variables
 			#We know there are the same number of variables since we checked above
 			for i in xrange(self.arity_in()):
-				constraint=Equality(IdExp(other._inTuple[i]),IdExp(self._outTuple[i]))
+				constraint=Equality(MinusExp(IdExp(other._inTuple[i]),IdExp(self._outTuple[i])))
 				self._conjunct._constraintList.append(constraint)
 
 			#Add the other's constraints to this relation
@@ -185,7 +185,7 @@ class PresRelation(IPresRelation):
 
 # A list of presburger relations involved in a union.
 class PresRelationUnion(IPresRelation):
-	__slots__=('_relations')
+	__slots__=('_relations',)
 
 	def __init__(self, relations):
 		self._relations = relations
@@ -285,7 +285,7 @@ class PresRelationUnion(IPresRelation):
 #---------- Variable Nodes ----------
 # Tuple of variables.
 class VarTuple(Node):
-	__slots__=('_idList')
+	__slots__=('_idList',)
 
 	def __init__(self, idList):
 		self._idList = idList
@@ -303,7 +303,7 @@ class VarTuple(Node):
 #---------- Conjunction Nodes ----------
 # A set of constraints that are all part of a conjunction (IOW ANDed together).
 class Conjunction(Node):
-	__slots__=('_constraintList')
+	__slots__=('_constraintList',)
 
 	def __init__(self, constraintList):
 		self._constraintList = constraintList
@@ -324,28 +324,26 @@ class IConstraint(Node):
 # It is assummed that all constraints are converted to GTE
 # inequalities.
 class Inequality(IConstraint):
-	__slots__=('_lhs','_rhs')
+	__slots__=('_exp',)
 
-	def __init__(self, lhs, rhs):
-		self._lhs = lhs
-		self._rhs = rhs
+	def __init__(self, exp):
+		self._exp=exp
 
 	def __repr__(self):
-		return 'Inequality(%s,%s)'%(self._lhs,self._rhs)
+		return 'Inequality(%s)'%self._exp
 
 	def apply_visitor(self,visitor):
 		visitor.visitInequality(self)
 
 
 class Equality(IConstraint):
-	__slots__=('_lhs','_rhs')
+	__slots__=('_exp',)
 
-	def __init__(self, lhs, rhs):
-		self._lhs = lhs
-		self._rhs = rhs
+	def __init__(self, exp):
+		self._exp=exp
 
 	def __repr__(self):
-		return 'Equality(%s,%s)'%(self._lhs,self._rhs)
+		return 'Equality(%s)'%self._exp
 
 	def apply_visitor(self,visitor):
 		visitor.visitEquality(self)
@@ -358,7 +356,7 @@ class IExp(Node):
 
 # Integer expressions
 class IntExp(IExp):
-	__slots__=('_val')
+	__slots__=('_val',)
 
 	def __init__(self, val):
 		self._val = val
@@ -380,7 +378,7 @@ class IntExp(IExp):
 
 # Identifier expressions
 class IdExp(IExp):
-	__slots__=('_id')
+	__slots__=('_id',)
 
 	def __init__(self, id):
 		self._id = id
@@ -402,7 +400,7 @@ class IdExp(IExp):
 
 # Unary Minus
 class UMinusExp(IExp):
-	__slots__=('_exp')
+	__slots__=('_exp',)
 
 	def __init__(self, exp):
 		self._exp = exp
