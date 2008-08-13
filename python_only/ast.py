@@ -49,7 +49,7 @@ class PresSet(IPresSet):
 		self._conjunct = conjunct
 
 	def __repr__(self):
-		return 'PresSet("%s,%s")'%(self._setTuple,self._conjunct)
+		return 'PresSet(%s,%s)'%(self._setTuple,self._conjunct)
 
 	def arity(self):
 		return len(self._setTuple._idList)
@@ -128,7 +128,7 @@ class PresRelation(IPresRelation):
 		self._conjunct = conjunct
 
 	def __repr__(self):
-		return 'PresRelation("%s,%s,%s")'%(self._inTuple,self._outTuple,self._conjunct)
+		return 'PresRelation(%s,%s,%s)'%(self._inTuple,self._outTuple,self._conjunct)
 
 	def arity_in(self):
 		return len(self._inTuple._idList)
@@ -290,7 +290,7 @@ class VarTuple(Node):
 		self._idList = idList
 
 	def __repr__(self):
-		return 'VarTuple("%s")'%(self._idList)
+		return 'VarTuple(%s)'%(self._idList)
 
 	def apply_visitor(self,visitor):
 		v.visitVarTuple(self)
@@ -305,7 +305,7 @@ class Conjunction(Node):
 		self._constraintList = constraintList
 
 	def __repr__(self):
-		return 'Conjunction("%s")'%(self._constraintList)
+		return 'Conjunction(%s)'%(self._constraintList)
 
 	def apply_visitor(self,visitor):
 		v.visitConjunction(self)
@@ -326,7 +326,7 @@ class Inequality(IConstraint):
 		self._rhs = rhs
 
 	def __repr__(self):
-		return 'Inequality("%s,%s")'%(self._lhs,self._rhs)
+		return 'Inequality(%s,%s)'%(self._lhs,self._rhs)
 
 	def apply_visitor(self,visitor):
 		v.visitInequality(self)
@@ -339,7 +339,7 @@ class Equality(IConstraint):
 		self._rhs = rhs
 
 	def __repr__(self):
-		return 'Equality("%s,%s")'%(self._lhs,self._rhs)
+		return 'Equality(%s,%s)'%(self._lhs,self._rhs)
 
 	def apply_visitor(self,visitor):
 		v.visitEquality(self)
@@ -357,7 +357,7 @@ class IntExp(IExp):
 		self._val = val
 
 	def __repr__(self):
-		return 'IntExp("%s")'%(self._val)
+		return 'IntExp(%s)'%(self._val)
 
 	def __eq__(self, other):
 		# An IntExp is not equal to any other object instance type.
@@ -378,7 +378,7 @@ class IdExp(IExp):
 		self._id = id
 
 	def __repr__(self):
-		return 'IdExp("%s")'%(self._id)
+		return 'IdExp(%s)'%(self._id)
 
 	def __eq__(self, other):
 		# An IdExp is not equal to any other object instance type.
@@ -400,7 +400,7 @@ class UMinusExp(IExp):
 		self._exp = exp
 
 	def __repr__(self):
-		return 'UMinusExp("%s")'%(self._exp)
+		return 'UMinusExp(%s)'%(self._exp)
 
 	def __eq__(self, other):
 		# A UMinusExp is not equal to any other object instance type.
@@ -426,7 +426,7 @@ class MulExp(IExp):
 		# the lhs or rhs is an IntExp
 
 	def __repr__(self):
-		return 'MulExp("%s,%s")'%(self._lhs,self._rhs)
+		return 'MulExp(%s,%s)'%(self._lhs,self._rhs)
 
 	def __eq__(self, other):
 		# A MulExp is not equal to any other object instance type.
@@ -451,7 +451,7 @@ class PlusExp(IExp):
 		self._rhs = rhs
 
 	def __repr__(self):
-		return 'PlusExp("%s,%s")'%(self._lhs,self._rhs)
+		return 'PlusExp(%s,%s)'%(self._lhs,self._rhs)
 
 	def __eq__(self, other):
 		# A PlusExp is not equal to any other object instance type.
@@ -476,7 +476,7 @@ class MinusExp(IExp):
 		self._rhs = rhs
 
 	def __repr__(self):
-		return 'MinusExp("%s,%s")'%(self._lhs,self._rhs)
+		return 'MinusExp(%s,%s)'%(self._lhs,self._rhs)
 
 	def __eq__(self, other):
 		# A MinusExp is not equal to any other object instance type.
@@ -499,7 +499,7 @@ class IntMulExp(IExp):
 		self._exp = exp
 
 	def __repr__(self):
-		return 'IntMulExp("%s,%s")'%(self._int,self._exp)
+		return 'IntMulExp(%s,%s)'%(self._int,self._exp)
 
 	def __eq__(self, other):
 		# A IntMulExp is not equal to any other object instance type
@@ -524,7 +524,7 @@ class FuncExp(IExp):
 		self._expList = expList
 
 	def __repr__(self):
-		return 'FuncExp("%s,%s")'%(self._func,self._expList)
+		return 'FuncExp(%s,%s)'%(self._func,self._expList)
 
 	# Compare this uninterpreted function expression with another
 	# uninterpreted function expression.  If the same function is
