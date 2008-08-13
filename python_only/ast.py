@@ -52,7 +52,7 @@ class PresSet(IPresSet):
 		return 'PresSet(%s,%s)'%(self._setTuple,self._conjunct)
 
 	def arity(self):
-		return len(self._setTuple._idList)
+		return len(self._setTuple)
 
 	def apply_visitor(self,visitor):
 		v.visitPresSet(self)
@@ -131,9 +131,9 @@ class PresRelation(IPresRelation):
 		return 'PresRelation(%s,%s,%s)'%(self._inTuple,self._outTuple,self._conjunct)
 
 	def arity_in(self):
-		return len(self._inTuple._idList)
+		return len(self._inTuple)
 	def arity_out(self):
-		return len(self._outTuple._idList)
+		return len(self._outTuple)
 
 	def apply_visitor(self,visitor):
 		v.visitPresRelation(self)
@@ -291,6 +291,9 @@ class VarTuple(Node):
 
 	def __repr__(self):
 		return 'VarTuple(%s)'%(self._idList)
+
+	def __len__(self):
+		return len(self._idList)
 
 	def apply_visitor(self,visitor):
 		v.visitVarTuple(self)
