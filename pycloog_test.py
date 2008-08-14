@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ctypes import *
-from pycloog import Statement,Names,codegen
+from iegen.pycloog import Statement,Names,codegen
 
 dom1=[[1, 1, 0,0, -1],
      [1,-1, 0,1, 0],

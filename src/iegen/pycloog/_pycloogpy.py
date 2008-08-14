@@ -1,8 +1,5 @@
 from ctypes import *
 
-def __init__():
-	pass
-
 #---------- Private Interface ----------
 #Defines a ctypes structure matching the pycloog_statement
 #structure found in pycloog.h
@@ -63,7 +60,9 @@ def _get_ctypes_str_arr(strs):
 #Loads the '_pycloog.so' shared object and returns a function pointer
 #to the pycloog_codegen function in that library
 def _get_codegen_func():
-	pycloog=CDLL('./_pycloog.so')
+	from os import sep
+	from os.path import dirname
+	pycloog=CDLL(dirname(__file__)+sep+'_pycloog.so')
 	pycloog.pycloog_codegen.argtypes=[POINTER(_PYCLOOG_STATEMENT),c_int,POINTER(_PYCLOOG_NAMES)]
 	return pycloog.pycloog_codegen
 

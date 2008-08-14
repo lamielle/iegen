@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+
+import os
+
+def set_options(opt):
+	pass
+
+def configure(conf):
+	pass
+
+def build(bld):
+
+	env=bld.env_of_name('default')
+
+	inst_dir='iegen'+os.sep+'util'
+
+	install_files('PREFIX',inst_dir,'__init__.py')
+	install_files('PREFIX',inst_dir,'_util.py')

@@ -1,1 +1,1 @@
-from _pycloog import Statement,Names,codegen
+from _pycloogpy import Statement,Names,codegen

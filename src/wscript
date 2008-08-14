@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+
+def set_options(opt):
+	opt.sub_options('iegen')
+
+def configure(conf):
+	conf.sub_config('iegen')
+
+def build(bld):
+	bld.add_subdirs('iegen')
