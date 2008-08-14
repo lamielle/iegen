@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cloog/cloog.h>
-#include "pycloog.h"
+#include <iegen/pycloog/pycloog.h>
 
 void pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_statements,pycloog_names *pycloog_names)
 {
