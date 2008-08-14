@@ -1,7 +1,0 @@
-Python parser for presburger sets and relations.
-See pres_parser.py for the parser and ast.py for the AST implementation.
-
-As a quick test, this works:
->>> import pres_parser
->>> parser = pres_parser.PresParser('set')
->>> parser.parse_set('{[i,j,k]}')
