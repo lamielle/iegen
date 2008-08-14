@@ -14,36 +14,40 @@ S2        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]];
 Notes
     - moldyn-FST.txt is an earlier version of this.  Main difference is that now we have the transformations clearly separated from optimization such as pointer update and array alignment.
 
-    - detail for the algorithms referenced in here can be found in uninterp-operations.txt
+    - detail for operations (compose, inverse, simplifications S1, etc.) referenced in here can be found in uninterp-operations.txt
 
 
 -----------------------
 What the user specifies
 -----------------------
-// FIXME: take out
-Iteration Space  NO user doesn't specify
-    I_0 := { [ii,j] : j=1 && 0 <= ii <= (n_inter-1)  }
-           union { [ii,j] : j=2 && 0 <= ii <= (n_inter-1)  }
 
-Symbolic Constants, FIXME use MapIR data structures
+Symbolic Constants
     N                   // number of atoms
+    N = new Symbolic ( name="N" )
+
     n_inter             // number of interactions between atoms
-
-    // uninterp functions for index arrays,
-    // [0..(n_inter-1)] indicates range of possible parameter values
-    // [0:N] indicates range of possible values
-    // FIXME: might want to use this approach of representing IndexArray
-    // constraints versus using the OmegaRelation that we currently have
-    // in the MapIR design.
-    inter1([0..(n_inter-1)]):[0..N]
-    inter2([0..(n_inter-1)]):[0..N]
-
+    n_inter = new Symbolic ( name="n_inter" )
 
 Data Spaces
     X_0 := name = "x", { [k] : 0 <= k <= (N-1) }, data array
     FX_0 := name = "fx", { [k] : 0 <= k <= (N-1) }, data array
     INTER1_0 := name = "inter1", { [k] : 0 <= k <= (n_inter-1) }, index array
     INTER2_0 := name = "inter2", { [k] : 0 <= k <= (n_inter-1) }, index array
+
+Index Arrays
+
+    inter1 = new IndexArray (
+        dataspace = INTER1_0,
+        isPermutation = false,
+        input_value_bounds = [ (0,n_inter-1) ], 
+        output_value_bounds = (0,N)
+    )
+    inter2 = new IndexArray (
+        dataspace = INTER2_0,
+        isPermutation = false,
+        input_value_bounds = [ (0,n_inter-1) ], 
+        output_value_bounds = (0,N)
+    )
 
 Statements
     S1:  "`a1 += `a2 - `a3;"
@@ -70,28 +74,6 @@ Statements
     S2          a5           X_0         { [ii] -> [k] : k=inter1(ii) }
     S2          a6           X_0         { [ii] -> [k] : k=inter2(ii) }
 
-    // FIXME: this will go away
-    // summary access relations are the union of all access relations
-    // to a particular data space
-    // These can actually be generated automatically by using unions
-    // between access relations that access the same data array.
-    A_I_0_to_X_0 := name = "A_I_0_to_X_0",
-                    iter_space = I_0,
-                    data_space = X_0,
-                    iterspace_to_data = { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }
-                    union { [ii,j] -> [ k ] : k=inter2(ii) && 1<=j<=2 }
-
-    A_I_0_to_FX_0 := name = "A_I_0_to_FX_0",
-                     { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }
-                     union { [ii,j] -> [ k ] : k=inter2(ii) && 1<=j<=2 }
-
-    // Do we also want summary access relations for the index arrays?
-    A_I_0_to_INTER1_0 := name = "A_I_0_to_INTER1_0", { [ii,1] -> [ ii ] }
-                       union { [ii,2] -> [ ii ] }
-
-    A_I_0_to_INTER2_0 := name = "A_I_0_to_INTER2_0", { [ii,1] -> [ ii ] }
-                       union { [ii,2] -> [ ii ] }
-
 Data Dependences
     Only reduction dependences.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically if the loop is being parallelized.
     FIXME: how will we indicate reduction dependences?
@@ -106,7 +88,7 @@ Composition and choice of RTRTs
             iag_func_name = CPackHyper
 
     Naming standards
-        After any transformation, we are going to assume that a space with the subscript n will be transformed into the same named space with the subscript n+1.  For example I_0 will become I_1.
+        After a transformation, we are going to assume that a space with the subscript n will be transformed into the same named space with the subscript n+1.  For example I_0 will become I_1.
 
     iteration reordering
         IterPermuteRTRT
@@ -223,17 +205,17 @@ Generating the composed inspector
                 }
 
           For the example, output is the following:
-                // this macro captures A_I0_to_X0, count, and data_index
+                // this macro captures artt, count, and data_index
                 #define s1(t1) data_index = inter1[t1]; \
-                    Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
+                    Hypergraph_ordered_insert_node(artt,count, \
                     data_index); \
                     data_index = inter2[t1]; \
-                    Hypergraph_ordered_insert_node(A_I0_to_X0,count, \
+                    Hypergraph_ordered_insert_node(artt,count, \
                     data_index); \
                     count++
 
                 // initialize variables
-                Hypergraph* A_I0_to_X0 = Hypergraph_ctor();
+                Hypergraph* artt = Hypergraph_ctor();
                 int count=0;
                 int data_index=0;
 
@@ -242,7 +224,7 @@ Generating the composed inspector
                     s1(t1);
                 }
 
-                Hypergraph_finalize(A_I0_to_X0);
+                Hypergraph_finalize(artt);
 
 
     c) Automatically generate the IndexArray specification for sigma
@@ -272,12 +254,12 @@ Generating the composed inspector
         For this example:
             IAG_cpack = new IAG_Permute (
                 String name = "CPackHyper"       // function name
-                AccessRelation input = A_I0_to_X0
+                AccessRelation input = artt
                 IndexArray result = new IndexArray(
                     data_space = "sigma", X_0.spec, index array,
                     isPermutation = true,
-                    input_value_bounds = [(0 .. (N-1))],
-                    output_value_bounds = (0 .. (N-1))
+                    input_value_bounds = [(0,(N-1))],
+                    output_value_bounds = (0,(N-1))
                 )
 
             )
@@ -295,7 +277,7 @@ Generating the composed inspector
         For this example:
                 int *sigma;
                 MALLOC(sigma,int,N);
-                CPackHyper( A_I0_to_X0, sigma );
+                CPackHyper( artt, sigma );
 
     e) generate code that does data reordering
     FIXME: eventually all the data reordering will be done only once per composition.  This example has only one data reordering, so this is somewhat mute.
@@ -317,28 +299,36 @@ Generating the composed inspector
 
 
 
-2) Modify iteration space and access functions based on previous transformation.
+2) Modify data dependences, scattering functions, and access functions based on previous transformation.
 
-    I_0     // iteration space was not modified
+    // Data in X and FX have been permuted, but their data space
+    // description have not been changed.
     X_1 := X_0    // same size
     FX_1 := FX_0    // same size
-    A_I_0_to_X_1 = data_reordering(A_I_0_to_X_0)
-                 = { [ k ] -> [ r ] : r=sigma( k ) ] } compose { [ii,j] -> [ k ] : k=inter1(ii) && 1<=j<=2 }
-                      // compose two relations
-                 = { [ii,j] -> [r] : r=sigma( k ) && k=inter1(ii) && 1<=j<=2}
-                      // apply S1
-                 = { [ii,j] -> [r] : r=sigma( inter1(ii) ) && 1<=j<=2 } union
-                   { [ii,j] -> [r] : r=sigma( inter2(ii) ) && 1<=j<=2 }
-
-
-    A_I_0_to_FX_1 = data_reordering(A_I_0_to_FX_0)
-                  = { [ii,1] -> [ k ] : k= sigma(inter1(ii)) }
-                    union { [ii,2] -> [ k ] : k=sigma(inter2(ii)) }
+    
+    // Scattering functions
+    // A data permutation does not affect the scattering/scheduling functions.
+    scatter_{S1} and scatter_{S2} stay the same.
+    
+    // Access Relations
+    // Each access relation that targets the arrays that were reordered (in this
+    // case x and fx) need to have the data reordering relation applied to them.
+    
+    a1_1 = data_reordering(a1) = data_reordering compose a1
+         = { [ k ] -> [ r ] : r=sigma( k ) ] } compose { [ii] -> [ k ] : k=inter1(ii) }
+         = { [ii] -> [ r ] : r=sigma( k ) && k=inter1(ii) }
+            // apply S1
+         = { [ii] -> [ r ] : r=sigma( inter1(ii) ) }
+   
+    a2_1 = data_reordering(a2)
+    ...
+    a6_1 = data_reordering(a6)
 
 
 3) (optional) pointer update optimization, or collapsing index arrays
-After performing a data reordering, if index arrays that access the reordered data arrays are updated with the new locations of data elements then later inspectors and the final executor will require fewer indirect accesses.
-    PU0) note that A_I_0_to_X_1 and A_I_0_to_FX_1 contain sigma(inter1(ii)) and sigma(inter2(ii))
+After performing a data reordering, if index arrays that access the reordered data arrays are updated with the new locations of data elements then later inspectors and the final executor will require fewer indirect accesses.  See uninterp-operations.txt for the definition of PU#.
+    PU0) note that all of the access relations for the statements (a1_1 through a6_1) contain sigma(inter1(ii)) or sigma(inter2(ii))
+    
     PU1) { [ii] -> [k] : k=sigma(inter1(ii)) && bounds for inter1 input }
          { [ii] -> [k] : k=sigma(inter2(ii)) && bounds for inter2 input }
 

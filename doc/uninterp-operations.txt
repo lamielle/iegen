@@ -132,6 +132,8 @@ We also should simplify across disjunction (IOW the list of relation or set unio
 
 S4) If two relations in the union list are equivalent, then remove one of them.
 
+S5) If a relation/set has a non-satisfiable constraint then make that an empty relation.  For example c1=c2, where c1!=c2 is an unsatisfiable constraint.  Se example 4.
+
 ---------------------
 Code Gen for Relation
 ---------------------
@@ -165,7 +167,7 @@ Needed as part of Code Gen for Relation.
 -----------------------
 Collapsing Index Arrays
 -----------------------
-Examples include pointer update and array alignment.  Actually pointer update and data alignment are the same ITO (inter-transformation optimization).  They both take nested index array accesses and collapse them by one or more levels.
+This is an optimization that should improve inspector and executor execution time.  Optimizations that can be formalized as collapsing index arrays include pointer update and array alignment.  Actually pointer update and data alignment are the same ITO (inter-transformation optimization).  They both take nested index array accesses and collapse them by one or more levels.
 
 Pointer update motivation: makes it so explicit construction of the data mapping is cheaper and improves the performance in the executor code.
 
@@ -177,7 +179,7 @@ Given two index arrays, pointer update creates a new index array that is the com
 new_iag = iag1[ iag2[ i ] ]
 
 Correctness
-    - Bounds on values for iag2 should like within bounds on input values for iag1.
+    - Bounds on values for iag2 should lie within bounds on input values for iag1.
 
 Could we use code gen for Relations to implement the construction of new_iag?
 {[i] -> [j] : j = iag1( iag2( i ) ) && bounds for input to iag2 };
@@ -186,7 +188,7 @@ If so this would be another example like Hypergraph construction that needs us t
 Implementation of collapsing index arrays
     PU0) find access relations with nested uninterpreted functions
 
-    PU1) create relation for each nest
+    PU1) create relation for each set of nested uninterpreted functions
         For example, assume we find the nest a(b(c(i))).
         Create the relation {[i] -> [j] : j=a(b(c(i))) }
 
@@ -296,6 +298,49 @@ for A_I1_to_X1 and A_I1_to_FX1
               { [ii,j] -> [ sigma(inter1_1(ii)) ] : 1<=j<=2 }
               union { [ii,j] -> [ sigma(inter2_1(ii)) ] : 1<=j<=2 }
 
+---------
+Example 4: inverse, composition, and simplification
+---------
 
+Example on board
+    for (s=0; s<numS; s++) {
+        for (i=0; i<numI; i++) {
+          x[a[i]] = ...
+        }
+        for (j=0; j<numJ; j++) {
+          ... = x[b[j]];
+        }
+    }
 
+A1 = {[s,i] -> [k] : k=a(i) }
+A2 = {[s,j] -> [k] : k=b(j) }
 
+scatter_{S1} = {[s,i] -> [s,v,i,w] : v=1 && w=1}
+scatter_{S2} = {[s,j] -> [s,v,j,w] : v=2 && w=1}
+
+iter_to_sub_space, itss = {[s,d,e,f] -> [e] : d=2 }
+
+Calculating access relation for inspector to inspect as in (1a) with x as the target data space.
+    iterspace_to_data = 
+        inverse (itss compose (scatter_{S1} compose inverse A1))
+        union inverse (itss compose (scatter_{S2} compose inverse A2))
+        = inverse (itss compose {[k] -> [s,v,i,w] : k=a(i) && v=1 && w=1})
+        union inverse (itss compose {[k] -> [s,v,i,w] : k=b(i) && v=2 && w=1})
+        = inverse {[k] -> [e] :  d=v && e=i && f=w && d=2 && k=a(i) && v=1 && w=1}
+        union inverse {[k] -> [e] :  d=v && e=i && f=w && d=2 && k=b(i) && v=2 && w=1}
+        = {[e] -> [k] :  d=v && e=i && f=w && d=2 && k=a(i) && v=1 && w=1}
+        union {[e] -> [k] :  d=v && e=i && f=w && d=2 && k=b(i) && v=2 && w=1}
+            // apply S1 with d=v where replace d everywhere
+        = {[e] -> [k] :  e=i && f=w && v=2 && k=a(i) && v=1 && w=1}
+        union {[e] -> [k] :  e=i && f=w && v=2 && k=b(i) && v=2 && w=1}
+            // apply S1 with v=2 where replace v everywhere
+        = {[e] -> [k] :  e=i && f=w && k=a(i) && 2=1 && w=1}
+        union {[e] -> [k] :  e=i && f=w && k=b(i) && w=1}        
+            // notice that first part of union is not satisfiable due to 2=1,
+            // this simplification is discussed in S5
+            
+        = {[e] -> [k] :  e=i && f=w && v=2 && k=b(i) && v=2 && w=1}
+            // apply S1 some more
+        = {[e] -> [k] :  k=b(e) }
+
+Ok this work the way I expected and we don't need to incorporate the bounds of the original statement iteration space.

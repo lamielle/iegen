@@ -6,43 +6,32 @@ Now that we have data and iteration reordering figured out in moldyn-data-iter-r
 
   for (s=0; s<T; s++) {
 	for (i=0; i<N; i++) {
-s1:     x[i] = fx[i]*1.25;
+S1:     x[i] = fx[i]*1.25;
 	}
 
     for (ii=0; ii<n_inter; ii++) {
         // simplified computations
-s2:     fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
-s3:     fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+S2:     fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
+S3:     fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]]; 
     }
   }
 
 Notes
-    - detail for the algorithms referenced in here can be found in uninterp-operations.txt
+    - detail for operations (compose, inverse, simplifications S1, etc.) referenced in here can be found in uninterp-operations.txt
     
     
 -----------------------
 What the user specifies
 -----------------------
-Iteration Space
-
-    I_0 := { [s,k,i,j] : 0<=s && s<T && k=1 && j=1 && 0<=i && i<N  }
-           union { [s,k,ii,j] : 0<=s && s<T && k=2 && j=1 && 0<=ii && ii<=(n_inter-1)  }
-           union { [s,k,ii,j] : 0<=s && s<T && k=2 && j=2 && 0<=ii && ii<=(n_inter-1)  }
-
 Symbolic Constants
 	T					// number of time steps
-    N                   // number of atoms
-    n_inter             // number of interactions between atoms
+    T = new Symbolic ( name="T" )
     
-    // uninterp functions for index arrays, 
-    // [0..(n_inter-1)] indicates range of possible parameter values
-    // [0:N] indicates range of possible values
-    // FIXME: might want to use this approach of representing IndexArray
-    // constraints versus using the OmegaRelation that we currently have
-    // in the MapIR design.
-    inter1([0..(n_inter-1)]):[0..N]    
-    inter2([0..(n_inter-1)]):[0..N]    
-                        
+    N                   // number of atoms
+    N = new Symbolic ( name="N" )
+    
+    n_inter             // number of interactions between atoms
+    n_inter = new Symbolic ( name="n_inter" )
 
 Data Spaces
     X_0 := name = "x", { [k] : 0 <= k <= (N-1) }, data array
@@ -50,29 +39,54 @@ Data Spaces
     INTER1_0 := name = "inter1", { [k] : 0 <= k <= (n_inter-1) }, index array
     INTER2_0 := name = "inter2", { [k] : 0 <= k <= (n_inter-1) }, index array
 
+Index Arrays
+
+    inter1 = new IndexArray (
+        dataspace = INTER1_0,
+        isPermutation = false,
+        input_value_bounds = [ (0,n_inter-1) ], 
+        output_value_bounds = (0,N)
+    )
+    inter2 = new IndexArray (
+        dataspace = INTER2_0,
+        isPermutation = false,
+        input_value_bounds = [ (0,n_inter-1) ], 
+        output_value_bounds = (0,N)
+    )
+
 Statements
-    [s,1,i,1]  "`a7 = `a8 * 1.25;"
-    [s,2,ii,1]  "`a1 += `a2 - `a3;" 
-    [s,2,ii,2]  "`a4 += `a5 - `a6;" 
+    S1:  "`a7 = `a8 * 1.25;"
+    S2:  "`a1 += `a2 - `a3;" 
+    S3:  "`a4 += `a5 - `a6;" 
 
+    Original Iteration Space for each statement, never changes
+        IS_{S1} = {[s,ii] : 0<=s && s<T && 0 <= i && i<N }  
+        IS_{S2} = {[s,ii] : 0<=s && s<T && 0 <= ii && ii <= (n_inter-1) }  
+        IS_{S3} = {[s,ii] : 0<=s && s<T && 0 <= ii && ii <= (n_inter-1) }  
+    
+    Scattering function, which represents original schedule for statement
+        scatter_{S1} = {[s,i] -> [s,a,i,b] : a=1 && b=1}    
+        scatter_{S2} = {[s,ii] -> [s,a,ii,b] : a=2 && b=1}
+        scatter_{S3} = {[s,ii] -> [s,a,ii,b] : a=2 && b=2}
 
-Access Relations
-    These actually need to be specified per data access in each statement.
+    Access Relations
+        These actually need to be specified per data access in each statement.
 
     statement   access#     DataSpace   AccessRelation
-    [s,1,i,1]	a7          X_0	        { [s,x,i,j] -> [i] : x=1 && j=1 }
-    [s,1,i,1]	a8          FX_0        { [s,x,i,j] -> [i] : x=1 && j=1 }
+    S1  	    a7          X_0	        { [s,i] -> [i]  }
+    S1	        a8          FX_0        { [s,i] -> [i]  }
     
-    [s,2,ii,1]  a1          FX_0       	{ [s,x,ii,j] -> [k] : x=2 && j=1 && k=inter1(ii) }
-    [s,2,ii,1]  a2          X_0        	{ [s,x,ii,j] -> [k] : x=2 && j=1 && k=inter1(ii) }
-    [s,2,ii,1]  a3          X_0        	{ [s,x,ii,j] -> [k] : x=2 && j=1 && k=inter2(ii) }
+    S2          a1          FX_0       	{ [s,ii] -> [k] : k=inter1(ii) }
+    S2          a2          X_0        	{ [s,ii] -> [k] : k=inter1(ii) }
+    S2          a3          X_0        	{ [s,ii] -> [k] : k=inter2(ii) }
     
-    [s,2,ii,2]  a4          FX_0       	{ [s,x,ii,j] -> [k] : x=2 && j=2 && k=inter2(ii) }
-    [s,2,ii,2]  a5          X_0        	{ [s,x,ii,j] -> [k] : x=2 && j=2 && k=inter1(ii) }
-    [s,2,ii,2]  a6          X_0        	{ [s,x,ii,j] -> [k] : x=2 && j=2 && k=inter2(ii) }
+    S3          a4          FX_0       	{ [s,ii] -> [k] : k=inter2(ii) }
+    S3          a5          X_0        	{ [s,ii] -> [k] : k=inter1(ii) }
+    S3          a6          X_0        	{ [s,ii] -> [k] : k=inter2(ii) }
     
 
 Data Dependences 
+(eventually should be automatically calculated, but for now computing by hand) 
 (only direct dependences for now and those not carried by s loop)
 D1    s1:x[i] to s2:x[inter1[ii]]: 
         { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=1 
@@ -96,12 +110,10 @@ Composition and choice of RTRTs
     data reordering
         DataPermuteRTRT
             data_reordering = { [ k ] -> [ r ] : r=sigma( k ) }
-            iteration_space = I_0
             data_spaces = [ X_0, FX_0 ]
-            access_relation = A_I0_to_X0
-            iter_sub_space_relation = { [ s, k, ii, j ] -> [ ii ] }
-            iag_func_name = CPackHyper
-            iag_type = IAG_Permute
+            iter_sub_space_relation = { [ s, k, ii, j ] -> [ ii ] }            
+            target_data_space = X_0
+            iag_func_name = CPackHyper    
     
     iteration reordering // permuting the ii loop
         IterPermuteRTRT
@@ -143,6 +155,13 @@ Automatically Generating Straight-Forward Inspector/Executor
 
 For data and iteration reordering see moldyn-data-iter-reord.txt.  Inputs have changed somewhat, but all code generation algorithms should still work.
 
+0) As in moldyn-data-iter-reord.txt, before we can specify reordering transformations it is useful to calculate the iteration space.  For this example the iteration space is as follows:
+
+    I_0 := { [s,k,i,j] : 0<=s && s<T && k=1 && j=1 && 0<=i && i<N  }
+           union { [s,k,ii,j] : 0<=s && s<T && k=2 && j=1 && 0<=ii && ii<=(n_inter-1)  }
+           union { [s,k,ii,j] : 0<=s && s<T && k=2 && j=2 && 0<=ii && ii<=(n_inter-1)  }
+
+    
 
 8) seedpart = IAG_Group
 	a) Automatically generate the IndexArray specification for "part" index array.
