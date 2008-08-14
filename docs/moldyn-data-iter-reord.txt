@@ -20,11 +20,12 @@ Notes
 -----------------------
 What the user specifies
 -----------------------
-Iteration Space
+// FIXME: take out
+Iteration Space  NO user doesn't specify
     I_0 := { [ii,j] : j=1 && 0 <= ii <= (n_inter-1)  }
            union { [ii,j] : j=2 && 0 <= ii <= (n_inter-1)  }
 
-Symbolic Constants
+Symbolic Constants, FIXME use MapIR data structures
     N                   // number of atoms
     n_inter             // number of interactions between atoms
 
@@ -45,8 +46,8 @@ Data Spaces
     INTER2_0 := name = "inter2", { [k] : 0 <= k <= (n_inter-1) }, index array
 
 Statements
-    [ii,1]  "`a1 += `a2 - `a3;"
-    [ii,2]  "`a4 += `a5 - `a6;"
+    S1:  "`a1 += `a2 - `a3;"
+    S2:  "`a4 += `a5 - `a6;"
     
     Original Iteration Space for each statement
         S1: IS_{S1} = {[ii] : 0 <= ii <= (n_inter-1) }  // never changes
@@ -69,6 +70,7 @@ Statements
     S2          a5           X_0         { [ii] -> [k] : k=inter1(ii) }
     S2          a6           X_0         { [ii] -> [k] : k=inter2(ii) }
 
+    // FIXME: this will go away
     // summary access relations are the union of all access relations
     // to a particular data space
     // These can actually be generated automatically by using unions

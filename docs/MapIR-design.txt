@@ -123,7 +123,10 @@ Transformation Specification:
         // Codifying correctness?  How should we codify things like
         // the data space should be 1D?
         // Possible Error Checks
-        //    - all data spaces being reordered should have the same bounds
+        //  - all data spaces being reordered should have the same bounds
+        //  - domain of iter_sub_space_relation should match "current iteration space"    
+        
+        // FIXME: how are we going to keep track of the current iteration space?
             
         // 8/13/08, MMS, deprecating
         // AccessRelation, mapping of iterations to data that
