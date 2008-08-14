@@ -42,7 +42,6 @@ def configure(conf):
 	libconf.mandatory=1
 	libconf.path+=[polylib_lib]
 	libconf.name='polylib64'
-#	libconf.static=True
 	libconf.run()
 
 	env['CPPPATH_POLYLIB64']+=[polylib_include]
@@ -52,7 +51,6 @@ def configure(conf):
 	libconf.mandatory=1
 	libconf.path+=[cloog_lib]
 	libconf.name='cloog'
-#	libconf.static=True
 	libconf.run()
 
 	env['CPPPATH_CLOOG']+=[cloog_include]
@@ -60,16 +58,9 @@ def configure(conf):
 	#Common include path
 	env['includes_common']=['include']
 
-#	print opt
-
 def build(bld):
 
 	env=bld.env_of_name('default')
-
-	keys=env.m_table.keys()
-	keys.sort()
-	for k in keys:
-		print '%s: %s'%(k,env[k])
 
 	inst_dir='iegen'+os.sep+'pycloog'
 
