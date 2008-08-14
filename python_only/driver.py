@@ -8,7 +8,7 @@
 # Initial testing of the ast
 from ast import *
 
-root = PresSet(VarTuple(['a','b']),Conjunction([Inequality(MinusExp(IdExp('a'),IntExp('5')))]))
+root = PresSet(VarTuple(['a','b']),Conjunction([Inequality(NormExp([VarExp(1,'a')],-5))]))
 
 # Testing of the presburger set and relation parser.
 from pres_parser import PresParser
@@ -61,24 +61,24 @@ PresParser.parse_relation('{ [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <
 
 print
 print "========================= Testing equality of uninterp func ===="
-f = FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
-g = FuncExp('g',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
-print "f= ", f
-print "g= ", g
-print "f==g should be false, f==g => ", f==g 
+#f = FuncExp('f',[VarExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
+#g = FuncExp('g',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
+#print "f= ", f
+#print "g= ", g
+#print "f==g should be false, f==g => ", f==g 
 
-g= FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
-print "f= ", f
-print "g= ", g
-print "f==g should be true, f==g => ", f==g
+#g= FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
+#print "f= ", f
+#print "g= ", g
+#print "f==g should be true, f==g => ", f==g
 
-g= FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('c'),IdExp('b'))])
-print "f= ", f
-print "g= ", g
-print "f==g should be true, f==g => ", f==g
+#g= FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('c'),IdExp('b'))])
+#print "f= ", f
+#print "g= ", g
+#print "f==g should be true, f==g => ", f==g
 
-g= FuncExp('f',[IdExp('a'),MulExp(IdExp('c'),IdExp('b'))])
-print "f= ", f
-print "g= ", g
-print "f==g should be false, f==g => ", f==g
+#g= FuncExp('f',[IdExp('a'),MulExp(IdExp('c'),IdExp('b'))])
+#print "f= ", f
+#print "g= ", g
+#print "f==g should be false, f==g => ", f==g
 
