@@ -78,6 +78,28 @@ class ImportTestCase(TestCase):
 		except Exception,e:
 			self.fail("Importing classes from iegen.parser failed: "+str(e))
 
+class PYCLooGTestCase(TestCase):
+
+	def testPYCLooGSimple(self):
+		from iegen.pycloog import Statement,Names,codegen
+
+		dom1=[[1, 1, 0,0, -1],
+			  [1,-1, 0,1, 0],
+			  [1, 0, 1,0, -1],
+			  [1, 0,-1,1,0]]
+		scat1=[[0,1,0,0,0,1]]
+		dom2=[[1, 1, 0,0, -1],
+			  [1,-1, 0,1, 0],
+			  [1, 0, 1,0, -1],
+			  [1, 0,-1,1,0]]
+		scat2=[[0,1,0,0,0,2]]
+
+		stmt1=Statement(dom1,scat1)
+		stmt2=Statement(dom2,scat2)
+		stmts=(stmt1,stmt2)
+		names=Names(['i','j'],['n'])
+		codegen(stmts,names)
+
 ##!/usr/bin/env python
 #
 ## driver.py
@@ -459,8 +481,9 @@ def build_test_suite(test_cases):
 
 if '__main__'==__name__:
 	#Test case categories
-	all_test_cases=(ImportTestCase,)
+	all_test_cases=(ImportTestCase,PYCLooGTestCase)
 	import_test_cases=(ImportTestCase,)
+	pycloog_test_cases=(PYCLooGTestCase,)
 
 	#Determine what test cases to run based on the given arguments
 	test_cases=()
@@ -472,6 +495,8 @@ if '__main__'==__name__:
 				test_cases+=all_test_cases
 			elif 'import'==arg:
 				test_cases+=import_test_cases
+			elif 'pycloog'==arg:
+				test_cases+=pycloog_test_cases
 			else:
 				test_cases=test_cases+(globals()[arg],)
 
