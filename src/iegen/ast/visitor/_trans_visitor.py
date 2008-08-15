@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from iegen.ast.visitor import DFVisitor
 #from pres_parser import PresParser
 #from pycloog import Statement,Names,codegen
