@@ -3,3 +3,8 @@
 *.so
 .lock-wscript
 .waf-*
+default
+config.log
+.wscript-trybuild
+.wafpickle-6
+c4che
