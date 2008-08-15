@@ -67,16 +67,5 @@ def build(bld):
 	                   ['CLOOG','POLYLIB64'],
 	                   inst_dir,3)
 
-
-#	shlib=bld.create_obj('cc','shlib')
-#	shlib.source='pycloog.c'
-#	shlib.target='pycloog'
-#	shlib.uselib=['CLOOG','POLYLIB64']
-#	shlib.includes=append_up_dirs(env['includes_common'],3)
-#	shlib.env['shlib_PATTERN']='_%s.so'
-#	shlib.obj_ext='.o'
-#	shlib.inst_var='PREFIX'
-#	shlib.inst_dir=inst_dir
-
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_pycloogpy.py')

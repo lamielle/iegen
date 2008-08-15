@@ -35,35 +35,6 @@ def configure(conf):
 	#Common include path
 	env['includes_common']=['include']
 
-#	#Omega include paths
-#	env['CPPPATH_OMEGA']+=[
-#		omega_include_base+'/include',
-#		omega_include_base+'/basic/include',
-#		omega_include_base+'/omega_lib/include',
-#		omega_include_base+'/code_gen/include']
-#
-#	#Omega bindings includes
-#	env['CPPPATH_AST']+=['../../include/omega']
-#
-#	#Omega defines (macros)
-#	env['CXXDEFINES_OMEGA']+=[
-#		'OMIT_QUANTIFY_CALLS',
-#		'SIG_HANDLER_HAS_ONE_ARG=1',
-#		'SHUT_UP_ABOUT_STATEMENT_WITH_NO_EFFECT_IN_DYNAMIC_ARRAY_CREATION',
-#		'BATCH_ONLY_PETIT',
-#		'DAVEW_THESIS_REDUCTIONS',
-#		'STUDY_KILL_USE',
-#		'PETIT_KILL_OBVIOUS']
-#
-#	#Make sure we are bulding the object files for eventual dynamic linking
-#	env['staticlib_CXXFLAGS']+=['-fPIC', '-DPIC']
-#
-#	#Some common values used by the whole project
-#	env['uselib_common']='BOOST_PYTHON PYEXT M CODE_GEN OMEGA OMEGA_BINDINGS'
-#	env['includes_common']=['include/omega',
-#	                        'include/omega/parser/ast',
-#	                        'include/omega/parser/ast/visitor']
-
 	conf.sub_config('ast')
 	conf.sub_config('pycloog')
 	conf.sub_config('util')
@@ -77,43 +48,6 @@ def build(bld):
 	env=bld.env_of_name('default')
 
 	inst_dir='iegen'
-#
-#	#Formula building sources
-#	create_obj_common(bld,
-#	               '''FExpr.cpp
-#	                  FPart.cpp
-#	                  FStmt.cpp
-#	                  FConj.cpp
-#	                  FreeVar.cpp
-#	                  FVar.cpp
-#	                  Var.cpp''',
-#	                 'omega_formula_building',2)
-#
-#	create_obj_common(bld,
-#	               '''TupleCollection.cpp
-#	                  OldRelation.cpp
-#	                  OldSet.cpp
-#	                  Formula.cpp
-#	                  Set.cpp
-#	                  Relation.cpp''',
-#	                 'omega_formulas',2)
-#
-#	create_obj_common(bld,
-#	               '''util.cpp
-#	                  OmegaException.cpp''',
-#	                 'omega_util',2)
-#
-#	create_shlib_common(bld,
-#	                   'omega_bindings.cpp',
-#	                   'omega',
-#	                 '''omega_formula_building
-#	                    omega_formulas
-#	                    omega_util
-#	                    ast_var_nodes
-#	                    ast_expr_nodes
-#	                    ast_root_nodes
-#	                    ast_util''',
-#	                   inst_dir,2)
 
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_iegen.py')
