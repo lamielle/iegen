@@ -50,6 +50,20 @@ class ImportTestCase(TestCase):
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast failed: "+str(e))
 
+	#Test simple importing of iegen.ast.visitor
+	def testIEGenASTImport(self):
+		try:
+			import iegen.ast.visitor
+		except Exception,e:
+			self.fail("'import iegen.ast.visitor' failed: "+str(e))
+
+	#Test simple importing of iegen.ast classes
+	def testIEGenASTNameImport(self):
+		try:
+			from iegen.ast.visitor import DFVisitor,TransVisitor
+		except Exception,e:
+			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
+
 ##!/usr/bin/env python
 #
 ## driver.py

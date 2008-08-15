@@ -3,10 +3,10 @@
 import os
 
 def set_options(opt):
-	pass
+	opt.sub_options('visitor')
 
 def configure(conf):
-	pass
+	conf.sub_config('visitor')
 
 def build(bld):
 
@@ -14,3 +14,5 @@ def build(bld):
 
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_ast.py')
+
+	bld.add_subdirs('visitor')

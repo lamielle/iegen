@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from visitor import DFVisitor
-from pres_parser import PresParser
-from pycloog import Statement,Names,codegen
+from iegen.ast.visitor import DFVisitor
+#from pres_parser import PresParser
+#from pycloog import Statement,Names,codegen
 
 class TransVisitor(DFVisitor):
 	def __init__(self,params):
@@ -74,13 +74,13 @@ class TransVisitor(DFVisitor):
 		pass
 #		print 'Out PlusExp'
 
-params=['n']
-v=TransVisitor(params)
+#params=['n']
+#v=TransVisitor(params)
 
-v.visit(PresParser.parse_set('{[i,j]:1<=i && i<=n && 1<=j && j<=n}'))
+#v.visit(PresParser.parse_set('{[i,j]:1<=i && i<=n && 1<=j && j<=n}'))
 
-print v.mat
-scat=[[0,1,0,0,0,0]]
-stmt=Statement(v.mat,scat)
-names=Names(['i','j'],['n'])
-codegen([stmt],names)
+#print v.mat
+#scat=[[0,1,0,0,0,0]]
+#stmt=Statement(v.mat,scat)
+#names=Names(['i','j'],['n'])
+#codegen([stmt],names)
