@@ -4,9 +4,9 @@
     Driver that unit tests the Hypergraph data structure.
 */
 
-#include "Hypergraph.h"
-#include "IAG.h"
-#include "util.h"
+#include <iegen/hypergraph/Hypergraph.h>
+#include <iegen/iag/IAG.h>
+#include <iegen/util/iegen_util.h>
 
 #define NUM_HE 10
 #define NUM_NODES 5

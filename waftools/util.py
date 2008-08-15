@@ -23,14 +23,25 @@ def create_obj_common(bld,source,target,depth):
 	obj.inst_dir=0
 	return obj
 
-def create_shlib_common(bld,source,target,local,inst_dir,depth):
+def create_program_common(bld,source,target,local,inst_dir,depth):
 	env=bld.env_of_name('default')
-	shlib=bld.create_obj('cpp','shlib')
+	shlib=bld.create_obj('cpp','program')
 	shlib.source=source
 	shlib.target=target
 	shlib.uselib_local=local
-	shlib.uselib=env['uselib_common']
-#	shlib.includes=append_up_dirs(env['includes_common'],depth)
+	shlib.includes=append_up_dirs(env['includes_common'],depth)
+	shlib.obj_ext='.o'
+	shlib.inst_var='PREFIX'
+	shlib.inst_dir=inst_dir
+	return shlib
+
+def create_shlib_common(bld,source,target,uselib,inst_dir,depth):
+	env=bld.env_of_name('default')
+	shlib=bld.create_obj('cc','shlib')
+	shlib.source=source
+	shlib.target=target
+	shlib.uselib=uselib
+	shlib.includes=append_up_dirs(env['includes_common'],depth)
 	shlib.env['shlib_PATTERN']='_%s.so'
 	shlib.obj_ext='.o'
 	shlib.inst_var='PREFIX'

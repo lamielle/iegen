@@ -48,7 +48,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include "util.h"
+#include <iegen/util/iegen_util.h>
 
 #ifndef _Hypergraph_H
 #define _Hypergraph_H

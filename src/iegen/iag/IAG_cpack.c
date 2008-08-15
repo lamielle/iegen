@@ -7,8 +7,8 @@
 
 */
 
-#include "util.h"
-#include "Hypergraph.h"
+#include <iegen/util/iegen_util.h>
+#include <iegen/hypergraph/Hypergraph.h>
 
 /*----------------------------------------------------------------*//*! 
     \short Creates permutation of nodes in hypergraph based on hyperedge order.

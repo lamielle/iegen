@@ -6,9 +6,9 @@
     See iegen/docs/moldyn-FST.txt for more notes.
 */
 
-#include "Hypergraph.h"
-#include "IAG.h"
-#include "util.h"
+#include <iegen/hypergraph/Hypergraph.h>
+#include <iegen/iag/IAG.h>
+#include <iegen/util/iegen_util.h>
 
 #define NUM_NODES 5
 
@@ -284,9 +284,15 @@ int main()
 
     // cleanup
     Hypergraph_dtor(&A_I0_to_X0);
-    Hypergraph_dtor(&A_I1_to_X1);
+
+    fprintf(stderr,"WARNING: A_I1_to_X1 unable to be freed here.  FIX ME!\n");
+    //Hypergraph_dtor(&A_I1_to_X1);
+
     FREE(sigma,int,NUM_NODES);
-    FREE(delta,int,NUM_NODES);
+
+    fprintf(stderr,"WARNING: delta unable to be freed here.  FIX ME!\n");
+    //FREE(delta,int,NUM_NODES);
+
     FREE(original_fx, double, NUM_NODES);
     FREE(fx,double,NUM_NODES);
     FREE(x,double,NUM_NODES);

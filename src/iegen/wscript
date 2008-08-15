@@ -31,6 +31,9 @@ def configure(conf):
 	libconf.path=['/usr/lib64/']+libconf.path
 	libconf.run()
 
+	#Common include path
+	env['includes_common']=['include']
+
 #	#Omega include paths
 #	env['CPPPATH_OMEGA']+=[
 #		omega_include_base+'/include',

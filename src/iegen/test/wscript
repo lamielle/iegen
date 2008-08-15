@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import os
+from waftools import *
+
 def set_options(opt):
 	pass
 
@@ -8,3 +11,26 @@ def configure(conf):
 
 def build(bld):
 	pass
+	env=bld.env_of_name('default')
+
+	inst_dir='iegen'+os.sep+'test'
+
+	create_program_common(bld,
+	                     'test_Hypergraph.c',
+	                     'test_Hypergraph',
+	                   '''Hypergraph
+	                      iegen_util
+	                      IAG_cpack''',
+	                      inst_dir,3)
+
+	create_program_common(bld,
+	                     'driver_moldyn_FST_hand.c',
+	                     'driver_moldyn_FST_hand',
+	                   '''Hypergraph
+	                      iegen_util
+	                      IAG_cpack
+	                      IAG_lexmin''',
+	                      inst_dir,3)
+
+	install_files('PREFIX',inst_dir,'test_Hypergraph',chmod=0711)
+	install_files('PREFIX',inst_dir,'driver_moldyn_FST_hand',chmod=0711)

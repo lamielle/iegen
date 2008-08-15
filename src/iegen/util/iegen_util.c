@@ -6,7 +6,7 @@
     data arrays.
 */
 
-#include "util.h"
+#include <iegen/util/iegen_util.h>
 
 static bool debug = true;
 

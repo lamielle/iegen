@@ -9,8 +9,8 @@
 
 */
 
-#include "util.h"
-#include "Hypergraph.h"
+#include <iegen/util/iegen_util.h>
+#include <iegen/hypergraph/Hypergraph.h>
 
 /*----------------------------------------------------------------*//*! 
     \short Creates permutation of hyperedges based on the node order.
@@ -49,8 +49,10 @@ void IAG_lexmin(Hypergraph* hg, int* old2new)
         
     MALLOC(taken, bool, nedges);
     
-    for (index = 0; index < nedges; index++) {
-            taken[index] = false;
+    fprintf(stderr,"WARNING: variable 'index' changed to 'i' here to make this code compile.\n");
+    int i;
+    for (i = 0; i < nedges; i++) {
+            taken[i] = false;
     }
             
     // reorder nodes on a first-touch basis

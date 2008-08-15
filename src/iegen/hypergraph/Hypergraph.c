@@ -1,12 +1,12 @@
 /* Hypergraph.c */
-#include "Hypergraph.h"
+#include <iegen/hypergraph/Hypergraph.h>
 /*! \file 
     Implements the Hypergraph data structure for use with the PIES project.
     
 
 */
 
-#include "Hypergraph.h"
+#include <iegen/hypergraph/Hypergraph.h>
 
 //----------------------- Helper routines for internal use
 
