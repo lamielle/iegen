@@ -1,0 +1,11 @@
+INSTALLING:
+
+iegen uses a python based build system called waf.
+
+Use the following commands to configure, build, and install iegen:
+
+1) ./waf configure --prefix=location_to_install_to --polylib-loc=path_to_polylib --cloog-loc=path_to_cloog
+
+2) ./waf build
+
+3) ./waf install
