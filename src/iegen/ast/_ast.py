@@ -322,6 +322,19 @@ class IConstraint(Node):
 	pass
 
 
+class Equality(IConstraint):
+	__slots__=('exp',)
+
+	def __init__(self,exp):
+		self.exp=exp
+
+	def __repr__(self):
+		return 'Equality(%s)'%self.exp
+
+	def apply_visitor(self,visitor):
+		visitor.visitEquality(self)
+
+
 #It is assummed that all constraints are converted to GTE
 #inequalities.
 class Inequality(IConstraint):
@@ -335,19 +348,6 @@ class Inequality(IConstraint):
 
 	def apply_visitor(self,visitor):
 		visitor.visitInequality(self)
-
-
-class Equality(IConstraint):
-	__slots__=('exp',)
-
-	def __init__(self,exp):
-		self.exp=exp
-
-	def __repr__(self):
-		return 'Equality(%s)'%self.exp
-
-	def apply_visitor(self,visitor):
-		visitor.visitEquality(self)
 #--------------------------------------
 
 #---------- Expression Nodes ----------

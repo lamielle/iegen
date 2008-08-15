@@ -8,18 +8,47 @@ from sys import argv
 #Test importing of modules
 class ImportTestCase(TestCase):
 
-	#Test simple importing of the omega
-	def testIeGenImport(self):
+	#Test simple importing of iegen
+	def testIEGenImport(self):
 		try:
 			import iegen
 		except Exception,e:
 			self.fail("'import iegen' failed: "+str(e))
 
-	def testIeGenNameImport(self):
+	#Test simple importing of iegen classes
+	def testIEGenNameImport(self):
 		try:
 			from iegen import MapIR,IterationSpace,DataSpace,IndexArray,AccessRelation,Statement,DataDependence,RTRT,DataPermuteRTRT,IterPermuteRTRT
 		except Exception,e:
 			self.fail("Importing classes from iegen failed: "+str(e))
+
+	#Test simple importing of iegen.util
+	def testIEGenUtilImport(self):
+		try:
+			import iegen.util
+		except Exception,e:
+			self.fail("'import iegen.util' failed: "+str(e))
+
+	#Test simple importing of iegen.util classes
+	def testIEGenUtilNameImport(self):
+		try:
+			from iegen.util import define_properties,DimensionalityError
+		except Exception,e:
+			self.fail("Importing classes from iegen.util failed: "+str(e))
+
+	#Test simple importing of iegen.ast
+	def testIEGenASTImport(self):
+		try:
+			import iegen.ast
+		except Exception,e:
+			self.fail("'import iegen.ast' failed: "+str(e))
+
+	#Test simple importing of iegen.ast classes
+	def testIEGenASTNameImport(self):
+		try:
+			from iegen.ast import Node,IPresSet,PresSet,PresSetUnion,IPresRelation,PresRelation,PresRelationUnion,VarTuple,Conjunction,IConstraint,Equality,Inequality,IExp,VarExp,FuncExp,NormExp
+		except Exception,e:
+			self.fail("Importing classes from iegen.ast failed: "+str(e))
 
 #class formulas:
 #

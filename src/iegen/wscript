@@ -6,10 +6,11 @@ def set_options(opt):
 	#Add config options for python
 	opt.tool_options('python')
 
+	opt.sub_options('ast')
 	opt.sub_options('pycloog')
+	opt.sub_options('util')
 	opt.sub_options('hypergraph')
 	opt.sub_options('iag')
-	opt.sub_options('util')
 	opt.sub_options('test')
 	opt.sub_options('specs')
 
@@ -63,10 +64,11 @@ def configure(conf):
 #	                        'include/omega/parser/ast',
 #	                        'include/omega/parser/ast/visitor']
 
+	conf.sub_config('ast')
 	conf.sub_config('pycloog')
+	conf.sub_config('util')
 	conf.sub_config('hypergraph')
 	conf.sub_config('iag')
-	conf.sub_config('util')
 	conf.sub_config('test')
 	conf.sub_config('specs')
 
@@ -116,9 +118,10 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_iegen.py')
 
+	bld.add_subdirs('ast')
 	bld.add_subdirs('pycloog')
+	bld.add_subdirs('util')
 	bld.add_subdirs('hypergraph')
 	bld.add_subdirs('iag')
-	bld.add_subdirs('util')
 	bld.add_subdirs('test')
 	bld.add_subdirs('specs')
