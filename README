@@ -1,12 +1,95 @@
+IEGen 0.1: Automatic Inspector/Executor Generation for Irregular Computations
+-August 15, 2008-
+
+Alan LaMielle (lamielle at cs dot colostate dot edu)
+Michelle Strout (mstrout at cs dot colostate dot edu)
+
 INSTALLING:
 
-iegen uses a python based build system called waf.
+-Dependencies: Python version >= 2.4.0, CLooG version >= 0.14.0, and Polylib
 
-Use the following commands to configure, build, and install iegen:
+ -As IEGen is mostly written in Python, Python is a necessary requirement.
 
-1)     ./waf configure --prefix=location_to_install_to --polylib-loc=path_to_polylib --cloog-loc=path_to_cloog
-  (ex: ./waf configure --prefix=$PWD --polylib-loc=$HOME/software/polylib/ --cloog-loc=$HOME/software/cloog)
+ -IEGen depends on a loop generation tool called CLooG: http://www.cloog.org/
+  This tool will need to be installed before you can use IEGen.
 
-2) ./waf build
+ -Indirectly IEGen depends on the Polylib library as CLooG uses it; this will
+  need to be installed as well.
 
-3) ./waf install
+-IEGen has currently only been built and tested on 64-bit machines.
+ If you have success building this software on a 32-bit machine, please let
+ us know.
+
+-IEGen uses a really slick Python based build system called waf.
+
+-Use the following commands to configure, build, and install IEGen using waf:
+
+-1)      ./waf configure --prefix=location_to_install_to --polylib-loc=path_to_polylib --cloog-loc=path_to_cloog
+   (exs: ./waf configure --prefix=$PWD --polylib-loc=$HOME/software/polylib/ --cloog-loc=$HOME/software/cloog
+         ./waf configure --prefix=$PWD --polylib-loc=$HOME/software --cloog-loc=$HOME/software)
+
+   -Note: the Polylib and CLooG paths should be a directory CONTAINING the
+          lib/ and include/ directories where Polylib/CLooG installed their
+          libraries and headers respectively. It is NOT a path to a lib/ or
+          include/ directory.
+
+          The prefix is the location where IEGen will be installed. A single
+          directory, named 'iegen', will be installed to this location. See
+          below for a detailed description of what is conatined in this
+          directory.
+
+-2) ./waf build
+
+-3) ./waf install
+
+-4) ./test (Optional)
+
+-Further building/installation related notes:
+
+ -To be sure that the dynamic linker can find the CLooG and Polylib
+  libraries at loadtime, be sure that the environent variable
+  LD_LIBRARY_PATH includes the location to the CLooG and Polylib libraries.
+
+ -Step 4 will run a test script that exercises the functionality of IEGen.
+
+ -This is a python script that imports the iegen python module that is the
+  root of the IEGen system.
+
+ -As such, Python must be able to find this module:
+
+  -If IEGen is installed to the example location, $PWD, then Python will
+   surely be able to find the iegen module.
+
+  -If IEGen is installed elsewhere, be sure that you set the environment
+   variable PYTHONPATH to include the location where the 'iegen' directory
+   is located.
+
+-What gets installed:
+
+iegen: Root module for IEGen
+|-- __init__.py: iegen module init
+|-- _iegen.py: Main IEGen classes/functions
+|-- ast: Set/Relation AST Module
+|   |-- __init__.py: ast module init
+|   |-- _ast.py: Set/Relation AST classes
+|   - visitor: Set/Relation AST Visitor module
+|       |-- __init__.py: visitor module init
+|       |-- _trans_visitor.py: Translates a Set AST to a CLooG domain matrix
+|       |-- _visitor.py: Depth First Visitor of Set/Relation ASTs
+|-- parser: Set/Relation Parser Module
+|   |-- __init__.py: parser module init
+|   |-- _parser.py: Set/Relation parser
+|-- pycloog: Python module for interfacing with CLooG
+|   |-- __init__.py: pycloog module init
+|   |-- _pycloog.so: Shared library that interfaces with CLooG
+|   - _pycloogpy.py: Python code that loads and interacts with _pycloog.so
+|-- test: C tests
+|   |-- driver_moldyn_FST_hand
+|   - test_Hypergraph
+- util: IEGen Utility Module
+    |-- __init__.py: util module init
+    |-- _util.py: IEGen utility classes/functions
+
+(Note: This directory tree was obtained from the useful unix command 'tree')
+
+-Alan LaMielle, 2008
