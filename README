@@ -4,6 +4,10 @@ IEGen 0.1: Automatic Inspector/Executor Generation for Irregular Computations
 Alan LaMielle (lamielle at cs dot colostate dot edu)
 Michelle Strout (mstrout at cs dot colostate dot edu)
 
+TODO: Use date stamps for version numbers
+TODO: Add simple example usage and refer to ./test for more complicated usage
+TODO: Format so it looks a bit nicer
+
 INSTALLING:
 
 -Dependencies: Python version >= 2.4.0, CLooG version >= 0.14.0, and Polylib
