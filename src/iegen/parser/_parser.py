@@ -15,7 +15,7 @@
 # MMS 7/21/08
 #
 
-from ast import *
+from iegen.ast import *
 import types
 
 #---------- Presburger Formula Parser Class ----------

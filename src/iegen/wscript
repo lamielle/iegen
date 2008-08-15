@@ -7,6 +7,7 @@ def set_options(opt):
 	opt.tool_options('python')
 
 	opt.sub_options('ast')
+	opt.sub_options('parser')
 	opt.sub_options('pycloog')
 	opt.sub_options('util')
 	opt.sub_options('hypergraph')
@@ -36,6 +37,7 @@ def configure(conf):
 	env['includes_common']=['include']
 
 	conf.sub_config('ast')
+	conf.sub_config('parser')
 	conf.sub_config('pycloog')
 	conf.sub_config('util')
 	conf.sub_config('hypergraph')
@@ -53,6 +55,7 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_iegen.py')
 
 	bld.add_subdirs('ast')
+	bld.add_subdirs('parser')
 	bld.add_subdirs('pycloog')
 	bld.add_subdirs('util')
 	bld.add_subdirs('hypergraph')
