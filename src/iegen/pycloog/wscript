@@ -37,11 +37,6 @@ def configure(conf):
 	cloog_include=getattr(opt,'cloog_loc','')+os.sep+'include'
 	cloog_lib=getattr(opt,'cloog_loc','')+os.sep+'lib'
 
-	print 'polylib_include:',polylib_include
-	print 'polylib_lib:',polylib_lib
-	print 'cloog_include:',cloog_include
-	print 'cloog_lib:',cloog_lib
-
 	#Polylib library
 	libconf=conf.create_library_configurator()
 	libconf.mandatory=1
