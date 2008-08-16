@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+
+import os
+from waftools import py_in_dir
+
+def set_options(opt):
+	opt.sub_options('ext')
+	opt.sub_options('plugins')
+
+def configure(conf):
+	conf.sub_config('ext')
+	conf.sub_config('plugins')
+
+def build(bld):
+
+	inst_dir='iegen'+os.sep+'lib'+os.sep+'nose'
+	nose_dir=os.getcwd()+os.sep+'src'+os.sep+inst_dir
+
+	print py_in_dir(nose_dir)
+	install_files('PREFIX',inst_dir,py_in_dir(nose_dir))
+
+	bld.add_subdirs('ext')
+	bld.add_subdirs('plugins')

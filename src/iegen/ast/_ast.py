@@ -14,7 +14,7 @@
 #    IConstraint -> IExp:lhs IExp:rhs // Inequality (GTE assummed)
 #                -> IExp:lhs IExp:rhs // Equality
 #
-#    IExp  -> INT                // IntExp
+#    Exp  -> INT                // IntExp
 #          -> IExp:operand       // UMinusExp
 #          -> IExp:lhs Expr:rhs  // MulExp, PlusExp, MinusExp
 #          -> INT IExp           // IntMulExp
@@ -24,25 +24,21 @@
 # Naming Convention
 #	A class prefixed with "I" is an interface class.
 #
-# Michelle Strout 7/22/08
+# Started by: Michelle Strout 7/22/08
+# Modified by: Alan LaMielle
 #
 
 from copy import deepcopy
 
-#base Node class
-#Not an interface, because might have a generic child list in the Node class
-#later.
+#---------- Base AST Node class ----------
 class Node(object):
 	def apply_visitor(self,visitor):
 		raise NotImplementedError('All node types should override the apply_visitor method.')
+#-----------------------------------------
 
-#---------- Presburger Sets ----------
-#Presburger set interface
-class IPresSet(Node):
-	pass
-
-#A single presburger set.
-class PresSet(IPresSet):
+#---------- Presburger Set ----------
+#A single presburger set
+class PresSet(Node):
 	__slots__=('set_tuple','conjunct')
 
 	def __init__(self,set_tuple,conjunct):
@@ -67,8 +63,8 @@ class PresSet(IPresSet):
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 
 
-#A list of presburger sets involved in a union.
-class PresSetUnion(IPresSet):
+#Presburger Set that is a disjunction of a collection of PresSet instances
+class PresSetUnion(Node):
 	__slots__=('sets',)
 
 	def __init__(self,sets):
@@ -81,9 +77,9 @@ class PresSetUnion(IPresSet):
 	def _arity_check(self):
 		if len(self.sets)>0:
 			set_arity=self.sets[0].arity()
-		for set in self.sets[1:]:
-			if set.arity()!=set_arity:
-				raise ValueError('All sets in a PresSetUnion must have the same arity.')
+			for set in self.sets[1:]:
+				if set.arity()!=set_arity:
+					raise ValueError('All sets in a PresSetUnion must have the same arity.')
 
 	def _add_set(self,set):
 		if not isinstance(set,PresSet):
@@ -116,12 +112,8 @@ class PresSetUnion(IPresSet):
 #-------------------------------------
 
 #---------- Presburger Relations ----------
-#Presburger relation interface
-class IPresRelation(Node):
-	pass
-
 #A single presburger relation
-class PresRelation(IPresRelation):
+class PresRelation(Node):
 	__slots__=('in_tuple','out_tuple','conjunct')
 
 	def __init__(self,in_tuple,out_tuple,conjunct):
@@ -184,8 +176,8 @@ class PresRelation(IPresRelation):
 			raise ValueError("Unsupported argument of type '%s' for operation compose."%type(other))
 
 
-#A list of presburger relations involved in a union.
-class PresRelationUnion(IPresRelation):
+#Presburger Relation that is a disjunction of a collection of PresRelation instances
+class PresRelationUnion(Node):
 	__slots__=('relations',)
 
 	def __init__(self,relations):
@@ -199,11 +191,11 @@ class PresRelationUnion(IPresRelation):
 		if len(self.relations)>0:
 			in_arity=self.relations[0].arity_in()
 			out_arity=self.relations[0].arity_out()
-		for relation in self.relations[1:]:
-			if relation.arity_in()!=arity_in:
-				raise ValueError('All relations in a PresRelationUnion must have the same input arity.')
-			if relation.arity_out()!=arity_out:
-				raise ValueError('All relations in a PresRelationUnion must have the same output arity.')
+			for relation in self.relations[1:]:
+				if relation.arity_in()!=arity_in:
+					raise ValueError('All relations in a PresRelationUnion must have the same input arity.')
+				if relation.arity_out()!=arity_out:
+					raise ValueError('All relations in a PresRelationUnion must have the same output arity.')
 
 	def _add_relation(self,relation):
 		if not isinstance(relation,PresRelation):
@@ -285,7 +277,7 @@ class PresRelationUnion(IPresRelation):
 
 #---------- Variable Tuple Node ----------
 #Tuple of variables.
-class VarTuple(Node):
+class VarTuple(object):
 	__slots__=('id_list',)
 
 	def __init__(self,id_list):
@@ -303,7 +295,7 @@ class VarTuple(Node):
 
 #---------- Conjunction Node ----------
 #A set of constraints that are all part of a conjunction (IOW ANDed together).
-class Conjunction(Node):
+class Conjunction(object):
 	__slots__=('constraint_list',)
 
 	def __init__(self,constraint_list):
@@ -317,12 +309,10 @@ class Conjunction(Node):
 #---------------------------------------
 
 #---------- Constraint Nodes ----------
-#Interface for constraints.
-class IConstraint(Node):
+class Constraint(Node):
 	pass
 
-
-class Equality(IConstraint):
+class Equality(Constraint):
 	__slots__=('exp',)
 
 	def __init__(self,exp):
@@ -337,7 +327,7 @@ class Equality(IConstraint):
 
 #It is assummed that all constraints are converted to GTE
 #inequalities.
-class Inequality(IConstraint):
+class Inequality(Constraint):
 	__slots__=('exp',)
 
 	def __init__(self,exp):
@@ -351,11 +341,11 @@ class Inequality(IConstraint):
 #--------------------------------------
 
 #---------- Expression Nodes ----------
-class IExp(Node):
+class Expression(Node):
 	pass
 
 #Variable expression
-class VarExp(IExp):
+class VarExp(Expression):
 	__slots__=('coeff','id')
 
 	def __init__(self,coeff,id):
@@ -399,7 +389,7 @@ class VarExp(IExp):
 
 
 #Function expression
-class FuncExp(IExp):
+class FuncExp(Expression):
 	__slots__=('coeff','name','exp_list')
 
 	def __init__(self,coeff,name,exp_list):
@@ -446,7 +436,7 @@ class FuncExp(IExp):
 #-A collection of variables and their coefficients
 #   and of function calls and their coefficients (terms)
 #-A constant value (const)
-class NormExp(IExp):
+class NormExp(Expression):
 	__slots__=('terms','const')
 
 	def __init__(self,terms,const):

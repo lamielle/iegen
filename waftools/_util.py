@@ -11,6 +11,9 @@ def print_env(env):
 def append_up_dirs(dirs,num):
 	return [('..'+os.sep)*num+dir for dir in dirs];
 
+def py_in_dir(dir):
+	return [f for f in os.listdir(dir) if f.endswith('.py')]
+
 def create_obj_common(bld,source,target,depth):
 	env=bld.env_of_name('default')
 	obj=bld.create_obj('cpp','staticlib')

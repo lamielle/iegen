@@ -5,8 +5,22 @@ from unittest import TestSuite,TestCase,defaultTestLoader,TextTestRunner
 from sys import argv
 
 #---------- Test case classes ----------
+
+#class IEGenTestCases
+#iegen
+
+#ast
+#
+#visitor
+#
+#parser
+#
+#pycloog
+#
+#util
+
 #Test importing of modules
-class ImportTestCase(TestCase):
+class IEGenImportTestCase(TestCase):
 
 	#Test simple importing of iegen
 	def testIEGenImport(self):
@@ -46,7 +60,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast classes
 	def testIEGenASTNameImport(self):
 		try:
-			from iegen.ast import Node,IPresSet,PresSet,PresSetUnion,IPresRelation,PresRelation,PresRelationUnion,VarTuple,Conjunction,IConstraint,Equality,Inequality,IExp,VarExp,FuncExp,NormExp
+			from iegen.ast import Node,PresSet,PresSetUnion,PresRelation,PresRelationUnion,VarTuple,Conjunction,Constraint,Equality,Inequality,Expression,VarExp,FuncExp,NormExp
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast failed: "+str(e))
 
@@ -78,7 +92,24 @@ class ImportTestCase(TestCase):
 		except Exception,e:
 			self.fail("Importing classes from iegen.parser failed: "+str(e))
 
-class PYCLooGTestCase(TestCase):
+class IEGenASTTestCase(TestCase):
+
+	def testSetRelation(self):
+		from iegen.ast import PresSet,PresSetUnion,PresRelation,PresRelationUnion
+
+	def testVarTuple(self):
+		from iegen.ast import VarTuple
+
+	def testConjunction(self):
+		from iegen.ast import Conjunction
+
+	def testConstraint(self):
+		from iegen.ast import Equality,Inequality
+
+	def testExpression(self):
+		from iegen.ast import VarExp,FuncExp,NormExp
+
+class IEGenPYCLooGTestCase(TestCase):
 
 	def testPYCLooGSimple(self):
 		from iegen.pycloog import Statement,Names,codegen
@@ -100,13 +131,6 @@ class PYCLooGTestCase(TestCase):
 		names=Names(['i','j'],['n'])
 		codegen(stmts,names)
 
-##!/usr/bin/env python
-#
-## driver.py
-## 
-## Driver to test the python only parsing and representation of Presburger sets 
-## and relations with uninterpreted function symbols.
-#
 ## Initial testing of the ast
 #from ast import *
 #
@@ -481,9 +505,10 @@ def build_test_suite(test_cases):
 
 if '__main__'==__name__:
 	#Test case categories
-	all_test_cases=(ImportTestCase,PYCLooGTestCase)
-	import_test_cases=(ImportTestCase,)
-	pycloog_test_cases=(PYCLooGTestCase,)
+	all_test_cases=(IEGenImportTestCase,IEGenASTTestCase,IEGenPYCLooGTestCase)
+	import_test_cases=(IEGenImportTestCase,)
+	pycloog_test_cases=(IEGenPYCLooGTestCase,)
+	ast_test_cases=(IEGenASTTestCase,)
 
 	#Determine what test cases to run based on the given arguments
 	test_cases=()
@@ -497,6 +522,8 @@ if '__main__'==__name__:
 				test_cases+=import_test_cases
 			elif 'pycloog'==arg:
 				test_cases+=pycloog_test_cases
+			elif 'ast'==arg:
+				test_cases+=ast_test_cases
 			else:
 				test_cases=test_cases+(globals()[arg],)
 
