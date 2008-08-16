@@ -3,10 +3,10 @@
 import os
 
 def set_options(opt):
-	pass
+	opt.sub_options('test')
 
 def configure(conf):
-	pass
+	conf.sub_config('test')
 
 def build(bld):
 
@@ -15,3 +15,5 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_visitor.py')
 	install_files('PREFIX',inst_dir,'_trans_visitor.py')
+
+	bld.add_subdirs('test')

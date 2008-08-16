@@ -1,3 +1,7 @@
+def run_tests():
+	import iegen,nose
+	nose.run(argv=['','-v','-w%s'%iegen.dir])
+
 #Defines a property called m_name
 #This property is assigned to the given class
 #The getter and setter access a member of the class called _'name'

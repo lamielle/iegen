@@ -34,3 +34,6 @@ def build(bld):
 
 	install_files('PREFIX',inst_dir,'test_Hypergraph',chmod=0711)
 	install_files('PREFIX',inst_dir,'driver_moldyn_FST_hand',chmod=0711)
+
+	install_files('PREFIX',inst_dir,'__init__.py')
+	install_files('PREFIX',inst_dir,'_test.py')

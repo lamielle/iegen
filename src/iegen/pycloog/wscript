@@ -23,6 +23,8 @@ def set_options(opt):
 		dest='cloog_loc',
 		help='Install directory of cloog (directory should have lib/ and include/). (Default: %s)'%default_cloog_loc)
 
+	opt.sub_options('test')
+
 def configure(conf):
 	import Params,os
 
@@ -55,6 +57,8 @@ def configure(conf):
 
 	env['CPPPATH_CLOOG']+=[cloog_include]
 
+	conf.sub_config('test')
+
 def build(bld):
 
 	env=bld.env_of_name('default')
@@ -69,3 +73,5 @@ def build(bld):
 
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_pycloogpy.py')
+
+	bld.add_subdirs('test')
