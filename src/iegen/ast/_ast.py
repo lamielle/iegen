@@ -353,7 +353,7 @@ class VarExp(Expression):
 		self.id=id
 
 	def __repr__(self):
-		return 'VarExp(%s,%s)'%(self.coeff,self.id)
+		return "VarExp(%s,'%s')"%(self.coeff,self.id)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -365,10 +365,6 @@ class VarExp(Expression):
 			return -1
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
-
-#	#Equality operator
-#	def __eq__(self,other):
-#		return 0==cmp(self,other)
 
 	#Multiplication operator:
 	#This is only defined between a variable and an integer
@@ -384,6 +380,10 @@ class VarExp(Expression):
 		other.coeff*=self
 		return other
 
+	#Reflexive multiplication
+	def __rmul__(self,other):
+		return self*other
+
 	def apply_visitor(self,visitor):
 		visitor.visitVarExp(self)
 
@@ -398,7 +398,7 @@ class FuncExp(Expression):
 		self.exp_list=exp_list
 
 	def __repr__(self):
-		return 'FuncExp(%s,%s,%s)'%(self.coeff,self.name,self.exp_list)
+		return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.exp_list)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -409,10 +409,6 @@ class FuncExp(Expression):
 			return cmp((self.coeff,self.name,self.exp_list),(other.coeff,other.name,other.exp_list))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
-
-#	#Equality operator
-#	def __eq__(self,other):
-#		return 0==cmp(self,other)
 
 	#Multiplication operator:
 	#This is only defined between a function and an integer
@@ -428,6 +424,10 @@ class FuncExp(Expression):
 		other.coeff*=self
 		return other
 
+	#Reflexive multiplication
+	def __rmul__(self,other):
+		return self*other
+
 	def apply_visitor(self,visitor):
 		visitor.visitFuncExp(self)
 
@@ -441,9 +441,11 @@ class NormExp(Expression):
 
 	def __init__(self,terms,const):
 		self.terms=terms
+		self.terms.sort()
 		self.const=const
 
 	def __repr__(self):
+		self.terms.sort()
 		return 'NormExp(%s,%s)'%(self.terms,self.const)
 
 	#Returns True if this NormExp has any variables or functions (terms)
@@ -456,13 +458,11 @@ class NormExp(Expression):
 	def __cmp__(self,other):
 		#Functions are 'greater' than IDs
 		if hasattr(other,'terms') and hasattr(other,'const'):
+			self.terms.sort()
+			other.terms.sort()
 			return cmp((self.terms,self.const),(other.terms,other.const))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
-
-#	#Equality operator
-#	def __eq__(self,other):
-#		return 0==cmp(self,other)
 
 	#Addition operator:
 	#Adds the two given NormExp expressions
@@ -471,6 +471,9 @@ class NormExp(Expression):
 	def __add__(self,other):
 		if not hasattr(self,'terms') or not hasattr(self,'const') or not hasattr(other,'terms') or not hasattr(other,'const'):
 			raise ValueError("Addition between a '%s' and a '%s' is undefined."%(type(self),type(other)))
+
+		self.terms.sort()
+		other.terms.sort()
 
 		self=deepcopy(self)
 		other=deepcopy(other)
@@ -485,6 +488,9 @@ class NormExp(Expression):
 
 		#Add the constant value from other to self
 		self.const+=other.const
+
+		#Sort the terms
+		self.terms.sort()
 
 		return self
 
@@ -503,6 +509,9 @@ class NormExp(Expression):
 		if self._has_terms() and other._has_terms():
 			raise ValueError("Multiplication of variables/functions with other variables/functions is not defined.");
 
+		self.terms.sort()
+		other.terms.sort()
+
 		self=deepcopy(self)
 		other=deepcopy(other)
 
@@ -519,6 +528,9 @@ class NormExp(Expression):
 
 		other.const*=const
 
+		#Sort the terms
+		other.terms.sort()
+
 		return other
 
 	#Negation operator
@@ -531,10 +543,12 @@ class NormExp(Expression):
 
 	#Returns a collection of all of the variable terms in this expression
 	def _vars(self):
+		self.terms.sort()
 		return [term for term in terms if hasattr(term,'id')]
 
 	#Returns a collection of all of the function terms in this expression
 	def _funcs(self):
+		self.terms.sort()
 		return [term for term in self.terms if hasattr(term,'name') and hasattr(term,'exp_list')]
 
 	def apply_visitor(self,visitor):
