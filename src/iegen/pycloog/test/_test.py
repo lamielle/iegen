@@ -37,4 +37,4 @@ class PYCLooGTestCase(TestCase):
 		stmt2=Statement(dom2,scat2)
 		stmts=(stmt1,stmt2)
 		names=Names(['i','j'],['n'])
-		codegen(stmts,names)
+		print codegen(stmts,names)

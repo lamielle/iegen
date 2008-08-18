@@ -1,17 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <cloog/cloog.h>
 #include <iegen/pycloog/pycloog.h>
 
-void pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_statements,pycloog_names *pycloog_names)
+char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_statements,pycloog_names *pycloog_names,string_allocator_t string_allocator)
 {
    CloogDomainList *cloog_scatter_list;
    CloogProgram *cloog_program;
    CloogOptions *cloog_options;
+   FILE *temp;
+   char *result;
 
    /* Make sure we were given at least one statement to work with */
    if(pycloog_num_statements<=0)
+   {
       fprintf(stderr,"[pyCLooG] No statements given to generate code for!\n");
+      result=pycloog_get_error_result();
+   }
    else
    {
       /* Build the CLooG program structure for the given statments and names */
@@ -26,11 +32,28 @@ void pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_state
       /* Get an options object */
       cloog_options=pycloog_get_options();
 
-      /* Ask cloog to generate a program from the give domain specifications */
+      /* Ask CLooG to generate a program from the give domain specifications */
       cloog_program=cloog_program_generate(cloog_program,cloog_options);
 
-      /* Print the program that was generated */
-      cloog_program_pprint(stdout,cloog_program,cloog_options);
+      /* Get a temporary file for CLooG to write to */
+      temp=NULL;
+      temp=pycloog_get_temp_file();
+      if(NULL==temp)
+      {
+         fprintf(stderr,"[pyCLooG] Unable to obtain a temporary file for writing.\n");
+         result=pycloog_get_error_result();
+      }
+      else
+      {
+         /* Print the program that was generated */
+         cloog_program_pprint(temp,cloog_program,cloog_options);
+
+         /* Get a string (allocated from python) from the text file that CLooG wrote to */
+         result=pycloog_get_pystring_from_file(temp,string_allocator);
+      }
+
+      /* Close the temporary file */
+      pycloog_close_temp_file(temp);
 
       /*
        *  Set the iterator and parameter names to NULL as they were not
@@ -44,6 +67,13 @@ void pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_state
       cloog_program_free(cloog_program); /* This recursively deallocates all substructures as well */
       cloog_domain_list_free(cloog_scatter_list);
    }
+
+   return result;
+}
+
+char* pycloog_get_error_result(void)
+{
+	return "";
 }
 
 CloogProgram* pycloog_get_program(
@@ -113,6 +143,86 @@ CloogOptions* pycloog_get_options()
    cloog_options->name="pyCLooG";
 
    return cloog_options;
+}
+
+FILE* pycloog_get_temp_file(void)
+{
+   return tmpfile();
+}
+
+char* pycloog_get_pystring_from_file(FILE *file,string_allocator_t string_allocator)
+{
+   char *result;
+   off_t size;
+   size_t num_read;
+
+   if(NULL==file)
+   {
+      fprintf(stderr,"[pyCLooG] Unable to obtain a string from a NULL file.\n");
+      result=pycloog_get_error_result();
+   }
+   else
+   {
+      /* Flush the file to make sure all of the pending data has been written to disk */
+      fflush(file);
+
+      /* Get the file size */
+      size=pycloog_get_file_size(fileno(file));
+      if(-1==size)
+      {
+         fprintf(stderr,"[pyCLooG] Unable to determine size of temporary file.\n");
+         result=pycloog_get_error_result();
+      }
+      else
+      {
+         /* Allocate space for the text of the file */
+         result=NULL;
+         result=string_allocator(size+1);
+         if(NULL==result)
+         {
+            fprintf(stderr,"[pyCLooG] Unable to allocate space for file text.\n");
+            result=pycloog_get_error_result();
+         }
+         else
+         {
+            /* Seek to the beginning of the file */
+            if(-1==fseek(file,0,SEEK_SET))
+            {
+               fprintf(stderr,"[pyCLooG] Unable to seek to beginning of temporary file.\n");
+               result=pycloog_get_error_result();
+            }
+            else
+            {
+               num_read=fread(result,sizeof(char),size,file);
+               if(size!=num_read)
+               {
+                  fprintf(stderr,"[pyCLooG] Did not read expected number of characters from temporary file.\n");
+                  result=pycloog_get_error_result();
+               }
+            }
+         }
+      }
+   }
+
+   return result;
+}
+
+off_t pycloog_get_file_size(int fd)
+{
+	struct stat sb;
+
+	if(-1==fstat(fd,&sb))
+	{
+		perror("stat");
+		return -1;
+	}
+
+	return sb.st_size;
+}
+
+void pycloog_close_temp_file(FILE *file)
+{
+   fclose(file);
 }
 
 CloogNames* pycloog_get_names(pycloog_names *pycloog_names)

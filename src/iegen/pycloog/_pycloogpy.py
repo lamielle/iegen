@@ -57,13 +57,22 @@ def _get_ctypes_str_arr(strs):
 		cstrs[i]=strs[i]
 	return cstrs
 
+#Allocator callback function for allocation of strings from C
+def _string_allocator(size):
+	return addressof(c_char_p(' '*size))
+
+#Returns the type of the string_allocator
+def _string_allocator_type():
+	return CFUNCTYPE(c_char_p,c_int)
+
 #Loads the '_pycloog.so' shared object and returns a function pointer
 #to the pycloog_codegen function in that library
 def _get_codegen_func():
 	from os import sep
 	from os.path import dirname
 	pycloog=CDLL(dirname(__file__)+sep+'_pycloog.so')
-	pycloog.pycloog_codegen.argtypes=[POINTER(_PYCLOOG_STATEMENT),c_int,POINTER(_PYCLOOG_NAMES)]
+	pycloog.pycloog_codegen.argtypes=[POINTER(_PYCLOOG_STATEMENT),c_int,POINTER(_PYCLOOG_NAMES),_string_allocator_type()]
+	pycloog.pycloog_codegen.restype=c_char_p
 	return pycloog.pycloog_codegen
 
 #Translates the given collection of Statement classes
@@ -121,7 +130,18 @@ class Names(object):
 #and a Names object and uses CLooG to generate
 #code based on these objects
 def codegen(statements,names):
+	#Convert the parmeters to ctypes
 	statements=_get_pycloog_statements(statements)
-	names=_get_pycloog_names(names)
-	_get_codegen_func()(statements,len(statements),byref(names))
+	num_statements=len(statements)
+	names=byref(_get_pycloog_names(names))
+	string_allocator=_string_allocator_type()(_string_allocator)
+
+	#Get a function pointer to the pycloog_codegen function
+	codegen_func=_get_codegen_func()
+
+	#Call pycloog_codegen
+	code=codegen_func(statements,num_statements,names,string_allocator)
+
+	#Return the generated code and trim off the trailing newline
+	return code[:-1]
 #--------------------------------------

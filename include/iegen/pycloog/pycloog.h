@@ -1,6 +1,7 @@
 #ifndef _PYCLOOG_H_
 #define _PYCLOOG_H_
 
+#include <stdio.h>
 #include <cloog/cloog.h>
 
 /*
@@ -31,15 +32,21 @@ struct pycloog_names
 };
 typedef struct pycloog_names pycloog_names;
 
+typedef char*(*string_allocator_t)(int);
+
 /* PUBLIC INTERFACE: */
 
 /*
  * Generates code using CLooG using the data
  * for the given statements and iterator/parameter names
+ * Returns a string with the code that CLooG generated
  */
-void pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_statements,pycloog_names *pycloog_names);
+char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_statements,pycloog_names *pycloog_names,string_allocator_t string_allocator);
 
 /* PRIVATE INTERFACE: */
+
+/* Returns an empty string */
+char* pycloog_get_error_result(void);
 
 /*
  * Gets a CloogProgram structure filled with data from
@@ -64,6 +71,28 @@ CloogDomainList* pycloog_get_scatter_list(
  * Gets a CloogOptions object
  */
 CloogOptions* pycloog_get_options();
+
+/*
+ * Gets a temporary stdio FILE* object
+ */
+FILE* pycloog_get_temp_file(void);
+
+/*
+ * Reads the text from the given file and returns
+ * a string of that text
+ */
+char* pycloog_get_pystring_from_file(FILE *file,string_allocator_t string_allocator);
+
+/*
+ * Returns the file size of the file associated with the given file descriptor.
+ * Returns -1 if a failure occurs.
+ */
+off_t pycloog_get_file_size(int fd);
+
+/*
+ * Closes the given file
+ */
+void pycloog_close_temp_file(FILE *file);
 
 /*
  * Gets a CloogNames structure filled with the given
