@@ -55,44 +55,19 @@ class DFVisitor(object):
 	def outEquality(self,node):
 		self.defaultOut(node)
 
-	def inIntExp(self,node):
+	def inVarExp(self,node):
 		self.defaultIn(node)
-	def outIntExp(self,node):
-		self.defaultOut(node)
-
-	def inIdExp(self,node):
-		self.defaultIn(node)
-	def outIdExp(self,node):
-		self.defaultOut(node)
-
-	def inUMinusExp(self,node):
-		self.defaultIn(node)
-	def outUMinusExp(self,node):
-		self.defaultOut(node)
-
-	def inMulExp(self,node):
-		self.defaultIn(node)
-	def outMulExp(self,node):
-		self.defaultOut(node)
-
-	def inPlusExp(self,node):
-		self.defaultIn(node)
-	def outPlusExp(self,node):
-		self.defaultOut(node)
-
-	def inMinusExp(self,node):
-		self.defaultIn(node)
-	def outMinusExp(self,node):
-		self.defaultOut(node)
-
-	def inIntMulExp(self,node):
-		self.defaultIn(node)
-	def outIntMulExp(self,node):
+	def outVarExp(self,node):
 		self.defaultOut(node)
 
 	def inFuncExp(self,node):
 		self.defaultIn(node)
 	def outFuncExp(self,node):
+		self.defaultOut(node)
+
+	def inNormExp(self,node):
+		self.defaultIn(node)
+	def outNormExp(self,node):
 		self.defaultOut(node)
 	#------------------------------------
 
@@ -102,26 +77,26 @@ class DFVisitor(object):
 
 	def visitPresSet(self,node):
 		self.inPresSet(node)
-		node._setTuple.apply_visitor(self)
-		node._conjunct.apply_visitor(self)
+		node.set_tuple.apply_visitor(self)
+		node.conjunct.apply_visitor(self)
 		self.outPresSet(node)
 
 	def visitPresSetUnion(self,node):
 		self.inPresSetUnion(node)
-		for set in node._sets:
+		for set in node.sets:
 			set.apply_visitor(self)
 		self.outPresSetUnion(node)
 
 	def visitPresRelation(self,node):
 		self.inPresRelation(node)
-		node._inTuple.apply_visitor(self)
-		node._outTuple.apply_visitor(self)
-		node._conjunct.apply_visitor(self)
+		node.in_tuple.apply_visitor(self)
+		node.out_tuple.apply_visitor(self)
+		node.conjunct.apply_visitor(self)
 		self.outPresRelation(node)
 
 	def visitPresRelationUnion(self,node):
 		self.inPresRelationUnion(node)
-		for relation in node._relations:
+		for relation in node.relations:
 			relation.apply_visitor(self)
 		self.outPresRelationUnion(node)
 
@@ -131,60 +106,33 @@ class DFVisitor(object):
 
 	def visitConjunction(self,node):
 		self.inConjunction(node)
-		for conjunction in node._constraintList:
+		for conjunction in node.constraint_list:
 			conjunction.apply_visitor(self)
 		self.outConjunction(node)
 
 	def visitInequality(self,node):
 		self.inInequality(node)
-		node._exp.apply_visitor(self)
+		node.exp.apply_visitor(self)
 		self.outInequality(node)
 
 	def visitEquality(self,node):
 		self.inEquality(node)
-		node._exp.apply_visitor(self)
+		node.exp.apply_visitor(self)
 		self.outEquality(node)
 
-	def visitIntExp(self,node):
-		self.inIntExp(node)
-		self.outIntExp(node)
-
-	def visitIdExp(self,node):
-		self.inIdExp(node)
-		self.outIdExp(node)
-
-	def visitUMinusExp(self,node):
-		self.inUMinusExp(node)
-		node._exp.apply_visitor(self)
-		self.outUMinusExp(node)
-
-	def visitMulExp(self,node):
-		self.inMulExp(node)
-		node._lhs.apply_visitor(self)
-		node._rhs.apply_visitor(self)
-		self.outMulExp(node)
-
-	def visitPlusExp(self,node):
-		self.inPlusExp(node)
-		node._lhs.apply_visitor(self)
-		node._rhs.apply_visitor(self)
-		self.outPlusExp(node)
-
-	def visitMinusExp(self,node):
-		self.inMinusExp(node)
-		node._lhs.apply_visitor(self)
-		node._rhs.apply_visitor(self)
-		self.outMinusExp(node)
-
-	def visitIntMulExp(self,node):
-		self.inIntMulExp(node)
-		node._int.apply_visitor(self)
-		node._exp.apply_visitor(self)
-		self.outIntMulExp(node)
+	def visitVarExp(self,node):
+		self.inVarExp(node)
+		self.outVarExp(node)
 
 	def visitFuncExp(self,node):
 		self.inFuncExp(node)
-		for exp in node._expList:
+		for exp in node.exp_list:
 			exp.apply_visitor(self)
 		self.outFuncExp(node)
+
+	def visitNormExp(self,node):
+		self.inNormExp(node)
+		for term in node.terms:
+			term.apply_visitor(self)
+		self.outNormExp(node)
 	#-----------------------------------

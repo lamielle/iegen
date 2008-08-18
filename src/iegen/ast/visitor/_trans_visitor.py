@@ -7,21 +7,22 @@ class TransVisitor(DFVisitor):
 		self.params=params
 		self.num_params=len(params)
 
+	#Do nothing by default
 	def defaultIn(self,node):
 		pass
 	def defaultOut(self,node):
 		pass
+
+	def inPresSet(self,node):
+		self.mat=[]
 
 	def inPresRelation(self,node):
 		raise ValueError('This visitor only works on PresSets and PresSetUnions.')
 	def inPresRelationUnion(self,node):
 		raise ValueError('This visitor only works on PresSets and PresSetUnions.')
 
-	def inPresSet(self,node):
-		self.mat=[]
-
 	def inVarTuple(self,node):
-		self.vars=node._idList
+		self.vars=node.id_list
 		self.num_vars=len(self.vars)
 		self.num_cols=1+self.num_vars+self.num_params+1
 
@@ -29,56 +30,32 @@ class TransVisitor(DFVisitor):
 		self.row=[0]*self.num_cols
 		self.row[0]=1
 
-		self.minus=0
-
 	def outInequality(self,node):
 		self.mat.append(self.row)
-		assert 0==self.minus
 
 	def inEquality(self,node):
 		self.row=[0]*self.num_cols
 		self.row[0]=0
 
-		self.minus=0
-
 	def outEquality(self,node):
 		self.mat.append(self.row)
-		assert 0==self.minus
 
-	def inIntExp(self,node):
-#		print 'In IntExp node:',node._val,self.minus%2
-		self.row[-1]= node._val if 0==self.minus%2 else -1*node._val
-
-	def inIdExp(self,node):
-		pass
-#		print 'InIdExp node:',node._id,self.minus%2
-
-		if node._id in self.vars:
-			self.row[self.vars.index(node._id)+1]=1 if 0==self.minus%2 else -1
-		elif node._id in self.params:
-			self.row[self.params.index(node._id)+self.num_vars+1]=1 if 0==self.minus%2 else -1
+	def inVarExp(self,node):
+		#Calculate the position of this variable in the matrix
+		if node.id in self.vars:
+			pos=self.vars.index(node.id)+1
+		elif node.id in self.params:
+			pos=self.params.index(node.id)+self.num_vars+1
 		else:
 			raise ValueError('Existential variable in set.')
 
-	def inMinusExp(self,node):
-		self.minus+=1
-	def outMinusExp(self,node):
-		self.minus-=1
+		#Assign this variable's coefficient to the matrix at the clculated position
+		self.row[pos]=node.coeff
 
-	def inPlusExp(self,node):
-		pass
-#		print 'In PlusExp'
-	def outPlusExp(self,node):
-		pass
-#		print 'Out PlusExp'
+	#Cannot translate sets with functions
+	def inFuncExp(self,node):
+		raise ValueError('Translation of function expressions is not supported.')
 
-#params=['n']
-#v=TransVisitor(params)
-
-#v.visit(PresParser.parse_set('{[i,j]:1<=i && i<=n && 1<=j && j<=n}'))
-
-#print v.mat
-#scat=[[0,1,0,0,0,0]]
-#stmt=Statement(v.mat,scat)
-#names=Names(['i','j'],['n'])
-#codegen([stmt],names)
+	def inNormExp(self,node):
+		#Set the last element in the row to the constant value of the expression
+		self.row[-1]=node.const

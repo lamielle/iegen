@@ -61,7 +61,7 @@ class PresParser(object):
 	def _get_parser(parser_type):
 		from ply import lex,yacc
 		lex.lex(module=PresParser(parser_type))
-		return yacc.yacc(start=parser_type,module=PresParser(parser_type),tabmodule="parsetab_%s"%parser_type)
+		return yacc.yacc(start=parser_type,module=PresParser(parser_type),tabmodule='iegen.parsetab_%s'%parser_type)
 	_get_parser=staticmethod(_get_parser)
 
 	#---------- Lexer methods/members ----------
@@ -234,13 +234,13 @@ class PresParser(object):
 		# (t[1]!=t[3]) = (t[3]>t[1] && t[1]>t[3])
 		#              = (t[3]>=t[1]+1 && t[1]>=t[3]+1)
 		raise Exception('This should be || and not &&!  Need to fix!')
-		t[0]=[Inequality(t[3]-(t[1]+1)),
+		t[0]=[Inequality(t[3]-(t[1]+NormExp([],1))),
 		      Inequality(t[1]-(t[3]+1))]
 
 	def p_constraint_gt(self,t):
 		'''constraint_gt : expression GT expression'''
 		# (t[1] > t[3]) = (t[1] >= t[3]+1) = (t[1]-(t[3]+1) >= 0)
-		t[0]=Inequality(t[1]-(t[3]+1))
+		t[0]=Inequality(t[1]-(t[3]+NormExp([],1)))
 
 	def p_constraint_gte(self,t):
 		'''constraint_gte : expression GTE expression'''
@@ -250,7 +250,7 @@ class PresParser(object):
 	def p_constraint_lt(self,t):
 		'''constraint_lt : expression LT expression'''
 		# (t[1] < t[3]) = (t[3] > t[1]) = (t[3] >= t[1]+1) = (t[3]-(t[1]+1) >= 0)
-		t[0]=Inequality(t[3]-(t[1]+1))
+		t[0]=Inequality(t[3]-(t[1]+NormExp([],1)))
 
 	def p_constraint_lte(self,t):
 		'''constraint_lte : expression LTE expression'''

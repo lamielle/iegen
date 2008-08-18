@@ -5,8 +5,8 @@
 #
 # Grammar for AST
 #
-#    IPresSet -> VarTuple Conjunction    // PresSet
-#             -> PresSet*                // PresSetUnion
+#    PresSet -> VarTuple Conjunction    // PresSet
+#            -> PresSet*                // PresSetUnion
 #
 #    VarTuple -> ID*
 #    Conjunction -> IConstraint*
@@ -25,7 +25,7 @@
 #	A class prefixed with "I" is an interface class.
 #
 # Started by: Michelle Strout 7/22/08
-# Modified by: Alan LaMielle
+# Modified by: Alan LaMielle starting around 7/30/08
 #
 
 from copy import deepcopy
