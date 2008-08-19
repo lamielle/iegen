@@ -39,14 +39,14 @@ Index Arrays
     inter1 = new IndexArray (
         dataspace = INTER1_0,
         isPermutation = false,
-        input_value_bounds = [ (0,n_inter-1) ], 
-        output_value_bounds = (0,N)
+        input_bounds = [ (0,n_inter-1) ], 
+        output_bounds = (0,N)
     )
     inter2 = new IndexArray (
         dataspace = INTER2_0,
         isPermutation = false,
-        input_value_bounds = [ (0,n_inter-1) ], 
-        output_value_bounds = (0,N)
+        input_bounds = [ (0,n_inter-1) ], 
+        output_bounds = (0,N)
     )
 
 Statements
@@ -242,8 +242,8 @@ Generating the composed inspector
                                  [specification from data space in RTRT],
                                  index array,
                     isPermutation = true,
-                    input_value_bounds = [ (same bounds as for data space) ],
-                    output_value_bounds = (same bounds as for data space)
+                    input_bounds = [ (same bounds as for data space) ],
+                    output_bounds = (same bounds as for data space)
                 )
             )
 
@@ -258,8 +258,8 @@ Generating the composed inspector
                 IndexArray result = new IndexArray(
                     data_space = "sigma", X_0.spec, index array,
                     isPermutation = true,
-                    input_value_bounds = [(0,(N-1))],
-                    output_value_bounds = (0,(N-1))
+                    input_bounds = [(0,(N-1))],
+                    output_bounds = (0,(N-1))
                 )
 
             )
@@ -444,8 +444,8 @@ After performing a data reordering, if index arrays that access the reordered da
                                  [rtrt.iter_space],
                                  index array,
                     isPermutation = true,
-                    input_value_bounds = [ (same bounds as for data space) ],
-                    output_value_bounds = (same bounds as for data space)               
+                    input_bounds = [ (same bounds as for data space) ],
+                    output_bounds = (same bounds as for data space)               
                 )
             )
 
@@ -461,8 +461,8 @@ After performing a data reordering, if index arrays that access the reordered da
                 IndexArray result = new IndexArray(
                     data_space = "delta", I_0.spec, index array,
                     isPermutation = true,
-                    input_value_bounds = [(0 .. (n_iter-1))],
-                    output_value_bounds = (0 .. (N-1))
+                    input_bounds = [(0 .. (n_iter-1))],
+                    output_bounds = (0 .. (N-1))
                 )
 
             )

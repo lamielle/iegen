@@ -53,8 +53,8 @@ Need a MapIR specification.
             boolean isPermutation;  // is this index array a permutation?
             
             // boundary can be constant or sym const
-            List<Range> input_value_bounds; 
-            Range   output_value_bounds;
+            List<Set> input_bounds; 
+            Set output_bounds;
         }
     Checking
         - The dimensionality of the input domain should match the dimensionality of the associated index array DataSpace.
