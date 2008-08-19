@@ -5,7 +5,7 @@
 */
 
 #include "ExplicitRelation.h"
-//#include "IAG.h"
+#include "IAG.h"
 #include "util.h"
 
 #define NUM_IN 10
@@ -32,48 +32,40 @@ int main()
     
     ExplicitRelation_dtor(&relptr);
 
-/*    // testing IAG_cpack
-    hg = Hypergraph_ctor();
+    //------- testing code that will be used in IAG_cpack
+    // first construct an explicit relation and fill it
+    // the explicit relation will be passed to IAG_cpack
+    relptr = ExplicitRelation_ctor(1,1);
 
-    // add only some nodes to each hyperedge
-    for (he=0; he<NUM_HE; he++) {
-      for (n=(he)%NUM_NODES; n<NUM_NODES; n+=2) {
-      
-            Hypergraph_ordered_insert_node( hg, he, n );
+    // add only some out vals for each in val
+    for (in=0; in<NUM_IN; in++) {
+      for (out=(in)%NUM_OUT; out<NUM_OUT; out+=2) {
+            ExplicitRelation_in_ordered_insert( relptr, in, out );
         }
     }
     
-    // indicate we are done constructing the hypergraph
-    Hypergraph_finalize(hg);
+    ExplicitRelation_dump(relptr);
     
-    Hypergraph_dump(hg);
+    // Iterate over the integer tuple relations
+    printf("\nTraversing in order of input tuples\n");
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        FOREACH_out_given_in_1d1d(relptr, in, out) {
+            printf("\t[%d] -> [%d]\n", in, out);
+        }
+    }
 
-    int* new2old = (int*)malloc(sizeof(int)*hg->nv);
-    CPackHyper(hg,new2old);
+
+    //----- testing IAG_cpack itself
+    int* new2old 
+        = (int*)malloc(sizeof(int)*ExplicitRelation_getRangeCount(relptr));
+    IAG_cpack(relptr,new2old);
     printf("\nnew2old = ");
-    printArray(new2old,hg->nv);
-    
-    // Iterate over the hyperedges and nodes in each hyperedge
-    int hedge, node;
-    printf("\nTraversing in order of hyperedges\n");
-    FOREACH_hyperedge(hg,hedge) {
-        FOREACH_node_in_hyperedge(hg,hedge,node) {
-            printf("\thedge = %d, node = %d\n", hedge, node);
-        }
-    }
-
-    printf("\nTraversing in order of nodes\n");
-    FOREACH_node(hg,node) {
-        FOREACH_hyperedge_for_node(hg,node,hedge) {
-            printf("\tnode = %d, hedge = %d\n", node, hedge);
-        }
-    }
-
-    Hypergraph_dump(hg);
+    printArray(new2old,ExplicitRelation_getRangeCount(relptr));
 
     free(new2old);
-    Hypergraph_dtor(&hg);
-    */
+    ExplicitRelation_dtor(&relptr);
+
+
     // ok now do somewhat of a stress test of the memory management
     /* MMS, this takes a long time so only do it when MEM_ALLOC_INCREMENT
      * is set low

@@ -2,19 +2,20 @@
 # Simple makefile for building the test driver that unit
 # tests the hypergraph and explicit relation datastructures.
 
-all: test_Hypergraph driver_moldyn_FST_hand test_ExplicitRelation
+all: test_ExplicitRelation #driver_moldyn_FST_hand 
 
 #########
-SRCS_RELATION = ExplicitRelation.c test_ExplicitRelation.c util.c #IAG_cpack.c
+SRCS_RELATION = ExplicitRelation.c test_ExplicitRelation.c util.c IAG_cpack.c
 
 test_ExplicitRelation: ExplicitRelation.h util.h $(SRCS_RELATION)
 	g++ -Wall -g  $(SRCS_RELATION) -o test_ExplicitRelation
 
 #########
-SRCS_HYPER = Hypergraph.c test_Hypergraph.c IAG_cpack.c util.c
-
-test_Hypergraph: Hypergraph.h util.h $(SRCS_HYPER)
-	g++ -Wall -g  $(SRCS_HYPER) -o test_Hypergraph
+# MMS, as of 8/19/08 does not build because IAG_cpack now uses ExplicitRelation
+#SRCS_HYPER = Hypergraph.c test_Hypergraph.c IAG_cpack.c util.c
+#
+#test_Hypergraph: Hypergraph.h util.h $(SRCS_HYPER)
+#	g++ -Wall -g  $(SRCS_HYPER) -o test_Hypergraph
 
 #########
 SRCS = driver_moldyn_FST_hand.c util.c Hypergraph.c IAG_cpack.c IAG_lexmin.c 

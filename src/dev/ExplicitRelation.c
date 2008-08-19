@@ -29,6 +29,7 @@ ExplicitRelation* ExplicitRelation_ctor(int in_tuple_arity,
     self->out_arity = out_tuple_arity;  
     
     self->in_count = 0;
+    self->out_count = 0;
     
     self->in_vals = NULL;
     self->out_index = NULL;
@@ -106,6 +107,9 @@ void ExplicitRelation_in_ordered_insert(ExplicitRelation* self,
     // by the in tuple, so make sure that assumption has not
     // changed.
     assert(self->ordered_by_in);
+    
+    // assuming positive in and out values
+    assert(in_int>=0 && out_int>=0);
 
     // first check whether inserting a new in_int
     // adding one to in_int because they are zero indexed
@@ -135,8 +139,24 @@ void ExplicitRelation_in_ordered_insert(ExplicitRelation* self,
     // insert [in_int] -> [out_int]
     self->out_vals[ self->out_index[in_int+1] ] = out_int;
     self->out_index[in_int+1]++;
+    
+    // if this output tuple numbers id is higher than any we have seen 
+    // then increase the number out
+    if (out_int > (self->out_count -1) ) {
+        self->out_count = out_int+1;
+    }
 
 }
+
+//! Returns the number of unique 1D output tuples seen
+// FIXME: how could we generalize this?
+int ExplicitRelation_getRangeCount( ExplicitRelation* self)
+    { return self->out_count; }
+
+//! Returns number of unique 1D input tuples seen
+// FIXME: again specific to 1D
+int ExplicitRelation_getDomainCount( ExplicitRelation* self)
+    { return self->in_count; }
 
 
 /*----------------------------------------------------------------*//*! 

@@ -97,6 +97,10 @@ typedef struct {
                         // If the same tuple shows up separated in the
                         // insertion order, then it will be counted for 
                         // the number of separations.
+
+    int     out_count;  // Keeps track of how many "unique" output 
+                        // tuples have been inserted.  
+                        // FIXME: this currently works for output_arity=1 only.
     
     int*    in_vals;    // Every in_arity entries represent the values
                         // for an input tuple instance.
@@ -135,6 +139,8 @@ ExplicitRelation* ExplicitRelation_ctor(int in_tuple_arity,
 //! Deallocate all of the memory for the ExplicitRelation.
 void ExplicitRelation_dtor(ExplicitRelation**);
 
+//----------------------- Routines for inserting relations
+
 //! Insertions are ordered lexicographically by in_tuple.
 // FIXME: put this in once have Tuple
 
@@ -142,6 +148,16 @@ void ExplicitRelation_dtor(ExplicitRelation**);
 void ExplicitRelation_in_ordered_insert(ExplicitRelation* relptr, 
                                         int in_int, 
                                         int out_int); 
+
+//----------------------- Informational routines
+
+//! Returns the number of unique 1D output tuples seen
+// FIXME: how could we generalize this?
+int ExplicitRelation_getRangeCount( ExplicitRelation* self);
+
+//! Returns number of unique 1D input tuples seen
+// FIXME: again specific to 1D
+int ExplicitRelation_getDomainCount( ExplicitRelation* self); 
 
 //! Output debug text representation of ExplicitRelation to standard out.
 void ExplicitRelation_dump( ExplicitRelation* self );
@@ -166,9 +182,9 @@ void ExplicitRelation_order_by_in(ExplicitRelation* relptr);
 #define FOREACH_out_given_in_1d1d(relptr, in_int, out_int) \
     int _FE_iter;  \
     for (_FE_iter=(relptr)->out_index[(in_int)],    \
-            node=(relptr)->out_vals[_FE_iter];      \
+            out_int=(relptr)->out_vals[_FE_iter];      \
          _FE_iter<(relptr)->out_index[(in_int)+1];  \
-         _FE_iter++,node=(relptr)->out_vals[_FE_iter]) 
+         _FE_iter++,out_int=(relptr)->out_vals[_FE_iter]) 
         
 #endif
 

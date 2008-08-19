@@ -7,63 +7,70 @@
 
 */
 
-#include "util.h"
-#include "Hypergraph.h"
+#include "IAG.h"
 
+void IAG_cpack(ExplicitRelation* relptr, int* old2new)
 /*----------------------------------------------------------------*//*! 
-    \short Creates permutation of nodes in hypergraph based on hyperedge order.
+    \brief Creates permutation of explicit relation's range 
+           (set of output tuple values) based on the order they appear
+           with the sorted input tuple values.
 
-    \param hg       Pointer to the hypergraph.
+    \param relptr   Pointer to the explicit relation.
     \param old2new  Maps old index to new index.
 
     It is assumed that old2new points to an array of integers with
-    one integer per node in the hypergraph.  This function will fill
-    the old2new array with a mapping of old node to new node.  The mapping
-    will be a permutation. 
+    one integer per unique output tuple in the explicit relation.  
+    This function will fill the old2new array with a mapping of old 
+    output tuple to new output tuple. 
+    // FIXME: old2new needs to be generalized to an explicit relation?
+    // or we need to assert if the explicit relation does not have 1D-to-1D
+    // arity.  How will the results of this function be used?
+    // We might be able to make the 1D-to-1D assertion, but still 
+    // represent old2new with an ExplicitRelation.
+    The mapping will be a permutation. 
     Another way of thinking about it is that at index 0 in old2new there
-    will be the new id for what was previously node 0.  
+    will be the new id for what was previously output tuple value 0.  
 
-    \author Kevin Depue, edited significantly by Michelle Strout 6/2008
+    \author Michelle Strout 8/19/08
 *//*----------------------------------------------------------------*/
-void CPackHyper(Hypergraph* hg, int* old2new)
 {
     assert(old2new!=NULL);
-    assert(hg!=NULL);
+    assert(relptr!=NULL);
 
-    int  hedge, count, index;
+    int  in, count, out;
     bool *taken;
 
-    // number of nodes in the hypergraph
-    int nnodes = hg->nv;
+    // number of unique output tuples in relation
+    int out_count = ExplicitRelation_getRangeCount(relptr);
         
-    MALLOC(taken, bool, nnodes);
+    MALLOC(taken, bool, out_count);
     
-    for (index = 0; index < nnodes; index++) {
-            taken[index] = false;
+    for (out = 0; out < out_count; out++) {
+            taken[out] = false;
     }
             
-    // reorder nodes on a first-touch basis
+    // reorder out tuples on a first-touch basis
     count = 0;
-    FOREACH_hyperedge(hg,hedge) {
-        FOREACH_node_in_hyperedge(hg,hedge,index) {
-            if (!taken[index]) {
-                old2new[index] = count;
-                taken[index]   = true;
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        FOREACH_out_given_in_1d1d(relptr, in, out) {
+            if (!taken[out]) {
+                old2new[out] = count;
+                taken[out]   = true;
                 count++;
             }
         }
     }
         
     // handle nodes that are never touched, if any 
-    if (count < nnodes) {
-        for (index = 0; index < nnodes; index++) {
-            if (taken[index] == false) {
-                old2new[index] = count;
+    if (count < out_count) {
+        for (out = 0; out < out_count; out++) {
+            if (taken[out] == false) {
+                old2new[out] = count;
                 count++;
             }
         }
     }
         
-    FREE(taken,bool,nnodes);
+    FREE(taken,bool,out_count);
 }
 

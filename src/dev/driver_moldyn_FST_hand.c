@@ -157,7 +157,7 @@ int main()
     // call the index array generator to create reordering function
     int *sigma;
     MALLOC(sigma,int,NUM_NODES);
-    CPackHyper( A_I0_to_X0, sigma );
+    IAG_cpack( A_I0_to_X0, sigma );
 
     if (debug) {
         printf("\nAfter call to CPackHyper, sigma = ");
