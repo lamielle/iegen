@@ -1,24 +1,24 @@
-/* Relation.h */
+/* ExplicitRelation.h */
 /**********************************************************************//*!
  \file
 
  \authors Michelle Strout
 
- The Relation data structure is for creating an explicit representation
+ The ExplicitRelation data structure is for creating an explicit representation
  of integer tuple relations at runtime.
  
- To create a Relation, call the constructor
+ To create a ExplicitRelation, call the constructor
  
-    relptr = Relation_ctor(in_tuple_arity, out_tuple_arity);
+    relptr = ExplicitRelation_ctor(in_tuple_arity, out_tuple_arity);
 
  and then add tuple relations by calling one of the following:
  
     // insert entries into a relation
-    Relation_insert(relptr, in_tuple, out_tuple); 
+    ExplicitRelation_insert(relptr, in_tuple, out_tuple); 
     // insertions are ordered lexicographically by in_tuple
-    Relation_in_ordered_insert(relptr, in_tuple, out_tuple); 
+    ExplicitRelation_in_ordered_insert(relptr, in_tuple, out_tuple); 
     // insertions are ordered lexicographically by in_tuple concat out_tuple
-    Relation_ordered_insert(relptr, in_tuple, out_tuple); 
+    ExplicitRelation_ordered_insert(relptr, in_tuple, out_tuple); 
         
  If the in and out tuple arities are both one, then the in and out tuples can just be single integers.  Otherwise, the in and out tuples can be created with a call to the tuple function.
  
@@ -33,28 +33,28 @@
 
  Before accessing the values in a relation, it is possible to indicate how
  the entries should be ordered.
-    Relation_order_by_in(relptr);
-    Relation_order_by_out(relptr);   // is this possible?
-    Relation_order_by_in_out(relptr);
-    Relation_order_by_out_in(relptr);
+    ExplicitRelation_order_by_in(relptr);
+    ExplicitRelation_order_by_out(relptr);   // is this possible?
+    ExplicitRelation_order_by_in_out(relptr);
+    ExplicitRelation_order_by_out_in(relptr);
    
  The following macros enable iteration over the relation.  Because
  these are implemented as macros (for efficiency) instead of functions, 
  the special treatment of 1D-to-1D arity relations is exposed.
  
     // iterate over an already constructed explicit relation
-    FOREACH_in_tuple(relation, in_tuple) {
-        FOREACH_out_given_in(relation, in_tuple, out_tuple) {
+    FOREACH_in_tuple(relptr, in_tuple) {
+        FOREACH_out_given_in(relptr, in_tuple, out_tuple) {
 
     FOREACH_out_tuple(relation, out_tuple) {
-        FOREACH_in_given_out(relation, out_tuple, in_tuple) {
+        FOREACH_in_given_out(relptr, out_tuple, in_tuple) {
 
     // special version of iterators for 1D-to-1D relations
-    FOREACH_in_tuple_1d1d(relation, in_int) {
-        FOREACH_out_given_in_1d1d(relation, in_int, out_int) {
+    FOREACH_in_tuple_1d1d(relptr, in_int) {
+        FOREACH_out_given_in_1d1d(reptr, in_int, out_int) {
         
-    FOREACH_out_tuple_1d1d(relation, out_int) {
-        FOREACH_in_given_out_1d1d(relation, out_int, in_int) {
+    FOREACH_out_tuple_1d1d(relptr, out_int) {
+        FOREACH_in_given_out_1d1d(relptr, out_int, in_int) {
      
 
  Copyright ((c)) 2008, Colorado State University
@@ -68,8 +68,8 @@
 #include <assert.h>
 #include "util.h"
 
-#ifndef _Relation_H
-#define _Relation_H
+#ifndef _ExplicitRelation_H
+#define _ExplicitRelation_H
 
 // assuming one page is 4K or less, going to create more space for array
 // in increments of 4K, which is 1024 integers.
@@ -78,7 +78,7 @@
 //#define MEM_ALLOC_INCREMENT 120
 
 /* ////////////////////////////////////////////////////////////////////
-// Relation Definition
+// ExplicitRelation Definition
 // 
 //////////////////////////////////////////////////////////////////// */
 typedef struct {
@@ -110,40 +110,57 @@ typedef struct {
     int*    out_index;  // Indices into the out_vals array.
     int*    out_vals;   // Output tuple values.
     
-} Relation;
+    //----- order management -----------------------------------------
+    // Keeps track of how the integer tuples have been inserted.
+    bool    ordered_by_in;
+    bool    ordered_by_out; // FIXME: possible?
+    bool    ordered_by_in_out;
+    
+    //----- memory management -----------------------------------------
+	// Need to keep track of the number of entries in each of the current
+	// array allocations.
+	// Needed because size of hypergraph is not known apriori.
+    int     in_vals_size;     // number of entries in current allocation
+    int     out_index_size;   // number of entries in current allocation
+    int     out_vals_size;    // number of entries in current allocation
+    
+} ExplicitRelation;
 
 // function prototypes
 
-//! Construct an empty Relation by specifying arity for in and out tuples.
-Relation* Relation_ctor(int in_tuple_arity, int out_tuple_arity);
+//! Construct an empty ExplicitRelation by specifying arity for in and out tuples.
+ExplicitRelation* ExplicitRelation_ctor(int in_tuple_arity, 
+                                        int out_tuple_arity);
 
-//! Deallocate all of the memory for the Relation.
-void Relation_dtor(Relation**);
+//! Deallocate all of the memory for the ExplicitRelation.
+void ExplicitRelation_dtor(ExplicitRelation**);
 
 //! Insertions are ordered lexicographically by in_tuple.
 // FIXME: put this in once have Tuple
 
 //! Insertion for special 1D-to-1D arity relations.  Ordered by in_int.
-Relation_in_ordered_insert(Relation* relptr, int in_int, int out_int); 
+void ExplicitRelation_in_ordered_insert(ExplicitRelation* relptr, 
+                                        int in_int, 
+                                        int out_int); 
 
-//! Output debug text representation of Relation to standard out.
-void Relation_dump( Relation* self );
+//! Output debug text representation of ExplicitRelation to standard out.
+void ExplicitRelation_dump( ExplicitRelation* self );
 
-//----------------------- Setting up Relation for iteration
+//----------------------- Setting up ExplicitRelation for iteration
 
 //! Insure that the integer tuple relations are sorted by the input tuples.
-Relation_order_by_in(relptr);
+void ExplicitRelation_order_by_in(ExplicitRelation* relptr);
 
 //----------------------- Macros for iterating over relations
 
 //! Iterate over the special 1D-to-1D arity relations.
-//! \param relptr   Pointer to a Relation.
+//! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   Variable in which to store the input tuple single entry.
 #define FOREACH_in_tuple_1d1d(relptr, in_int) \
     for ((in_int)=0; (in_int)<(relptr)->in_count; (in_int)++) 
 
 //! Iterate over output ints given input ints for 1D-to-1D arity relations.
-//! \param relptr   Pointer to a Relation.
+//! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   input tuple value
 //! \param out_int  Variable in which to store the output tuple value.
 #define FOREACH_out_given_in_1d1d(relptr, in_int, out_int) \
