@@ -14,6 +14,7 @@
 #
 # MMS 7/21/08
 #
+# AML 8/13/2008: Modified to use rewritten expressions and their operators
 
 from iegen.ast import *
 import types
