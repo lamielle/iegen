@@ -1,15 +1,19 @@
 from ctypes import *
 
 #---------- Private Interface ----------
+#Defines a ctypes structure matching the pycloog_domain
+#structure found in pycloog.h
+class _PYCLOOG_DOMAIN(Structure):
+	_fields_=[('domain',POINTER(POINTER(c_int))),
+	          ('num_rows',c_int),
+	          ('num_cols',c_int)]
+
 #Defines a ctypes structure matching the pycloog_statement
 #structure found in pycloog.h
 class _PYCLOOG_STATEMENT(Structure):
-	_fields_=[('domain',POINTER(POINTER(c_int))),
-	          ('domain_num_rows',c_int),
-	          ('domain_num_cols',c_int),
-	          ('scatter',POINTER(POINTER(c_int))),
-	          ('scatter_num_rows',c_int),
-	          ('scatter_num_cols',c_int)]
+	_fields_=[('domains',POINTER(_PYCLOOG_DOMAIN)),
+	          ('num_domains',c_int),
+	          ('scatter',_PYCLOOG_DOMAIN)]
 
 #Defines a ctypes structure matching the pycloog_names
 #structure found in pycloog.h
@@ -33,21 +37,6 @@ def _row_type(num_cols):
 #The size of the array is equal to the num_strings
 def _str_arr_type(num_strings):
 	return c_char_p*num_strings
-
-#Converts the given two dimensional array (mat)
-#To a ctypes two dimainsional integer array
-#NOTE: This function assumes all rows have
-#the same length (mat is not a jagged array)
-def _get_ctypes_mat(mat):
-	num_rows=len(mat)
-	num_cols=len(mat[0])
-	cmat=_mat_type(num_rows)()
-
-	for row in xrange(num_rows):
-		cmat[row]=_row_type(num_cols)()
-		for col in xrange(num_cols):
-			cmat[row][col]=c_int(mat[row][col])
-	return cmat
 
 #Gets an array of char* based on the given collection of strings
 def _get_ctypes_str_arr(strs):
@@ -75,23 +64,51 @@ def _get_codegen_func():
 	pycloog.pycloog_codegen.restype=c_char_p
 	return pycloog.pycloog_codegen
 
+#Converts the given two dimensional array (mat)
+#to a ctypes two diminsional integer array
+#contained in a _PYCLOOG_DOMAIN structure
+#NOTE: This function assumes all rows have
+#the same length (mat is not a jagged array)
+def _get_pycloog_domain(mat):
+	domain=_PYCLOOG_DOMAIN()
+
+	#Set the dimensions of the domain
+	domain.num_rows=len(mat)
+	domain.num_cols=len(mat[0])
+
+	#Create a ctypes two-dimensional array
+	cmat=_mat_type(domain.num_rows)()
+
+	#Copy the data from the given two-dimensional array to the ctypes two-dimensional array
+	for row in xrange(domain.num_rows):
+		cmat[row]=_row_type(domain.num_cols)()
+		for col in xrange(domain.num_cols):
+			cmat[row][col]=c_int(mat[row][col])
+
+	#Set the new domain
+	domain.domain=cmat
+
+	return domain
+
 #Translates the given collection of Statement classes
 #to a ctypes array of PYCLOOG_STATEMENT structures
 def _get_pycloog_statements(statements):
-	new_statements=(_PYCLOOG_STATEMENT*len(statements))()
-	for i in xrange(len(statements)):
+	num_statements=len(statements)
+	new_statements=(_PYCLOOG_STATEMENT*num_statements)()
+	for s in xrange(num_statements):
 		#XXX: This may not be necessary, once finished check
-		new_statements[i]=_PYCLOOG_STATEMENT()
+		new_statements[s]=_PYCLOOG_STATEMENT()
 
 		#Set the domain related fields
-		new_statements[i].domain=_get_ctypes_mat(statements[i].domain)
-		new_statements[i].domain_num_rows=len(statements[i].domain)
-		new_statements[i].domain_num_cols=len(statements[i].domain[0])
+		num_domains=len(statements[s].domains)
+		new_domains=(_PYCLOOG_DOMAIN*num_domains)()
+		for d in xrange(num_domains):
+			new_domains[d]=_get_pycloog_domain(statements[s].domains[d])
+		new_statements[s].domains=new_domains
+		new_statements[s].num_domains=num_domains
 
 		#Set the scattering function related fields
-		new_statements[i].scatter=_get_ctypes_mat(statements[i].scatter)
-		new_statements[i].scatter_num_rows=len(statements[i].scatter)
-		new_statements[i].scatter_num_cols=len(statements[i].scatter[0])
+		new_statements[s].scatter=_get_pycloog_domain(statements[s].scatter)
 
 	return new_statements
 
@@ -107,13 +124,13 @@ def _get_pycloog_names(names):
 
 #---------- Public Interface ----------
 #Class representing a single statement:
-#Each statement has an associated iteration domain
+#Each statement has an associated collection of iteration domains
 #and a scattering function
 class Statement(object):
-	__slots__=('domain','scatter')
+	__slots__=('domains','scatter')
 
-	def __init__(self,domain,scatter):
-		self.domain=domain
+	def __init__(self,domains,scatter):
+		self.domains=domains
 		self.scatter=scatter
 
 #Class containing a collection of iterator names

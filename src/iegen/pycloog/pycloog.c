@@ -316,7 +316,7 @@ CloogLoop* pycloog_get_loop_from_statement(
 
    /* Define this statement's loop structure */
    cloog_loop=cloog_loop_malloc();
-   cloog_loop->domain=pycloog_get_domain(pycloog_statement->domain,pycloog_statement->domain_num_rows,pycloog_statement->domain_num_cols);
+   cloog_loop->domain=pycloog_get_unioned_domains(pycloog_statement->domains,pycloog_statement->num_domains);
    cloog_loop->stride=1;
    cloog_loop->block=cloog_block;
    cloog_loop->inner=NULL;
@@ -325,7 +325,28 @@ CloogLoop* pycloog_get_loop_from_statement(
    return cloog_loop;
 }
 
-CloogDomain* pycloog_get_domain(int **domain,int num_rows,int num_cols)
+CloogDomain* pycloog_get_unioned_domains(pycloog_domain *domains,int num_domains)
+{
+   CloogDomain *unioned_domains,*curr_domain,*temp_domain;
+   int curr_domain_pos;
+
+   unioned_domains=pycloog_get_domain(&domains[0]);
+   if(num_domains>1)
+   {
+      for(curr_domain_pos=1;curr_domain_pos<num_domains;curr_domain_pos++)
+      {
+         curr_domain=pycloog_get_domain(&domains[curr_domain_pos]);
+         temp_domain=unioned_domains;
+         unioned_domains=cloog_domain_union(temp_domain,curr_domain);
+         cloog_domain_free(curr_domain);
+         cloog_domain_free(temp_domain);
+      }
+   }
+
+   return unioned_domains;
+}
+
+CloogDomain* pycloog_get_domain(pycloog_domain *domain)
 {
    CloogMatrix *cloog_matrix;
    CloogDomain *cloog_domain;
@@ -333,7 +354,7 @@ CloogDomain* pycloog_get_domain(int **domain,int num_rows,int num_cols)
    int row,col;
 
    /* Allocate a CLooG matrix structure */
-   cloog_matrix=cloog_matrix_alloc(num_rows,num_cols);
+   cloog_matrix=cloog_matrix_alloc(domain->num_rows,domain->num_cols);
 
    /* Get the pointer to the matricies' data */
    p=cloog_matrix->p;
@@ -342,11 +363,11 @@ CloogDomain* pycloog_get_domain(int **domain,int num_rows,int num_cols)
     * Copy the data from the given two dimensional array to
     * the allocated matrix
     */
-   for(row=0;row<num_rows;row++)
+   for(row=0;row<domain->num_rows;row++)
    {
-      for(col=0;col<num_cols;col++)
+      for(col=0;col<domain->num_cols;col++)
       {
-         p[row][col]=domain[row][col];
+         p[row][col]=domain->domain[row][col];
       }
    }
 
@@ -370,7 +391,7 @@ CloogDomainList* pycloog_get_domain_list(pycloog_statement *pycloog_statement)
     */
    cloog_domain_list=(CloogDomainList*)malloc(sizeof(CloogDomainList));
 
-   cloog_domain_list->domain=pycloog_get_domain(pycloog_statement->scatter,pycloog_statement->scatter_num_rows,pycloog_statement->scatter_num_cols);
+   cloog_domain_list->domain=pycloog_get_domain(&pycloog_statement->scatter);
    cloog_domain_list->next=NULL;
 
    return cloog_domain_list;

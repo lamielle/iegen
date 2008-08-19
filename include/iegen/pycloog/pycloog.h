@@ -5,20 +5,30 @@
 #include <cloog/cloog.h>
 
 /*
+ * Contains data for a two-dimensional domain:
+ *  -The domain data itself
+ *  -Number of rows for the domain
+ *  -Number of cols for the domain
+ */
+struct pycloog_domain
+{
+   int **domain;
+   int num_rows;
+   int num_cols;
+};
+typedef struct pycloog_domain pycloog_domain;
+
+/*
  * Contains all data for a single statement:
- *   -Domain of the statement
- *   -Number of rows/cols for the domain
- *   -Scattering function for the statement
- *   -Number of rows/cols for the scattering function
+ *  -Collection of domains for the statement
+ *  -Number of domains for the statement
+ *  -Scattering function for the statement
  */
 struct pycloog_statement
 {
-   int **domain;
-   int domain_num_rows;
-   int domain_num_cols;
-   int **scatter;
-   int scatter_num_rows;
-   int scatter_num_cols;
+   pycloog_domain *domains;
+   int num_domains;
+   pycloog_domain scatter;
 };
 typedef struct pycloog_statement pycloog_statement;
 
@@ -127,10 +137,16 @@ CloogLoop* pycloog_get_loop_from_statement(
    int pycloog_statement_num);
 
 /*
+ * Gets a CloogDomain structure that is the union of
+ * the given collection of domains
+ */
+CloogDomain* pycloog_get_unioned_domains(pycloog_domain *domains,int num_domains);
+
+/*
  * Gets a CloogDomain structure
  * with data from the given two dimensional array.
  */
-CloogDomain* pycloog_get_domain(int **domain,int num_rows,int num_cols);
+CloogDomain* pycloog_get_domain(pycloog_domain *domain);
 
 /*
  * Gets a CloogDomainList with the domain
