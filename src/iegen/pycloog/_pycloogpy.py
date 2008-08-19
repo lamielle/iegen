@@ -13,7 +13,7 @@ class _PYCLOOG_DOMAIN(Structure):
 class _PYCLOOG_STATEMENT(Structure):
 	_fields_=[('domains',POINTER(_PYCLOOG_DOMAIN)),
 	          ('num_domains',c_int),
-	          ('scatter',_PYCLOOG_DOMAIN)]
+	          ('scatter',POINTER(_PYCLOOG_DOMAIN))]
 
 #Defines a ctypes structure matching the pycloog_names
 #structure found in pycloog.h
@@ -108,7 +108,10 @@ def _get_pycloog_statements(statements):
 		new_statements[s].num_domains=num_domains
 
 		#Set the scattering function related fields
-		new_statements[s].scatter=_get_pycloog_domain(statements[s].scatter)
+		if None==statements[s].scatter:
+			new_statements[s].scatter=POINTER(_PYCLOOG_DOMAIN)()
+		else:
+			new_statements[s].scatter=pointer(_get_pycloog_domain(statements[s].scatter))
 
 	return new_statements
 

@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <cloog/cloog.h>
 #include <iegen/pycloog/pycloog.h>
 
 char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_statements,pycloog_names *pycloog_names,string_allocator_t string_allocator)
 {
+   bool do_scatter;
    CloogDomainList *cloog_scatter_list;
    CloogProgram *cloog_program;
    CloogOptions *cloog_options;
@@ -20,14 +22,28 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
    }
    else
    {
+      printf("Determining if we should do scattering...\n");
+      /* Determine if we are to do any scattering */
+      do_scatter=(pycloog_statements[0].scatter!=NULL);
+      if(do_scatter)
+         printf("We should scatter %p\n",pycloog_statements[0].scatter);
+      else
+         printf("We should not scatter\n");
+
       /* Build the CLooG program structure for the given statments and names */
       cloog_program=pycloog_get_program(pycloog_statements,pycloog_num_statements,pycloog_names);
 
-      /* Get a list of scattering functions */
-      cloog_scatter_list=pycloog_get_scatter_list(pycloog_statements,pycloog_num_statements,pycloog_names);
+      if(do_scatter)
+      {
+         /* Get a list of scattering functions */
+         cloog_scatter_list=pycloog_get_scatter_list(pycloog_statements,pycloog_num_statements,pycloog_names);
 
-      /* Apply the scattering functions */
-      pycloog_scatter(cloog_program,cloog_scatter_list);
+         /* Apply the scattering functions */
+         pycloog_scatter(cloog_program,cloog_scatter_list);
+
+         /* Free the scattering list */
+         cloog_domain_list_free(cloog_scatter_list);
+      }
 
       /* Get an options object */
       cloog_options=pycloog_get_options();
@@ -65,7 +81,6 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
       /* Free the allocated structures */
       cloog_options_free(cloog_options);
       cloog_program_free(cloog_program); /* This recursively deallocates all substructures as well */
-      cloog_domain_list_free(cloog_scatter_list);
    }
 
    return result;
@@ -73,7 +88,7 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
 
 char* pycloog_get_error_result(void)
 {
-	return "";
+   return "";
 }
 
 CloogProgram* pycloog_get_program(
@@ -209,15 +224,15 @@ char* pycloog_get_pystring_from_file(FILE *file,string_allocator_t string_alloca
 
 off_t pycloog_get_file_size(int fd)
 {
-	struct stat sb;
+   struct stat sb;
 
-	if(-1==fstat(fd,&sb))
-	{
-		perror("stat");
-		return -1;
-	}
+   if(-1==fstat(fd,&sb))
+   {
+      perror("stat");
+      return -1;
+   }
 
-	return sb.st_size;
+   return sb.st_size;
 }
 
 void pycloog_close_temp_file(FILE *file)
@@ -391,7 +406,7 @@ CloogDomainList* pycloog_get_domain_list(pycloog_statement *pycloog_statement)
     */
    cloog_domain_list=(CloogDomainList*)malloc(sizeof(CloogDomainList));
 
-   cloog_domain_list->domain=pycloog_get_domain(&pycloog_statement->scatter);
+   cloog_domain_list->domain=pycloog_get_domain(pycloog_statement->scatter);
    cloog_domain_list->next=NULL;
 
    return cloog_domain_list;

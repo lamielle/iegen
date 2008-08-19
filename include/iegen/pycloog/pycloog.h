@@ -28,7 +28,7 @@ struct pycloog_statement
 {
    pycloog_domain *domains;
    int num_domains;
-   pycloog_domain scatter;
+   pycloog_domain *scatter;
 };
 typedef struct pycloog_statement pycloog_statement;
 
@@ -50,6 +50,13 @@ typedef char*(*string_allocator_t)(int);
  * Generates code using CLooG using the data
  * for the given statements and iterator/parameter names
  * Returns a string with the code that CLooG generated
+ * A note on scattering functions:
+ * If the first statement's scattering function is NULL,
+ * it is assumed that no scattering is desired.
+ * If the first statement's scattering function is not NULL,
+ * it is assumed that each statement will have one.
+ * You can either provide a scattering function for each statement,
+ * or not provide any at all.
  */
 char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_statements,pycloog_names *pycloog_names,string_allocator_t string_allocator);
 
