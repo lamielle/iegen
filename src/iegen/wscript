@@ -14,7 +14,6 @@ def set_options(opt):
 	opt.sub_options('hypergraph')
 	opt.sub_options('iag')
 	opt.sub_options('test')
-	opt.sub_options('specs')
 
 def configure(conf):
 	import Params,os
@@ -45,7 +44,6 @@ def configure(conf):
 	conf.sub_config('hypergraph')
 	conf.sub_config('iag')
 	conf.sub_config('test')
-	conf.sub_config('specs')
 
 def build(bld):
 
@@ -65,4 +63,3 @@ def build(bld):
 	bld.add_subdirs('hypergraph')
 	bld.add_subdirs('iag')
 	bld.add_subdirs('test')
-	bld.add_subdirs('specs')
