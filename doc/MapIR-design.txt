@@ -9,15 +9,14 @@ Need a MapIR specification.
             map<String,MapIRSet>
 
         class MapIR {
-            IterSpace getIterSpace(String);
-            void putIterSpace(String,IterSpace);
 
-            DataSpace getDataSpace(String);
+            Map<String,Symbolic> symbolics;
 
-            IndexArray getIndexArray(String);
+            Map<String,DataSpace> data_spaces;
 
-            Symbolic getSymbolic(String);
+            List<IndexArray> index_arrays;
 
+            List<Statement> statements;
         }
 
         Questions
