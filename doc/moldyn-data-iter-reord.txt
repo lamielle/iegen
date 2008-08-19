@@ -145,7 +145,7 @@ Generating the composed inspector
                 name = "A_I_sub_to_TARGET",
                 iter_space = iter_sub_space_relation ( I_0 ),
                 data_space = DataPermuteRTRT.target_data_space,
-                iterspace_to_data =
+                iter_to_data =
                     Union_{over all statements S}
                         Union_{over each access relation A to DataPermuteRTRT.target_data_space}
                             inverse (DataPermuteRTRT.iter_sub_space_relation compose (scatter_S compose (inverse A)))
@@ -155,11 +155,11 @@ Generating the composed inspector
                 name = "A_I_0_sub_to_X_0",
                 iter_space = { [ii] : 0 <= ii < n_inter  },
                 data_space = X0,
-                iterspace_to_data = { [a] -> [ k ] : k=inter1(a) }
+                iter_to_data = { [a] -> [ k ] : k=inter1(a) }
                                     union { [a] -> [ k ] : k=inter2(a) }
           )
 
-          How we calculated iterspace_to_data:
+          How we calculated iter_to_data:
             inverse ({ [ ii, j ] -> [ ii ] } compose (scatter_{S1} compose (inverse a2)))
             union
             inverse ({ [ ii, j ] -> [ ii ] } compose (scatter_{S1} compose (inverse a3)))
@@ -397,7 +397,7 @@ After performing a data reordering, if index arrays that access the reordered da
                 name = "A_I_0_to_X_1"
                 iter_space = { [ii] : 0 <= ii < n_inter  }
                 data_space = X_1
-                iterspace_to_data := { [ii] -> [ sigma(inter1(ii)) ] }
+                iter_to_data := { [ii] -> [ sigma(inter1(ii)) ] }
                                      union { [ii] -> [ sigma(inter2(ii)) ] }
 
     b) generate code that explicitly creates hypergraph generate code that explicitly creates hypergraph representation of access relation at runtime. (same as 1b above)

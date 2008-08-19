@@ -66,7 +66,7 @@ Need a MapIR specification.
             String name;            // need a name so can name hypergraph
             IterSpace iter_space;
             DataSpace data_space;
-            PresRelation iterspace_to_data;
+            PresRelation iter_to_data;
         }
 
     Checking

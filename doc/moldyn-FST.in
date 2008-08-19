@@ -25,8 +25,8 @@ iss_relation := { [ ii, 1 ] -> [ ii ] };
 
 # access relation to traverse
 iter_space := iss_relation ( I_0 );
-iterspace_to_data := inverse (iss_relation compose (inverse A_I0_to_X0));
-iterspace_to_data;
+iter_to_data := inverse (iss_relation compose (inverse A_I0_to_X0));
+iter_to_data;
 
 # loop that traverses [artt.iter_space]
 codegen iter_space;

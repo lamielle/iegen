@@ -321,7 +321,7 @@ scatter_{S2} = {[s,j] -> [s,v,j,w] : v=2 && w=1}
 iter_to_sub_space, itss = {[s,d,e,f] -> [e] : d=2 }
 
 Calculating access relation for inspector to inspect as in (1a) with x as the target data space.
-    iterspace_to_data = 
+    iter_to_data = 
         inverse (itss compose (scatter_{S1} compose inverse A1))
         union inverse (itss compose (scatter_{S2} compose inverse A2))
         = inverse (itss compose {[k] -> [s,v,i,w] : k=a(i) && v=1 && w=1})

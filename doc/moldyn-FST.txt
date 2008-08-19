@@ -165,7 +165,7 @@ Generating the composed inspector
                     iter_space = iter_sub_space_relation (     
                                     [access_relation.iter_space] )
                     data_space = access_relation.data_space
-                    iterspace_to_data =  inverse 
+                    iter_to_data =  inverse 
                     ( iter_sub_space_relation compose (inverse access_relation))
                 
                 
@@ -174,7 +174,7 @@ Generating the composed inspector
                     name = "A_I0_to_X0"
                     iter_space = { [ii] : 0 <= ii < n_inter  }
                     data_space = X0                    
-                    iterspace_to_data := { [ii] -> [ inter1(ii) ] } 
+                    iter_to_data := { [ii] -> [ inter1(ii) ] } 
                                        union { [ii] -> [ inter2(ii) ] }
                                  
                 
@@ -370,7 +370,7 @@ Generating the composed inspector
                     name = "A_I1_to_X1"
                     iter_space = { [ii] : 0 <= ii < n_inter  }
                     data_space = X1                    
-                    iterspace_to_data := { [ii] -> [ sigma(inter1(ii)) ] } 
+                    iter_to_data := { [ii] -> [ sigma(inter1(ii)) ] } 
                                        union { [ii] -> [ sigma(inter2(ii)) ] }
                                  
                 
