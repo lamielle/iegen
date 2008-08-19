@@ -46,7 +46,7 @@ INSTALLING:
 
 -3) ./waf install
 
--4) ./test (Optional)
+-4) ./run_tests (Optional)
 
 -Further building/installation related notes:
 
