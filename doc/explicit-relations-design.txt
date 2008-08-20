@@ -1,0 +1,147 @@
+Explicit Relations
+------------------
+started 08/15/08
+
+Explicit relations that need to be constructed
+        1) access relation that will be input to data and loop permutations
+            iterspace_to_data = { [a] -> [ k ] : k=inter1(a) }
+                                union { [a] -> [ k ] : k=inter2(a) }
+            iterspace_to_data := { [ii] -> [ sigma(inter1(ii)) ] }
+                                union { [ii] -> [ sigma(inter2(ii)) ] }
+            bounds for the domain are currently kept separate
+            
+            -these are essentially many-to-many
+            -currently considering generating code that explicitly builds hypergraphs.  Could that code be simplified?  No because that code would still be constructing the explicit relations, not using them.
+            
+        2) relations used to create new index arrays due to collapsing index arrays
+            { [ii] -> [k] : k=sigma(inter1(ii)) && bounds for inter1 input }
+            { [ii] -> [k] : k=sigma(inter2(ii)) && bounds for inter2 input }
+            
+            These are one-to-one.
+            
+        3) turning transformed access relations into executor code?  I think this is related to the code generation required to generate code that computes the explicit relations
+        
+        4) data deps, which are many-to-many relations, but are accessed as one-to-many or many-to-one, probably accessed in order for the one.
+        
+        5) tiling uninterpreted function, many-to-one
+            tile(x_1,x_2, ..., x_n) => tile
+            -the domain is randomly accessed and written in the sparse tiling algorithms.  
+            -to create a schedule it needs to be sorted by tile and then by other iterators that are not sparse.
+            
+        6) sparse sets, one-to-many
+            foreach i in sched(x_1, x_2, ...x_n)
+            -should be sorted lexicographically by x vector and preferably have i's sorted as well
+            
+        7) 1D index arrays  (eg. sigma, delta, inter1, inter2) are currently implemented with a 1D array.  Are typically accessed in order of domain.
+
+Operations we need for explicit relations and their input and output tuples.
+    // iterate over an already constructed explicit relation
+    FOREACH_in_tuple(relation, in_tuple) {
+        FOREACH_out_given_in(relation, in_tuple, out_tuple) {
+
+    FOREACH_out_tuple(relation, out_tuple) {
+        FOREACH_in_given_out(relation, out_tuple, in_tuple) {
+
+    // special version of iterators for 1D-to-1D relations
+    FOREACH_in_tuple_1d1d(relation, in_int) {
+        FOREACH_out_given_in_1d1d(relation, in_int, out_int) {
+        
+    FOREACH_out_tuple_1d1d(relation, out_int) {
+        FOREACH_in_given_out_1d1d(relation, out_int, in_int) {
+    
+    // construct a relation
+    Relation_ctor(in_tuple_size, out_tuple_size);
+    
+    // insert entries into a relation
+    Relation_insert(relptr, in_tuple, out_tuple); 
+    // insertions are ordered lexicographically by in_tuple
+    Relation_in_ordered_insert(relptr, in_tuple, out_tuple); 
+    // insertions are ordered lexicographically by in_tuple concat out_tuple
+    Relation_ordered_insert(relptr, in_tuple, out_tuple); 
+    
+    // Since we are compiling all of this stuff with C++, we can overload
+    // all of the above routines to take in and out integers as well.
+    
+    // the above example would not be an ordered insert, therefore the 
+    // Relation_finalize would need to organize things?
+    // There should be different finalize calls to indicate how to 
+    // organize?  Or maybe there should be prepare_for_access calls
+    // that indicate how to prepare the relation for access.  That
+    // makes sense, because at "finalization" time, we don't necessarily
+    // know how the explicit relation will be used.
+    Relation_order_by_in(relptr);
+    Relation_order_by_out(relptr);   // is this possible?
+    Relation_order_by_in_out(relptr);
+    Relation_order_by_out_in(relptr);
+
+    // constructing a tuple
+    mytuple = tuple(x_1, x_2, ..., x_n)
+    
+    // accessing entry k in a tuple
+    // these should be macros
+    ... = tuple_val(mytuple, k)
+    tuple_val(mytuple, k) = ...
+
+Maybe we do need different data structures given certain assumptions.
+    - permutation, or one-to-one and onto function with same domain and range
+    - function instead of relation
+    - relation with 1D to 1D arity (seems orthogonal to the first two)
+    - general relation
+
+example relation
+{[0,1]->[1,4], [0,1]->[1,2], [0,2]->[1,0]}
+
+in_vals:    0 1 0 2
+out_index:  0 4 6
+out_vals:   1 4 1 2 1 0
+in_arity = 2
+out_arity = 2
+in_count = 3
+
+The above data structure could work for the specializations we will want.
+    - permutation, how would this affect this implementation?  It affects the simplifications we can do at compile time and it suggests we can create the inverse.  Although for a relation we can always create the inverse.  Ah but the important thing about a permutation is also that the domain and range are the same.  Again won't affect this underlying implementation except that the 
+        -in and out arity will be the same.  
+        -Also when we calculate the inverse, the in_count should be the same for the inverse relation.
+        -The out_index will be out_arity*0, out_arity*1, ... out_arity*k
+        -When calculating inverse, we can keep the in_vals identical and just recalculate the out_vals.
+
+    - if a function, which is the case for all permutations and groupings, if x=y then f(x) = f(y).  (possibly many-to-one)
+        - can't necessarily compute inverse because could be many-to-one
+        -The out_index will be out_arity*0, out_arity*1, ... out_arity*k, because each input tuple corresponds to only a single output tuple.
+   
+    - out arity is 1D, this doesn't help us by itself.
+        
+    - 1D to 1D and one-to-one (if x!=y then f(x)!=f(y)), true for a permutation of a 1D space
+        - DO need to be inserted in order because not going to store in tuple values.  I guess the whether inserting in order is another feature.
+        - do not need in_vals because can just assume in_vals are 1D index into out_vals
+        - do not need out_index because know that each input value will index to one out_val
+        - these will have 2 pointers and 3 integers of overhead, but one of those integers is the count, which was overhead we already had       
+ 
+If not inserting in order, then must store in_vals.
+-Should finalize sort by in_vals?
+-when we are doing random access by in_vals and we have in_arity>1 will we have to do a binary search to find the necessary in val?  Or could we keep the count value in the tuple data structure and therefore enable random access?  How do we need to access tile information while building the tile function and then while using it to build a schedule?
+
+If I create the tiling relation with the tile numbers as the input tuple, then I could have the finalization step always sort by input tuples.  That way the schedule would be set up already?  Is the schedule a relation as well?  Are sparse sets in general relations as well?
+
+Main question is what should the tuple data structure be?
+    -pointer to an array?
+    -pointer to a structure that has a size field and a pointer to an array?
+    -I don't think we can get away from dynamically allocating the tuple
+
+Important Specializations
+    - 1D-to-1D
+        - only needs output_vals
+        - FOREACH_out_given_in macro could be specialized to not loop
+    - 1D-to-anything
+        - only needs output_vals and out_index and size of out_tuple
+        
+8/17/08
+-------
+How would I rewrite CPackHyper (which should be named IAG_Cpack) with explicit relations?
+    -taken array of flags would have to be a relation mapping the input tuple to a 1D output tuple of 1 or zero
+    -NO, what old stuff that assumes 1D-to-1D to stay almost the same and get the benefit of the 1D-to-1D lack of overhead.
+    -can have outer FOREACH check the sizeof() the variable being passed in to store the in or out tuple.  Won't work because we have typechecking done at compile time in C.  Also we should make specialness be transparent.
+    
+I think the tuple data structure should be a struct with an int * and int.  The int * will point at an array of ints or possibly into an existing array in a Relation.  The int will indicate how many ints are in the tuple.  Since it is so small, going to pass it around without doing dynamic allocation.  Might have to dynamically allocate the integer array it is pointing at if the tuple is not being accessed from a relation, but don't have to dynamically allocate the tuple itself.
+
+

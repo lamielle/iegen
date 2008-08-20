@@ -54,12 +54,12 @@ Statements
     S2:  "`a4 += `a5 - `a6;"
 
     Original Iteration Space for each statement
-        S1: IS_{S1} = {[ii] : 0 <= ii <= (n_inter-1) }  // never changes
-        S2: IS_{S2} = {[ii] : 0 <= ii <= (n_inter-1) }  // never changes
+        IS_{S1} = {[ii] : 0 <= ii <= (n_inter-1) }  // never changes
+        IS_{S2} = {[ii] : 0 <= ii <= (n_inter-1) }  // never changes
 
     Scattering function, which represents original schedule for statement
-        S1: scatter_{S1} = {[ii] -> [ii,j] : j=1}    // theta_s(ii) = (ii,1)
-        S2: scatter_{S2} = {[ii] -> [ii,j] : j=2}    // theta_s(ii) = (ii,1)
+        scatter_{S1} = {[ii] -> [ii,j] : j=1}    // theta_s(ii) = (ii,1)
+        scatter_{S2} = {[ii] -> [ii,j] : j=2}    // theta_s(ii) = (ii,1)
 
 
     Access Relations
@@ -85,7 +85,7 @@ Composition and choice of RTRTs
             data_spaces = [ X_0, FX_0 ]
             iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
             target_data_space = X_0
-            iag_func_name = CPackHyper
+            iag_func_name = IAG_cpack
 
     Naming standards
         After a transformation, we are going to assume that a space with the subscript n will be transformed into the same named space with the subscript n+1.  For example I_0 will become I_1.
@@ -95,7 +95,7 @@ Composition and choice of RTRTs
             iter_reordering = { [ i,x ] -> [ k,x ] : k = delta( i ) }
             iteration_space = I_0
             access_relation = A_I_0_to_X_1
-            iag_func_name = LexMin
+            iag_func_name = IAG_lexmin
             iag_type = IAG_Permute
 
 ------------------------------------------------------------
@@ -180,19 +180,20 @@ Generating the composed inspector
 
 
 
-    b) generate code that explicitly creates hypergraph representation of access relation at runtime.
+    b) generate code that explicitly creates explicit representation of access relation at runtime. (see src/dev/test_ExplicitRelation.c for example usage)
         input:
             access_relation_to_traverse, artt
         output:
             code
                 // data index calc for each disjunct in access relation
                 #define s1(i_1, ..., i_d) data_index = ...; \
-                    Hypergraph_ordered_insert_node([artt.name], \                     count,data_index);
+                    ExplicitRelation_in_ordered_insert([artt.name], \                     count,data_index);
                     count++;
 
-                {
+                
                 // initialize variables
-                Hypergraph* [artt.name] = Hypergraph_ctor();
+                // For now assuming 1D-to-1D arity.
+                ExplicitRelation* [artt.name] = ExplicitRelation_ctor(1,1);
                 int count=0;
                 int data_index=0;
                 int t1, ..., ;  // declare index variables omega will use
@@ -201,21 +202,21 @@ Generating the composed inspector
                 for ...
                     s1(i_1, ..., i_d);
 
-                Hypergraph_finalize([argtt.name]);
-                }
+                // between the above code and the next piece of the
+                // inspector, only [artt.name] variable needs passed
 
           For the example, output is the following:
                 // this macro captures artt, count, and data_index
                 #define s1(t1) data_index = inter1[t1]; \
-                    Hypergraph_ordered_insert_node(artt,count, \
+                    ExplicitRelation_in_ordered_insert(artt,count, \
                     data_index); \
                     data_index = inter2[t1]; \
-                    Hypergraph_ordered_insert_node(artt,count, \
+                    ExplicitRelation_in_ordered_insert(artt,count, \
                     data_index); \
                     count++
 
                 // initialize variables
-                Hypergraph* artt = Hypergraph_ctor();
+                ExplicitRelation* artt = ExplicitRelation_ctor(1,1);
                 int count=0;
                 int data_index=0;
 
@@ -223,8 +224,6 @@ Generating the composed inspector
                 for(t1 = 0; t1 <= n_inter-1; t1++) {
                     s1(t1);
                 }
-
-                Hypergraph_finalize(artt);
 
 
     c) Automatically generate the IndexArray specification for sigma
@@ -253,7 +252,7 @@ Generating the composed inspector
 
         For this example:
             IAG_cpack = new IAG_Permute (
-                String name = "CPackHyper"       // function name
+                String name = "IAG_cpack"       // function name
                 AccessRelation input = artt
                 IndexArray result = new IndexArray(
                     data_space = "sigma", X_0.spec, index array,
@@ -264,7 +263,7 @@ Generating the composed inspector
 
             )
 
-    d) generate code that passes hypergraph to IAG
+    d) generate code that passes explicit relation to IAG
         input:
             iag_spec for sigma
 
@@ -277,7 +276,7 @@ Generating the composed inspector
         For this example:
                 int *sigma;
                 MALLOC(sigma,int,N);
-                CPackHyper( artt, sigma );
+                IAG_cpack( artt, sigma );
 
     e) generate code that does data reordering
     FIXME: eventually all the data reordering will be done only once per composition.  This example has only one data reordering, so this is somewhat mute.
@@ -357,10 +356,10 @@ After performing a data reordering, if index arrays that access the reordered da
         for ...
 
     algorithm:
-        for each statement in computation
+        -for each statement in computation
             generate macro code for statement using transformed access relations
 
-        have omega or Cloog generate code for current iteration space (ALAN?)
+        -have omega or Cloog generate code for each statement's current iteration space and scattering function
 
 
     output for this example:
@@ -451,7 +450,7 @@ After performing a data reordering, if index arrays that access the reordered da
 
         Initial Assumptions:
             -only one interpreted function in iteration reordering
-            -that uninterpreted function has a domain with dimensionality 1
+            -that uninterpreted function has a domain with dimensionality 1, FIXME: this is not the case for sparse tiling, so why do we have this assumption.  Maybe we need this assumption to only apply reordering to one loop?
 
 
         For this example:
