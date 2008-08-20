@@ -39,14 +39,14 @@ Index Arrays
     inter1 = new IndexArray (
         dataspace = INTER1_0,
         isPermutation = false,
-        input_bounds = [ (0,n_inter-1) ],
-        output_bounds = (0,N)
+        input_bounds = { [k] : 0 <= k <= (n_inter-1) },
+        output_bounds = { [k] : 0 <= k <= (N-1) }
     )
     inter2 = new IndexArray (
         dataspace = INTER2_0,
         isPermutation = false,
-        input_bounds = [ (0,n_inter-1) ],
-        output_bounds = (0,N)
+        input_bounds = { [k] : 0 <= k <= (n_inter-1) },
+        output_bounds = { [k] : 0 <= k <= (N-1) }
     )
 
 Statements
