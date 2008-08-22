@@ -1,6 +1,7 @@
 from unittest import TestCase
 from nose.tools import assert_raises
 
+#---------- Import Tests ----------
 #Test importing of iegen.ast.visitor
 class ImportTestCase(TestCase):
 
@@ -17,7 +18,9 @@ class ImportTestCase(TestCase):
 			from iegen.ast.visitor import DFVisitor,TransVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
+#----------------------------------
 
+#---------- Domain Matrix Translation Tests ----------
 #Test translation visitor
 class TransVisitorTestCase(TestCase):
 
@@ -81,17 +84,13 @@ class TransVisitorTestCase(TestCase):
 	                                                   [1,-1, 0,1,0, 0],
 	                                                   [1, 0, 1,0,0,-1],
 	                                                   [1, 0,-1,0,1, 0]],['n','m']))
+
 	#Test that the sets in set_tests are translated properly
 	def testTrans(self):
 		from iegen.ast.visitor import TransVisitor
 		from iegen.parser import PresParser
 
-		for set_test in self.set_tests:
-			#Unpack the test tuple
-			set_string=set_test[0]
-			res_mat=set_test[1]
-			params=set_test[2]
-
+		for set_string,res_mat,params in self.set_tests:
 			#Create a set from set string
 			set=PresParser.parse_set(set_string)
 
@@ -99,5 +98,10 @@ class TransVisitorTestCase(TestCase):
 			v=TransVisitor(params)
 			v.visit(set)
 
+			#Sort the rows of the matricies
+			v.mat.sort()
+			res_mat.sort()
+
 			#Make sure the translated matrix matches the result matrix
 			self.failUnless(v.mat==res_mat,'%s!=%s'%(v.mat,res_mat))
+#-----------------------------------------------------

@@ -1,3 +1,4 @@
+#Runs all of the IEGen tests
 def run_tests():
 	import iegen,nose
 	nose.run(argv=['','-v','-s','-w%s'%iegen.dir])

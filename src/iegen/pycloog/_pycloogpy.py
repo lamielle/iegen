@@ -162,6 +162,8 @@ def codegen(statements,names):
 	#Call pycloog_codegen
 	code=codegen_func(statements,num_statements,names,string_allocator)
 
-	#Return the generated code and trim off the trailing newline
-	return code[:-1]
+	#Return the generated code with comments and empty lines
+	lines=code.split('\n')
+	lines=[line for line in lines if -1==line.find('/*') and -1==line.find('//') and line!='']
+	return '\n'.join(lines)
 #--------------------------------------

@@ -48,6 +48,14 @@ class PresSet(Node):
 	def __repr__(self):
 		return 'PresSet(%s,%s)'%(self.set_tuple,self.conjunct)
 
+	#Comparison operator
+	def __cmp__(self,other):
+		#Compare PresSets by their VarTuple and Conjunction
+		if hasattr(other,'set_tuple') and hasattr(other,'conjunct'):
+			return cmp((self.set_tuple,self.conjunct),(other.set_tuple,other.conjunct))
+		else:
+			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
+
 	def arity(self):
 		return len(self.set_tuple)
 
@@ -123,6 +131,14 @@ class PresRelation(Node):
 
 	def __repr__(self):
 		return 'PresRelation(%s,%s,%s)'%(self.in_tuple,self.out_tuple,self.conjunct)
+
+	#Comparison operator
+	def __cmp__(self,other):
+		#Compare PresRelations by their VarTuple and Conjunction
+		if hasattr(other,'in_tuple') and hasattr(other,'out_tuple') and hasattr(other,'conjunct'):
+			return cmp((self.in_tuple,self.out_tuple,self.conjunct),(other.in_tuple,self.out_tuple,other.conjunct))
+		else:
+			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 	def arity_in(self):
 		return len(self.in_tuple)
@@ -289,6 +305,14 @@ class VarTuple(object):
 	def __len__(self):
 		return len(self.id_list)
 
+	#Comparison operator
+	def __cmp__(self,other):
+		#Compare VarTuples by their id_lists
+		if hasattr(other,'id_list'):
+			return cmp(self.id_list,other.id_list)
+		else:
+			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
+
 	def apply_visitor(self,visitor):
 		visitor.visitVarTuple(self)
 #------------------------------------
@@ -300,9 +324,18 @@ class Conjunction(object):
 
 	def __init__(self,constraint_list):
 		self.constraint_list=constraint_list
+		self.constraint_list.sort()
 
 	def __repr__(self):
 		return 'Conjunction(%s)'%(self.constraint_list)
+
+	#Comparison operator
+	def __cmp__(self,other):
+		#Compare Conjunctions by their constraint_lists
+		if hasattr(other,'constraint_list'):
+			return cmp(self.constraint_list,other.constraint_list)
+		else:
+			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 	def apply_visitor(self,visitor):
 		visitor.visitConjunction(self)
@@ -310,13 +343,23 @@ class Conjunction(object):
 
 #---------- Constraint Nodes ----------
 class Constraint(Node):
-	pass
+	__slots__=('_equality',)
+
+	#Comparison operator
+	def __cmp__(self,other):
+		#Compare Constraints by their expression and Equality/Inequality type
+		if hasattr(other,'exp') and hasattr(other,'_equality'):
+			return cmp((self._equality,self.exp),(other._equality,other.exp))
+		else:
+			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
+
 
 class Equality(Constraint):
 	__slots__=('exp',)
 
 	def __init__(self,exp):
 		self.exp=exp
+		self._equality=True
 
 	def __repr__(self):
 		return 'Equality(%s)'%self.exp
@@ -332,6 +375,7 @@ class Inequality(Constraint):
 
 	def __init__(self,exp):
 		self.exp=exp
+		self._equality=False
 
 	def __repr__(self):
 		return 'Inequality(%s)'%self.exp
@@ -353,14 +397,17 @@ class VarExp(Expression):
 		self.id=id
 
 	def __repr__(self):
-		return "VarExp(%s,'%s')"%(self.coeff,self.id)
+		if self.id.find("'")>=0:
+			return "VarExp(%s,\"%s\")"%(self.coeff,self.id)
+		else:
+			return "VarExp(%s,'%s')"%(self.coeff,self.id)
 
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare other variables by their coefficients and ids
 		if hasattr(other,'id'):
 			return cmp((self.coeff,self.id),(other.coeff,other.id))
-		#Variables are 'less' than functions
+		#Variables are 'greater' than functions
 		elif hasattr(other,'name') and hasattr(other,'exp_list'):
 			return -1
 		else:
@@ -396,13 +443,14 @@ class FuncExp(Expression):
 		self.coeff=coeff
 		self.name=name
 		self.exp_list=exp_list
+		self.exp_list.sort()
 
 	def __repr__(self):
 		return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.exp_list)
 
 	#Comparison operator
 	def __cmp__(self,other):
-		#Functions are 'greater' than IDs
+		#Functions are 'less' than IDs
 		if hasattr(other,'id'):
 			return 1
 		elif hasattr(other,'name') and hasattr(other,'exp_list'):
@@ -456,11 +504,10 @@ class NormExp(Expression):
 
 	#Comparison operator
 	def __cmp__(self,other):
-		#Functions are 'greater' than IDs
 		if hasattr(other,'terms') and hasattr(other,'const'):
 			self.terms.sort()
 			other.terms.sort()
-			return cmp((self.terms,self.const),(other.terms,other.const))
+			return cmp((self.const,self.terms),(other.const,other.terms))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 

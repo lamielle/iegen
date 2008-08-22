@@ -18,5 +18,6 @@ def build(bld):
 
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_util.py')
+	install_files('PREFIX',inst_dir,'_test_util.py')
 
 	bld.add_subdirs('test')

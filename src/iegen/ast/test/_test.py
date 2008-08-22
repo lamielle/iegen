@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+#---------- Import Tests ----------
 #Test importing of iegen.ast
 class ImportTestCase(TestCase):
 
@@ -15,9 +16,243 @@ class ImportTestCase(TestCase):
 		try:
 			from iegen.ast import Node,PresSet,PresSetUnion,PresRelation,PresRelationUnion,VarTuple,Conjunction,Constraint,Equality,Inequality,Expression,VarExp,FuncExp,NormExp
 		except Exception,e:
-			self.fail("Importing classes from iegen.ast failed: "+str(e))
+			self.fail('Importing classes from iegen.ast failed: '+str(e))
+#----------------------------------
 
-class ASTTestCase(TestCase):
+#---------- PresSet Tests ----------
+class SetTestCase(TestCase):
+
+	#Tests the __repr__ method
+	def testRepr(self):
+		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
+		from iegen.util import test_sets
+
+		for set_str,set_exp in test_sets:
+			exec('new_set_exp=repr('+set_exp+')')
+			self.failUnless(set_exp==new_set_exp,'%s!=%s'%(set_exp,new_set_exp))
+
+	#Tests the __cmp__ method
+	def testCmp(self):
+		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
+		from iegen.util import test_sets
+
+		for set_str,set_exp in test_sets:
+			exec('new_set_exp1='+set_exp)
+			exec('new_set_exp2='+set_exp)
+			self.failUnless(new_set_exp1==new_set_exp2,'%s!=%s'%(new_set_exp1,new_set_exp2))
+			new_set_exp1.set_tuple.id_list.append('asdfghjkl')
+			self.failIf(new_set_exp1==new_set_exp2,'%s==%s'%(new_set_exp1,new_set_exp2))
+
+	#Tests that the __cmp__ method doesn't use 'isinstance'
+	#but instead checks for properties of the object
+	def testCmpNoIsInstance(self):
+		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp,Node
+		from iegen.util import test_sets
+
+		class DummyPresSet(Node):
+			def __init__(self,set_tuple,conjunct):
+				self.set_tuple=set_tuple
+				self.conjunct=conjunct
+
+		for set_str,set_exp in test_sets:
+			exec('new_set_exp1='+set_exp)
+			set_exp=set_exp.replace('PresSet','DummyPresSet')
+			exec('new_set_exp2='+set_exp)
+			self.failUnless(new_set_exp1==new_set_exp2,'%s!=%s'%(new_set_exp1,new_set_exp2))
+			new_set_exp1.set_tuple.id_list.append('asdfghjkl')
+			self.failIf(new_set_exp1==new_set_exp2,'%s==%s'%(new_set_exp1,new_set_exp2))
+
+	#Tests for the arity method(s)
+	def testArity(self):
+		from iegen.ast import PresSet
+
+		self.failUnless(hasattr(PresSet,'arity'),"PresSet has no 'arity' method.")
+
+#---------- PresRelation Tests ----------
+class RelationTestCase(TestCase):
+
+	#Tests the __repr__ method
+	def testRepr(self):
+		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
+		from iegen.util import test_relations
+
+		for rel_str,rel_exp in test_relations:
+			exec('new_rel_exp=repr('+rel_exp+')')
+			self.failUnless(rel_exp==new_rel_exp,'%s!=%s'%(rel_exp,new_rel_exp))
+
+	#Tests the __cmp__ method
+	def testCmp(self):
+		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
+		from iegen.util import test_relations
+
+		for rel_str,rel_exp in test_relations:
+			exec('new_rel_exp1='+rel_exp)
+			exec('new_rel_exp2='+rel_exp)
+			self.failUnless(new_rel_exp1==new_rel_exp2,'%s!=%s'%(new_rel_exp1,new_rel_exp2))
+			new_rel_exp1.in_tuple.id_list.append('asdfghjkl')
+			self.failIf(new_rel_exp1==new_rel_exp2,'%s==%s'%(new_rel_exp1,new_rel_exp2))
+
+	#Tests that the __cmp__ method doesn't use 'isinstance'
+	#but instead checks for properties of the object
+	def testCmpNoIsInstance(self):
+		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp,Node
+		from iegen.util import test_relations
+
+		class DummyPresRelation(Node):
+			def __init__(self,in_tuple,out_tuple,conjunct):
+				self.in_tuple=in_tuple
+				self.out_tuple=out_tuple
+				self.conjunct=conjunct
+
+		for rel_str,rel_exp in test_relations:
+			exec('new_rel_exp1='+rel_exp)
+			rel_exp=rel_exp.replace('PresRelation','DummyPresRelation')
+			exec('new_rel_exp2='+rel_exp)
+			self.failUnless(new_rel_exp1==new_rel_exp2,'%s!=%s'%(new_rel_exp1,new_rel_exp2))
+			new_rel_exp1.in_tuple.id_list.append('asdfghjkl')
+			self.failIf(new_rel_exp1==new_rel_exp2,'%s==%s'%(new_rel_exp1,new_rel_exp2))
+
+	#Tests for the arity method(s)
+	def testArity(self):
+		from iegen.ast import PresRelation
+
+		self.failUnless(hasattr(PresRelation,'arity_in'),"PresRelation has no 'arity_in' method.")
+		self.failUnless(hasattr(PresRelation,'arity_out'),"PresRelation has no 'arity_out' method.")
+#----------------------------------------
+
+#---------- Conjunction Tests ----------
+class ConjunctionTestCase(TestCase):
+
+	#Tests the __repr__ method
+	def testRepr(self):
+		from iegen.ast import Conjunction,Inequality,VarExp
+
+		cs="Conjunction([Inequality(VarExp(2,'c'))])"
+		exec('c='+cs)
+
+		self.failUnless(cs==repr(c),'%s!=%s'%(cs,repr(c)))
+
+	#Tests the __cmp__ method
+	def testCmp(self):
+		from iegen.ast import Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
+
+		cs1="Conjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
+		cs2="Conjunction([Equality(NormExp([VarExp(-5,'b')],-5))])"
+		exec('c1a='+cs1)
+		exec('c1b='+cs1)
+		exec('c2='+cs2)
+
+		self.failUnless(cs1==repr(c1a),'%s!=%s'%(cs1,repr(c1a)))
+		self.failUnless(cs1==repr(c1b),'%s!=%s'%(cs1,repr(c1b)))
+		self.failUnless(cs2==repr(c2),'%s!=%s'%(cs2,repr(c2)))
+		self.failUnless(c1a==c1b,'%s!=%s'%(c1a,c1b))
+		self.failIf(c1a==c2,'%s==%s'%(c1a,c2))
+
+	#Tests that the __cmp__ method doesn't use 'isinstance'
+	#but instead checks for properties of the object
+	def testCmpNoIsInstance(self):
+		from iegen.ast import Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp,Node
+		from iegen.util import test_relations
+
+		class DummyConjunction(Node):
+			def __init__(self,constraint_list):
+				self.constraint_list=constraint_list
+
+		cs="Conjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
+		dcs="DummyConjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
+		exec('c='+cs)
+		exec('dc='+dcs)
+
+		self.failUnless(c==dc,'%s!=%s'%(c,dc))
+		c.constraint_list.append(VarExp(1,'b'))
+		self.failIf(c==dc,'%s==%s'%(c,dc))
+#---------------------------------------
+
+#---------- VarTuple Tests ----------
+class VarTupleTestCase(TestCase):
+
+	#Tests the __repr__ method
+	def testRepr(self):
+		from iegen.ast import VarTuple
+
+		vs="VarTuple(['a', 'b', 'c'])"
+		exec('v='+vs)
+
+		self.failUnless(vs==repr(v),'%s!=%s'%(vs,repr(v)))
+
+	#Validate VarTuple's __len__ method
+	def testLen(self):
+		from iegen.ast import VarTuple
+
+		v1=VarTuple(['a'])
+		v2=VarTuple(['a','b'])
+		v3=VarTuple(['a','b','c'])
+
+		self.failUnless(1==len(v1),'len(%s)!=1'%v1)
+		self.failUnless(2==len(v2),'len(%s)!=2'%v2)
+		self.failUnless(3==len(v3),'len(%s)!=3'%v3)
+
+	def testConjunction(self):
+		from iegen.ast import Conjunction,Inequality,VarExp
+
+		cs="Conjunction([Inequality(VarExp(2,'c'))])"
+		exec('c='+cs)
+
+		self.failUnless(cs==repr(c),'%s!=%s'%(cs,repr(c)))
+
+	#Tests the __cmp__ method
+	def testCmp(self):
+		from iegen.ast import Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
+
+		cs1="Conjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
+		cs2="Conjunction([Equality(NormExp([VarExp(-5,'b')],-5))])"
+		exec('c1a='+cs1)
+		exec('c1b='+cs1)
+		exec('c2='+cs2)
+
+		self.failUnless(cs1==repr(c1a),'%s!=%s'%(cs1,repr(c1a)))
+		self.failUnless(cs1==repr(c1b),'%s!=%s'%(cs1,repr(c1b)))
+		self.failUnless(cs2==repr(c2),'%s!=%s'%(cs2,repr(c2)))
+		self.failUnless(c1a==c1b,'%s!=%s'%(c1a,c1b))
+		self.failIf(c1a==c2,'%s==%s'%(c1a,c2))
+
+	#Tests that the __cmp__ method doesn't use 'isinstance'
+	#but instead checks for properties of the object
+	def testCmpNoIsInstance(self):
+		from iegen.ast import Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp,Node
+		from iegen.util import test_relations
+
+		class DummyConjunction(Node):
+			def __init__(self,constraint_list):
+				self.constraint_list=constraint_list
+
+		cs="Conjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
+		dcs="DummyConjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
+		exec('c='+cs)
+		exec('dc='+dcs)
+
+		self.failUnless(c==dc,'%s!=%s'%(c,dc))
+		c.constraint_list.append(VarExp(1,'b'))
+		self.failIf(c==dc,'%s==%s'%(c,dc))
+
+#------------------------------------
+
+#---------- Constraint Tests ----------
+class ConstraintTestCase(TestCase):
+	def testConstraint(self):
+		from iegen.ast import Equality,Inequality,NormExp,FuncExp,VarExp
+
+		cs1="Equality(NormExp([VarExp(1,'a')],1))"
+		exec('c1='+cs1)
+		cs2="Inequality(NormExp([FuncExp(1,'f',[VarExp(1,'b')])],1))"
+		exec('c2='+cs2)
+
+		self.failUnless(cs1==repr(c1),'%s!=%s'%(cs1,repr(c1)))
+		self.failUnless(cs2==repr(c2),'%s!=%s'%(cs2,repr(c2)))
+#--------------------------------------
+
+#---------- VarExp Tests ----------
+class VarExpTestCase(TestCase):
 
 	var_exps=(
 	          "VarExp(0,'')",
@@ -76,7 +311,10 @@ class ASTTestCase(TestCase):
 				#Make sure multiplication works correctly
 				self.failUnless(v_i==new_v,'%s!=%s'%(v_i,new_v))
 				self.failUnless(i_v==new_v,'%s!=%s'%(i_v,new_v))
+#----------------------------------
 
+#---------- FuncExp Tests ----------
+class FuncExpTestCase(TestCase):
 	func_exps=(
 	          "FuncExp(0,'',[])",
 	          "FuncExp(1,'f',[VarExp(1,'a')])",
@@ -143,6 +381,10 @@ class ASTTestCase(TestCase):
 				#Make sure multiplication works correctly
 				self.failUnless(f_i==new_f,'%s!=%s'%(f_i,new_f))
 				self.failUnless(i_f==new_f,'%s!=%s'%(i_f,new_f))
+#-----------------------------------
+
+#---------- FuncExp Tests ----------
+class NormExpTestCase(TestCase):
 
 	norm_exps=(
 	          "NormExp([],0)",
@@ -308,82 +550,4 @@ class ASTTestCase(TestCase):
 		            6)
 
 		self.failUnless(n1==n2,'%s!=%s'%(n1,n2))
-
-	def testConstraint(self):
-		from iegen.ast import Equality,Inequality,NormExp,FuncExp,VarExp
-
-		cs1="Equality(NormExp([VarExp(1,'a')],1))"
-		exec('c1='+cs1)
-		cs2="Inequality(NormExp([FuncExp(1,'f',[VarExp(1,'b')])],1))"
-		exec('c2='+cs2)
-
-		self.failUnless(cs1==repr(c1),'%s!=%s'%(cs1,repr(c1)))
-		self.failUnless(cs2==repr(c2),'%s!=%s'%(cs2,repr(c2)))
-
-	def testConjunction(self):
-		from iegen.ast import Conjunction,Inequality,VarExp
-
-		cs="Conjunction([Inequality(VarExp(2,'c'))])"
-		exec('c='+cs)
-
-		self.failUnless(cs==repr(c),'%s!=%s'%(cs,repr(c)))
-
-	def testVarTuple(self):
-		from iegen.ast import VarTuple
-
-		vs="VarTuple(['a', 'b', 'c'])"
-		exec('v='+vs)
-
-		self.failUnless(vs==repr(v),'%s!=%s'%(vs,repr(v)))
-
-#	sets=(
-	      
-	def testSet(self):
-		from iegen.ast import PresSet
-
-#		s=Set
-
-	def testSetRelation(self):
-		from iegen.ast import PresSet,PresSetUnion,PresRelation,PresRelationUnion
-
-		
-
-
-
-
-
-## Initial testing of the ast
-#from ast import *
-#
-#root = PresSet(VarTuple(['a','b']),Conjunction([Inequality(NormExp([VarExp(1,'a')],-5))]))
-#
-
-
-
-#print
-#print "========================= Testing equality of uninterp func ===="
-##f = FuncExp('f',[VarExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
-##g = FuncExp('g',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
-##print "f= ", f
-##print "g= ", g
-##print "f==g should be false, f==g => ", f==g 
-#
-##g= FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('b'),IdExp('c'))])
-##print "f= ", f
-##print "g= ", g
-##print "f==g should be true, f==g => ", f==g
-#
-##g= FuncExp('f',[IdExp('a'),IntExp(3),MulExp(IdExp('c'),IdExp('b'))])
-##print "f= ", f
-##print "g= ", g
-##print "f==g should be true, f==g => ", f==g
-#
-##g= FuncExp('f',[IdExp('a'),MulExp(IdExp('c'),IdExp('b'))])
-##print "f= ", f
-##print "g= ", g
-##print "f==g should be false, f==g => ", f==g
-
-
-
-
-
+#-----------------------------------
