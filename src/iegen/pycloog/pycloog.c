@@ -22,13 +22,8 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
    }
    else
    {
-      printf("Determining if we should do scattering...\n");
       /* Determine if we are to do any scattering */
       do_scatter=(pycloog_statements[0].scatter!=NULL);
-      if(do_scatter)
-         printf("We should scatter %p\n",pycloog_statements[0].scatter);
-      else
-         printf("We should not scatter\n");
 
       /* Build the CLooG program structure for the given statments and names */
       cloog_program=pycloog_get_program(pycloog_statements,pycloog_num_statements,pycloog_names);
@@ -214,6 +209,7 @@ char* pycloog_get_pystring_from_file(FILE *file,string_allocator_t string_alloca
                   fprintf(stderr,"[pyCLooG] Did not read expected number of characters from temporary file.\n");
                   result=pycloog_get_error_result();
                }
+               result[size]='\0';
             }
          }
       }
