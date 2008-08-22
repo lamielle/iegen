@@ -408,7 +408,7 @@ class VarExp(Expression):
 		if hasattr(other,'id'):
 			return cmp((self.coeff,self.id),(other.coeff,other.id))
 		#Variables are 'greater' than functions
-		elif hasattr(other,'name') and hasattr(other,'exp_list'):
+		elif hasattr(other,'name') and hasattr(other,'args'):
 			return -1
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -437,24 +437,24 @@ class VarExp(Expression):
 
 #Function expression
 class FuncExp(Expression):
-	__slots__=('coeff','name','exp_list')
+	__slots__=('coeff','name','args')
 
-	def __init__(self,coeff,name,exp_list):
+	def __init__(self,coeff,name,args):
 		self.coeff=coeff
 		self.name=name
-		self.exp_list=exp_list
-		self.exp_list.sort()
+		self.args=args
+		self.args.sort()
 
 	def __repr__(self):
-		return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.exp_list)
+		return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.args)
 
 	#Comparison operator
 	def __cmp__(self,other):
 		#Functions are 'less' than IDs
 		if hasattr(other,'id'):
 			return 1
-		elif hasattr(other,'name') and hasattr(other,'exp_list'):
-			return cmp((self.coeff,self.name,self.exp_list),(other.coeff,other.name,other.exp_list))
+		elif hasattr(other,'name') and hasattr(other,'args'):
+			return cmp((self.coeff,self.name,self.args),(other.coeff,other.name,other.args))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
@@ -596,7 +596,7 @@ class NormExp(Expression):
 	#Returns a collection of all of the function terms in this expression
 	def _funcs(self):
 		self.terms.sort()
-		return [term for term in self.terms if hasattr(term,'name') and hasattr(term,'exp_list')]
+		return [term for term in self.terms if hasattr(term,'name') and hasattr(term,'args')]
 
 	def apply_visitor(self,visitor):
 		visitor.visitNormExp(self)

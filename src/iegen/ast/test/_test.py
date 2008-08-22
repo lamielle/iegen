@@ -488,7 +488,7 @@ class FuncExpTestCase(TestCase):
 				self.failUnless(f2!=f,'%s==%s'%(f2,f))
 				self.failIf(f2==f,'%s==%s'%(f2,f))
 
-				greater=((f2.coeff,f2.name,f2.exp_list)>(f.coeff,f.name,f.exp_list))
+				greater=((f2.coeff,f2.name,f2.args)>(f.coeff,f.name,f.args))
 				if greater:
 					self.failUnless(f2>f,'%s<%s'%(f2,f))
 				else:
@@ -504,7 +504,7 @@ class FuncExpTestCase(TestCase):
 			#Test FuncExp's multiplication operator
 			coeff=f.coeff
 			name=f.name
-			exps=f.exp_list
+			exps=f.args
 
 			#Test multiplication from -5 to 9
 			for i in xrange(-5,10):

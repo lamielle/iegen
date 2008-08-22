@@ -126,7 +126,7 @@ class DFVisitor(object):
 
 	def visitFuncExp(self,node):
 		self.inFuncExp(node)
-		for exp in node.exp_list:
+		for exp in node.args:
 			exp.apply_visitor(self)
 		self.outFuncExp(node)
 
