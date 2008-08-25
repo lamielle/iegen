@@ -62,7 +62,7 @@ INSTALLING:
  -As such, Python must be able to find this module:
 
   -If IEGen is installed to the example location, $PWD, then Python will
-   surely be able to find the iegen module.
+   surely be able to find the iegen module when running ./run_tests.
 
   -If IEGen is installed elsewhere, be sure that you set the environment
    variable PYTHONPATH to include the location where the 'iegen' directory
