@@ -199,9 +199,9 @@ class ConjunctionTestCase(TestCase):
 
 	#Tests the __repr__ method
 	def testRepr(self):
-		from iegen.ast import Conjunction,Inequality,VarExp
+		from iegen.ast import Conjunction,Inequality,VarExp,NormExp
 
-		cs="Conjunction([Inequality(VarExp(2,'c'))])"
+		cs="Conjunction([Inequality(NormExp([VarExp(2,'c')],0))])"
 		exec('c='+cs)
 
 		self.failUnless(cs==repr(c),'%s!=%s'%(cs,repr(c)))
@@ -300,10 +300,10 @@ class EqualityTestCase(TestCase):
 
 	#Tests that Equalities are 'greater' than Inequalities
 	def testGreaterThanInequality(self):
-		from iegen.ast import Equality,Inequality,VarExp
+		from iegen.ast import Equality,Inequality,VarExp,NormExp
 
-		e=Equality(VarExp(1,'a'))
-		i=Inequality(VarExp(1,'a'))
+		e=Equality(NormExp([VarExp(1,'a')],0))
+		i=Inequality(NormExp([VarExp(1,'a')],0))
 
 		self.failUnless(e>i)
 		self.failUnless(i<e)
@@ -316,7 +316,7 @@ class InequalityTestCase(TestCase):
 	def testRepr(self):
 		from iegen.ast import Inequality,NormExp,FuncExp,VarExp
 
-		is1="Inequality(NormExp([FuncExp(1,'f',[VarExp(1,'b')])],1))"
+		is1="Inequality(NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'b')],0)])],1))"
 		exec('i1='+is1)
 
 		self.failUnless(is1==repr(i1),'%s!=%s'%(is1,repr(i1)))
@@ -363,10 +363,10 @@ class InequalityTestCase(TestCase):
 
 	#Tests that Inequalities are 'less' than Equalities
 	def testLessThanEquality(self):
-		from iegen.ast import Inequality,Equality,VarExp
+		from iegen.ast import Inequality,Equality,VarExp,NormExp
 
-		i=Inequality(VarExp(1,'a'))
-		e=Equality(VarExp(1,'a'))
+		i=Inequality(NormExp([VarExp(1,'a')],0))
+		e=Equality(NormExp([VarExp(1,'a')],0))
 
 		self.failUnless(i<e)
 		self.failUnless(e>i)
@@ -447,23 +447,23 @@ class VarExpTestCase(TestCase):
 class FuncExpTestCase(TestCase):
 	func_exps=(
 	          "FuncExp(0,'',[])",
-	          "FuncExp(1,'f',[VarExp(1,'a')])",
-	          "FuncExp(1,'f',[VarExp(1,'a'), VarExp(1,'a')])",
-	          "FuncExp(1,'f',[VarExp(1,'a')])",
-	          "FuncExp(1,'g',[VarExp(1,'a')])",
-	          "FuncExp(1,'f',[VarExp(1,'a')])",
-	          "FuncExp(2,'f',[VarExp(1,'a')])",
-	          "FuncExp(2,'g',[VarExp(1,'a')])",
-	          "FuncExp(3,'fog',[VarExp(1,'a')])",
-	          "FuncExp(4,'rain',[VarExp(1,'a')])",
-	          "FuncExp(42,'test',[VarExp(1,'a')])",
-	          "FuncExp(-81,'z',[VarExp(1,'a')])",
-	          "FuncExp(101,'x',[VarExp(1,'a')])",
-	          "FuncExp(16,'wxyz',[VarExp(1,'a'), VarExp(2,'b')])")
+	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(1,'f',[NormExp([VarExp(1,'a'), VarExp(1,'a')],0)])",
+	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(1,'g',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(2,'f',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(2,'g',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(3,'fog',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(4,'rain',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(42,'test',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(-81,'z',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(101,'x',[NormExp([VarExp(1,'a')],0)])",
+	          "FuncExp(16,'wxyz',[NormExp([VarExp(1,'a'), VarExp(2,'b')],0)])")
 
 	#Tests the __repr__ method
 	def testRepr(self):
-		from iegen.ast import FuncExp,VarExp
+		from iegen.ast import VarExp,FuncExp,NormExp
 
 		for func_exp in self.func_exps:
 			exec('f='+func_exp)
@@ -474,7 +474,7 @@ class FuncExpTestCase(TestCase):
 
 	#Tests the __cmp__ method
 	def testCmp(self):
-		from iegen.ast import FuncExp,VarExp
+		from iegen.ast import FuncExp,VarExp,NormExp
 
 		for func_exp in self.func_exps:
 			exec('f='+func_exp)
@@ -496,7 +496,7 @@ class FuncExpTestCase(TestCase):
 
 	#Tests the __mul__ method
 	def testMul(self):
-		from iegen.ast import FuncExp,VarExp
+		from iegen.ast import FuncExp,VarExp,NormExp
 
 		for func_exp in self.func_exps:
 			exec('f='+func_exp)
@@ -530,8 +530,8 @@ class NormExpTestCase(TestCase):
 	          "NormExp([],1)",
 	          "NormExp([VarExp(1,'a')],5)",
 	          "NormExp([VarExp(1,'a')],1)",
-	          "NormExp([VarExp(1,'a'), FuncExp(2,'f',[VarExp(1,'b')])],5)",
-	          "NormExp([VarExp(1,'a'), FuncExp(2,'f',[VarExp(1,'b')])],5)",
+	          "NormExp([VarExp(1,'a'), FuncExp(2,'f',[NormExp([VarExp(1,'b')],0)])],5)",
+	          "NormExp([VarExp(1,'a'), FuncExp(2,'f',[NormExp([VarExp(1,'b')],0)])],5)",
 	          "NormExp([VarExp(1,'b')],5)",
 	          "NormExp([VarExp(1,'a')],6)")
 
@@ -675,27 +675,27 @@ class NormExpTestCase(TestCase):
 		            VarExp(2,'b'),
 		            VarExp(2,'c'),
 		            VarExp(3,'c'),
-		            FuncExp(1,'f',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(2,'f',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(3,'g',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(3,'h',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(4,'i',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(4,'i',[VarExp(2,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(5,'j',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(5,'j',[VarExp(1,'a'),FuncExp(2,'f',[])])],
+		            FuncExp(1,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(2,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(3,'g',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(3,'h',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(4,'i',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(4,'i',[NormExp([VarExp(2,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(2,'f',[])],0)])],
 		            6)
 
-		n2=NormExp([FuncExp(1,'f',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(3,'g',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(2,'f',[VarExp(1,'a'),FuncExp(1,'f',[])]),
+		n2=NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(3,'g',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(2,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
 		            VarExp(2,'b'),
-		            FuncExp(3,'h',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(5,'j',[VarExp(1,'a'),FuncExp(2,'f',[])]),
+		            FuncExp(3,'h',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(2,'f',[])],0)]),
 		            VarExp(2,'c'),
-		            FuncExp(4,'i',[VarExp(1,'a'),FuncExp(1,'f',[])]),
-		            FuncExp(4,'i',[VarExp(2,'a'),FuncExp(1,'f',[])]),
+		            FuncExp(4,'i',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+		            FuncExp(4,'i',[NormExp([VarExp(2,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
 		            VarExp(3,'c'),
-		            FuncExp(5,'j',[VarExp(1,'a'),FuncExp(1,'f',[])]),
+		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
 		            VarExp(2,'a'),
 		            VarExp(1,'a')],
 		            6)

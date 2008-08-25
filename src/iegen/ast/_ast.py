@@ -32,6 +32,12 @@ from copy import deepcopy
 
 #---------- Base AST Node class ----------
 class Node(object):
+
+	#Check method that makes sure its argument 'looks like' a NormExp
+	def _check_norm_exp(self,exp):
+		if not hasattr(exp,'terms') or not hasattr(exp,'const'):
+			raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
+
 	def apply_visitor(self,visitor):
 		raise NotImplementedError('All node types should override the apply_visitor method.')
 #-----------------------------------------
@@ -353,13 +359,13 @@ class Constraint(Node):
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
-
 class Equality(Constraint):
 	__slots__=('exp',)
 
 	def __init__(self,exp):
 		self.exp=exp
 		self._equality=True
+		self._check_norm_exp(exp)
 
 	def __repr__(self):
 		return 'Equality(%s)'%self.exp
@@ -376,6 +382,7 @@ class Inequality(Constraint):
 	def __init__(self,exp):
 		self.exp=exp
 		self._equality=False
+		self._check_norm_exp(exp)
 
 	def __repr__(self):
 		return 'Inequality(%s)'%self.exp
@@ -444,6 +451,10 @@ class FuncExp(Expression):
 		self.name=name
 		self.args=args
 		self.args.sort()
+
+		#Make sure all arguments 'look like' NormExps
+		for arg in self.args:
+			self._check_norm_exp(arg)
 
 	def __repr__(self):
 		return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.args)
