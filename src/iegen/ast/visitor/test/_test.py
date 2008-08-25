@@ -1,5 +1,5 @@
 from unittest import TestCase
-from nose.tools import assert_raises
+from nose.tools import raises
 
 #---------- Import Tests ----------
 #Test importing of iegen.ast.visitor
@@ -25,31 +25,34 @@ class ImportTestCase(TestCase):
 class TransVisitorTestCase(TestCase):
 
 	#Test that relations are not supported
+	@raises(ValueError)
 	def testRelationFailure(self):
 		from iegen.ast.visitor import TransVisitor
 		from iegen.parser import PresParser
 
 		rel=PresParser.parse_relation('{[]->[]}')
 		v=TransVisitor([])
-		assert_raises(ValueError,v.visit,rel)
+		v.visit(rel)
 
 	#Test that relations are not supported
+	@raises(ValueError)
 	def testFuncFailure(self):
 		from iegen.ast.visitor import TransVisitor
 		from iegen.parser import PresParser
 
 		set=PresParser.parse_set('{[]:f(a)=1}')
 		v=TransVisitor([])
-		assert_raises(ValueError,v.visit,set)
+		v.visit(set)
 
 	#Test that existential variables are not supported
+	@raises(ValueError)
 	def testExistentialFail(self):
 		from iegen.ast.visitor import TransVisitor
 		from iegen.parser import PresParser
 
 		set=PresParser.parse_set('{[a]:a=1 && b=1}')
 		v=TransVisitor([])
-		assert_raises(ValueError,v.visit,set)
+		v.visit(set)
 
 	#Make sure the result of the visiting is placed in the mat property
 	def testResultPresent(self):

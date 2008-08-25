@@ -1,5 +1,26 @@
 #---------- Testing related utility items ----------
 
+#---------- Character tuple generation methods ----------
+def tuple_gen(num,from_string):
+	num=min(num,len(from_string))
+	chars=from_string[:num]
+	return (tuple(chars[:num]) for num in range(len(chars)+1))
+
+#Returns a generator that returns tuples in the following sequence:
+# () ('a',) ('a','b') ('a','b','c') ...
+# Up to a tuple of length min(num,len(lowercase))
+def lower_gen(num):
+	from string import lowercase
+	return tuple_gen(num,lowercase)
+
+#Returns a generator that returns tuples in the following sequence:
+# () ('A',) ('A','B') ('A','B','C') ...
+# Up to a tuple of length min(num,len(uppercase))
+def upper_gen(num):
+	from string import uppercase
+	return tuple_gen(num,uppercase)
+#--------------------------------------------------
+
 #Attempts to parse the given formula using the given parsing method
 #If a SyntaxError is thrown, calls 'fail' on the given test case with an error string
 def parse_test(test_case,formula,parse):

@@ -1,4 +1,5 @@
 from unittest import TestCase
+from nose.tools import raises
 
 #---------- Import Tests ----------
 #Test importing of iegen.ast
@@ -14,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast classes
 	def testNameImport(self):
 		try:
-			from iegen.ast import Node,PresSet,PresSetUnion,PresRelation,PresRelationUnion,VarTuple,Conjunction,Constraint,Equality,Inequality,Expression,VarExp,FuncExp,NormExp
+			from iegen.ast import Node,PresSet,PresRelation,VarTuple,Conjunction,Constraint,Equality,Inequality,Expression,VarExp,FuncExp,NormExp
 		except Exception,e:
 			self.fail('Importing classes from iegen.ast failed: '+str(e))
 #----------------------------------
@@ -567,6 +568,40 @@ class NormExpTestCase(TestCase):
 					self.failUnless(n2>n,'%s<%s'%(n2,n))
 				else:
 					self.failUnless(n2<n,'%s>%s'%(n2,n))
+
+	#Tests that objects that 'look like' VarExps are valid terms for a NormExp
+	def testVarExpValid(self):
+		from iegen.ast import NormExp,Node
+		class DummyVarExp(Node):
+			def __init__(self):
+				self.coeff=None
+				self.id=None
+
+		NormExp([DummyVarExp()],0)
+
+	#Tests that objects that 'look like' FuncExps are valid terms for a NormExp
+	def testFuncExpValid(self):
+		from iegen.ast import NormExp,Node
+		class DummyFuncExp(Node):
+			def __init__(self):
+				self.coeff=None
+				self.name=None
+				self.args=None
+		NormExp([DummyFuncExp()],0)
+
+	#Tests that an object that 'looks like' neither a VarExp nor a FuncExp is not a valid term for a NormExp
+	@raises(ValueError)
+	def testNormExpInvalid(self):
+		from iegen.ast import NormExp
+		NormExp([NormExp([],0)],0)
+	@raises(ValueError)
+	def testIntInvalid(self):
+		from iegen.ast import NormExp
+		NormExp([10],0)
+	@raises(ValueError)
+	def testStrInvalid(self):
+		from iegen.ast import NormExp
+		NormExp(['hello'],0)
 
 	#Tests the __mul__ method
 	def testMul(self):

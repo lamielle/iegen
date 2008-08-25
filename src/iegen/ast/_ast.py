@@ -5,14 +5,18 @@
 #
 # Grammar for AST
 #
-#    PresSet -> VarTuple Conjunction    // PresSet
-#            -> PresSet*                // PresSetUnion
+#    PresSet -> set_tuple:VarTuple conjunct:Conjunction // PresSet
 #
-#    VarTuple -> ID*
-#    Conjunction -> IConstraint*
+#    PresRelation -> in_tuple:VarTuple out_tuple:VarTuple conjunct:Conjunction // PresSet
 #
-#    IConstraint -> IExp:lhs IExp:rhs // Inequality (GTE assummed)
-#                -> IExp:lhs IExp:rhs // Equality
+#    VarTuple -> id_list:ID*
+#
+#    Conjunction -> constraint_list:Constraint*
+#
+#    Constraint -> NormExp>=0 // Inequality
+#               -> NormExp=0  // Equality
+#
+#    NormExp -> 
 #
 #    Exp  -> INT                // IntExp
 #          -> IExp:operand       // UMinusExp
@@ -21,11 +25,9 @@
 #          -> ID                 // VarExp
 #          -> ID:func IExp*      // FuncExp
 #
-# Naming Convention
-#	A class prefixed with "I" is an interface class.
-#
 # Started by: Michelle Strout 7/22/08
 # Modified by: Alan LaMielle starting around 7/30/08
+# AML 8/25/2008: Removed PresSetUnion and PresRelation Union
 #
 
 from copy import deepcopy
@@ -34,9 +36,25 @@ from copy import deepcopy
 class Node(object):
 
 	#Check method that makes sure its argument 'looks like' a NormExp
-	def _check_norm_exp(self,exp):
+	def _like_norm_exp(self,exp):
 		if not hasattr(exp,'terms') or not hasattr(exp,'const'):
-			raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
+			return False
+		else:
+			return True
+
+	#Check method that makes sure its argument 'looks like' a VarExp
+	def _like_var_exp(self,exp):
+		if not hasattr(exp,'coeff') or not hasattr(exp,'id'):
+			return False
+		else:
+			return True
+
+	#Check method that makes sure its argument 'looks like' a FuncExp
+	def _like_func_exp(self,exp):
+		if not hasattr(exp,'coeff') or not hasattr(exp,'name') or not hasattr(exp,'args'):
+			return False
+		else:
+			return True
 
 	def apply_visitor(self,visitor):
 		raise NotImplementedError('All node types should override the apply_visitor method.')
@@ -67,65 +85,9 @@ class PresSet(Node):
 
 	def apply_visitor(self,visitor):
 		visitor.visitPresSet(self)
-
-	def union(self,other):
-		if isinstance(other,PresSet):
-			return PresSetUnion([self,other])
-		elif isinstance(other,PresSetUnion):
-			return other.union(self)
-		else:
-			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
-
-
-#Presburger Set that is a disjunction of a collection of PresSet instances
-class PresSetUnion(Node):
-	__slots__=('sets',)
-
-	def __init__(self,sets):
-		self.sets=sets
-		self._arity_check()
-
-	def __repr__(self):
-		return "PresSetUnion(%s)"%(self.sets)
-
-	def _arity_check(self):
-		if len(self.sets)>0:
-			set_arity=self.sets[0].arity()
-			for set in self.sets[1:]:
-				if set.arity()!=set_arity:
-					raise ValueError('All sets in a PresSetUnion must have the same arity.')
-
-	def _add_set(self,set):
-		if not isinstance(set,PresSet):
-			raise ValueError("Cannot add object of type '%s' to PresSetUnion."%type(set))
-		self.sets.append(set)
-
-	def _add_union(self,union):
-		if not isinstance(set,PresSetUnion):
-			raise ValueError("Cannot add sets from object of type '%s' to PresSetUnion."%type(set))
-		self.sets.extend(union.sets)
-
-	def arity(self):
-		if len(self.sets)>0:
-			return self.sets[0].arity()
-		else:
-			raise ValueError('Cannot determine arity of a PresSetUnion that contains no sets.')
-
-	def apply_visitor(self,visitor):
-		visitor.visitPresSetUnion(self)
-
-	def union(self,other):
-		if isinstance(other,PresSet):
-			self._add_set(other)
-			return self
-		elif isinstance(other,PresSetUnion):
-			self._add_union(other)
-			return self
-		else:
-			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 #-------------------------------------
 
-#---------- Presburger Relations ----------
+#---------- Presburger Relation ----------
 #A single presburger relation
 class PresRelation(Node):
 	__slots__=('in_tuple','out_tuple','conjunct')
@@ -153,148 +115,6 @@ class PresRelation(Node):
 
 	def apply_visitor(self,visitor):
 		visitor.visitPresRelation(self)
-
-	def union(self,other):
-		if isinstance(other,PresRelation):
-			result=PresRelationUnion([self])
-			result.union(other)
-			return result
-		elif isinstance(other,PresRelationUnion):
-			return other.union(self)
-		else:
-			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
-
-	def inverse(self):
-		outTemp=self.out_tuple
-		self.out_tuple=self.in_tuple
-		self.in_tuple=outTemp
-		return self
-
-	#Relation composition: self(other)
-	def compose(self,other):
-		#Composing two relations?
-		if isinstance(other,PresRelation):
-			#Make sure the arities are valid
-			if other.arity_out()!=self.arity_in():
-				raise ValueError('Output arity of first relation (%d) does not match input arity of second relation (%d)'%(other.arity_out(),self.arity_in()))
-
-			#Add equalities of tuple variables
-			#We know there are the same number of variables since we checked above
-			for i in xrange(self.arity_in()):
-				constraint=Equality(MinusExp(VarExp(other.in_tuple[i]),VarExp(self.out_tuple[i])))
-				self.conjunct.constraint_list.append(constraint)
-
-			#Add the other's constraints to this relation
-			self.conjunct.extend(other.conjunct.constraint_list)
-
-			return self
-		#Composing a relation with union of relations?
-		elif isinstance(other,PresRelationUnion):
-			new_union=PresRelationUnion([])
-			for relation in other.relations:
-				new_union._add_relation(self.compose(relation))
-			return new_union
-		else:
-			raise ValueError("Unsupported argument of type '%s' for operation compose."%type(other))
-
-
-#Presburger Relation that is a disjunction of a collection of PresRelation instances
-class PresRelationUnion(Node):
-	__slots__=('relations',)
-
-	def __init__(self,relations):
-		self.relations=relations
-		self._arity_check()
-
-	def __repr__(self):
-		return "PresRelationUnion(%s)"%(self.relations)
-
-	def _arity_check(self):
-		if len(self.relations)>0:
-			in_arity=self.relations[0].arity_in()
-			out_arity=self.relations[0].arity_out()
-			for relation in self.relations[1:]:
-				if relation.arity_in()!=arity_in:
-					raise ValueError('All relations in a PresRelationUnion must have the same input arity.')
-				if relation.arity_out()!=arity_out:
-					raise ValueError('All relations in a PresRelationUnion must have the same output arity.')
-
-	def _add_relation(self,relation):
-		if not isinstance(relation,PresRelation):
-			raise ValueError("Cannot add object of type '%s' to PresRelationUnion."%type(relation))
-		self.relations.append(relation)
-
-	def _add_union(self,union):
-		if not isinstance(relation,PresRelationUnion):
-			raise ValueError("Cannot add relations from object of type '%s' to PresRelationUnion."%type(relation))
-		self.relations.extend(union.relations)
-
-	def arity_in(self):
-		if len(self.relations)>0:
-			return self.relations[0].arity_in()
-		else:
-			raise ValueError('Cannot determine input arity of a PresRelationUnion that contains no relations.')
-
-	def arity_out(self):
-		if len(self.relations)>0:
-			return self.relations[0].arity_out()
-		else:
-			raise ValueError('Cannot determine output arity of a PresRelationUnion that contains no relations.')
-
-	def apply_visitor(self,visitor):
-		visitor.visitPresRelationUnion(self)
-
-	def union(self,other):
-		#Unioning a single relation?
-		if isinstance(other,PresRelation):
-			if 0==len(self.relations):
-				self._add_relation(other)
-			else:
-				#Assuming that all relations already within the union
-				#have matching arities
-				if self.relations[0].arity_in()==other.arity_in() and \
-				   self.relations[0].arity_out()==other.arity_out():
-					self._add_relation(other)
-				else:
-					raise ValueError('Cannot union relations with differing in or out arity')
-			return self
-		#Unioning another union?
-		elif isinstance(other,PresRelationUnion):
-			if 0==len(self.relations) or 0==len(other.relations):
-				self._add_union(other)
-			else:
-				#Assuming that all relations already within the unions
-				#have matching arities
-				if self.relations[0].arity_in()==other.relations[0].arity_in() and \
-				   self.relations[0].arity_out()==other.relations[0].arity_out():
-					self._add_union(other)
-				else:
-					raise ValueError('Cannot union relations with differing in or out arity')
-			return self
-		else:
-			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
-
-	def inverse(self):
-		for relation in self.relations:
-			relation.inverse()
-		return self
-
-	def compose(self,other):
-		#Composing with a single relation?
-		if isinstance(other,PresRelation):
-			new_union=PresRelationUnion([])
-			for relation in self.relations:
-				new_union._add_relation(relation.compose(other))
-			return new_union
-		#Composing two unions?
-		elif isinstance(other,PresRelationUnion):
-			new_union=PresRelationUnion([])
-			for self_relation in self.relations:
-				for other_relation in other.relations:
-					new_union._add_relation(self_relation.compose(other_relation))
-			return new_union
-		else:
-			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 #------------------------------------------
 
 #---------- Variable Tuple Node ----------
@@ -365,7 +185,9 @@ class Equality(Constraint):
 	def __init__(self,exp):
 		self.exp=exp
 		self._equality=True
-		self._check_norm_exp(exp)
+
+		if not self._like_norm_exp(exp):
+			raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
 
 	def __repr__(self):
 		return 'Equality(%s)'%self.exp
@@ -382,7 +204,8 @@ class Inequality(Constraint):
 	def __init__(self,exp):
 		self.exp=exp
 		self._equality=False
-		self._check_norm_exp(exp)
+		if not self._like_norm_exp(exp):
+			raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
 
 	def __repr__(self):
 		return 'Inequality(%s)'%self.exp
@@ -454,7 +277,8 @@ class FuncExp(Expression):
 
 		#Make sure all arguments 'look like' NormExps
 		for arg in self.args:
-			self._check_norm_exp(arg)
+			if not self._like_norm_exp(arg):
+				raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
 
 	def __repr__(self):
 		return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.args)
@@ -502,6 +326,17 @@ class NormExp(Expression):
 		self.terms=terms
 		self.terms.sort()
 		self.const=const
+
+		self._check_terms()
+
+	#Tests that all terms in this NormExp are either VarExps or FuncExps
+	def _check_terms(self):
+		for term in self.terms:
+			if not self._like_var_exp(term) and not self._like_func_exp(term):
+				if not self._like_var_exp(term):
+					raise ValueError("The given expression, '%s', must have the 'coeff' and 'id' attributes."%term)
+				else:
+					raise ValueError("The given expression, '%s', must have the 'coeff', 'name', and 'args' attributes."%term)
 
 	def __repr__(self):
 		self.terms.sort()
