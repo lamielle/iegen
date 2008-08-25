@@ -44,13 +44,12 @@ test_sets=(
 	("{[a,b]: a=b' && b=a'}","PresSet(VarTuple(['a', 'b']),Conjunction([Equality(NormExp([VarExp(-1,\"a'\"), VarExp(1,'b')],0)), Equality(NormExp([VarExp(-1,\"b'\"), VarExp(1,'a')],0))]))"),
 	("{[a,b]: a=b && a=a' and a'=b'}","PresSet(VarTuple(['a', 'b']),Conjunction([Equality(NormExp([VarExp(-1,\"a'\"), VarExp(1,'a')],0)), Equality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0)), Equality(NormExp([VarExp(-1,\"b'\"), VarExp(1,\"a'\")],0))]))"),
 	("{[a,b]: a=b && a=a' and a'=b' && a=1}","PresSet(VarTuple(['a', 'b']),Conjunction([Equality(NormExp([VarExp(1,'a')],-1)), Equality(NormExp([VarExp(-1,\"a'\"), VarExp(1,'a')],0)), Equality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0)), Equality(NormExp([VarExp(-1,\"b'\"), VarExp(1,\"a'\")],0))]))"),
-	("{[a,b]: 1<=a and a<=b && b<=10}","PresSet(VarTuple(['a', 'b']),Conjunction([Inequality(NormExp([VarExp(1,'b')],-10)), Inequality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0)), Inequality(NormExp([VarExp(-1,'a')],1))]))"),
+	("{[a,b]: 1<=a and a<=b && b<=10}","PresSet(VarTuple(['a', 'b']),Conjunction([Inequality(NormExp([VarExp(1,'a')],-1)), Inequality(NormExp([VarExp(-1,'a'), VarExp(1,'b')],0)), Inequality(NormExp([VarExp(-1,'b')],10))]))"),
 	("{[a,b]: a>=b && c>=d AND a=b}","PresSet(VarTuple(['a', 'b']),Conjunction([Inequality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0)), Inequality(NormExp([VarExp(-1,'d'), VarExp(1,'c')],0)), Equality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0))]))"),
-	("{[ii]: ii>=f(x)}","PresSet(VarTuple(['ii']),Conjunction([Inequality(NormExp([VarExp(1,'ii'), FuncExp(-1,'f',[VarExp(1,'x')])],0))]))"),
-	("{[a]:f(a,a)>=0}","PresSet(VarTuple(['a']),Conjunction([Inequality(NormExp([FuncExp(1,'f',[VarExp(1,'a'), VarExp(1,'a')])],0))]))"),
-	("{[a]:f(g(a,a))>=0}","PresSet(VarTuple(['a']),Conjunction([Inequality(NormExp([FuncExp(1,'f',[FuncExp(1,'g',[VarExp(1,'a'), VarExp(1,'a')])])],0))]))"),
-	("{[a]:3f(5*g(2a,-5*a)-5)>=0}","PresSet(VarTuple(['a']),Conjunction([Inequality(NormExp([FuncExp(3,'f',[NormExp([FuncExp(5,'g',[VarExp(-5,'a'), VarExp(2,'a')])],-5)])],0))]))"))
-
+	("{[ii]: ii>=f(x)}","PresSet(VarTuple(['ii']),Conjunction([Inequality(NormExp([VarExp(1,'ii'), FuncExp(-1,'f',[NormExp([VarExp(1,'x')],0)])],0))]))"),
+	("{[a]:f(a,a)>=0}","PresSet(VarTuple(['a']),Conjunction([Inequality(NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'a')],0), NormExp([VarExp(1,'a')],0)])],0))]))"),
+	("{[a]:f(g(a,a))>=0}","PresSet(VarTuple(['a']),Conjunction([Inequality(NormExp([FuncExp(1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'a')],0), NormExp([VarExp(1,'a')],0)])],0)])],0))]))"),
+	("{[a]:3f(5*g(2a,-5*a)-5)>=0}","PresSet(VarTuple(['a']),Conjunction([Inequality(NormExp([FuncExp(3,'f',[NormExp([FuncExp(5,'g',[NormExp([VarExp(-5,'a')],0), NormExp([VarExp(2,'a')],0)])],-5)])],0))]))"))
 
 #PresParser.parse_set('{[i,j,k]}')
 #
@@ -95,7 +94,7 @@ test_relations=(
 	("{[a,b]->[]}","PresRelation(VarTuple(['a', 'b']),VarTuple([]),Conjunction([]))"),
 	("{[a,b,c]->[]}","PresRelation(VarTuple(['a', 'b', 'c']),VarTuple([]),Conjunction([]))"),
 	("{[]->[a']}","PresRelation(VarTuple([]),VarTuple([\"a'\"]),Conjunction([]))"),
-	("{[]->[a',b']","PresRelation(VarTuple([]),VarTuple([\"a'\", \"b'\"]),Conjunction([]))"),
+	("{[]->[a',b']}","PresRelation(VarTuple([]),VarTuple([\"a'\", \"b'\"]),Conjunction([]))"),
 	("{[]->[a',b',c']}","PresRelation(VarTuple([]),VarTuple([\"a'\", \"b'\", \"c'\"]),Conjunction([]))"),
 	("{[a]->[a']}","PresRelation(VarTuple(['a']),VarTuple([\"a'\"]),Conjunction([]))"),
 	("{[a,b]->[a',b']}","PresRelation(VarTuple(['a', 'b']),VarTuple([\"a'\", \"b'\"]),Conjunction([]))"),
@@ -121,12 +120,12 @@ test_relations=(
 	("{[a,b]->[a',b']: a=b' && b=a'}","PresRelation(VarTuple(['a', 'b']),VarTuple([\"a'\", \"b'\"]),Conjunction([Equality(NormExp([VarExp(-1,\"a'\"), VarExp(1,'b')],0)), Equality(NormExp([VarExp(-1,\"b'\"), VarExp(1,'a')],0))]))"),
 	("{[a,b]->[a',b']: a=b && a=a' and a'=b'}","PresRelation(VarTuple(['a', 'b']),VarTuple([\"a'\", \"b'\"]),Conjunction([Equality(NormExp([VarExp(-1,\"a'\"), VarExp(1,'a')],0)), Equality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0)), Equality(NormExp([VarExp(-1,\"b'\"), VarExp(1,\"a'\")],0))]))"),
 	("{[a,b]->[a',b']: a=b && a=a' and a'=b' && a=1}","PresRelation(VarTuple(['a', 'b']),VarTuple([\"a'\", \"b'\"]),Conjunction([Equality(NormExp([VarExp(1,'a')],-1)), Equality(NormExp([VarExp(-1,\"a'\"), VarExp(1,'a')],0)), Equality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0)), Equality(NormExp([VarExp(-1,\"b'\"), VarExp(1,\"a'\")],0))]))"),
-	("{[a,b]->[c,d]: 1<=a and a<=b && b<=10}","PresRelation(VarTuple(['a', 'b']),VarTuple(['c', 'd']),Conjunction([Inequality(NormExp([VarExp(1,'b')],-10)), Inequality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0)), Inequality(NormExp([VarExp(-1,'a')],1))]))"),
+	("{[a,b]->[c,d]: 1<=a and a<=b && b<=10}","PresRelation(VarTuple(['a', 'b']),VarTuple(['c', 'd']),Conjunction([Inequality(NormExp([VarExp(1,'a')],-1)), Inequality(NormExp([VarExp(-1,'a'), VarExp(1,'b')],0)), Inequality(NormExp([VarExp(-1,'b')],10))]))"),
 	("{[a,b]->[c,d]: a>=b && c>=d AND a=b}","PresRelation(VarTuple(['a', 'b']),VarTuple(['c', 'd']),Conjunction([Inequality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0)), Inequality(NormExp([VarExp(-1,'d'), VarExp(1,'c')],0)), Equality(NormExp([VarExp(-1,'b'), VarExp(1,'a')],0))]))"),
-	("{[ii] -> [inter_func]: ii>=f(x)}","PresRelation(VarTuple(['ii']),VarTuple(['inter_func']),Conjunction([Inequality(NormExp([VarExp(1,'ii'), FuncExp(-1,'f',[VarExp(1,'x')])],0))]))"),
-	("{[a]->[b]:f(a,a)>=0}","PresRelation(VarTuple(['a']),VarTuple(['b']),Conjunction([Inequality(NormExp([FuncExp(1,'f',[VarExp(1,'a'), VarExp(1,'a')])],0))]))"),
-	("{[a]->[b]:f(g(a,a))>=0}","PresRelation(VarTuple(['a']),VarTuple(['b']),Conjunction([Inequality(NormExp([FuncExp(1,'f',[FuncExp(1,'g',[VarExp(1,'a'), VarExp(1,'a')])])],0))]))"),
-	("{[a]->[b]:3f(5*g(2a,-5*a)-5)>=0}","PresRelation(VarTuple(['a']),VarTuple(['b']),Conjunction([Inequality(NormExp([FuncExp(3,'f',[NormExp([FuncExp(5,'g',[VarExp(-5,'a'), VarExp(2,'a')])],-5)])],0))]))"))
+	("{[ii] -> [inter_func]: ii>=f(x)}","PresRelation(VarTuple(['ii']),VarTuple(['inter_func']),Conjunction([Inequality(NormExp([VarExp(1,'ii'), FuncExp(-1,'f',[NormExp([VarExp(1,'x')],0)])],0))]))"),
+	("{[a]->[b]:f(a,a)>=0}","PresRelation(VarTuple(['a']),VarTuple(['b']),Conjunction([Inequality(NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'a')],0), NormExp([VarExp(1,'a')],0)])],0))]))"),
+	("{[a]->[b]:f(g(a,a))>=0}","PresRelation(VarTuple(['a']),VarTuple(['b']),Conjunction([Inequality(NormExp([FuncExp(1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'a')],0), NormExp([VarExp(1,'a')],0)])],0)])],0))]))"),
+	("{[a]->[b]:3f(5*g(2a,-5*a)-5)>=0}","PresRelation(VarTuple(['a']),VarTuple(['b']),Conjunction([Inequality(NormExp([FuncExp(3,'f',[NormExp([FuncExp(5,'g',[NormExp([VarExp(-5,'a')],0), NormExp([VarExp(2,'a')],0)])],-5)])],0))]))"))
 
 #PresParser.parse_relation('{[i] -> [j]}')
 #PresParser.parse_relation('{[i] -> [j] : i = j }')
