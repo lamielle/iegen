@@ -1,5 +1,10 @@
 from iegen.ast.visitor import DFVisitor
 
+#Translation Visitor:
+#Only works on a Set, not a Relation
+#Given a Set, produces a collection of domain matrices,
+#one for each PresSet in the Set.
+#The result is placed in the 'mats' attribute
 class TransVisitor(DFVisitor):
 	def __init__(self,params):
 		self.params=params
@@ -12,7 +17,13 @@ class TransVisitor(DFVisitor):
 		pass
 
 	def inSet(self,node):
-		self.mat=[]
+		self.mats=[]
+
+	def inPresSet(self,node):
+		self._mat=[]
+
+	def outPresSet(self,node):
+		self.mats.append(self._mat)
 
 	def inRelation(self,node):
 		raise ValueError('This visitor only works on Sets.')
@@ -23,18 +34,18 @@ class TransVisitor(DFVisitor):
 		self.num_cols=1+self.num_vars+self.num_params+1
 
 	def inInequality(self,node):
-		self.row=[0]*self.num_cols
-		self.row[0]=1
+		self._row=[0]*self.num_cols
+		self._row[0]=1
 
 	def outInequality(self,node):
-		self.mat.append(self.row)
+		self._mat.append(self._row)
 
 	def inEquality(self,node):
-		self.row=[0]*self.num_cols
-		self.row[0]=0
+		self._row=[0]*self.num_cols
+		self._row[0]=0
 
 	def outEquality(self,node):
-		self.mat.append(self.row)
+		self._mat.append(self._row)
 
 	def inVarExp(self,node):
 		#Calculate the position of this variable in the matrix
@@ -46,7 +57,7 @@ class TransVisitor(DFVisitor):
 			raise ValueError('Existential variable in set.')
 
 		#Assign this variable's coefficient to the matrix at the clculated position
-		self.row[pos]=node.coeff
+		self._row[pos]=node.coeff
 
 	#Cannot translate sets with functions
 	def inFuncExp(self,node):
@@ -54,4 +65,4 @@ class TransVisitor(DFVisitor):
 
 	def inNormExp(self,node):
 		#Set the last element in the row to the constant value of the expression
-		self.row[-1]=node.const
+		self._row[-1]=node.const

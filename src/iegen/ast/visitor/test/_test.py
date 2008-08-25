@@ -54,7 +54,7 @@ class TransVisitorTestCase(TestCase):
 		v=TransVisitor([])
 		v.visit(set)
 
-	#Make sure the result of the visiting is placed in the mat property
+	#Make sure the result of the visiting is placed in the mat attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import TransVisitor
 		from iegen import Set
@@ -62,38 +62,38 @@ class TransVisitorTestCase(TestCase):
 		set=Set('{[]}')
 		v=TransVisitor([])
 		v.visit(set)
-		self.failUnless(hasattr(v,'mat'),"TransVisitor doesn't place result in 'mat' property.")
+		self.failUnless(hasattr(v,'mats'),"TransVisitor doesn't place result in 'mats' property.")
 
-	set_tests=(('{[a]: a=n}',[[0,1,-1,0]],['n']),
-	           ('{[a,b]: a=n && b=m}',[[0,1,0,-1,0,0],
-	                                   [0,0,1,0,-1,0]],['n','m']),
-	           ('{[a]: 0<a && a<n+1}',[[1,1,0,-1],
-	                              [1,-1,1,0]],['n']),
-	           ('{[a]: 1<=a && a<=n}',[[1, 1,0,-1],
-	                              [1,-1,1, 0]],['n']),
-	           ('{[a,b]: 0<a && a<n+1 && 0<b && b<n+1}',[[1, 1, 0,0,-1],
+	set_tests=(('{[a]: a=n}',[[[0,1,-1,0]]],['n']),
+	           ('{[a,b]: a=n && b=m}',[[[0,1,0,-1,0,0],
+	                                   [0,0,1,0,-1,0]]],['n','m']),
+	           ('{[a]: 0<a && a<n+1}',[[[1,1,0,-1],
+	                              [1,-1,1,0]]],['n']),
+	           ('{[a]: 1<=a && a<=n}',[[[1, 1,0,-1],
+	                              [1,-1,1, 0]]],['n']),
+	           ('{[a,b]: 0<a && a<n+1 && 0<b && b<n+1}',[[[1, 1, 0,0,-1],
 	                                                   [1,-1, 0,1, 0],
 	                                                   [1, 0, 1,0,-1],
-	                                                   [1, 0,-1,1, 0]],['n']),
-	           ('{[a,b]: 1<=a && a<=n && 1<=b && b<=n}',[[1, 1, 0,0,-1],
+	                                                   [1, 0,-1,1, 0]]],['n']),
+	           ('{[a,b]: 1<=a && a<=n && 1<=b && b<=n}',[[[1, 1, 0,0,-1],
 	                                                   [1,-1, 0,1, 0],
 	                                                   [1, 0, 1,0,-1],
-	                                                   [1, 0,-1,1, 0]],['n']),
-	           ('{[a,b]: 0<a && a<n+1 && 0<b && b<m+1}',[[1, 1, 0,0,0,-1],
+	                                                   [1, 0,-1,1, 0]]],['n']),
+	           ('{[a,b]: 0<a && a<n+1 && 0<b && b<m+1}',[[[1, 1, 0,0,0,-1],
 	                                                   [1,-1, 0,1,0, 0],
 	                                                   [1, 0, 1,0,0,-1],
-	                                                   [1, 0,-1,0,1, 0]],['n','m']),
-	           ('{[a,b]: 1<=a && a<=n && 1<=b && b<=m}',[[1, 1, 0,0,0,-1],
+	                                                   [1, 0,-1,0,1, 0]]],['n','m']),
+	           ('{[a,b]: 1<=a && a<=n && 1<=b && b<=m}',[[[1, 1, 0,0,0,-1],
 	                                                   [1,-1, 0,1,0, 0],
 	                                                   [1, 0, 1,0,0,-1],
-	                                                   [1, 0,-1,0,1, 0]],['n','m']))
+	                                                   [1, 0,-1,0,1, 0]]],['n','m']))
 
 	#Test that the sets in set_tests are translated properly
 	def testTrans(self):
 		from iegen.ast.visitor import TransVisitor
 		from iegen import Set
 
-		for set_string,res_mat,params in self.set_tests:
+		for set_string,res_mats,params in self.set_tests:
 			#Create a set from set string
 			set=Set(set_string)
 
@@ -102,9 +102,11 @@ class TransVisitorTestCase(TestCase):
 			v.visit(set)
 
 			#Sort the rows of the matricies
-			v.mat.sort()
-			res_mat.sort()
+			for mat in v.mats:
+				mat.sort()
+			for res_mat in res_mats:
+				res_mat.sort()
 
 			#Make sure the translated matrix matches the result matrix
-			self.failUnless(v.mat==res_mat,'%s!=%s'%(v.mat,res_mat))
+			self.failUnless(v.mats==res_mats,'%s!=%s'%(v.mats,res_mats))
 #-----------------------------------------------------
