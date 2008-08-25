@@ -75,12 +75,19 @@ Operations we need for explicit relations and their input and output tuples.
     Relation_order_by_out_in(relptr);
 
     // constructing a tuple
-    mytuple = tuple(x_1, x_2, ..., x_n)
+    mytuple = Tuple(x_1, x_2, ..., x_n)
     
     // accessing entry k in a tuple
     // these should be macros
-    ... = tuple_val(mytuple, k)
-    tuple_val(mytuple, k) = ...
+    // Where do I even need these?
+    ... = Tuple_val(mytuple, k)
+    Tuple_val(mytuple, k) = ...
+    
+    // Given an in tuple, return THE(?) out tuple.  
+    // This suggests uninterpreted function symbol, because in a relation
+    // could have one input go to many outputs.
+    out_tuple = ER_out_given_in(relation, in_tuple)
+        // should assert if this relation is not a function.
 
 Maybe we do need different data structures given certain assumptions.
     - permutation, or one-to-one and onto function with same domain and range
@@ -129,7 +136,7 @@ Main question is what should the tuple data structure be?
     -I don't think we can get away from dynamically allocating the tuple
 
 Important Specializations
-    - 1D-to-1D
+    - 1D-to-1D and function
         - only needs output_vals
         - FOREACH_out_given_in macro could be specialized to not loop
     - 1D-to-anything
@@ -144,4 +151,20 @@ How would I rewrite CPackHyper (which should be named IAG_Cpack) with explicit r
     
 I think the tuple data structure should be a struct with an int * and int.  The int * will point at an array of ints or possibly into an existing array in a Relation.  The int will indicate how many ints are in the tuple.  Since it is so small, going to pass it around without doing dynamic allocation.  Might have to dynamically allocate the integer array it is pointing at if the tuple is not being accessed from a relation, but don't have to dynamically allocate the tuple itself.
 
+8/21/08
+-------
+Ok, going to stick with just having the explicit relation, but we will have three orthogonal special cases?
+    1) 1D-to-XD arity
+        do NOT need in_vals
+            -will have easy random access via input tuples
+        in_tuple will just be an integer
+        
+    2) XD-to-1D arity
+        out tuple will just be an integer
+        
+    3) relation is a function, each input only maps to one output
+        do NOT need out_index and can make ER_out_given_in call
+        
+    4) insertion order?
 
+Seems like I might be bending over backwards to implement this in C.  What if I use C++, then will STL make this easier?  I am a little gun shy about this because of the map problems we have had in OA.

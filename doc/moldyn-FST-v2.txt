@@ -256,7 +256,7 @@ For data and iteration reordering see moldyn-data-iter-reord.txt.  Inputs have c
                 = { [s,z,i,j] -> [c] : z=1 && j=1 && i=inter1(c) }                
 	            
 	
-	b) Generate code to explicitly inspect those dependences and create  to_deps and from_deps hypergraphs. (possible ITO for later: if to_deps and from_deps are the same but inverse of each other then only have to make one hypergraph?  would probably need inverse operation on hypergraph data structure)
+	b) Generate code to explicitly inspect those dependences and create  to_deps and from_deps hypergraphs. (possible ITO for later: if to_deps and from_deps are the same but inverse of each other then only have to make one explicit relation?  would probably need inverse operation on explicit relation data structure?)
 	
 	c) Pass the dependences into FST.
 	
