@@ -1,19 +1,20 @@
 #
-# pres_parser.py
-#
-# Attempting a python only manipulation of presburger sets and relations.
+# _parser.py
+
+# A python parser for presburger sets and relations.
 # Copied and trimmed from omega_bindings/src/omega/parser/pres_parser.py,
 # which was written by Alan LaMielle.
 #
 # Assumptions and set and relation language restrictions
 #   - All constraints must be written as binary operations.
 #     For example, 1<=i<=10 must be written as 1<=i && i<=10.
-#   - The constraints will all be part of a conjunction.  For disjunction
-#     union separate sets.
+#   - The constraints will all be part of a conjunction (AND).  For disjunction
+#     union separate Set/Relation objects (iegen.Set/Relation)
 #   - This grammar does NOT include Exists, Forall, or not keywords.
 #
 # MMS 7/21/08
 # AML 8/13/2008: Modified to use rewritten expressions and their operators
+# AML 8/25/2008: Removed union support from parser
 
 from iegen.ast import *
 import types
@@ -24,12 +25,39 @@ class PresParser(object):
 	#---------- Public Interface ----------
 	#Parse the given set string and return the associated AST
 	def parse_set(set,debug=False):
-		return PresParser.get_set_parser(set).parse(set)
+		#Remove relation-only tokens and rules
+		relation_rule=PresParser.p_relation
+		del PresParser.p_relation
+		arrow_token=PresParser.t_ARROW
+		del PresParser.t_ARROW
+
+		try:
+			#Define what tokens the lexer should use
+			PresParser.tokens=PresParser.set_tokens
+
+			#Return the parsed AST
+			return PresParser.get_set_parser(set).parse(set)
+		finally:
+			#Replace the relation-only tokens and rules
+			PresParser.p_relation=relation_rule
+			PresParser.t_ARROW=arrow_token
 	parse_set=staticmethod(parse_set)
 
 	#Parse the given relation string and return the associated AST
 	def parse_relation(relation,debug=False):
-		return PresParser.get_relation_parser(relation).parse(relation)
+		#Remove set-only tokens and rules
+		p_set=PresParser.p_set
+		del PresParser.p_set
+
+		try:
+			#Define what tokens the lexer should use
+			PresParser.tokens=PresParser.relation_tokens
+
+			#Return the parsed AST
+			return PresParser.get_relation_parser(relation).parse(relation)
+		finally:
+			#Replace the set-only tokens and rules
+			PresParser.p_set=p_set
 	parse_relation=staticmethod(parse_relation)
 	#--------------------------------------
 
@@ -56,16 +84,17 @@ class PresParser(object):
 	def _get_parser(parser_type,formula):
 		from ply import lex,yacc
 		lex.lex(module=PresParser(parser_type,formula))
-		return yacc.yacc(start=parser_type,module=PresParser(parser_type,formula),tabmodule='iegen.parsetab_%s'%parser_type)
+		return yacc.yacc(start=parser_type,module=PresParser(parser_type,formula),tabmodule='iegen.parsetab_%s'%parser_type,debug=0)
 	_get_parser=staticmethod(_get_parser)
 
 	#---------- Lexer methods/members ----------
 	#Token definitions
 	keywords={
-		'and':'AND','AND':'AND',
-		'union':'UNION','UNION':'UNION'
+		'and':'AND','AND':'AND'
     }
-	tokens=('LBRACE','RBRACE','LBRACKET','RBRACKET','LPAREN','RPAREN','COMMA','COLON','STAR','PLUS','DASH','EQ','NEQ','GT','GTE','LT','LTE','ARROW','ID','INT')+tuple(set(keywords.values()))
+	set_tokens=('LBRACE','RBRACE','LBRACKET','RBRACKET','LPAREN','RPAREN','COMMA','COLON','STAR','PLUS','DASH','EQ','NEQ','GT','GTE','LT','LTE','ID','INT')+tuple(set(keywords.values()))
+
+	relation_tokens=set_tokens+('ARROW',)
 
 	t_LBRACE=r'\{'
 	t_RBRACE=r'\}'
@@ -110,7 +139,6 @@ class PresParser(object):
 		('left','STAR'),
 		('left','UMINUS'),
 		('left','AND'),
-		('left','UNION')
 	)
 
 	#Parser error routine
@@ -122,20 +150,12 @@ class PresParser(object):
 			raise SyntaxError("Syntax error at '%s' [%d,%d] when parsing '%s'" %(t.value,t.lineno,t.lexpos,self._formula))
 
 	def p_set(self,t):
-		'''set : LBRACE variable_tuple_set optional_constraints RBRACE
-				           | set UNION set'''
-		if 5==len(t):
-			t[0] = PresSet(t[2],t[3])
-		else:
-			t[0] = t[1].union(t[3])
+		'''set : LBRACE variable_tuple optional_constraints RBRACE'''
+		t[0] = PresSet(t[2],t[3])
 
 	def p_relation(self,t):
-		'''relation : LBRACE variable_tuple_in ARROW variable_tuple_out optional_constraints RBRACE
-				           | relation UNION relation'''
-		if 7==len(t):
-			t[0] = PresRelation(t[2],t[4],t[5])
-		else:
-			t[0] = t[1].union(t[3])
+		'''relation : LBRACE variable_tuple ARROW variable_tuple optional_constraints RBRACE'''
+		t[0] = PresRelation(t[2],t[4],t[5])
 
 	#epsilon (empty production)
 	def p_epsilon(self,t):
@@ -144,18 +164,6 @@ class PresParser(object):
 	#--------------------------------------------
 
 	#---------- Variable Tuple Productions ----------
-	def p_variable_tuple_set(self,t):
-		'''variable_tuple_set : variable_tuple'''
-		t[0] = t[1]
-
-	def p_variable_tuple_in(self,t):
-		'''variable_tuple_in : variable_tuple'''
-		t[0] = t[1]
-
-	def p_variable_tuple_out(self,t):
-		'''variable_tuple_out : variable_tuple'''
-		t[0] = t[1]
-
 	def p_variable_tuple(self,t):
 		'''variable_tuple : LBRACKET tuple_variable_list RBRACKET
 		                  | LBRACKET RBRACKET'''
