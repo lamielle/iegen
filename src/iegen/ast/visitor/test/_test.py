@@ -34,7 +34,7 @@ class TransVisitorTestCase(TestCase):
 		v=TransVisitor([])
 		v.visit(rel)
 
-	#Test that relations are not supported
+	#Test that functions are not supported
 	@raises(ValueError)
 	def testFuncFailure(self):
 		from iegen.ast.visitor import TransVisitor
