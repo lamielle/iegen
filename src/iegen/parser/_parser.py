@@ -13,7 +13,6 @@
 #   - This grammar does NOT include Exists, Forall, or not keywords.
 #
 # MMS 7/21/08
-#
 # AML 8/13/2008: Modified to use rewritten expressions and their operators
 
 from iegen.ast import *
@@ -21,48 +20,43 @@ import types
 
 #---------- Presburger Formula Parser Class ----------
 class PresParser(object):
-	def __init__(self,parser_type):
+
+	#---------- Public Interface ----------
+	#Parse the given set string and return the associated AST
+	def parse_set(set,debug=False):
+		return PresParser.get_set_parser(set).parse(set)
+	parse_set=staticmethod(parse_set)
+
+	#Parse the given relation string and return the associated AST
+	def parse_relation(relation,debug=False):
+		return PresParser.get_relation_parser(relation).parse(relation)
+	parse_relation=staticmethod(parse_relation)
+	#--------------------------------------
+
+	#---------- Private Interface ----------
+	def __init__(self,parser_type,formula):
 		self._parser_type=parser_type
+		self._formula=formula
 
 	#Strings used to differentiate between sets and relations
 	_set='set'
 	_relation='relation'
 
 	#Static factory method to obtain a new set parser
-	def get_set_parser():
-		return PresParser._get_parser(PresParser._set)
+	def get_set_parser(set):
+		return PresParser._get_parser(PresParser._set,set)
 	get_set_parser=staticmethod(get_set_parser)
 
-	#Parse the given set string and return the associated AST
-	def parse_set(set,debug=False):
-		from ply import lex
-		if debug:
-			PresParser.get_set_parser()
-			print dir(lex)
-			print set
-			lex.input(set)
-			while 1:
-				tok = lex.token()
-				if not tok: break      #No more input
-				print tok
-		return PresParser.get_set_parser().parse(set)
-	parse_set=staticmethod(parse_set)
-
 	#Static factory method to obtain a new relation parser
-	def get_relation_parser():
-		return PresParser._get_parser(PresParser._relation)
+	def get_relation_parser(relation):
+		return PresParser._get_parser(PresParser._relation,relation)
 	get_relation_parser=staticmethod(get_relation_parser)
 
-	#Parse the given relation string and return the associated AST
-	def parse_relation(relation,debug=False):
-		return PresParser.get_relation_parser().parse(relation)
-	parse_relation=staticmethod(parse_relation)
-
 	#Static factory method to obtain a new parser of the given type
-	def _get_parser(parser_type):
+	def _get_parser(parser_type,formula):
 		from ply import lex,yacc
-		lex.lex(module=PresParser(parser_type))
-		return yacc.yacc(start=parser_type,module=PresParser(parser_type),tabmodule='iegen.parsetab_%s'%parser_type)
+		lex.lex(module=PresParser(parser_type,formula))
+		return yacc.yacc(start=parser_type,module=PresParser(parser_type,formula),tabmodule='iegen.parsetab_%s'%parser_type)
 	_get_parser=staticmethod(_get_parser)
 
 	#---------- Lexer methods/members ----------
@@ -122,7 +116,10 @@ class PresParser(object):
 	#Parser error routine
 	def p_error(self,t):
 		from ply import yacc
-		raise SyntaxError("Syntax error at '%s' [%d,%d]" %(t.value,t.lineno,t.lexpos))
+		if None==t:
+			raise SyntaxError("Syntax when parsing '%s'" %(self._formula,))
+		else:
+			raise SyntaxError("Syntax error at '%s' [%d,%d] when parsing '%s'" %(t.value,t.lineno,t.lexpos,self._formula))
 
 	def p_set(self,t):
 		'''set : LBRACE variable_tuple_set optional_constraints RBRACE
@@ -320,5 +317,5 @@ class PresParser(object):
 		else:
 			t[0]=[t[1]]
 	#--------------------------------------------------
-
+	#---------------------------------------
 #-------------------------------------------------------------------------
