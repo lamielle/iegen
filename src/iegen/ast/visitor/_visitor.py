@@ -15,24 +15,24 @@ class DFVisitor(object):
 	#--------------------------------------------
 
 	#---------- In/Out Methods ----------
+	def inSet(self,node):
+		self.defaultIn(node)
+	def outSet(self,node):
+		self.defaultOut(node)
+
 	def inPresSet(self,node):
 		self.defaultIn(node)
 	def outPresSet(self,node):
 		self.defaultOut(node)
 
-	def inPresSetUnion(self,node):
+	def inRelation(self,node):
 		self.defaultIn(node)
-	def outPresSetUnion(self,node):
+	def outRelation(self,node):
 		self.defaultOut(node)
 
 	def inPresRelation(self,node):
 		self.defaultIn(node)
 	def outPresRelation(self,node):
-		self.defaultOut(node)
-
-	def inPresRelationUnion(self,node):
-		self.defaultIn(node)
-	def outPresRelationUnion(self,node):
 		self.defaultOut(node)
 
 	def inVarTuple(self,node):
@@ -75,17 +75,23 @@ class DFVisitor(object):
 	def visit(self,node):
 		node.apply_visitor(self)
 
+	def visitSet(self,node):
+		self.inSet(node)
+		for set in node.sets:
+			set.apply_visitor(self)
+		self.outSet(node)
+
 	def visitPresSet(self,node):
 		self.inPresSet(node)
 		node.set_tuple.apply_visitor(self)
 		node.conjunct.apply_visitor(self)
 		self.outPresSet(node)
 
-	def visitPresSetUnion(self,node):
-		self.inPresSetUnion(node)
-		for set in node.sets:
-			set.apply_visitor(self)
-		self.outPresSetUnion(node)
+	def visitRelation(self,node):
+		self.inRelation(node)
+		for relation in node.relations:
+			relation.apply_visitor(self)
+		self.outRelation(node)
 
 	def visitPresRelation(self,node):
 		self.inPresRelation(node)
@@ -93,12 +99,6 @@ class DFVisitor(object):
 		node.out_tuple.apply_visitor(self)
 		node.conjunct.apply_visitor(self)
 		self.outPresRelation(node)
-
-	def visitPresRelationUnion(self,node):
-		self.inPresRelationUnion(node)
-		for relation in node.relations:
-			relation.apply_visitor(self)
-		self.outPresRelationUnion(node)
 
 	def visitVarTuple(self,node):
 		self.inVarTuple(node)

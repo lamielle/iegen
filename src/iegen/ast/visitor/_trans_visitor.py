@@ -1,6 +1,4 @@
 from iegen.ast.visitor import DFVisitor
-#from pres_parser import PresParser
-#from pycloog import Statement,Names,codegen
 
 class TransVisitor(DFVisitor):
 	def __init__(self,params):
@@ -13,13 +11,11 @@ class TransVisitor(DFVisitor):
 	def defaultOut(self,node):
 		pass
 
-	def inPresSet(self,node):
+	def inSet(self,node):
 		self.mat=[]
 
-	def inPresRelation(self,node):
-		raise ValueError('This visitor only works on PresSets and PresSetUnions.')
-	def inPresRelationUnion(self,node):
-		raise ValueError('This visitor only works on PresSets and PresSetUnions.')
+	def inRelation(self,node):
+		raise ValueError('This visitor only works on Sets.')
 
 	def inVarTuple(self,node):
 		self.vars=node.id_list

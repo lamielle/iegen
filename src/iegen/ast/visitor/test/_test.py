@@ -28,9 +28,9 @@ class TransVisitorTestCase(TestCase):
 	@raises(ValueError)
 	def testRelationFailure(self):
 		from iegen.ast.visitor import TransVisitor
-		from iegen.parser import PresParser
+		from iegen import Relation
 
-		rel=PresParser.parse_relation('{[]->[]}')
+		rel=Relation('{[]->[]}')
 		v=TransVisitor([])
 		v.visit(rel)
 
@@ -38,9 +38,9 @@ class TransVisitorTestCase(TestCase):
 	@raises(ValueError)
 	def testFuncFailure(self):
 		from iegen.ast.visitor import TransVisitor
-		from iegen.parser import PresParser
+		from iegen import Set
 
-		set=PresParser.parse_set('{[]:f(a)=1}')
+		set=Set('{[]:f(a)=1}')
 		v=TransVisitor([])
 		v.visit(set)
 
@@ -48,18 +48,18 @@ class TransVisitorTestCase(TestCase):
 	@raises(ValueError)
 	def testExistentialFail(self):
 		from iegen.ast.visitor import TransVisitor
-		from iegen.parser import PresParser
+		from iegen import Set
 
-		set=PresParser.parse_set('{[a]:a=1 && b=1}')
+		set=Set('{[a]:a=1 && b=1}')
 		v=TransVisitor([])
 		v.visit(set)
 
 	#Make sure the result of the visiting is placed in the mat property
 	def testResultPresent(self):
 		from iegen.ast.visitor import TransVisitor
-		from iegen.ast import PresSet,VarTuple,Conjunction
+		from iegen import Set
 
-		set=PresSet(VarTuple([]),Conjunction([]))
+		set=Set('{[]}')
 		v=TransVisitor([])
 		v.visit(set)
 		self.failUnless(hasattr(v,'mat'),"TransVisitor doesn't place result in 'mat' property.")
@@ -91,11 +91,11 @@ class TransVisitorTestCase(TestCase):
 	#Test that the sets in set_tests are translated properly
 	def testTrans(self):
 		from iegen.ast.visitor import TransVisitor
-		from iegen.parser import PresParser
+		from iegen import Set
 
 		for set_string,res_mat,params in self.set_tests:
 			#Create a set from set string
-			set=PresParser.parse_set(set_string)
+			set=Set(set_string)
 
 			#Visit the set
 			v=TransVisitor(params)

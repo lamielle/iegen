@@ -27,7 +27,7 @@
 #
 # Started by: Michelle Strout 7/22/08
 # Modified by: Alan LaMielle starting around 7/30/08
-# AML 8/25/2008: Removed PresSetUnion and PresRelation Union
+# AML 8/25/2008: Removed PresSetUnion and PresRelationUnion
 #
 
 from copy import deepcopy
