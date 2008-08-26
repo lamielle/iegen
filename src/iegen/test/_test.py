@@ -383,8 +383,15 @@ class RelationTestCase(TestCase):
 		self.failUnless(inverse==inverse_res,'%s!=%s'%(inverse,inverse_res))
 
 	#Tests the compose operation
-#	def testCompose(self):
-#		from iegen import Relation
+	def testCompose(self):
+		from iegen import Relation
 
-#		relation=Relation('{[a,b]->
+		relation1=Relation('{[a,b]->[c]:1<=a and a<=10 and 1<=b and b<=10}')
+		relation2=Relation('{[a]->[b,c]:-10<=a and a<=0}')
+
+		composed=relation1.compose(relation2)
+		composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
 #------------------------------------
