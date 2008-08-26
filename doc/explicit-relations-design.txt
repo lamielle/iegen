@@ -32,7 +32,8 @@ Explicit relations that need to be constructed
             foreach i in sched(x_1, x_2, ...x_n)
             -should be sorted lexicographically by x vector and preferably have i's sorted as well
             
-        7) 1D index arrays  (eg. sigma, delta, inter1, inter2) are currently implemented with a 1D array.  Are typically accessed in order of domain.
+        7) 1D index arrays  (eg. sigma, delta, inter1, inter2) are currently implemented with a 1D array.  Are typically accessed in order of domain.  These are functions and are one-to-one and onto.
+
 
 Operations we need for explicit relations and their input and output tuples.
     // iterate over an already constructed explicit relation
@@ -48,6 +49,7 @@ Operations we need for explicit relations and their input and output tuples.
         
     FOREACH_out_tuple_1d1d(relation, out_int) {
         FOREACH_in_given_out_1d1d(relation, out_int, in_int) {
+    
     
     // construct a relation
     Relation_ctor(in_tuple_size, out_tuple_size);
@@ -168,3 +170,133 @@ Ok, going to stick with just having the explicit relation, but we will have thre
     4) insertion order?
 
 Seems like I might be bending over backwards to implement this in C.  What if I use C++, then will STL make this easier?  I am a little gun shy about this because of the map problems we have had in OA.
+
+8/25/08
+-------
+what about a sketch of creating the schedule?  The sparse sets for the schedule is a mapping from the tile space and output loop vars to a set of the innermost loop iterations.  Can use RectDomain from the tile space and the outer loop variables to indicate the domain for sparse set explicit relation.  However it is NOT a function.  We would like the executor to take advantage of the fact that the output tuple's are 1D.
+    FOREACH relation in theta
+        ER_insert(sched,
+                  <tile_space_point,all_but_last_entry_in_input tuple>,
+                  // FIXME: we will have to automatically generate the code
+                  // that calculates the sparse set schedule because the size of
+                  // the tuples cannot be generalized
+                  last entry in in tuple)
+
+Proposal for big change in implementation (8/25/08)
+     Required functionality
+        - Iterate over input tuple's in order.
+        - Iterate over output tuple's in order.
+        - Given an input tuple, iterate over all associated output tuples.
+        - vice versa.
+        - Given an input tuple provide the single associated output tuple, when the explicit relation is in fact a function.
+        - get the lower and upper bounds for the input tuples or output tuples, used in IAG_CPACK
+        
+    Initial implementation thought
+        Gather all explicit relations sequentially and keep track of needed information such as the rectangular bounds on tuples and then have a finalize step.
+        Need a RectDomain data structure.
+        
+    Possible optimizations
+     
+    Possible Problem
+        Creating tiling relation (theta) and querying it at the same time.  It is a function where we know the domain ahead of time and we need to take advantage of that fact in the explicit relation implementation.  Other examples of this include the permutations like sigma and delta.
+        Could pass in the domain as rectangular bounds instead of that having to be discovered.  Also think we need to know if relation is a function so
+        that only one spot is needed for the output tuple associated with each input tuple.
+
+
+8/26/08
+-------
+RectDomain
+    int *bounds;    // bounds[i*2] and bounds[i*2+1] respectively
+                    // contain the lower and upper
+                    // bounds for the ith dimension
+                    
+    int dim;        // dimensionality
+
+    // Returns dimensionality of the rectangular domain.
+    RD_dim()
+    
+    // Returns lower bound for the kth dimension
+    RD_lb(int k)
+    // Returns upper bound for the kth dimension
+    RD_ub(int k)
+    
+    // Returns size for the kth dimension.
+    // RD_size(k) = RD_ub(k)-RD_lb(k)+1
+    RD_size(int k)
+    
+ExplicitRelation
+    Now the constructor will be taking much more in terms of initial information about the explicit relation.
+        in_arity
+        out_arity
+        
+        isFunction  // If true indicates that each input tuple will map 
+                    // to only one output tuple.
+                    
+        in_domain   // Domain for the input tuples.  If known at construction
+                    // time then it is not necessary to finalize data structure
+                    // for efficient access.
+                    
+        in_vals
+        
+        out_index
+        
+        out_vals
+        
+        raw_data
+        
+ER_ctor
+    if isFunction and in_domain is provided then 
+        -will not need out_index because each in_val only has one out_val
+        -Going to use multi-dim array addressing arithmetic to index into out_vals.  Each point in the in_domain will need out_arity spaces to store the associated output_tuple.
+            in_tuple: <x_0, x_1, ..., x_k>
+            out_tuple will be stored at 
+                out_vals[ (x_0*(LD_size(x_1)*...*LD_size(x_k)) 
+                          + x_1*(LD_size(x_2)* ... *LD_size(x_k))
+                          + x_k) * out_arity ]
+    
+    if in_domain provided, but do not know if it is a function
+        -disallow calls to ER_out_given_in
+        -instead of using the multidim array equation to index into out_vals will use it to index into out_index instead.  Need out_index to keep track of all the out tuples for a given in_tuple.
+        -This is great, but since don't know number of out_tuples per in_tuple can only insert directly into this format if doing an ordered insert on the in_tuple.
+        
+    if isFunction, but no in_domain is provided.
+        Without an in_domain specification, we can't sort until after everything is put in.  Therefore, I think that if no in_domain is provided, then we should have insert just put all of the relations into the raw data array.  Each entry will take in_arity+out_arity spots in the raw_data array.  insert can then keep track of the in_domain.
+        The fact that it is a function just means that we don't need the out_index array.
+    
+ER_insert
+    if isFunction and know in_domain then 
+        set value in out_vals based on multidim array calculation.
+            in_tuple: <x_0, x_1, ..., x_k>
+            out_tuple will be stored at 
+                out_vals[ (x_0*(LD_size(x_1)*...*LD_size(x_k)) 
+                          + x_1*(LD_size(x_2)* ... *LD_size(x_k))
+                          + x_k) * out_arity ]
+                          
+    else must put all relations in raw_data array, set ordered_by_in = false
+    
+    for either keep track of out domain as things are being inserted
+        
+ER_ordered_in_insert
+    if isFunction and know in_domain then do the same as above
+    
+    else if know in_domain then
+        index into out_index with same multidim array calculation
+        
+    else put all relations in raw_data array
+        // FIXME: more optimization is possible here, but we may not need it.
+        // We could record input tuples in the in_vals array and figure out the 
+        // in domain.  Then the out_vals array could stay the same and just have
+        // the out_index array change so that it is accessed using multidim
+        // array computation and thus making the explicit relation randomly
+        // accessible via the input tuple.
+
+    for either keep track of out domain as things are being inserted
+
+        
+ER_order_by_in(relptr)
+    if ordered_by_in not set then
+        go through raw data and make it ordered by in
+    
+ER_order_by_out(relptr)
+    if ordered_by_out not set then
+        go through raw data and make it ordered by in

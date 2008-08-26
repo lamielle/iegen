@@ -7,18 +7,18 @@
  The ExplicitRelation data structure is for creating an explicit representation
  of integer tuple relations at runtime.
  
- To create a ExplicitRelation, call the constructor
+ To create a ExplicitRelation call the constructor, which returns a pointer
  
-    relptr = ExplicitRelation_ctor(in_tuple_arity, out_tuple_arity);
+    relptr = ER_ctor(in_tuple_arity, out_tuple_arity);
 
  and then add tuple relations by calling one of the following:
  
     // insert entries into a relation
-    ExplicitRelation_insert(relptr, in_tuple, out_tuple); 
+    ER_insert(relptr, in_tuple, out_tuple); 
     // insertions are ordered lexicographically by in_tuple
-    ExplicitRelation_in_ordered_insert(relptr, in_tuple, out_tuple); 
+    ER_in_ordered_insert(relptr, in_tuple, out_tuple); 
     // insertions are ordered lexicographically by in_tuple concat out_tuple
-    ExplicitRelation_ordered_insert(relptr, in_tuple, out_tuple); 
+    ER_ordered_insert(relptr, in_tuple, out_tuple); 
         
  If the in and out tuple arities are both one, then the in and out tuples can just be single integers.  Otherwise, the in and out tuples can be created with a call to the tuple function.
  
@@ -33,10 +33,10 @@
 
  Before accessing the values in a relation, it is possible to indicate how
  the entries should be ordered.
-    ExplicitRelation_order_by_in(relptr);
-    ExplicitRelation_order_by_out(relptr);   // is this possible?
-    ExplicitRelation_order_by_in_out(relptr);
-    ExplicitRelation_order_by_out_in(relptr);
+    ER_order_by_in(relptr);
+    ER_order_by_out(relptr);   // is this possible?
+    ER_order_by_in_out(relptr);
+    ER_order_by_out_in(relptr);
    
  The following macros enable iteration over the relation.  Because
  these are implemented as macros (for efficiency) instead of functions, 
@@ -130,42 +130,71 @@ typedef struct {
     
 } ExplicitRelation;
 
+/* ////////////////////////////////////////////////////////////////////
+// Tuple Definition
+// 
+//////////////////////////////////////////////////////////////////// */
+typedef struct {
+    int *valptr;    // pts to flat 1D array of vals in tuple
+    int arity;      // indicates number of values in the tuple
+} Tuple;
+
+/* ////////////////////////////////////////////////////////////////////
 // function prototypes
+// 
+//////////////////////////////////////////////////////////////////// */
 
 //! Construct an empty ExplicitRelation by specifying arity for in and out tuples.
-ExplicitRelation* ExplicitRelation_ctor(int in_tuple_arity, 
-                                        int out_tuple_arity);
+ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity);
+ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity, 
+                          int num_entries);
 
 //! Deallocate all of the memory for the ExplicitRelation.
-void ExplicitRelation_dtor(ExplicitRelation**);
+void ER_dtor(ExplicitRelation**);
+
+//! Create a Tuple structure and return a copy of it.
+//! Calling it _make because it is different from a constructor in
+//! that it does not return a pointer to the object, but returns
+//! the whole object.
+Tuple Tuple_make(int x1);
+Tuple Tuple_make(int x1, int x2);
+Tuple Tuple_make(int x1, int x2, int x3);
 
 //----------------------- Routines for inserting relations
+
+//! Insertion for special 1D-to-1D arity relations.
+void ER_insert(ExplicitRelation* relptr, int in_int, int out_int); 
+
 
 //! Insertions are ordered lexicographically by in_tuple.
 // FIXME: put this in once have Tuple
 
 //! Insertion for special 1D-to-1D arity relations.  Ordered by in_int.
-void ExplicitRelation_in_ordered_insert(ExplicitRelation* relptr, 
+void ER_in_ordered_insert(ExplicitRelation* relptr, 
                                         int in_int, 
                                         int out_int); 
 
 //----------------------- Informational routines
 
+//! Assuming that each input tuple maps to only one output tuple
+//! return that single output tuple given an input tuple.
+Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple);
+
 //! Returns the number of unique 1D output tuples seen
 // FIXME: how could we generalize this?
-int ExplicitRelation_getRangeCount( ExplicitRelation* self);
+int ER_getRangeCount( ExplicitRelation* self);
 
 //! Returns number of unique 1D input tuples seen
 // FIXME: again specific to 1D
-int ExplicitRelation_getDomainCount( ExplicitRelation* self); 
+int ER_getDomainCount( ExplicitRelation* self); 
 
 //! Output debug text representation of ExplicitRelation to standard out.
-void ExplicitRelation_dump( ExplicitRelation* self );
+void ER_dump( ExplicitRelation* self );
 
 //----------------------- Setting up ExplicitRelation for iteration
 
 //! Insure that the integer tuple relations are sorted by the input tuples.
-void ExplicitRelation_order_by_in(ExplicitRelation* relptr);
+void ER_order_by_in(ExplicitRelation* relptr);
 
 //----------------------- Macros for iterating over relations
 

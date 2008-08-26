@@ -16,35 +16,35 @@ int main()
     ExplicitRelation* relptr;
     int in, out;
     
-    relptr = ExplicitRelation_ctor(1,1);
+    relptr = ER_ctor(1,1);
 
     // then add [in]->[out] relationships 
     // for this example doing all combos of possible
     // in and out values
     for (in=0; in<NUM_IN; in++) {
       for (out=0; out<NUM_OUT; out++) {
-            ExplicitRelation_in_ordered_insert( relptr, in, out );
+            ER_in_ordered_insert( relptr, in, out );
         }
     }
     
     
-    ExplicitRelation_dump(relptr);
+    ER_dump(relptr);
     
-    ExplicitRelation_dtor(&relptr);
+    ER_dtor(&relptr);
 
     //------- testing code that will be used in IAG_cpack
     // first construct an explicit relation and fill it
     // the explicit relation will be passed to IAG_cpack
-    relptr = ExplicitRelation_ctor(1,1);
+    relptr = ER_ctor(1,1);
 
     // add only some out vals for each in val
     for (in=0; in<NUM_IN; in++) {
       for (out=(in)%NUM_OUT; out<NUM_OUT; out+=2) {
-            ExplicitRelation_in_ordered_insert( relptr, in, out );
+            ER_in_ordered_insert( relptr, in, out );
         }
     }
     
-    ExplicitRelation_dump(relptr);
+    ER_dump(relptr);
     
     // Iterate over the integer tuple relations
     printf("\nTraversing in order of input tuples\n");
@@ -57,13 +57,13 @@ int main()
 
     //----- testing IAG_cpack itself
     int* new2old 
-        = (int*)malloc(sizeof(int)*ExplicitRelation_getRangeCount(relptr));
+        = (int*)malloc(sizeof(int)*ER_getRangeCount(relptr));
     IAG_cpack(relptr,new2old);
     printf("\nnew2old = ");
-    printArray(new2old,ExplicitRelation_getRangeCount(relptr));
+    printArray(new2old,ER_getRangeCount(relptr));
 
     free(new2old);
-    ExplicitRelation_dtor(&relptr);
+    ER_dtor(&relptr);
 
 
     // ok now do somewhat of a stress test of the memory management
