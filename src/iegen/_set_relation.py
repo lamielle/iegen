@@ -15,7 +15,11 @@ class Set(object):
 		if None!=set_string and None==sets:
 			self.sets=[PresParser.parse_set(set_string)]
 		elif None!=sets and None==set_string:
-			self.sets=sets
+			if len(sets)>0:
+				self.sets=sets
+				self.sets.sort()
+			else:
+				raise ValueError('Must specify at least one set in the sets collection')
 		else:
 			raise ValueError('Set.__init__ takes either a set string or a collection of sets.')
 
@@ -24,6 +28,14 @@ class Set(object):
 
 	def __repr__(self):
 		return "Set(sets=%s)"%(self.sets)
+
+	#Comparison operator
+	def __cmp__(self,other):
+		#Compare Sets by their set collection
+		if hasattr(other,'sets') and hasattr(other,'sets'):
+			return cmp(self.sets,other.sets)
+		else:
+			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 	#Makes sure all sets 'look like' PresSets
 	def _set_check(self):
@@ -51,36 +63,27 @@ class Set(object):
 	def apply_visitor(self,visitor):
 		visitor.visitSet(self)
 
-#
-#	#Union implementation from PresSet
-#	def union(self,other):
-#		if isinstance(other,PresSet):
-#			return PresSetUnion([self,other])
-#		elif isinstance(other,PresSetUnion):
-#			return other.union(self)
-#		else:
-#			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
-#
-#	#Methods from PresSetUnion
-#	def _add_set(self,set):
-#		if not isinstance(set,PresSet):
-#			raise ValueError("Cannot add object of type '%s' to PresSetUnion."%type(set))
-#		self.sets.append(set)
-#
-#	def _add_union(self,union):
-#		if not isinstance(set,PresSetUnion):
-#			raise ValueError("Cannot add sets from object of type '%s' to PresSetUnion."%type(set))
-#		self.sets.extend(union.sets)
-#
-#	def union(self,other):
-#		if isinstance(other,PresSet):
-#			self._add_set(other)
-#			return self
-#		elif isinstance(other,PresSetUnion):
-#			self._add_union(other)
-#			return self
-#		else:
-#			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+	#Adds all of the PresSets in the given Set to this Set
+	def _add_set(self,set):
+		if not hasattr(set,'sets'):
+			raise ValueError("Cannot add object of type '%s' to Set."%type(set))
+		self.sets.extend(set.sets)
+
+	#Takes the union of this Set and the given Set
+	def union(self,other):
+		from copy import deepcopy
+
+		if hasattr(other,'sets'):
+			if self.arity()==other.arity():
+				self=deepcopy(self)
+				other=deepcopy(other)
+				self._add_set(other)
+				self.sets.sort()
+				return self
+			else:
+				raise ValueError('Cannot union sets with differing arity (%d and %d).'%(self.arity(),other.arity()))
+		else:
+			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 
 #	#Given a collection of scattering functions for each statement
 #	#Returns the code that iterates over the tuples in this set
@@ -103,7 +106,11 @@ class Relation(object):
 		if None!=relation_string and None==relations:
 			self.relations=[PresParser.parse_relation(relation_string)]
 		elif None!=relations and None==relation_string:
-			self.relations=relations
+			if len(relations)>0:
+				self.relations=relations
+				self.relations.sort()
+			else:
+				raise ValueError('Must specify at least one relation in the relations collection')
 		else:
 			raise ValueError('Relation.__init__ takes either a relation string or a collection of relations.')
 
@@ -112,6 +119,14 @@ class Relation(object):
 
 	def __repr__(self):
 		return "Relation(relations=%s)"%(self.relations)
+
+	#Comparison operator
+	def __cmp__(self,other):
+		#Compare Relations by their relation collection
+		if hasattr(other,'relations') and hasattr(other,'relations'):
+			return cmp(self.relations,other.relations)
+		else:
+			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 	#Makes sure all relations 'look like' PresRelations
 	def _relation_check(self):
@@ -142,7 +157,7 @@ class Relation(object):
 					raise ValueError('All relations in a Relation must have the same output arity.')
 
 	#Returns the input arity of this relation
-	#Assumption: All PresRelation instances in sets have the same input arity
+	#Assumption: All PresRelation instances in relations have the same input arity
 	#This should be checked with _arity_check upon creation
 	def arity_in(self):
 		if len(self.relations)>0:
@@ -151,7 +166,7 @@ class Relation(object):
 			raise ValueError('Cannot determine input arity of a Relation that contains no relations.')
 
 	#Returns the output arity of this relation
-	#Assumption: All PresRelation instances in sets have the same output arity
+	#Assumption: All PresRelation instances in relations have the same output arity
 	#This should be checked with _arity_check upon creation
 	def arity_out(self):
 		if len(self.relations)>0:
@@ -162,33 +177,38 @@ class Relation(object):
 	def apply_visitor(self,visitor):
 		visitor.visitRelation(self)
 
-#	#Methods from PresRelation
-#	def union(self,other):
-#		if isinstance(other,PresRelation):
-#			result=PresRelationUnion([self])
-#			result.union(other)
-#			return result
-#		elif isinstance(other,PresRelationUnion):
-#			return other.union(self)
-#		else:
-#			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
-#
-#	def inverse(self):
-#		outTemp=self.out_tuple
-#		self.out_tuple=self.in_tuple
-#		self.in_tuple=outTemp
-#		return self
-#
-#	def _add_relation(self,relation):
-#		if not isinstance(relation,PresRelation):
-#			raise ValueError("Cannot add object of type '%s' to PresRelationUnion."%type(relation))
-#		self.relations.append(relation)
-#
-#	def _add_union(self,union):
-#		if not isinstance(relation,PresRelationUnion):
-#			raise ValueError("Cannot add relations from object of type '%s' to PresRelationUnion."%type(relation))
-#		self.relations.extend(union.relations)
-#
+	#Adds all of the PresRelations in the given Relation to this Relation
+	def _add_relation(self,relation):
+		if not hasattr(relation,'relations'):
+			raise ValueError("Cannot add object of type '%s' to Relation."%type(relation))
+		self.relations.extend(relation.relations)
+
+	#Takes the union of this Relation and the given Relation
+	def union(self,other):
+		from copy import deepcopy
+
+		if hasattr(other,'relations'):
+			if self.arity_in()==other.arity_in() and self.arity_out()==other.arity_out():
+				self=deepcopy(self)
+				other=deepcopy(other)
+				self._add_relation(other)
+				self.relations.sort()
+				return self
+			else:
+				raise ValueError('Cannot union relations with differing arity ((%d->%d) and (%d->%d)).'%(self.arity_in(),self.arity_out(),other.arity_in(),other.arity_out()))
+		else:
+			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+
+	#Takes the inverse of all of the PresRelations in this Relation
+	def inverse(self):
+		from copy import deepcopy
+
+		self=deepcopy(self)
+		for relation in self.relations:
+			#Swap input and output tuples
+			relation.in_tuple,relation.out_tuple=relation.out_tuple,relation.in_tuple
+		return self
+
 #	#Relation composition: self(other)
 #	def compose(self,other):
 #		#Composing two relations?
@@ -217,41 +237,6 @@ class Relation(object):
 #			raise ValueError("Unsupported argument of type '%s' for operation compose."%type(other))
 #
 #	#Methods from PresRelationUnion
-#	def union(self,other):
-#		#Unioning a single relation?
-#		if isinstance(other,PresRelation):
-#			if 0==len(self.relations):
-#				self._add_relation(other)
-#			else:
-#				#Assuming that all relations already within the union
-#				#have matching arities
-#				if self.relations[0].arity_in()==other.arity_in() and \
-#				   self.relations[0].arity_out()==other.arity_out():
-#					self._add_relation(other)
-#				else:
-#					raise ValueError('Cannot union relations with differing in or out arity')
-#			return self
-#		#Unioning another union?
-#		elif isinstance(other,PresRelationUnion):
-#			if 0==len(self.relations) or 0==len(other.relations):
-#				self._add_union(other)
-#			else:
-#				#Assuming that all relations already within the unions
-#				#have matching arities
-#				if self.relations[0].arity_in()==other.relations[0].arity_in() and \
-#				   self.relations[0].arity_out()==other.relations[0].arity_out():
-#					self._add_union(other)
-#				else:
-#					raise ValueError('Cannot union relations with differing in or out arity')
-#			return self
-#		else:
-#			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
-#
-#	def inverse(self):
-#		for relation in self.relations:
-#			relation.inverse()
-#		return self
-#
 #	def compose(self,other):
 #		#Composing with a single relation?
 #		if isinstance(other,PresRelation):
