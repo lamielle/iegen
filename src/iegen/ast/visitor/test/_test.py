@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -110,3 +110,98 @@ class TransVisitorTestCase(TestCase):
 			#Make sure the translated matrix matches the result matrix
 			self.failUnless(v.mats==res_mats,'%s!=%s'%(v.mats,res_mats))
 #-----------------------------------------------------
+
+#---------- Renaming Visitor Tests ----------
+#Test renaming visitor
+class RenameVisitorTestCase(TestCase):
+
+	#Test that renaming in Sets works as expected with all variables
+	def testRenameSetAll(self):
+		from iegen.ast.visitor import RenameVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]:a>=10 and b<5 and c=f(g(c))}')
+
+		v=RenameVisitor({'a':"a'",'b':"b'",'c':"c'"})
+
+		v.visit(set)
+
+		set_renamed=Set("{[a',b',c']: a'>=10 and b'<5 and c'=f(g(c'))}")
+
+		self.failUnless(set==set_renamed,'%s!=%s'%(set,set_renamed))
+
+	#Test that renaming in Sets works as expected with all variables
+	def testRenameSetSome(self):
+		from iegen.ast.visitor import RenameVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]:a>=10 and b<5 and c=f(g(c))}')
+
+		v=RenameVisitor({'a':"a'",'c':"c'"})
+
+		v.visit(set)
+
+		set_renamed=Set("{[a',b,c']: a'>=10 and b<5 and c'=f(g(c'))}")
+
+		self.failUnless(set==set_renamed,'%s!=%s'%(set,set_renamed))
+
+	#Test that renaming in Sets works as expected with all variables
+	def testRenameSetOne(self):
+		from iegen.ast.visitor import RenameVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]:a>=10 and b<5 and c=f(g(c))}')
+
+		v=RenameVisitor({'a':"a'"})
+
+		v.visit(set)
+
+		set_renamed=Set("{[a',b,c]: a'>=10 and b<5 and c=f(g(c))}")
+
+		self.failUnless(set==set_renamed,'%s!=%s'%(set,set_renamed))
+
+	#Test that renaming in Relations works as expected
+	def testRenameRelationAll(self):
+		from iegen.ast.visitor import RenameVisitor
+		from iegen import Relation
+
+		relation=Relation('{[a,b,c]->[d,e,f]:a>=10 and b<5 and c=6 and d=5 and e>=4 and f=g(f)}')
+
+		v=RenameVisitor({'a':"a'",'b':"b'",'c':"c'",'d':"d'",'e':"e'",'f':"f'"})
+
+		v.visit(relation)
+
+		relation_renamed=Relation("{[a',b',c']->[d',e',f']:a'>=10 and b'<5 and c'=6 and d'=5 and e'>=4 and f'=g(f')}")
+
+		self.failUnless(relation==relation_renamed,'%s!=%s'%(relation,relation_renamed))
+
+	#Test that renaming in Relations works as expected
+	def testRenameRelationSome(self):
+		from iegen.ast.visitor import RenameVisitor
+		from iegen import Relation
+
+		relation=Relation('{[a,b,c]->[d,e,f]:a>=10 and b<5 and c=6 and d=5 and e>=4 and f=g(f)}')
+
+		v=RenameVisitor({'b':"b'",'c':"c'",'d':"d'",'f':"f'"})
+
+		v.visit(relation)
+
+		relation_renamed=Relation("{[a,b',c']->[d',e,f']:a>=10 and b'<5 and c'=6 and d'=5 and e>=4 and f'=g(f')}")
+
+		self.failUnless(relation==relation_renamed,'%s!=%s'%(relation,relation_renamed))
+
+	#Test that renaming in Relations works as expected
+	def testRenameRelationOne(self):
+		from iegen.ast.visitor import RenameVisitor
+		from iegen import Relation
+
+		relation=Relation('{[a,b,c]->[d,e,f]:a>=10 and b<5 and c=6 and d=5 and e>=4 and f=g(f)}')
+
+		v=RenameVisitor({'b':"b'",'f':"f'"})
+
+		v.visit(relation)
+
+		relation_renamed=Relation("{[a,b',c]->[d,e,f']:a>=10 and b'<5 and c=6 and d=5 and e>=4 and f'=g(f')}")
+
+		self.failUnless(relation==relation_renamed,'%s!=%s'%(relation,relation_renamed))
+#--------------------------------------------

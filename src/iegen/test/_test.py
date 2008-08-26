@@ -393,5 +393,4 @@ class RelationTestCase(TestCase):
 		composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
-
 #------------------------------------
