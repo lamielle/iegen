@@ -5,9 +5,9 @@
 #
 # Grammar for AST
 #
-#    PresSet -> set_tuple:VarTuple conjunct:Conjunction // PresSet
+#    PresSet -> tuple_set:VarTuple conjunct:Conjunction // PresSet
 #
-#    PresRelation -> in_tuple:VarTuple out_tuple:VarTuple conjunct:Conjunction // PresSet
+#    PresRelation -> tuple_in:VarTuple tuple_out:VarTuple conjunct:Conjunction // PresSet
 #
 #    VarTuple -> id_list:ID*
 #
@@ -63,25 +63,25 @@ class Node(object):
 #---------- Presburger Set ----------
 #A single presburger set
 class PresSet(Node):
-	__slots__=('set_tuple','conjunct')
+	__slots__=('tuple_set','conjunct')
 
-	def __init__(self,set_tuple,conjunct):
-		self.set_tuple=set_tuple
+	def __init__(self,tuple_set,conjunct):
+		self.tuple_set=tuple_set
 		self.conjunct=conjunct
 
 	def __repr__(self):
-		return 'PresSet(%s,%s)'%(self.set_tuple,self.conjunct)
+		return 'PresSet(%s,%s)'%(self.tuple_set,self.conjunct)
 
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare PresSets by their VarTuple and Conjunction
-		if hasattr(other,'set_tuple') and hasattr(other,'conjunct'):
-			return cmp((self.set_tuple,self.conjunct),(other.set_tuple,other.conjunct))
+		if hasattr(other,'tuple_set') and hasattr(other,'conjunct'):
+			return cmp((self.tuple_set,self.conjunct),(other.tuple_set,other.conjunct))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 	def arity(self):
-		return len(self.set_tuple)
+		return len(self.tuple_set)
 
 	def apply_visitor(self,visitor):
 		visitor.visitPresSet(self)
@@ -90,28 +90,28 @@ class PresSet(Node):
 #---------- Presburger Relation ----------
 #A single presburger relation
 class PresRelation(Node):
-	__slots__=('in_tuple','out_tuple','conjunct')
+	__slots__=('tuple_in','tuple_out','conjunct')
 
-	def __init__(self,in_tuple,out_tuple,conjunct):
-		self.in_tuple=in_tuple
-		self.out_tuple=out_tuple
+	def __init__(self,tuple_in,tuple_out,conjunct):
+		self.tuple_in=tuple_in
+		self.tuple_out=tuple_out
 		self.conjunct=conjunct
 
 	def __repr__(self):
-		return 'PresRelation(%s,%s,%s)'%(self.in_tuple,self.out_tuple,self.conjunct)
+		return 'PresRelation(%s,%s,%s)'%(self.tuple_in,self.tuple_out,self.conjunct)
 
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare PresRelations by their VarTuple and Conjunction
-		if hasattr(other,'in_tuple') and hasattr(other,'out_tuple') and hasattr(other,'conjunct'):
-			return cmp((self.in_tuple,self.out_tuple,self.conjunct),(other.in_tuple,self.out_tuple,other.conjunct))
+		if hasattr(other,'tuple_in') and hasattr(other,'tuple_out') and hasattr(other,'conjunct'):
+			return cmp((self.tuple_in,self.tuple_out,self.conjunct),(other.tuple_in,self.tuple_out,other.conjunct))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 	def arity_in(self):
-		return len(self.in_tuple)
+		return len(self.tuple_in)
 	def arity_out(self):
-		return len(self.out_tuple)
+		return len(self.tuple_out)
 
 	def apply_visitor(self,visitor):
 		visitor.visitPresRelation(self)

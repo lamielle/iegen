@@ -83,7 +83,7 @@ class DFVisitor(object):
 
 	def visitPresSet(self,node):
 		self.inPresSet(node)
-		node.set_tuple.apply_visitor(self)
+		node.tuple_set.apply_visitor(self)
 		node.conjunct.apply_visitor(self)
 		self.outPresSet(node)
 
@@ -95,8 +95,8 @@ class DFVisitor(object):
 
 	def visitPresRelation(self,node):
 		self.inPresRelation(node)
-		node.in_tuple.apply_visitor(self)
-		node.out_tuple.apply_visitor(self)
+		node.tuple_in.apply_visitor(self)
+		node.tuple_out.apply_visitor(self)
 		node.conjunct.apply_visitor(self)
 		self.outPresRelation(node)
 

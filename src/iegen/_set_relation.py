@@ -41,8 +41,8 @@ class Set(object):
 	def _set_check(self):
 		if len(self.sets)>0:
 			for set in self.sets:
-				if not hasattr(set,'set_tuple') or not hasattr(set,'conjunct'):
-					raise ValueError("Object of type '%s' does not have the required attributes 'set_tuple' and 'conjunct'."%(type(set)))
+				if not hasattr(set,'tuple_set') or not hasattr(set,'conjunct'):
+					raise ValueError("Object of type '%s' does not have the required attributes 'tuple_set' and 'conjunct'."%(type(set)))
 
 	def _arity_check(self):
 		if len(self.sets)>0:
@@ -132,8 +132,8 @@ class Relation(object):
 	def _relation_check(self):
 		if len(self.relations)>0:
 			for relation in self.relations:
-				if not hasattr(relation,'in_tuple') or not hasattr(relation,'out_tuple') or not hasattr(relation,'conjunct'):
-					raise ValueError("Object of type '%s' does not have the required attributes 'in_tuple', 'out_tuple', and 'conjunct'."%(type(relation)))
+				if not hasattr(relation,'tuple_in') or not hasattr(relation,'tuple_out') or not hasattr(relation,'conjunct'):
+					raise ValueError("Object of type '%s' does not have the required attributes 'tuple_in', 'tuple_out', and 'conjunct'."%(type(relation)))
 
 	#Checks that all relations in this Relation have the same input and output arity
 	def _arity_check(self):
@@ -206,7 +206,7 @@ class Relation(object):
 		self=deepcopy(self)
 		for relation in self.relations:
 			#Swap input and output tuples
-			relation.in_tuple,relation.out_tuple=relation.out_tuple,relation.in_tuple
+			relation.tuple_in,relation.tuple_out=relation.tuple_out,relation.tuple_in
 		return self
 
 #	#Relation composition: self(other)
@@ -220,7 +220,7 @@ class Relation(object):
 #			#Add equalities of tuple variables
 #			#We know there are the same number of variables since we checked above
 #			for i in xrange(self.arity_in()):
-#				constraint=Equality(MinusExp(VarExp(other.in_tuple[i]),VarExp(self.out_tuple[i])))
+#				constraint=Equality(MinusExp(VarExp(other.tuple_in[i]),VarExp(self.tuple_out[i])))
 #				self.conjunct.constraint_list.append(constraint)
 #
 #			#Add the other's constraints to this relation

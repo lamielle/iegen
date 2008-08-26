@@ -43,7 +43,7 @@ class SetTestCase(TestCase):
 			self.failUnless(new_set_exp1==new_set_exp2,'%s!=%s'%(new_set_exp1,new_set_exp2))
 			self.failIf(new_set_exp1>new_set_exp2,'%s>%s'%(new_set_exp1,new_set_exp2))
 			self.failIf(new_set_exp1<new_set_exp2,'%s<%s'%(new_set_exp1,new_set_exp2))
-			new_set_exp1.set_tuple.id_list.append('asdfghjkl')
+			new_set_exp1.tuple_set.id_list.append('asdfghjkl')
 			self.failIf(new_set_exp1==new_set_exp2,'%s==%s'%(new_set_exp1,new_set_exp2))
 			self.failUnless(new_set_exp1>new_set_exp2,'%s<%s'%(new_set_exp1,new_set_exp2))
 			self.failUnless(new_set_exp2<new_set_exp1,'%s>%s'%(new_set_exp2,new_set_exp1))
@@ -55,8 +55,8 @@ class SetTestCase(TestCase):
 		from iegen.util import test_sets
 
 		class DummyPresSet(Node):
-			def __init__(self,set_tuple,conjunct):
-				self.set_tuple=set_tuple
+			def __init__(self,tuple_set,conjunct):
+				self.tuple_set=tuple_set
 				self.conjunct=conjunct
 
 		for set_str,set_exp in test_sets:
@@ -64,7 +64,7 @@ class SetTestCase(TestCase):
 			set_exp=set_exp.replace('PresSet','DummyPresSet')
 			exec('new_set_exp2='+set_exp)
 			self.failUnless(new_set_exp1==new_set_exp2,'%s!=%s'%(new_set_exp1,new_set_exp2))
-			new_set_exp1.set_tuple.id_list.append('asdfghjkl')
+			new_set_exp1.tuple_set.id_list.append('asdfghjkl')
 			self.failIf(new_set_exp1==new_set_exp2,'%s==%s'%(new_set_exp1,new_set_exp2))
 
 	#Tests for the arity method(s)
@@ -97,7 +97,7 @@ class RelationTestCase(TestCase):
 			self.failUnless(new_rel_exp1==new_rel_exp2,'%s!=%s'%(new_rel_exp1,new_rel_exp2))
 			self.failIf(new_rel_exp1>new_rel_exp2,'%s>%s'%(new_rel_exp1,new_rel_exp2))
 			self.failIf(new_rel_exp1<new_rel_exp2,'%s<%s'%(new_rel_exp1,new_rel_exp2))
-			new_rel_exp1.in_tuple.id_list.append('asdfghjkl')
+			new_rel_exp1.tuple_in.id_list.append('asdfghjkl')
 			self.failIf(new_rel_exp1==new_rel_exp2,'%s==%s'%(new_rel_exp1,new_rel_exp2))
 			self.failUnless(new_rel_exp1>new_rel_exp2,'%s<%s'%(new_rel_exp1,new_rel_exp2))
 			self.failUnless(new_rel_exp2<new_rel_exp1,'%s>%s'%(new_rel_exp2,new_rel_exp1))
@@ -109,9 +109,9 @@ class RelationTestCase(TestCase):
 		from iegen.util import test_relations
 
 		class DummyPresRelation(Node):
-			def __init__(self,in_tuple,out_tuple,conjunct):
-				self.in_tuple=in_tuple
-				self.out_tuple=out_tuple
+			def __init__(self,tuple_in,tuple_out,conjunct):
+				self.tuple_in=tuple_in
+				self.tuple_out=tuple_out
 				self.conjunct=conjunct
 
 		for rel_str,rel_exp in test_relations:
@@ -119,7 +119,7 @@ class RelationTestCase(TestCase):
 			rel_exp=rel_exp.replace('PresRelation','DummyPresRelation')
 			exec('new_rel_exp2='+rel_exp)
 			self.failUnless(new_rel_exp1==new_rel_exp2,'%s!=%s'%(new_rel_exp1,new_rel_exp2))
-			new_rel_exp1.in_tuple.id_list.append('asdfghjkl')
+			new_rel_exp1.tuple_in.id_list.append('asdfghjkl')
 			self.failIf(new_rel_exp1==new_rel_exp2,'%s==%s'%(new_rel_exp1,new_rel_exp2))
 
 	#Tests for the arity method(s)

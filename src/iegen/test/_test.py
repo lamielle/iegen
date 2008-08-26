@@ -83,7 +83,7 @@ class SetTestCase(TestCase):
 
 		class DummyPresSet(Node):
 			def __init__(self):
-				self.set_tuple=VarTuple([])
+				self.tuple_set=VarTuple([])
 				self.conjunct=Conjunction([])
 			def arity(self):
 				return 0
@@ -248,8 +248,8 @@ class RelationTestCase(TestCase):
 
 		class DummyPresRelation(Node):
 			def __init__(self):
-				self.in_tuple=VarTuple([])
-				self.out_tuple=VarTuple([])
+				self.tuple_in=VarTuple([])
+				self.tuple_out=VarTuple([])
 				self.conjunct=Conjunction([])
 			def arity_in(self):
 				return 0
