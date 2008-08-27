@@ -104,9 +104,9 @@ class SetTestCase(TestCase):
 	#Tests the __repr__ method
 	def testRepr(self):
 		from iegen import Set
-		from iegen.ast import PresSet,VarTuple,Conjunction
+		from iegen.ast import PresSet,VarTuple,Conjunction,VarExp
 
-		set_str="Set(sets=[PresSet(VarTuple(['a']),Conjunction([]))])"
+		set_str="Set(sets=[PresSet(VarTuple([VarExp(1,'a')]),Conjunction([]))])"
 		exec('set='+set_str)
 		self.failUnless(repr(set)==set_str,'%s!=%s'%(repr(set),set_str))
 
@@ -288,9 +288,9 @@ class RelationTestCase(TestCase):
 	#Tests the __repr__ method
 	def testRepr(self):
 		from iegen import Relation
-		from iegen.ast import PresRelation,VarTuple,Conjunction
+		from iegen.ast import PresRelation,VarTuple,Conjunction,VarExp
 
-		relation_str="Relation(relations=[PresRelation(VarTuple(['a']),VarTuple(['b']),Conjunction([]))])"
+		relation_str="Relation(relations=[PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([]))])"
 		exec('relation='+relation_str)
 		self.failUnless(repr(relation)==relation_str,'%s!=%s'%(repr(relation),relation_str))
 

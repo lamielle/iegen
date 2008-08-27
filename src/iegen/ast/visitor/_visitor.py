@@ -102,6 +102,8 @@ class DFVisitor(object):
 
 	def visitVarTuple(self,node):
 		self.inVarTuple(node)
+		for var in node.vars:
+			var.apply_visitor(self)
 		self.outVarTuple(node)
 
 	def visitConjunction(self,node):

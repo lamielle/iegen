@@ -184,11 +184,11 @@ class PresParser(object):
 			t[0]=t[1]
 
 	def p_tuple_variable(self,t):
-		'''tuple_variable : tuple_variable_id'''
-		t[0]=t[1]
+		'''tuple_variable : variable_id'''
+		t[0]=VarExp(1,t[1])
 
-	def p_tuple_variable_id(self,t):
-		'''tuple_variable_id : ID'''
+	def p_variable_id(self,t):
+		'''variable_id : ID'''
 		t[0] = t[1]
 	#--------------------------------------------------
 
@@ -309,7 +309,7 @@ class PresParser(object):
 		t[0]=NormExp([VarExp(1,t[1])],0)
 
 	def p_expression_func(self,t):
-		'''expression_func : tuple_variable_id LPAREN expr_list RPAREN'''
+		'''expression_func : variable_id LPAREN expr_list RPAREN'''
 		t[0]=NormExp([FuncExp(1,t[1],t[3])],0)
 
 	def p_expression_paren(self,t):

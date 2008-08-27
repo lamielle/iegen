@@ -9,7 +9,7 @@
 #
 #    PresRelation -> tuple_in:VarTuple tuple_out:VarTuple conjunct:Conjunction // PresSet
 #
-#    VarTuple -> id_list:ID*
+#    VarTuple -> vars:ID*
 #
 #    Conjunction -> constraint_list:Constraint*
 #
@@ -36,6 +36,7 @@ from copy import deepcopy
 class Node(object):
 
 	#Check method that makes sure its argument 'looks like' a NormExp
+	#Returns True if it does, False otherwise
 	def _like_norm_exp(self,exp):
 		if not hasattr(exp,'terms') or not hasattr(exp,'const'):
 			return False
@@ -43,6 +44,7 @@ class Node(object):
 			return True
 
 	#Check method that makes sure its argument 'looks like' a VarExp
+	#Returns True if it does, False otherwise
 	def _like_var_exp(self,exp):
 		if not hasattr(exp,'coeff') or not hasattr(exp,'id'):
 			return False
@@ -50,6 +52,7 @@ class Node(object):
 			return True
 
 	#Check method that makes sure its argument 'looks like' a FuncExp
+	#Returns True if it does, False otherwise
 	def _like_func_exp(self,exp):
 		if not hasattr(exp,'coeff') or not hasattr(exp,'name') or not hasattr(exp,'args'):
 			return False
@@ -119,23 +122,27 @@ class PresRelation(Node):
 
 #---------- Variable Tuple Node ----------
 #Tuple of variables.
-class VarTuple(object):
-	__slots__=('id_list',)
+class VarTuple(Node):
+	__slots__=('vars',)
 
-	def __init__(self,id_list):
-		self.id_list=id_list
+	def __init__(self,vars):
+		self.vars=vars
+
+		for var in self.vars:
+			if not self._like_var_exp(var):
+				raise ValueError("The given variable, '%s', must have the 'coeff' and 'id' attributes."%var)
 
 	def __repr__(self):
-		return 'VarTuple(%s)'%(self.id_list)
+		return 'VarTuple(%s)'%(self.vars)
 
 	def __len__(self):
-		return len(self.id_list)
+		return len(self.vars)
 
 	#Comparison operator
 	def __cmp__(self,other):
-		#Compare VarTuples by their id_lists
-		if hasattr(other,'id_list'):
-			return cmp(self.id_list,other.id_list)
+		#Compare VarTuples by their varss
+		if hasattr(other,'vars'):
+			return cmp(self.vars,other.vars)
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
@@ -145,7 +152,7 @@ class VarTuple(object):
 
 #---------- Conjunction Node ----------
 #A set of constraints that are all part of a conjunction (IOW ANDed together).
-class Conjunction(object):
+class Conjunction(Node):
 	__slots__=('constraint_list',)
 
 	def __init__(self,constraint_list):

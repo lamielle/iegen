@@ -43,7 +43,7 @@ class SetTestCase(TestCase):
 			self.failUnless(new_set_exp1==new_set_exp2,'%s!=%s'%(new_set_exp1,new_set_exp2))
 			self.failIf(new_set_exp1>new_set_exp2,'%s>%s'%(new_set_exp1,new_set_exp2))
 			self.failIf(new_set_exp1<new_set_exp2,'%s<%s'%(new_set_exp1,new_set_exp2))
-			new_set_exp1.tuple_set.id_list.append('asdfghjkl')
+			new_set_exp1.tuple_set.vars.append(VarExp(1,'asdfghjkl'))
 			self.failIf(new_set_exp1==new_set_exp2,'%s==%s'%(new_set_exp1,new_set_exp2))
 			self.failUnless(new_set_exp1>new_set_exp2,'%s<%s'%(new_set_exp1,new_set_exp2))
 			self.failUnless(new_set_exp2<new_set_exp1,'%s>%s'%(new_set_exp2,new_set_exp1))
@@ -64,7 +64,7 @@ class SetTestCase(TestCase):
 			set_exp=set_exp.replace('PresSet','DummyPresSet')
 			exec('new_set_exp2='+set_exp)
 			self.failUnless(new_set_exp1==new_set_exp2,'%s!=%s'%(new_set_exp1,new_set_exp2))
-			new_set_exp1.tuple_set.id_list.append('asdfghjkl')
+			new_set_exp1.tuple_set.vars.append(VarExp(1,'asdfghjkl'))
 			self.failIf(new_set_exp1==new_set_exp2,'%s==%s'%(new_set_exp1,new_set_exp2))
 
 	#Tests for the arity method(s)
@@ -97,7 +97,7 @@ class RelationTestCase(TestCase):
 			self.failUnless(new_rel_exp1==new_rel_exp2,'%s!=%s'%(new_rel_exp1,new_rel_exp2))
 			self.failIf(new_rel_exp1>new_rel_exp2,'%s>%s'%(new_rel_exp1,new_rel_exp2))
 			self.failIf(new_rel_exp1<new_rel_exp2,'%s<%s'%(new_rel_exp1,new_rel_exp2))
-			new_rel_exp1.tuple_in.id_list.append('asdfghjkl')
+			new_rel_exp1.tuple_in.vars.append(VarExp(1,'asdfghjkl'))
 			self.failIf(new_rel_exp1==new_rel_exp2,'%s==%s'%(new_rel_exp1,new_rel_exp2))
 			self.failUnless(new_rel_exp1>new_rel_exp2,'%s<%s'%(new_rel_exp1,new_rel_exp2))
 			self.failUnless(new_rel_exp2<new_rel_exp1,'%s>%s'%(new_rel_exp2,new_rel_exp1))
@@ -119,7 +119,7 @@ class RelationTestCase(TestCase):
 			rel_exp=rel_exp.replace('PresRelation','DummyPresRelation')
 			exec('new_rel_exp2='+rel_exp)
 			self.failUnless(new_rel_exp1==new_rel_exp2,'%s!=%s'%(new_rel_exp1,new_rel_exp2))
-			new_rel_exp1.tuple_in.id_list.append('asdfghjkl')
+			new_rel_exp1.tuple_in.vars.append(VarExp(1,'asdfghjkl'))
 			self.failIf(new_rel_exp1==new_rel_exp2,'%s==%s'%(new_rel_exp1,new_rel_exp2))
 
 	#Tests for the arity method(s)
@@ -135,19 +135,19 @@ class VarTupleTestCase(TestCase):
 
 	#Tests the __repr__ method
 	def testRepr(self):
-		from iegen.ast import VarTuple
+		from iegen.ast import VarTuple,VarExp
 
-		vs="VarTuple(['a', 'b', 'c'])"
+		vs="VarTuple([VarExp(1,'a'), VarExp(1,'b'), VarExp(1,'c')])"
 		exec('v='+vs)
 
 		self.failUnless(vs==repr(v),'%s!=%s'%(vs,repr(v)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
-		from iegen.ast import VarTuple
+		from iegen.ast import VarTuple,VarExp
 
-		vs1="VarTuple(['a', 'b', 'c', 'd'])"
-		vs2="VarTuple(['a', 'b', 'c', 'e'])"
+		vs1="VarTuple([VarExp(1,'a'), VarExp(1,'b'), VarExp(1,'c'), VarExp(1,'d')])"
+		vs2="VarTuple([VarExp(1,'a'), VarExp(1,'b'), VarExp(1,'c'), VarExp(1,'e')])"
 		exec('v1a='+vs1)
 		exec('v1b='+vs1)
 		exec('v2='+vs2)
@@ -166,29 +166,29 @@ class VarTupleTestCase(TestCase):
 	#Tests that the __cmp__ method doesn't use 'isinstance'
 	#but instead checks for properties of the object
 	def testCmpNoIsInstance(self):
-		from iegen.ast import VarTuple,Node
+		from iegen.ast import VarTuple,VarExp,Node
 		from iegen.util import test_relations
 
 		class DummyVarTuple(Node):
-			def __init__(self,id_list):
-				self.id_list=id_list
+			def __init__(self,vars):
+				self.vars=vars
 
-		vs="VarTuple(['a','b'])"
-		dvs="DummyVarTuple(['a','b'])"
+		vs="VarTuple([VarExp(1,'a'), VarExp(1,'b')])"
+		dvs="DummyVarTuple([VarExp(1,'a'), VarExp(1,'b')])"
 		exec('v='+vs)
 		exec('dv='+dvs)
 
 		self.failUnless(v==dv,'%s!=%s'%(v,dv))
-		v.id_list.append('c')
+		v.vars.append('c')
 		self.failIf(v==dv,'%s==%s'%(v,dv))
 
 	#Validate VarTuple's __len__ method
 	def testLen(self):
-		from iegen.ast import VarTuple
+		from iegen.ast import VarTuple,VarExp
 
-		v1=VarTuple(['a'])
-		v2=VarTuple(['a','b'])
-		v3=VarTuple(['a','b','c'])
+		v1=VarTuple([VarExp(1,'a')])
+		v2=VarTuple([VarExp(1,'a'),VarExp(1,'b')])
+		v3=VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')])
 
 		self.failUnless(1==len(v1),'len(%s)!=1'%v1)
 		self.failUnless(2==len(v2),'len(%s)!=2'%v2)
