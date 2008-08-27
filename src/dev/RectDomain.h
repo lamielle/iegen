@@ -39,6 +39,10 @@
  
 *//**********************************************************************/
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+
 #ifndef _RectDomain_H
 #define _RectDomain_H
 
@@ -61,16 +65,18 @@ typedef struct {
 // function prototypes
 
 RectDomain* RD_ctor(int dim);
+void RD_dtor( RectDomain** self );
 
 void RD_set_lb( RectDomain *rd, int k, int lb );
 void RD_set_ub( RectDomain *rd, int k, int lb );
 
 
-int RD_dim();
-int RD_lb(int k);
-int RD_ub(int k);
-int RD_size(int k); 
- 
+int RD_dim(RectDomain *rd );
+int RD_lb(RectDomain *rd, int k);
+int RD_ub(RectDomain *rd, int k);
+int RD_size(RectDomain *rd, int k); 
+
+void RD_dump( RectDomain* self ); 
 
 #endif
 
