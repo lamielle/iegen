@@ -186,6 +186,7 @@ class Constraint(Node):
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
+
 class Equality(Constraint):
 	__slots__=('exp',)
 
@@ -193,8 +194,15 @@ class Equality(Constraint):
 		self.exp=exp
 		self._equality=True
 
+		#Make sure the given expression 'looks like' a NormExp
 		if not self._like_norm_exp(exp):
 			raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
+
+		#Canonicalize the expression by taking the 'larger' of exp and -1*exp since Equality is reflexive and both expressions are equivalent in this case
+		neg_exp=NormExp([],-1)*self.exp
+
+		if neg_exp>self.exp:
+			self.exp=neg_exp
 
 	def __repr__(self):
 		return 'Equality(%s)'%self.exp
@@ -234,6 +242,7 @@ class VarExp(Expression):
 		self.id=id
 
 	def __repr__(self):
+		#Use double quotes if this variable's name has a "'" in it
 		if self.id.find("'")>=0:
 			return "VarExp(%s,\"%s\")"%(self.coeff,self.id)
 		else:
@@ -285,10 +294,14 @@ class FuncExp(Expression):
 		#Make sure all arguments 'look like' NormExps
 		for arg in self.args:
 			if not self._like_norm_exp(arg):
-				raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
+				raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%arg)
 
 	def __repr__(self):
-		return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.args)
+		#Use double quotes if this function's name has a "'" in it
+		if self.name.find("'")>=0:
+			return "FuncExp(%s,\"%s\",%s)"%(self.coeff,self.name,self.args)
+		else:
+			return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.args)
 
 	#Comparison operator
 	def __cmp__(self,other):

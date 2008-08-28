@@ -382,15 +382,82 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(inverse==inverse_res,'%s!=%s'%(inverse,inverse_res))
 
+	#Tests the inverse operation with constraints
+	def testInverseConstraints(self):
+		from iegen import Relation
+		from iegen.parser import PresParser
+
+		relation=Relation('{[a,b]->[c,d]:a>=n && b<5 and c+d=15}')
+		prelation=PresParser.parse_relation('{[c,d]->[a,b]:b<5 and a>=n && c+d=15}')
+
+		inverse=relation.inverse()
+		inverse_res=Relation(relations=[prelation])
+
+		self.failUnless(inverse==inverse_res,'%s!=%s'%(inverse,inverse_res))
+
+	#Tests that compose is not destructive
+	def testComposeNonDestructive(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a]->[a]}')
+		relation2=Relation('{[b]->[b]}')
+		composed=relation1.compose(relation2)
+
+		self.failIf(composed is relation1,'%s is %s'%(composed,relation1))
+		self.failIf(composed is relation2,'%s is %s'%(composed,relation2))
+
+	#Tests that compose fails when the output arity of the second relation does not match the input arity of the first relation
+	@raises(ValueError)
+	def testComposeArityFail(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a,b]->[c]}')
+		relation2=Relation('{[b]->[b]}')
+		composed=relation1.compose(relation2)
+
+		relation1=Relation('{[]->[c]}')
+		relation2=Relation('{[a,b,c,d]->[e]}')
+		composed=relation1.compose(relation2)
+
 	#Tests the compose operation
 	def testCompose(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a,b]->[c]:1<=a and a<=10 and 1<=b and b<=10}')
+		relation2=Relation('{[d]->[e,f]:-10<=d and d<=0}')
+
+		composed=relation1.compose(relation2)
+		composed_res=Relation('{[d]->[c]: -10<=d and d<=0 and 1<=a and a<=10 and 1<=b and b<=1}')
+		#Once simplification is implemented, this should be the result
+		#composed_res=Relation('{[d]->[c]: -10<=d and d<=0}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests the compose operation with equality constraints
+	def testComposeEquality(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a,b]->[c]:c=a}')
+		relation2=Relation('{[d]->[e,f]:e=d and f=d}')
+
+		composed=relation1.compose(relation2)
+		composed_res=Relation('{[d]->[c]: a=e and b=f and e=d and f=d and c=a}')
+		#Once simplification is implemented, this should be the result
+		#composed_res=Relation('{[d]->[c]: -10<=d and d<=0}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests that the compose operation doesn't choke on duplicate names
+	def testComposeRename(self):
 		from iegen import Relation
 
 		relation1=Relation('{[a,b]->[c]:1<=a and a<=10 and 1<=b and b<=10}')
 		relation2=Relation('{[a]->[b,c]:-10<=a and a<=0}')
 
 		composed=relation1.compose(relation2)
-		composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
+		composed_res=Relation('{[a]->[c]: -10<=a and a<=0 and 1<=a and a<=10 and 1<=b and b<=1}')
+		#Once simplification is implemented, this should be the result
+		#composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 #------------------------------------

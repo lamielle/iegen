@@ -211,8 +211,8 @@ class ConjunctionTestCase(TestCase):
 	def testCmp(self):
 		from iegen.ast import Conjunction,Equality,NormExp,VarExp
 
-		cs1="Conjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
-		cs2="Conjunction([Equality(NormExp([VarExp(-5,'b')],-5))])"
+		cs1="Conjunction([Equality(NormExp([VarExp(5,'a')],5))])"
+		cs2="Conjunction([Equality(NormExp([VarExp(5,'b')],5))])"
 		exec('c1a='+cs1)
 		exec('c1b='+cs1)
 		exec('c2='+cs2)
@@ -263,8 +263,8 @@ class EqualityTestCase(TestCase):
 	def testCmp(self):
 		from iegen.ast import Equality,NormExp,VarExp
 
-		es1="Equality(NormExp([VarExp(-9,'f')],-9))"
-		es2="Equality(NormExp([VarExp(-9,'g')],-9))"
+		es1="Equality(NormExp([VarExp(9,'f')],9))"
+		es2="Equality(NormExp([VarExp(9,'g')],9))"
 		exec('e1a='+es1)
 		exec('e1b='+es1)
 		exec('e2='+es2)
@@ -290,8 +290,8 @@ class EqualityTestCase(TestCase):
 				self.exp=exp
 				self._equality=equality
 
-		es="Equality(NormExp([VarExp(-5,'a')],-5))"
-		des="DummyEquality(NormExp([VarExp(-5,'a')],-5),True)"
+		es="Equality(NormExp([VarExp(5,'a')],5))"
+		des="DummyEquality(NormExp([VarExp(5,'a')],5),True)"
 		exec('e='+es)
 		exec('de='+des)
 
@@ -306,8 +306,42 @@ class EqualityTestCase(TestCase):
 		e=Equality(NormExp([VarExp(1,'a')],0))
 		i=Inequality(NormExp([VarExp(1,'a')],0))
 
-		self.failUnless(e>i)
-		self.failUnless(i<e)
+		self.failUnless(e>i,'%s<=%s'%(e,i))
+		self.failUnless(i<e,'%s>=%s'%(i,e))
+
+	#Tests that a=b and b=a are considered equal
+	def testEqualityReflexive(self):
+		from iegen.ast import Equality,VarExp,NormExp
+
+		e1=Equality(NormExp([VarExp(1,'a')],-10))
+		e2=Equality(NormExp([VarExp(-1,'a')],10))
+
+		self.failUnless(e1==e2,'%s!=%s'%(e1,e2))
+
+		e1=Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],-10))
+		e2=Equality(NormExp([VarExp(-1,'a'),VarExp(1,'b')],10))
+
+		self.failUnless(e1==e2,'%s!=%s'%(e1,e2))
+
+	#Tests that Equality uses the 'larger' expression of exp vs. -exp
+	def testEqualityGreaterExp(self):
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+
+		l1=[Equality(NormExp([VarExp(1,'b')],-10)),Equality(NormExp([VarExp(-1,'a')],10))]
+		l2=[Equality(NormExp([VarExp(-1,'b')],10)),Equality(NormExp([VarExp(-1,'a')],10))]
+
+		l1.sort()
+		l2.sort()
+
+		self.failUnless(l1==l2,'%s!=%s'%(l1,l2))
+
+		l1=[Equality(NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'b')],0)])],-10)),Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'a')],0)])],10))]
+		l2=[Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'b')],0)])],10)),Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'a')],0)])],10))]
+
+		l1.sort()
+		l2.sort()
+
+		self.failUnless(l1==l2,'%s!=%s'%(l1,l2))
 #------------------------------------
 
 #---------- Inequality Tests ----------
@@ -460,7 +494,9 @@ class FuncExpTestCase(TestCase):
 	          "FuncExp(42,'test',[NormExp([VarExp(1,'a')],0)])",
 	          "FuncExp(-81,'z',[NormExp([VarExp(1,'a')],0)])",
 	          "FuncExp(101,'x',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(16,'wxyz',[NormExp([VarExp(1,'a'), VarExp(2,'b')],0)])")
+	          "FuncExp(16,'wxyz',[NormExp([VarExp(1,'a'), VarExp(2,'b')],0)])",
+	          "FuncExp(16,\"f'\",[NormExp([VarExp(1,'a'), VarExp(2,'b')],0)])",
+	          "FuncExp(16,\"f'\",[NormExp([FuncExp(2,\"g'\",[NormExp([VarExp(1,'a')],0)])],0)])")
 
 	#Tests the __repr__ method
 	def testRepr(self):

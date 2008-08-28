@@ -2,9 +2,31 @@
 
 from iegen.parser import PresParser
 
+#---------- Formula class ----------
+#Parent class for Sets and Relations
+class Formula(object):
+
+	#Check method that makes sure its argument 'looks like' a PresSet
+	#Returns True if it does, False otherwise
+	def _like_pres_set(self,exp):
+		if not hasattr(exp,'tuple_set') or not hasattr(exp,'conjunct'):
+			return False
+		else:
+			return True
+
+	#Check method that makes sure its argument 'looks like' a PresRelation
+	#Returns True if it does, False otherwise
+	def _like_pres_relation(self,exp):
+		if not hasattr(exp,'tuple_in') or not hasattr(exp,'tuple_out') or not hasattr(exp,'conjunct'):
+			return False
+		else:
+			return True
+#-----------------------------------
+
+
 #---------- Set class ----------
 #Presburger Set that is a disjunction of a collection of PresSet instances
-class Set(object):
+class Set(Formula):
 	__slots__=('sets',)
 
 	#Constructor for Set:
@@ -95,7 +117,7 @@ class Set(object):
 
 
 #---------- Relation class ----------
-class Relation(object):
+class Relation(Formula):
 	__slots__=('relations',)
 
 	#Constructor for Relation:
@@ -209,7 +231,42 @@ class Relation(object):
 			relation.tuple_in,relation.tuple_out=relation.tuple_out,relation.tuple_in
 		return self
 
-#	#Relation composition: self(other)
+	#Relation composition: self(other)
+	#Composition of unions of relations is defined as:
+	#Let R1=A union B
+	#Let R2=C union D
+	#
+	#Then R1(R2)=A(C) union A(D) union B(C) union B(D)
+	def compose(self,other):
+		from copy import deepcopy
+
+		#Make sure the arities are valid
+		if other.arity_out()!=self.arity_in():
+			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
+
+		return self
+
+	#Private utility method to perform the compose operation between two PresRelation objects
+	def _compose(r1,r2):
+		from copy import deepcopy
+
+		#Make sure we are given PresRelations
+		if not self._like_pres_relation(r1) or not self._like_pres_relation(r2):
+			raise ValueError("Compose failure: The given relations, '%s' and '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%r1)
+
+		#Make sure the arities are valid
+		if r2.arity_out()!=r1.arity_in():
+			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(r2.arity_out(),r1.arity_in()))
+
+		#Add equality constraints for the 'inner' tuple variables of the composition
+		#We know there are the same number of variables since we checked above
+		for i in xrange(self.arity_in()):
+			constraint=Equality(MinusExp(VarExp(other.tuple_in[i]),VarExp(self.tuple_out[i])))
+			self.conjunct.constraint_list.append(constraint)
+
+		#Add the other's constraints to this relation
+		self.conjunct.extend(other.conjunct.constraint_list)
+
 #	def compose(self,other):
 #		#Composing two relations?
 #		if isinstance(other,PresRelation):
