@@ -32,6 +32,10 @@ class SetTestCase(TestCase):
 			exec('new_set_exp=repr('+set_exp+')')
 			self.failUnless(set_exp==new_set_exp,'%s!=%s'%(set_exp,new_set_exp))
 
+			exec('new_set_exp2=repr('+new_set_exp+')')
+			self.failUnless(new_set_exp2==new_set_exp,'%s!=%s'%(new_set_exp2,new_set_exp))
+			self.failUnless(new_set_exp2==set_exp,'%s!=%s'%(new_set_exp2,set_exp))
+
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
@@ -85,6 +89,10 @@ class RelationTestCase(TestCase):
 		for rel_str,rel_exp in test_relations:
 			exec('new_rel_exp=repr('+rel_exp+')')
 			self.failUnless(rel_exp==new_rel_exp,'%s!=%s'%(rel_exp,new_rel_exp))
+
+			exec('new_rel_exp2=repr('+new_rel_exp+')')
+			self.failUnless(new_rel_exp2==new_rel_exp,'%s!=%s'%(new_rel_exp2,new_rel_exp))
+			self.failUnless(new_rel_exp2==rel_exp,'%s!=%s'%(new_rel_exp2,rel_exp))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
