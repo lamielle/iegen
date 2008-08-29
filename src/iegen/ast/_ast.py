@@ -198,7 +198,10 @@ class Equality(Constraint):
 		if not self._like_norm_exp(exp):
 			raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
 
-		#Canonicalize the expression by taking the 'larger' of exp and -1*exp since Equality is reflexive and both expressions are equivalent in this case
+		self._set_largest_exp()
+
+	#Canonicalize the expression by taking the 'larger' of exp and -1*exp since Equality is reflexive and both expressions are equivalent in this case
+	def _set_largest_exp(self):
 		neg_exp=NormExp([],-1)*self.exp
 
 		if neg_exp>self.exp:

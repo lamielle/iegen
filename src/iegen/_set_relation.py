@@ -6,6 +6,11 @@ from iegen.parser import PresParser
 #Parent class for Sets and Relations
 class Formula(object):
 
+	#Uses the sort visitor to sort all lists in this formula and the ASTs it contains
+	def _sort(self):
+		from iegen.ast.visitor import SortVisitor
+		SortVisitor().visit(self)
+
 	#Check method that makes sure its argument 'looks like' a PresSet
 	#Returns True if it does, False otherwise
 	def _like_pres_set(self,exp):
@@ -39,7 +44,6 @@ class Set(Formula):
 		elif None!=sets and None==set_string:
 			if len(sets)>0:
 				self.sets=sets
-				self.sets.sort()
 			else:
 				raise ValueError('Must specify at least one set in the sets collection')
 		else:
@@ -47,6 +51,7 @@ class Set(Formula):
 
 		self._set_check()
 		self._arity_check()
+		self._sort()
 
 	def __repr__(self):
 		return "Set(sets=%s)"%(self.sets)
@@ -100,12 +105,13 @@ class Set(Formula):
 				self=deepcopy(self)
 				other=deepcopy(other)
 				self._add_set(other)
-				self.sets.sort()
+				self._sort()
 				return self
 			else:
 				raise ValueError('Cannot union sets with differing arity (%d and %d).'%(self.arity(),other.arity()))
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+
 
 #	#Given a collection of scattering functions for each statement
 #	#Returns the code that iterates over the tuples in this set
@@ -130,7 +136,6 @@ class Relation(Formula):
 		elif None!=relations and None==relation_string:
 			if len(relations)>0:
 				self.relations=relations
-				self.relations.sort()
 			else:
 				raise ValueError('Must specify at least one relation in the relations collection')
 		else:
@@ -138,6 +143,7 @@ class Relation(Formula):
 
 		self._relation_check()
 		self._arity_check()
+		self._sort()
 
 	def __repr__(self):
 		return "Relation(relations=%s)"%(self.relations)
@@ -214,12 +220,13 @@ class Relation(Formula):
 				self=deepcopy(self)
 				other=deepcopy(other)
 				self._add_relation(other)
-				self.relations.sort()
+				self._sort()
 				return self
 			else:
 				raise ValueError('Cannot union relations with differing arity ((%d->%d) and (%d->%d)).'%(self.arity_in(),self.arity_out(),other.arity_in(),other.arity_out()))
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+
 
 	#Takes the inverse of all of the PresRelations in this Relation
 	def inverse(self):
@@ -229,6 +236,8 @@ class Relation(Formula):
 		for relation in self.relations:
 			#Swap input and output tuples
 			relation.tuple_in,relation.tuple_out=relation.tuple_out,relation.tuple_in
+
+		self._sort()
 		return self
 
 	#Relation composition: self(other)

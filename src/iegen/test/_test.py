@@ -87,6 +87,8 @@ class SetTestCase(TestCase):
 				self.conjunct=Conjunction([])
 			def arity(self):
 				return 0
+			def apply_visitor(self,visitor):
+				visitor.visitPresSet(self)
 
 		set=PresParser.parse_set('{[]}')
 		Set(sets=[set,DummyPresSet()])
@@ -255,6 +257,8 @@ class RelationTestCase(TestCase):
 				return 0
 			def arity_out(self):
 				return 0
+			def apply_visitor(self,visitor):
+				visitor.visitPresRelation(self)
 
 		relation=PresParser.parse_relation('{[]->[]}')
 		Relation(relations=[relation,DummyPresRelation()])
@@ -432,6 +436,20 @@ class RelationTestCase(TestCase):
 		#composed_res=Relation('{[d]->[c]: -10<=d and d<=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests the compose operation on a real-world use case from moldyn-FST.in
+	def testComposeReal(self):
+		from iegen import Relation
+
+		ar=Relation('{[ii,s]->[ar_out]:s=1 and ar_out=inter(ii)}')
+		data_reordering=Relation('{[k]->[dr_out]:dr_out=sigma(k)}')
+
+		ar_composed=data_reordering.compose(ar)
+		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}')
+		#Once simplification is implemented, this should be the result
+		#ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}')
+
+		self.failUnless(ar_composed==ar_res,'%s!=%s'%(ar_composed,ar_res))
 
 	#Tests the compose operation with equality constraints
 	def testComposeEquality(self):
