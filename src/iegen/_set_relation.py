@@ -244,70 +244,100 @@ class Relation(Formula):
 		if other.arity_out()!=self.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
 
-		return self
+		#Collection of new composed relations
+		new_relations=[]
+
+		for rel1 in self.relations:
+			for rel2 in other.relations:
+				new_relations.append(self._compose(rel1,rel2))
+
+		return Relation(relations=new_relations)
 
 	#Private utility method to perform the compose operation between two PresRelation objects
-	def _compose(r1,r2):
+	#Returns the PresRelation resulting from the composition operation r1(r2)
+	def _compose(self,r1,r2):
 		from copy import deepcopy
+		from iegen.ast import PresRelation,Conjunction,Equality,NormExp
+		from iegen.ast.visitor import RenameVisitor
 
 		#Make sure we are given PresRelations
 		if not self._like_pres_relation(r1) or not self._like_pres_relation(r2):
-			raise ValueError("Compose failure: The given relations, '%s' and '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%r1)
+			raise ValueError("Compose failure: The given relations, '%s' and '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%(r1,r2))
 
 		#Make sure the arities are valid
 		if r2.arity_out()!=r1.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(r2.arity_out(),r1.arity_in()))
 
-		#Add equality constraints for the 'inner' tuple variables of the composition
+		#Copy the relations so this operation is using fresh copies of the objects
+		r1=deepcopy(r1)
+		r2=deepcopy(r2)
+
+		#Create dictionaries for renaming the tuple variables
+		r1_rename=self._get_rename_dict(r1,'r1')
+		r1_unrename=self._get_unrename_dict(r1,'r1')
+		r2_rename=self._get_rename_dict(r2,'r2')
+		r2_unrename=self._get_unrename_dict(r2,'r2')
+
+		#Rename the tuple varibles in r1 and r2
+		v=RenameVisitor(r1_rename)
+		v.visit(r1)
+		v=RenameVisitor(r2_rename)
+		v.visit(r2)
+
+		#Create a new relation
+		new_rel=PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([]))
+
+		#Add equality constraints for the 'inner' tuple variables of the composition to the new relation
 		#We know there are the same number of variables since we checked above
-		for i in xrange(self.arity_in()):
-			constraint=Equality(MinusExp(VarExp(other.tuple_in[i]),VarExp(self.tuple_out[i])))
-			self.conjunct.constraint_list.append(constraint)
+		for i in xrange(r2.arity_out()):
+			#Get the variables from the relations
+			var1=deepcopy(r1.tuple_in.vars[i])
+			var2=deepcopy(r2.tuple_out.vars[i])
 
-		#Add the other's constraints to this relation
-		self.conjunct.extend(other.conjunct.constraint_list)
+			#Set the coefficient on the first variable to -1 since:
+			#var2=var1 -> var2-var1=0
+			var1.coeff=-1
 
-#	def compose(self,other):
-#		#Composing two relations?
-#		if isinstance(other,PresRelation):
-#			#Make sure the arities are valid
-#			if other.arity_out()!=self.arity_in():
-#				raise ValueError('Output arity of first relation (%d) does not match input arity of second relation (%d)'%(other.arity_out(),self.arity_in()))
-#
-#			#Add equalities of tuple variables
-#			#We know there are the same number of variables since we checked above
-#			for i in xrange(self.arity_in()):
-#				constraint=Equality(MinusExp(VarExp(other.tuple_in[i]),VarExp(self.tuple_out[i])))
-#				self.conjunct.constraint_list.append(constraint)
-#
-#			#Add the other's constraints to this relation
-#			self.conjunct.extend(other.conjunct.constraint_list)
-#
-#			return self
-#		#Composing a relation with union of relations?
-#		elif isinstance(other,PresRelationUnion):
-#			new_union=PresRelationUnion([])
-#			for relation in other.relations:
-#				new_union._add_relation(self.compose(relation))
-#			return new_union
-#		else:
-#			raise ValueError("Unsupported argument of type '%s' for operation compose."%type(other))
-#
-#	#Methods from PresRelationUnion
-#	def compose(self,other):
-#		#Composing with a single relation?
-#		if isinstance(other,PresRelation):
-#			new_union=PresRelationUnion([])
-#			for relation in self.relations:
-#				new_union._add_relation(relation.compose(other))
-#			return new_union
-#		#Composing two unions?
-#		elif isinstance(other,PresRelationUnion):
-#			new_union=PresRelationUnion([])
-#			for self_relation in self.relations:
-#				for other_relation in other.relations:
-#					new_union._add_relation(self_relation.compose(other_relation))
-#			return new_union
-#		else:
-#			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+			#Create a constraint where these variables are equal
+			constraint=Equality(NormExp([var1,var2],0))
+
+			#Add the new constraint to the new relation
+			new_rel.conjunct.constraint_list.append(constraint)
+
+		#Add the constraints of both relations to the new relation
+		for constraint in r1.conjunct.constraint_list:
+			new_rel.conjunct.constraint_list.append(deepcopy(constraint))
+		for constraint in r2.conjunct.constraint_list:
+			new_rel.conjunct.constraint_list.append(deepcopy(constraint))
+
+		#Sort the constraints
+		new_rel.conjunct.constraint_list.sort()
+
+		#Rename the variables back to what the were before
+		v=RenameVisitor(r1_unrename)
+		v.visit(new_rel)
+		v=RenameVisitor(r2_unrename)
+		v.visit(new_rel)
+
+		return new_rel
+
+	#Creates a dictionary for renaming variables in a relation
+	def _get_rename_dict(self,relation,prefix):
+		rename={}
+
+		#Make sure we are given a PresRelation
+		if not self._like_pres_relation(relation):
+			raise ValueError("The given relation, '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%r1)
+
+		for var in relation.tuple_in.vars:
+			rename[var.id]=prefix+'_in_'+var.id
+		for var in relation.tuple_out.vars:
+			rename[var.id]=prefix+'_out_'+var.id
+
+		return rename
+
+	#Returns a dictionary that is the inverse of that returned by _get_rename_dict
+	def _get_unrename_dict(self,relation,prefix):
+		from iegen.util import invert_dict
+		return invert_dict(self._get_rename_dict(relation,prefix))
 #------------------------------------

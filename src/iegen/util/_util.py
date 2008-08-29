@@ -15,6 +15,10 @@ def full_iter_space(statements):
 
 	return full_iter
 
+#Inverts key/value pairs of the given dictionary
+def invert_dict(d):
+	return dict(((v,k) for k,v in d.iteritems()))
+
 #Defines a property called m_name
 #This property is assigned to the given class
 #The getter and setter access a member of the class called _'name'

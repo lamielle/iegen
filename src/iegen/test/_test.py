@@ -427,7 +427,7 @@ class RelationTestCase(TestCase):
 		relation2=Relation('{[d]->[e,f]:-10<=d and d<=0}')
 
 		composed=relation1.compose(relation2)
-		composed_res=Relation('{[d]->[c]: -10<=d and d<=0 and 1<=a and a<=10 and 1<=b and b<=1}')
+		composed_res=Relation('{[d]->[c]: -10<=d and d<=0 and 1<=a and a<=10 and 1<=b and b<=10 and a=e and b=f}')
 		#Once simplification is implemented, this should be the result
 		#composed_res=Relation('{[d]->[c]: -10<=d and d<=0}')
 
@@ -443,7 +443,7 @@ class RelationTestCase(TestCase):
 		composed=relation1.compose(relation2)
 		composed_res=Relation('{[d]->[c]: a=e and b=f and e=d and f=d and c=a}')
 		#Once simplification is implemented, this should be the result
-		#composed_res=Relation('{[d]->[c]: -10<=d and d<=0}')
+		#composed_res=Relation('{[d]->[c]: d=c}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -455,9 +455,31 @@ class RelationTestCase(TestCase):
 		relation2=Relation('{[a]->[b,c]:-10<=a and a<=0}')
 
 		composed=relation1.compose(relation2)
-		composed_res=Relation('{[a]->[c]: -10<=a and a<=0 and 1<=a and a<=10 and 1<=b and b<=1}')
+		composed_res=Relation('{[a]->[c]: -10<=a and a<=0 and 1<=a and a<=10 and 1<=b and b<=10 and a=b and b=c}')
 		#Once simplification is implemented, this should be the result
 		#composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests the _get_rename_dict method of Relation
+	def testGetRenameDict(self):
+		from iegen import Relation
+
+		relation=Relation('{[a,b]->[c,d,e]:1<=a and a<=10}')
+
+		rename=relation._get_rename_dict(relation.relations[0],'pre')
+		rename_res={'a':'pre_in_a','b':'pre_in_b','c':'pre_out_c','d':'pre_out_d','e':'pre_out_e'}
+
+		self.failUnless(rename==rename_res,'%s!=%s'%(rename,rename_res))
+
+	#Tests the _get_unrename_dict method of Relation
+	def testGetUnrenameDict(self):
+		from iegen import Relation
+
+		relation=Relation('{[a,b]->[c,d,e]:1<=a and a<=10}')
+
+		unrename=relation._get_unrename_dict(relation.relations[0],'pre')
+		unrename_res={'pre_in_a':'a','pre_in_b':'b','pre_out_c':'c','pre_out_d':'d','pre_out_e':'e'}
+
+		self.failUnless(unrename==unrename_res,'%s!=%s'%(unrename,unrename_res))
 #------------------------------------
