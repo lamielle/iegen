@@ -23,9 +23,9 @@
     // Returns dimensionality of the rectangular domain.
     RD_dim()    
     
-    // Returns lower bound for the kth dimension
+    // Returns lower bound for the kth dimension.
     RD_lb(int k)
-    // Returns upper bound for the kth dimension
+    // Returns upper bound for the kth dimension.
     RD_ub(int k)
     
     // Returns size for the kth dimension.

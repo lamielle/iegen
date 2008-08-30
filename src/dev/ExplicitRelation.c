@@ -1,25 +1,102 @@
-/* ExplicitRelation.c */
-#include "ExplicitRelation.h"
-/*! \file 
+/*! \file        ExplicitRelation.c
     Implements the ExplicitRelation data structure for use with the PIES project.
 */
 
 #include "ExplicitRelation.h"
 
+int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
+/*----------------------------------------------------------------*//*! 
+  \short Given an in tuple calculate the index into out_vals array where
+         the out tuple is stored.  
 
-ExplicitRelation* ER_ctor(int in_tuple_arity, 
-                                        int out_tuple_arity) 
+    <pre>
+        in_tuple: <x_0, x_1, ..., x_k>
+        out_tuple will be stored at 
+            out_vals[ (x_0*(RD_size(1)*...*RD_size(k)) 
+                      + x_1*(RD_size(2)* ... *LD_size(k))
+                      + x_k) * out_arity ]
+    </pre>
+         
+    Assumes we are dealing with a function.
+    
+    FIXME? Possible performance problem.
+
+  \author Michelle Strout 8/30/08
+*//*----------------------------------------------------------------*/
+{
+    int i, j, index;
+    index = 0;
+    RectDomain * in_domain = ER_in_domain(relptr);
+    // add up all the terms for each dimension of the in_tuple
+    for (i=0; i<relptr->in_arity; i++) {
+        // get element value from Tuple
+        int term = Tuple_val(in_tuple, i);
+        for (j=i+1; j<relptr->in_arity; j++) {
+            term *= RD_size( j );
+        }
+        index += term;
+    }
+    
+    return index * relptr->out_arity;
+}
+
+int ER_calcIndex( ExplicitRelation* relptr, int in_val )
+/*----------------------------------------------------------------*//*! 
+  \short Given an 1D in tuple (so just the single value) 
+         calculates the index into out_vals array where
+         the out tuple value is stored.  1D-to-1D arity specialization.
+
+    <pre>
+        in_tuple: <x_0>
+        out_tuple will be stored at 
+            out_vals[ x_0 * out_arity ]
+    </pre>
+         
+    Assumes we are dealing with a function.
+    
+    FIXME? Possible performance problem.
+
+  \author Michelle Strout 8/30/08
+*//*----------------------------------------------------------------*/
+{
+    return in_val*relptr->out_arity;
+}
+
+
+ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
+                          RectDomain *in_domain=NULL, bool isFunction=false)
 /*----------------------------------------------------------------*//*! 
   \short Construct ExplicitRelation structure and return a ptr to it.
 
   Initializes the explicit relation to empty.
   
+  If isFunction and in_domain is provided then,
+  <ul>
+    <li> will not need out_index because each in_val only has one out_val
+    <li> Going to use multi-dim array addressing arithmetic to index into out_vals.  Each point in the in_domain will need out_arity spaces to store the associated output_tuple.  See ER_calcIndex() for more details.
+  </ul>
+  
+  If in_domain provided, but do not know if it is a function
+  <ul>
+    <li> disallow calls to ER_out_given_in
+    <li> instead of using the multidim array equation to index into out_vals will use it to index into out_index instead.  Need out_index to keep track of all the out tuples for a given in_tuple.
+    <li> This is great, but since don't know number of out_tuples per in_tuple can only insert directly into this format if doing an ordered insert on the in_tuple.
+  </ul>
+  
+  If isFunction, but no in_domain is provided.
+  <ul>
+    <li>Without an in_domain specification, we can't sort until after everything is put in.  Therefore, I think that if no in_domain is provided, then we should have insert just put all of the relations into the raw data array.  Each entry will take in_arity+out_arity spots in the raw_data array.  Insert can then keep track of the in_domain.
+    <li>The fact that it is a function just means that we don't need the out_index array.
+  </ul>
+  
   \param in_tuple_arity     Arity of the input tuples.
   \param out_tuple_arity    Arity of the output tuples.
+  \param in_domain          Min and max values of all entries in in_tuples.
+  \param isFunction         Indicates each input tuple has only one output.
 
   \return Returns a ptr to the constructed ExplicitRelation structure.
 
-  \author Michelle Strout 8/19/08
+  \author Michelle Strout 8/29/08
 *//*----------------------------------------------------------------*/
 {
     ExplicitRelation* self 
@@ -27,58 +104,67 @@ ExplicitRelation* ER_ctor(int in_tuple_arity,
     
     self->in_arity = in_tuple_arity;
     self->out_arity = out_tuple_arity;  
+    self->isFunction = isFunction;
+    self->in_domain = in_domain;
     
-    self->in_count = 0;
-    self->out_count = 0;
+    // if in_domain was not provided then create one to keep track of 
+    // values observed within insert.
+    if (in_domain != NULL) {
+        self->in_domain_given = true;
+        assert(self->in_arity == RD_arity(self->in_domain));
+        
+    // set up an "undefined" rectangular domain where the starting
+    // ub is 0 and the starting lb is maxint.  That way when
+    // actual values are inserted, the ub and lb will be properly
+    // updated.
+    } else {
+        self->in_domain_given = false;
+        self->in_domain = RD_ctor(self->in_arity);
+        int i;
+        for (i=0; i<self->in_arity; i++ ) {
+            RD_set_lb( self->in_domain, INT_MAX );
+            RD_set_ub( self->in_domain, 0 );
+        }
+    }
+    
+    // set up out_domain
+    self->out_domain = RD_ctor(self->out_arity);
+    int i;
+    for (i=0; i<self->out_arity; i++ ) {
+        RD_set_lb( self->out_domain, INT_MAX );
+        RD_set_ub( self->out_domain, 0 );
+    }
     
     self->in_vals = NULL;
     self->out_index = NULL;
-    self->out_vals = NULL;  
+    self->out_vals = NULL; 
+    self->raw_data = NULL;
+    self->raw_num = 0;
     
     self->in_vals_size = 0;
     self->out_index_size = 0;
     self->out_vals_size = 0;
+    self->raw_data_size = 0;
 
-    // Default values.  The insertion routines should maintain these.
-    // Do not change these lightly, it will cause problems.
-    self->ordered_by_in = true;
+    // By default not ordered.
+    self->ordered_by_in = false;
     self->ordered_by_out = false;
-    self->ordered_by_in_out = false;
+
+    // check for special conditions
+    if ( isFunction && in_domain!=NULL ) {
+        self->ordered_by_in = true;
+    }   
     
     return self;
 }
 
-ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
-                          int num_entries) 
-/*----------------------------------------------------------------*//*! 
-  \short Construct ExplicitRelation structure and return a ptr to it.
 
-  Initializes the explicit relation to empty.
+/*----------------------------------------------------------------*//*! 
+  \short Deallocate all memory for ExplicitRelation.
   
-  \param in_tuple_arity     Arity of the input tuples.
-  \param out_tuple_arity    Arity of the output tuples.
-  \param num_entries        Number of entries the relation expects to contain.
-
-  \return Returns a ptr to the constructed ExplicitRelation structure.
-
-  \author Michelle Strout 8/23/08
-*//*----------------------------------------------------------------*/
-{
-    ExplicitRelation* retval = ER_ctor(in_tuple_arity, out_tuple_arity);
-    
-    // FIXME: need to generalize this routine to any arity
-    if (in_tuple_arity==1 && out_tuple_arity==1) {
-        retval->out_vals_size = num_entries;
-        retval->out_vals = (int*)malloc(sizeof(int)*num_entries);
-    } else {
-        assert(0);
-    }
-
-    return retval;
-}
-
-/*----------------------------------------------------------------*//*! 
-  \short Deallocate all memory for ExplicitRelation
+  The ExplicitRelation deletes the RectDomain for the in_domain,
+  which may cause problems if the RectDomain pointer is being used
+  elsewhere.
 
   \author Michelle Strout 8/19/08
 *//*----------------------------------------------------------------*/
@@ -87,6 +173,8 @@ void ER_dtor( ExplicitRelation** self )
     if ((*self)->in_vals != NULL) { free((*self)->in_vals); }
     if ((*self)->out_index != NULL) { free((*self)->out_index); }
     if ((*self)->out_vals != NULL) { free((*self)->out_vals); }
+    if ((*self)->raw_data != NULL) { free((*self)->raw_data); }
+    if ((*self)->in_domain != NULL) { free((*self)->in_domain); }
     free(*self);
     *self = NULL;
 }
@@ -147,6 +235,19 @@ Tuple Tuple_make(int x1, int x2, int x3)
 }
 
 
+int Tuple_val(Tuple t, int k)
+/*----------------------------------------------------------------*//*! 
+  \short Returns the value of the kth element in the tuple.
+
+  \author Michelle Strout 8/30/08
+*//*----------------------------------------------------------------*/
+{
+    // check that not attempting to index outside of the tuple
+    assert(k >= 0  && k<t.arity );
+    
+    return t.valptr[k];
+}
+
 //! Helper routine for expanding an arrays data allocation.
 static void expand_array( int** array_handle, int* array_size )
 {
@@ -172,20 +273,53 @@ static void expand_array( int** array_handle, int* array_size )
 /*----------------------------------------------------------------*//*! 
   \short Insert a relation, [in]->[out], into the explicit relation.  
   
-  This function assumes that the relation has 1D-to-1D arity, but does
-  not assume the relation is a function.
+  This function assumes that the relation has 1D-to-1D arity.
 
   Handles some memory management wrt the from and hgdata arrays.
 
-  \author Michelle Strout 8/23/08
+  \author Michelle Strout 8/29/08
 *//*----------------------------------------------------------------*/
 void ER_insert(ExplicitRelation* self, int in_int, int out_int)
 {    
     // assuming non-negative in and out values
     assert(in_int>=0 && out_int>=0);
 
+    // if the relation is not a function
     // indicate that this relation is no longer ordered
-    self->ordered_by_in = false;
+    if (!self->isFunction) { self->ordered_by_in = false; }
+
+    // if isFunction and know in_domain then 
+    if (self->isFunction  && self->in_domain_given) {
+        // check that in int is within bounds
+        assert(in_int>=RD_lb(self->in_domain) 
+               && in_int<=RD_ub(self->in_domain));  
+               
+        self->out_vals[ER_calcIndex(self, in_int)] = out_int;    
+    
+    // else must put all relations in raw_data array, set ordered_by_in = false
+    } else {
+        self->raw_data[self->raw_num ++ ] = out_int;
+
+        // keep track of domain as things are being inserted
+        if (in_int < RD_lb(self->in_domain, 0) ) {
+            RD_set_lb( self->in_domain, 0, in_int );
+        }
+        if (in_int > RD_ub(self->in_domain, 0) ) {
+            RD_set_ub( self->in_domain, 0, in_int );
+        }
+        
+    }
+                          
+    // keep track of out tuple ub and lb whether the in_domain is
+    // already known or not
+    if (out_int < RD_lb(self->out_domain, 0) ) {
+        RD_set_lb( self->out_domain, 0, out_int );
+    }
+    if (out_int > RD_ub(self->out_domain, 0) ) {
+        RD_set_ub( self->out_domain, 0, out_int );
+    }
+    
+    
     
     // since not inserting ordered by in, must keep track of
     // all the in_vals and will just assume that each in val

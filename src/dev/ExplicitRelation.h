@@ -74,6 +74,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <limits.h>
 #include "util.h"
 
 #ifndef _ExplicitRelation_H
@@ -101,6 +102,8 @@ typedef struct {
                             //! construction time, then it is not necessary to 
                             //! finalize data structure for efficient access.
 
+    bool        in_domain_given;    //! Keeps track of whether the domain was
+                                    //! given or was dynamically built.
     
 	//----- relation representation ---------------------------------------
     // WARNING: Do not access these fields directly, use interface.
@@ -122,6 +125,7 @@ typedef struct {
     int*        raw_data;   //! Holds raw relations as input tuple followed
                             //! by output tuple.  Used if do not know
                             //! in domain.
+    int         raw_num;    //! Number of relations in raw_data array.
     
     //----- order management -----------------------------------------
     // Keeps track of how the integer tuples have been inserted.
@@ -193,11 +197,20 @@ void ER_in_ordered_insert(ExplicitRelation* relptr,
 //! return the single output tuple for the given input tuple.
 Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple);
 
+//! Returns the kth element value in the tuple.
+int Tuple_val(Tuple t, int k);
+
 //! Returns the in domain.  Min and Max vals for each element in tuples.
 RectDomain* ER_in_domain( ExplicitRelation * relptr);
 
 //! Returns the out domain.  Min and Max vals for each element out tuples.
 RectDomain* ER_out_range( ExplicitRelation * relptr);
+
+//! Returns an index into the out_vals for the first out tuple element
+//! associated with the given in tuple.  Assumes the explicit relation
+//! is storing a function.
+int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple );
+
 
 //! Output debug text representation of ExplicitRelation to standard out.
 void ER_dump( ExplicitRelation* self );
