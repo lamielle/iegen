@@ -76,6 +76,7 @@
 #include <assert.h>
 #include <limits.h>
 #include "util.h"
+#include "RectDomain.h"
 
 #ifndef _ExplicitRelation_H
 #define _ExplicitRelation_H
@@ -95,15 +96,17 @@ typedef struct {
     int         in_arity;   //! arity of input tuple
     int         out_arity;  //! arity of output tuple
 
-    bool        isFunction  //! If true indicates that each input tuple will map 
+    bool        isFunction; //! If true indicates that each input tuple will map 
                             //! to only one output tuple.
                     
-    RectDomain* in_domain   //! Domain for the input tuples.  If known at
+    RectDomain* in_domain;  //! Domain for the input tuples.  If known at
                             //! construction time, then it is not necessary to 
                             //! finalize data structure for efficient access.
 
     bool        in_domain_given;    //! Keeps track of whether the domain was
                                     //! given or was dynamically built.
+                                    
+    RectDomain* out_range;  //! Range for the output tuples.                                 
     
 	//----- relation representation ---------------------------------------
     // WARNING: Do not access these fields directly, use interface.
@@ -161,7 +164,7 @@ typedef struct {
 //! Construct an empty ExplicitRelation by specifying arity 
 //! for in and out tuples.
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
-                          RectDomain *in_domain=NULL, bool isFunction=false);
+                          RectDomain *in_domain, bool isFunction);
 
 //! Deallocate all of the memory for the ExplicitRelation.
 void ER_dtor(ExplicitRelation**);
@@ -211,6 +214,7 @@ RectDomain* ER_out_range( ExplicitRelation * relptr);
 //! is storing a function.
 int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple );
 
+int ER_calcIndex( ExplicitRelation* relptr, int in_val );
 
 //! Output debug text representation of ExplicitRelation to standard out.
 void ER_dump( ExplicitRelation* self );

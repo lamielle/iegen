@@ -24,6 +24,8 @@ int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
   \author Michelle Strout 8/30/08
 *//*----------------------------------------------------------------*/
 {
+    assert(relptr->isFunction);
+
     int i, j, index;
     index = 0;
     RectDomain * in_domain = ER_in_domain(relptr);
@@ -32,7 +34,7 @@ int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
         // get element value from Tuple
         int term = Tuple_val(in_tuple, i);
         for (j=i+1; j<relptr->in_arity; j++) {
-            term *= RD_size( j );
+            term *= RD_size( in_domain, j );
         }
         index += term;
     }
@@ -59,7 +61,9 @@ int ER_calcIndex( ExplicitRelation* relptr, int in_val )
   \author Michelle Strout 8/30/08
 *//*----------------------------------------------------------------*/
 {
-    return in_val*relptr->out_arity;
+    assert(relptr->isFunction);
+    
+    return (in_val-RD_lb(relptr->in_domain,0) )*relptr->out_arity;
 }
 
 
@@ -111,7 +115,7 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     // values observed within insert.
     if (in_domain != NULL) {
         self->in_domain_given = true;
-        assert(self->in_arity == RD_arity(self->in_domain));
+        assert(self->in_arity == RD_dim(self->in_domain));
         
     // set up an "undefined" rectangular domain where the starting
     // ub is 0 and the starting lb is maxint.  That way when
@@ -122,17 +126,17 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
         self->in_domain = RD_ctor(self->in_arity);
         int i;
         for (i=0; i<self->in_arity; i++ ) {
-            RD_set_lb( self->in_domain, INT_MAX );
-            RD_set_ub( self->in_domain, 0 );
+            RD_set_lb( self->in_domain, i, INT_MAX );
+            RD_set_ub( self->in_domain, i, 0 );
         }
     }
     
-    // set up out_domain
-    self->out_domain = RD_ctor(self->out_arity);
+    // set up out_range
+    self->out_range = RD_ctor(self->out_arity);
     int i;
     for (i=0; i<self->out_arity; i++ ) {
-        RD_set_lb( self->out_domain, INT_MAX );
-        RD_set_ub( self->out_domain, 0 );
+        RD_set_lb( self->out_range, i, INT_MAX );
+        RD_set_ub( self->out_range, i, 0 );
     }
     
     self->in_vals = NULL;
@@ -291,8 +295,8 @@ void ER_insert(ExplicitRelation* self, int in_int, int out_int)
     // if isFunction and know in_domain then 
     if (self->isFunction  && self->in_domain_given) {
         // check that in int is within bounds
-        assert(in_int>=RD_lb(self->in_domain) 
-               && in_int<=RD_ub(self->in_domain));  
+        assert(in_int>=RD_lb(self->in_domain, 0) 
+               && in_int<=RD_ub(self->in_domain, 0));  
                
         self->out_vals[ER_calcIndex(self, in_int)] = out_int;    
     
@@ -312,15 +316,15 @@ void ER_insert(ExplicitRelation* self, int in_int, int out_int)
                           
     // keep track of out tuple ub and lb whether the in_domain is
     // already known or not
-    if (out_int < RD_lb(self->out_domain, 0) ) {
-        RD_set_lb( self->out_domain, 0, out_int );
+    if (out_int < RD_lb(self->out_range, 0) ) {
+        RD_set_lb( self->out_range, 0, out_int );
     }
-    if (out_int > RD_ub(self->out_domain, 0) ) {
-        RD_set_ub( self->out_domain, 0, out_int );
+    if (out_int > RD_ub(self->out_range, 0) ) {
+        RD_set_ub( self->out_range, 0, out_int );
     }
     
     
-    
+/*    
     // since not inserting ordered by in, must keep track of
     // all the in_vals and will just assume that each in val
     // is unique to make things easier.
@@ -363,7 +367,7 @@ void ER_insert(ExplicitRelation* self, int in_int, int out_int)
     if (out_int > (self->out_count -1) ) {
         self->out_count = out_int+1;
     }
-
+*/
 }
 
 
@@ -381,7 +385,7 @@ void ER_in_ordered_insert(ExplicitRelation* self,
                                         int in_int, 
                                         int out_int)
 {    
-    // cannot insert an in tuple less than our current in tuple
+/*    // cannot insert an in tuple less than our current in tuple
     // due to ordered assumption
     assert(in_int+1 >= self->in_count);
     
@@ -427,7 +431,7 @@ void ER_in_ordered_insert(ExplicitRelation* self,
     if (out_int > (self->out_count -1) ) {
         self->out_count = out_int+1;
     }
-
+*/
 }
 
 /*----------------------------------------------------------------*//*! 
@@ -437,8 +441,10 @@ void ER_in_ordered_insert(ExplicitRelation* self,
 *//*----------------------------------------------------------------*/
 int ER_out_given_in( ExplicitRelation* relptr, int in_val)
 {
-    assert(in_val < relptr->in_count);
-    return relptr->out_vals[in_val];
+//    assert(in_val < relptr->in_count);
+//    return relptr->out_vals[in_val];
+    assert(0);
+    return 0;
 }
 
 /*----------------------------------------------------------------*//*! 
@@ -455,15 +461,11 @@ Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple)
 }
 
 
-//! Returns the number of unique 1D output tuples seen
-// FIXME: how could we generalize this?
-int ER_getRangeCount( ExplicitRelation* self)
-    { return self->out_count; }
+RectDomain* ER_in_domain( ExplicitRelation * relptr)
+{ return relptr->in_domain; }
 
-//! Returns number of unique 1D input tuples seen
-// FIXME: again specific to 1D
-int ER_getDomainCount( ExplicitRelation* self)
-    { return self->in_count; }
+RectDomain* ER_out_range( ExplicitRelation * relptr)
+{ return relptr->out_range; }
 
 
 /*----------------------------------------------------------------*//*! 
@@ -480,6 +482,7 @@ void ER_order_by_in( ExplicitRelation* self )
     assert(self->ordered_by_in);
 }
 
+void ER_dump( ExplicitRelation* self )
 /*----------------------------------------------------------------*//*! 
   \short Output text representation of relation to standard out.
 
@@ -492,20 +495,25 @@ void ER_order_by_in( ExplicitRelation* self )
 
   \author Michelle Strout 8/19/08
 *//*----------------------------------------------------------------*/
-void ER_dump( ExplicitRelation* self )
 {
-    int in, p;
+//    int in, p;
     
     printf("ExplicitRelation\n");
     printf("\tin_arity = %d\n", self->in_arity);
     printf("\tout_arity = %d\n", self->out_arity);
-    printf("\tin_count = %d\n", self->in_count);
+    printf("\tisFunction = %d\n", self->isFunction);
+    printf("\tin_domain = ");
+    RD_dump(self->in_domain);
+    printf("\tout_range = ");
+    RD_dump(self->out_range);
     printf("\tin_vals_size = %d\n", self->in_vals_size);
     printf("\tout_index_size = %d\n", self->out_index_size);
     printf("\tout_vals_size = %d\n", self->out_vals_size);
+    printf("\traw_data_size = %d\n", self->raw_data_size);
+    printf("\traw_num = %d\n", self->raw_num);
     
     // nicely formated list of integer tuple pairs in the relation
-    if (self->in_arity==1 && self->out_arity==1) {
+/*    if (self->in_arity==1 && self->out_arity==1) {
     
         for (in=0; in<self->in_count; in++) {
             for (p=self->out_index[in]; p<self->out_index[in+1]; p++) {
@@ -516,13 +524,14 @@ void ER_dump( ExplicitRelation* self )
     } else {
         assert(0);  // needs implemented for more general arities
     }
+*/
 
     // rest of the raw data
     // FIXME: not keeping track of in_vals yet
     //printf("in_vals = "); 
     //printArray(self->in_vals, self->in_vals_size);
     printf("out_index = "); 
-    printArray(self->out_index, self->in_count+1);
+//    printArray(self->out_index, self->in_count+1);
     printf("out_vals = "); 
-    printArray(self->out_vals, self->out_index[self->in_count]);
+//    printArray(self->out_vals, self->out_index[self->in_count]);
 }
