@@ -21,16 +21,19 @@
  the bounds for each dimension and the size of each dimension.
 
     // Returns dimensionality of the rectangular domain.
-    RD_dim()    
+    RD_dim(rd)    
     
     // Returns lower bound for the kth dimension.
-    RD_lb(int k)
+    RD_lb(rd, int k)
     // Returns upper bound for the kth dimension.
-    RD_ub(int k)
+    RD_ub(rd, int k)
     
     // Returns size for the kth dimension.
-    // RD_size(k) = RD_ub(k)-RD_lb(k)+1
-    RD_size(int k)    
+    // RD_size(rd,k) = RD_ub(rd,k)-RD_lb(rd,k)+1
+    RD_size(RectDomain*,int k)
+    
+    // Returns size for full domain.
+    RD_size(rd)
     
 
  Copyright ((c)) 2008, Colorado State University
@@ -75,6 +78,7 @@ int RD_dim(RectDomain *rd );
 int RD_lb(RectDomain *rd, int k);
 int RD_ub(RectDomain *rd, int k);
 int RD_size(RectDomain *rd, int k); 
+int RD_size(RectDomain *rd); 
 
 void RD_dump( RectDomain* self ); 
 

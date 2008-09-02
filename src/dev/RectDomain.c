@@ -116,7 +116,7 @@ int RD_ub(RectDomain *rd, int k)
 
 int RD_size(RectDomain *rd, int k)
 /*----------------------------------------------------------------*//*! 
-  \short Returns upper bound for dimension k.
+  \short Returns size for dimension k.
 
   \author Michelle Strout 8/27/08
 *//*----------------------------------------------------------------*/
@@ -127,6 +127,20 @@ int RD_size(RectDomain *rd, int k)
     return rd->bounds[k*2+1] - rd->bounds[k*2] + 1;
 }
 
+int RD_size(RectDomain *rd)
+/*----------------------------------------------------------------*//*! 
+  \short Returns size for full domain.
+
+  \author Michelle Strout 9/2/08
+*//*----------------------------------------------------------------*/
+{
+    int k;
+    int retval = 1;
+    for (k=0; k<rd->dim; k++) {
+        retval = retval*RD_size(rd,k);
+    }
+    return retval;
+}
 
 /*----------------------------------------------------------------*//*! 
   \short Output text representation of RectDomain to standard out.

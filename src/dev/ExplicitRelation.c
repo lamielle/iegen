@@ -12,9 +12,9 @@ int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
     <pre>
         in_tuple: <x_0, x_1, ..., x_k>
         out_tuple will be stored at 
-            out_vals[ (x_0*(RD_size(1)*...*RD_size(k)) 
-                      + x_1*(RD_size(2)* ... *LD_size(k))
-                      + x_k) * out_arity ]
+            out_vals[ ((x_0-lb_0)*(RD_size(1)*...*RD_size(k)) 
+                      + (x_1-lb_0)*(RD_size(2)* ... *RD_size(k))
+                      + (x_k-lb_k)) * out_arity ]
     </pre>
          
     Assumes we are dealing with a function.
@@ -32,7 +32,7 @@ int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
     // add up all the terms for each dimension of the in_tuple
     for (i=0; i<relptr->in_arity; i++) {
         // get element value from Tuple
-        int term = Tuple_val(in_tuple, i);
+        int term = Tuple_val(in_tuple, i) - RD_lb(in_domain,i);
         for (j=i+1; j<relptr->in_arity; j++) {
             term *= RD_size( in_domain, j );
         }
@@ -51,7 +51,7 @@ int ER_calcIndex( ExplicitRelation* relptr, int in_val )
     <pre>
         in_tuple: <x_0>
         out_tuple will be stored at 
-            out_vals[ x_0 * out_arity ]
+            out_vals[ (x_0-lb_0) * out_arity ]
     </pre>
          
     Assumes we are dealing with a function.
@@ -110,12 +110,28 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     self->out_arity = out_tuple_arity;  
     self->isFunction = isFunction;
     self->in_domain = in_domain;
+
+    self->in_vals = NULL;
+    self->out_index = NULL;
+    self->out_vals = NULL; 
+    self->raw_data = NULL;
+    self->raw_num = 0;
+    
+    self->in_vals_size = 0;
+    self->out_index_size = 0;
+    self->out_vals_size = 0;
+    self->raw_data_size = 0;
     
     // if in_domain was not provided then create one to keep track of 
     // values observed within insert.
     if (in_domain != NULL) {
         self->in_domain_given = true;
         assert(self->in_arity == RD_dim(self->in_domain));
+        
+        // with a known in_domain, we know how big out_vals array must be
+        self->out_vals_size 
+            = self->out_arity *  RD_size(self->in_domain);
+        self->out_vals = (int*)malloc(self->out_vals_size*sizeof(int));
         
     // set up an "undefined" rectangular domain where the starting
     // ub is 0 and the starting lb is maxint.  That way when
@@ -138,17 +154,6 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
         RD_set_lb( self->out_range, i, INT_MAX );
         RD_set_ub( self->out_range, i, 0 );
     }
-    
-    self->in_vals = NULL;
-    self->out_index = NULL;
-    self->out_vals = NULL; 
-    self->raw_data = NULL;
-    self->raw_num = 0;
-    
-    self->in_vals_size = 0;
-    self->out_index_size = 0;
-    self->out_vals_size = 0;
-    self->raw_data_size = 0;
 
     // By default not ordered.
     self->ordered_by_in = false;
@@ -252,6 +257,48 @@ int Tuple_val(Tuple t, int k)
     return t.valptr[k];
 }
 
+bool Tuple_in_domain(Tuple t, RectDomain * rd)
+/*----------------------------------------------------------------*//*! 
+  \short Indicates with Tuple t is inside domain rd.
+
+  \author Michelle Strout 9/2/08
+*//*----------------------------------------------------------------*/
+{
+    // check that the Tuple and RectDomain have same dimensionality
+    if (t.arity != RD_dim(rd)) {
+        return false;
+    }
+    
+    // check that the tuple values lie within bounds.
+    int i;
+    for (i=0; i<t.arity; i++) {
+        if ( t.valptr[i] < RD_lb(rd,i) || t.valptr[i] > RD_ub(rd,i) ) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool Tuple_equal(Tuple t1, Tuple t2)
+/*----------------------------------------------------------------*//*! 
+  \short Returns true if given tuples are equal.
+
+  \author Michelle Strout 9/2/08
+*//*----------------------------------------------------------------*/
+{
+    if (t1.arity != t2.arity) {
+        return false;
+    }
+    int k;
+    for (k=0; k<t1.arity; k++) {
+        if ( t1.valptr[k] != t2.valptr[k] ) {
+            return false;
+        }
+    }
+    return true;
+}
+
 //! Helper routine for expanding an arrays data allocation.
 static void expand_array( int** array_handle, int* array_size )
 {
@@ -284,7 +331,12 @@ static void expand_array( int** array_handle, int* array_size )
   \author Michelle Strout 8/29/08
 *//*----------------------------------------------------------------*/
 void ER_insert(ExplicitRelation* self, int in_int, int out_int)
-{    
+{  
+
+    // For now just use the more general insert.
+    ER_insert(self, Tuple_make(in_int), Tuple_make(out_int));
+    
+/*  Might use this code if we decide to specialize for 1Dto1D arity.
     // assuming non-negative in and out values
     assert(in_int>=0 && out_int>=0);
 
@@ -322,52 +374,91 @@ void ER_insert(ExplicitRelation* self, int in_int, int out_int)
     if (out_int > RD_ub(self->out_range, 0) ) {
         RD_set_ub( self->out_range, 0, out_int );
     }
+*/    
     
-    
-/*    
-    // since not inserting ordered by in, must keep track of
-    // all the in_vals and will just assume that each in val
-    // is unique to make things easier.
-    // FIXME: does this mess up some assumptions made about the
-    //      data structure elsewhere?
-    self->in_count++;
+
+}
+
+
+/*----------------------------------------------------------------*//*! 
+  \short Insert a relation, [in]->[out], into the explicit relation.  
+  
+  This function handles general in and out arity.
+
+  Handles some memory management wrt to the raw_data, out_vals, etc arrays.
+
+  \author Michelle Strout 9/2/08
+*//*----------------------------------------------------------------*/
+void ER_insert(ExplicitRelation* self, Tuple in_tuple, Tuple out_tuple)
+{    
+    int k;
+
+    // if the relation is not a function
+    // indicate that this relation is no longer ordered
+    if (!self->isFunction) { self->ordered_by_in = false; }
+
+    // if isFunction and know in_domain then 
+    if (self->isFunction  && self->in_domain_given) {
+        // check that in Tuple is within bounds
+        assert(Tuple_in_domain(in_tuple , self->in_domain) );  
+               
+        // insert output tuple values into locations in out_vals
+        // associated with this input tuple
+        assert( self->out_arity == out_tuple.arity );
         
-    // if we are on the next unique in_tuple then check if we need to 
-    // expand the array.
-    if  (self->in_count + 1 > self->out_index_size) {
-        expand_array( &(self->out_index), &(self->out_index_size) );
-    }
-    if  (self->in_count + 1 > self->in_vals_size) {
-        expand_array( &(self->in_vals), &(self->in_vals_size) );
-    }
+        // do actual insertion of output tuple
+        int start_index = ER_calcIndex(self, in_tuple);
+        for (k=0; k< self->out_arity; k++) {        
+            self->out_vals[start_index+k] = out_tuple.valptr[k];
+        }
     
-    FIXME: LEFTOFF: This is going to be horribly inefficient.  I know how big this is going to be and I know that it is a function, I really want to take advantage of that information.  Not just because it would be more efficient, also because it would be easier to implement.  Do I need the more general case for dependences?
-    
-    
-        // Set the end of the indices to nodes for this new in tuple to 
-        // the same as the beginning, since currently haven't inserted any
-        // relations for this in tuple.
-        self->out_index[in_int+1] = self->out_index[in_int];
+    // else must put all relations in raw_data array, set ordered_by_in = false
+    } else {
+        // Check tuple arities.
+        assert( self->out_arity == out_tuple.arity
+                && self->in_arity == in_tuple.arity );
+
+        // indicate not doing ordered insert.
+        self->ordered_by_in = false;
+        
+        // make sure there is enough room in the array
+        if  (self->raw_num + self->in_arity + self->out_arity 
+             > self->raw_data_size) 
+        {
+            expand_array( &(self->raw_data), &(self->raw_data_size) );
+        }
+
+        // Insert in_tuple and out_tuple into the raw_data array.
+        for (k=0; k<self->in_arity; k++) {
+            self->raw_data[self->raw_num ++ ] = in_tuple.valptr[k];
+
+            // keep track of domain as things are being inserted
+            if (in_tuple.valptr[k] < RD_lb(self->in_domain, k) ) {
+                RD_set_lb( self->in_domain, k, in_tuple.valptr[k] );
+            }
+            if (in_tuple.valptr[k] > RD_ub(self->in_domain, k) ) {
+                RD_set_ub( self->in_domain, k, in_tuple.valptr[k] );
+            }
+        }
+        for (k=0; k<self->out_arity; k++) {
+            self->raw_data[self->raw_num ++ ] = out_tuple.valptr[k];
+            
+            // see below for keeping track of out_tuple bounds
+        }
         
     }
-    
-    // Check that there is enough room to insert the relation's out tuple,
-    // and if not then expand allocation for out_vals array.
-    if (self->out_index[in_int+1] + 1 > self->out_vals_size) {
-        expand_array( &(self->out_vals), &(self->out_vals_size) );
+                          
+    // keep track of out tuple ub and lb whether the in_domain is
+    // already known or not
+    for (k=0; k<self->out_arity; k++) {
+        if (out_tuple.valptr[k] < RD_lb(self->out_range, k) ) {
+            RD_set_lb( self->out_range, k, out_tuple.valptr[k] );
+        }
+        if (out_tuple.valptr[k] > RD_ub(self->out_range, k) ) {
+            RD_set_ub( self->out_range, k, out_tuple.valptr[k] );
+        }
     }
     
-    // insert [in_int] -> [out_int]
-    self->out_vals[ self->out_index[in_int+1] ] = out_int;
-    self->out_index[in_int+1]++;
-    
-    // if this output tuple numbers id is higher than any we have seen 
-    // then increase the number out
-    // FIXME: not sure if this will be correct in all cases
-    if (out_int > (self->out_count -1) ) {
-        self->out_count = out_int+1;
-    }
-*/
 }
 
 
@@ -441,23 +532,27 @@ void ER_in_ordered_insert(ExplicitRelation* self,
 *//*----------------------------------------------------------------*/
 int ER_out_given_in( ExplicitRelation* relptr, int in_val)
 {
-//    assert(in_val < relptr->in_count);
-//    return relptr->out_vals[in_val];
-    assert(0);
-    return 0;
+    // For now just use more general implementation.
+    return Tuple_val(ER_out_given_in( relptr, Tuple_make(in_val)),0);
 }
 
 /*----------------------------------------------------------------*//*! 
   \short General version.  Given in_tuple return single associated out_tuple.
 
-    FIXME: this is going to cause serious performance problems because
-    it is doing a linear search through input tuples.
+    Assumes that explicit relation is representing a function.
 
-  \author Michelle Strout 8/23/08
+  \author Michelle Strout 9/2/08
 *//*----------------------------------------------------------------*/
 Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple)
 {
-    assert(0);  // not implemented yet
+    assert(relptr->isFunction);
+    
+    // Find index of beginning of output tuple and use address of 
+    // that to create tuple.
+    Tuple retval;
+    retval.arity = relptr->out_arity;
+    retval.valptr = & (relptr->out_vals[ER_calcIndex(relptr, in_tuple)]);
+    return retval;
 }
 
 
@@ -532,6 +627,6 @@ void ER_dump( ExplicitRelation* self )
     //printArray(self->in_vals, self->in_vals_size);
     printf("out_index = "); 
 //    printArray(self->out_index, self->in_count+1);
-    printf("out_vals = "); 
-//    printArray(self->out_vals, self->out_index[self->in_count]);
+    printf("out_vals = ");
+    printArray(self->out_vals, self->out_vals_size);
 }

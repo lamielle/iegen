@@ -177,6 +177,10 @@ Tuple Tuple_make(int x1);
 Tuple Tuple_make(int x1, int x2);
 Tuple Tuple_make(int x1, int x2, int x3);
 
+int Tuple_val(Tuple t, int k);
+bool Tuple_in_domain(Tuple t, RectDomain * rd);
+bool Tuple_equal(Tuple t1, Tuple t2);
+
 //----------------------- Routines for inserting relations
 
 //! Insert relation into given explicit relation.
@@ -202,6 +206,10 @@ Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple);
 
 //! Returns the kth element value in the tuple.
 int Tuple_val(Tuple t, int k);
+
+//! Returns true if the given tuple is within the bounds specified in
+//! given RectDomain.
+bool Tuple_in_domain(Tuple t, RectDomain * rd);
 
 //! Returns the in domain.  Min and Max vals for each element in tuples.
 RectDomain* ER_in_domain( ExplicitRelation * relptr);

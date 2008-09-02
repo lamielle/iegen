@@ -15,7 +15,7 @@ int main()
 {
     ExplicitRelation* relptr;
     RectDomain* in_domain;
-    int in, out;
+    //int in, out;
 
     // Test out explicit relations that are functions and where the
     // in_domain is provided.
@@ -26,7 +26,17 @@ int main()
     RD_set_ub(in_domain, 1, 5);
     relptr = ER_ctor(2,2, in_domain, true);
     
+    printf("==== Before inserting any relations int 2D -> 2D relation\n");
     ER_dump(relptr);
+    
+    ER_insert(relptr, Tuple_make(2,3), Tuple_make(3,4));
+    ER_insert(relptr, Tuple_make(1,2), Tuple_make(2,3));
+    
+    assert(Tuple_equal( ER_out_given_in(relptr,Tuple_make(2,3)), 
+                        Tuple_make(3,4) ) );
+    
+    printf("==== After inserting some relations\n");
+    ER_dump(relptr);    
     
     ER_dtor(&relptr);
   
