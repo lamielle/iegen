@@ -119,7 +119,9 @@ typedef struct {
                             //! for all of the output tuples stored from
                             //! out_vals[out_index[i]] through 
                             //! out_vals[out_index[i+1]] non-inclusive.
-                        
+   
+    int         unique_in_count;    //! Number of unique input tuples that
+                                    //! have been inserted.
                         
     int*        out_index;  //! Indices into the out_vals array.
     
@@ -177,6 +179,7 @@ Tuple Tuple_make(int x1);
 Tuple Tuple_make(int x1, int x2);
 Tuple Tuple_make(int x1, int x2, int x3);
 
+
 int Tuple_val(Tuple t, int k);
 bool Tuple_in_domain(Tuple t, RectDomain * rd);
 bool Tuple_equal(Tuple t1, Tuple t2);
@@ -186,13 +189,12 @@ bool Tuple_equal(Tuple t1, Tuple t2);
 //! Insert relation into given explicit relation.
 void ER_insert(ExplicitRelation* relptr, Tuple in_int, Tuple out_int); 
 
+//! Insertion for special 1D-to-1D arity relations.
+void ER_insert(ExplicitRelation* relptr, int in_int, int out_int); 
 
 //! Insertions are ordered lexicographically by in_tuple.
 void ER_in_ordered_insert(ExplicitRelation* relptr, 
                           Tuple in_int, Tuple out_int); 
-
-//! Insertion for special 1D-to-1D arity relations.
-void ER_insert(ExplicitRelation* relptr, int in_int, int out_int); 
 
 //! Insertion for special 1D-to-1D arity relations.  Ordered by in_int.
 void ER_in_ordered_insert(ExplicitRelation* relptr, 
@@ -210,6 +212,10 @@ int Tuple_val(Tuple t, int k);
 //! Returns true if the given tuple is within the bounds specified in
 //! given RectDomain.
 bool Tuple_in_domain(Tuple t, RectDomain * rd);
+
+//! Returns -1 if first tuple less, 0 if they are equal, 
+//! and 1 if first is greater.
+int Tuple_compare( Tuple t1, Tuple t2);
 
 //! Returns the in domain.  Min and Max vals for each element in tuples.
 RectDomain* ER_in_domain( ExplicitRelation * relptr);

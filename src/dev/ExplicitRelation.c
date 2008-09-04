@@ -112,6 +112,7 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     self->in_domain = in_domain;
 
     self->in_vals = NULL;
+    self->unique_in_count = 0;
     self->out_index = NULL;
     self->out_vals = NULL; 
     self->raw_data = NULL;
@@ -299,18 +300,53 @@ bool Tuple_equal(Tuple t1, Tuple t2)
     return true;
 }
 
+int Tuple_compare( Tuple t1, Tuple t2)
+/*----------------------------------------------------------------*//*! 
+  \short Returns -1, 0, or 1 depending on whether t1 is <, =, or > than t2.
+  
+  FIXME: should probably replace Tuple_equal calls to calls to this?
+  This is less lenient though.  It assumes both tuples have the same
+  arity.
+
+  \author Michelle Strout 9/4/08
+*//*----------------------------------------------------------------*/
+{
+    if (t1.arity != t2.arity) {
+        assert(0);
+    }
+    int k;
+    for (k=0; k<t1.arity; k++) {
+        if ( t1.valptr[k] < t2.valptr[k] ) {
+            return -1;
+        } else if ( t1.valptr[k] < t2.valptr[k] ) {
+            return 1;
+        }
+    }
+    // All elements in tuples were equal.
+    return 0;
+}
+
+
 //! Helper routine for expanding an arrays data allocation.
+//! Guarantees that the newly expanded part of the array is 
+//! set to zero.
 static void expand_array( int** array_handle, int* array_size )
 {
     // save old info
 //    int* temp = *array_handle;
-//    int old_size = *array_size;
-//    int i;
+    int old_size = *array_size;
+    int i;
             
     // create new array that is bigger
     *array_size += MEM_ALLOC_INCREMENT;
     *array_handle = (int*)realloc(*array_handle, (*array_size)*sizeof(int));
-            
+    
+    // Want to make sure that the newly allocated spaces at the 
+    // end of the array are all set to zero.  realloc does not guarantee that.
+    for (i=old_size; i<*array_size; i++) {
+        (*array_handle)[i] = 0;
+    }
+    
 /*    // copy data from old array
     for (i=0; i<old_size; i++) {
         (*array_handle)[i] = temp[i];
@@ -461,6 +497,134 @@ void ER_insert(ExplicitRelation* self, Tuple in_tuple, Tuple out_tuple)
     
 }
 
+/*----------------------------------------------------------------*//*! 
+  \short Insert a relation, [in]->[out], into the explicit relation.  
+  
+  This function handles general in and out arity.  It uses the assumption
+  that the relations are provided in lexigraphical order wrt the input
+  tuple values.
+
+  Handles some memory management wrt to the raw_data, out_vals, etc arrays.
+
+  \author Michelle Strout 9/4/08
+*//*----------------------------------------------------------------*/
+void ER_in_ordered_insert(ExplicitRelation* self, 
+                          Tuple in_tuple, Tuple out_tuple)
+{    
+    int k;
+
+    // If inserting into a relation that implements a function,
+    // then just use the regular ER_insert.
+    if (self->isFunction) { 
+        ER_insert(self, in_tuple, out_tuple);
+    
+    // If we know the in_domain, then the calculated index
+    // into the out_index array should match our unique input
+    // tuple count, which we keep even if we don't know they
+    // in_domain.  Therefore, can handle both cases the same,
+    // with an extra assertion for the case where we know the
+    // in_domain.  Also, when know in_domain do not need to store
+    // input tuple into in_vals.
+    } else  {
+
+        // check that out_arity is correct
+        assert( self->out_arity == out_tuple.arity );
+
+        // determine if the input tuple is a new unique
+        // input tuple or the same as previously seen
+        if (self->in_domain_given) {
+            // check that indexing matches unique_in_count
+            // or is greater
+            assert(self->unique_in_count <= ER_calcIndex(self, in_tuple));
+            if (self->unique_in_count < ER_calcIndex(self, in_tuple)) {
+                // doing assignment because could be skipping something
+                // in the in_domain
+                self->unique_in_count = ER_calcIndex(self, in_tuple);
+            }
+            
+        // otherwise we need to look at previous input
+        // tuple value in in_vals and see if this tuple
+        // is lexicographically greater than or equal
+        } else {
+            // previous Tuple
+            Tuple prev;
+            prev.arity = self->in_arity;
+            prev.valptr = &(self->in_vals[self->unique_in_count]);
+            
+            // make sure the in_tuple is the same or ordered after
+            // previous tuple
+            assert( Tuple_compare(prev, in_tuple) >= 0 );
+        
+            // if have a new unique in_tuple then increment unique count
+            // and store in_tuple into in_vals
+            if (Tuple_compare(prev,in_tuple) == 1) {
+                self->unique_in_count ++;
+                for (k=0; k<self->in_arity; k++) {
+                    int i = (self->unique_in_count - 1) * self->in_arity + k;
+                    self->in_vals[ i ] = Tuple_val(in_tuple,k);
+                    
+                    // keep track of domain as things are being inserted
+                    if (in_tuple.valptr[k] < RD_lb(self->in_domain, k) ) {
+                        RD_set_lb( self->in_domain, k, in_tuple.valptr[k] );
+                    }
+                    if (in_tuple.valptr[k] > RD_ub(self->in_domain, k) ) {
+                        RD_set_ub( self->in_domain, k, in_tuple.valptr[k] );
+                    }      
+                }
+            }
+            
+            
+        }
+
+        //=========================================================
+        // At this point the self->unique_in_count is set properly
+        // to index into self->out_vals.  Now we just need to insert
+        // the out tuple.
+        
+        // check that out_index is big enough
+        if ( self->unique_in_count > self->out_index_size ) {
+            expand_array( &(self->out_index), &(self->out_index_size) );
+        }
+        
+        // If this is the first time we are inserting output tuples
+        // for the specific input tuple then we will need to set up
+        // the out_indices.
+        // Indices into out_vals, 
+        // out_index[unique_in_count-1] to out_index[unique_in_count]
+        if (self->out_index[self->unique_in_count]==0) {
+            self->out_index[self->unique_in_count] 
+                = self->out_index[self->unique_in_count-1];
+        }
+        
+        // check that out_vals is big enough
+        if ( self->out_index[self->unique_in_count] + self->out_arity >     
+             self->out_vals_size ) 
+        {
+            expand_array( &(self->out_vals), &(self->out_vals_size) );
+        }
+
+        // do actual insertion of output tuple
+        for (k=0; k<self->out_arity; k++) {        
+            self->out_vals[self->out_index[self->unique_in_count]+k] 
+                = out_tuple.valptr[k];
+                
+            // keep track of out tuple ub and lb 
+            if (out_tuple.valptr[k] < RD_lb(self->out_range, k) ) {
+                RD_set_lb( self->out_range, k, out_tuple.valptr[k] );
+            }
+            if (out_tuple.valptr[k] > RD_ub(self->out_range, k) ) {
+                RD_set_ub( self->out_range, k, out_tuple.valptr[k] );
+            }
+        }                
+        
+        // increment last out_index value to point after out_tuple
+        // just inserted
+        self->out_index[self->unique_in_count] += self->out_arity;
+        
+    }
+        
+}
+
 
 /*----------------------------------------------------------------*//*! 
   \short Insert a relation, [in]->[out], into the explicit relation.  
@@ -472,10 +636,12 @@ void ER_insert(ExplicitRelation* self, Tuple in_tuple, Tuple out_tuple)
 
   \author Michelle Strout 8/19/08
 *//*----------------------------------------------------------------*/
-void ER_in_ordered_insert(ExplicitRelation* self, 
-                                        int in_int, 
-                                        int out_int)
-{    
+void ER_in_ordered_insert(ExplicitRelation* self, int in_int, int out_int)
+{   
+
+    // For now just use the more general insert.
+    ER_in_ordered_insert(self, Tuple_make(in_int), Tuple_make(out_int));
+
 /*    // cannot insert an in tuple less than our current in tuple
     // due to ordered assumption
     assert(in_int+1 >= self->in_count);

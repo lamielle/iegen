@@ -15,7 +15,7 @@ int main()
 {
     ExplicitRelation* relptr;
     RectDomain* in_domain;
-    //int in, out;
+    int in, out;
 
     // Test out explicit relations that are functions and where the
     // in_domain is provided.
@@ -26,7 +26,7 @@ int main()
     RD_set_ub(in_domain, 1, 5);
     relptr = ER_ctor(2,2, in_domain, true);
     
-    printf("==== Before inserting any relations int 2D -> 2D relation\n");
+    printf("==== Before inserting any relations into 2D -> 2D relation\n");
     ER_dump(relptr);
     
     ER_insert(relptr, Tuple_make(2,3), Tuple_make(3,4));
@@ -40,13 +40,17 @@ int main()
     
     ER_dtor(&relptr);
   
-/*    relptr = ER_ctor(1,1);
+    printf("==== Before inserting any relations into 1D -> 1D relation\n");
+    in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 3);
+    RD_set_ub(in_domain, 0, 6);
+    relptr = ER_ctor(1,1, in_domain, false);
 
     // then add [in]->[out] relationships 
     // for this example doing all combos of possible
     // in and out values
-    for (in=0; in<NUM_IN; in++) {
-      for (out=0; out<NUM_OUT; out++) {
+    for (in=3; in<=6; in++) {
+      for (out=0; out<=2; out++) {
             ER_in_ordered_insert( relptr, in, out );
         }
     }
@@ -56,6 +60,7 @@ int main()
     
     ER_dtor(&relptr);
 
+/*
     //------- testing code that will be used in IAG_cpack
     // first construct an explicit relation and fill it
     // the explicit relation will be passed to IAG_cpack
