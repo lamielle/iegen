@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+
+import os
+
+def set_options(opt):
+	pass
+
+def configure(conf):
+	pass
+
+def build(bld):
+
+	inst_dir='iegen'+os.sep+'lib'+os.sep+'test'
+
+	install_files('PREFIX',inst_dir,'__init__.py')
+	install_files('PREFIX',inst_dir,'_test.py')

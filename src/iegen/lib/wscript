@@ -5,10 +5,14 @@ import os
 def set_options(opt):
 	opt.sub_options('ply')
 	opt.sub_options('nose')
+	opt.sub_options('decorator')
+	opt.sub_options('test')
 
 def configure(conf):
 	conf.sub_config('ply')
 	conf.sub_config('nose')
+	conf.sub_config('decorator')
+	conf.sub_config('test')
 
 def build(bld):
 
@@ -18,3 +22,5 @@ def build(bld):
 
 	bld.add_subdirs('ply')
 	bld.add_subdirs('nose')
+	bld.add_subdirs('decorator')
+	bld.add_subdirs('test')
