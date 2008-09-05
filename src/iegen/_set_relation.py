@@ -11,6 +11,22 @@ class Formula(object):
 		from iegen.ast.visitor import SortVisitor
 		SortVisitor().visit(self)
 
+	#Check method that makes sure its argument 'looks like' a Set
+	#Returns True if it does, False otherwise
+	def _like_set(self,exp):
+		if not hasattr(exp,'sets'):
+			return False
+		else:
+			return True
+
+	#Check method that makes sure its argument 'looks like' a Relation
+	#Returns True if it does, False otherwise
+	def _like_relation(self,exp):
+		if not hasattr(exp,'relations'):
+			return False
+		else:
+			return True
+
 	#Check method that makes sure its argument 'looks like' a PresSet
 	#Returns True if it does, False otherwise
 	def _like_pres_set(self,exp):
@@ -26,6 +42,26 @@ class Formula(object):
 			return False
 		else:
 			return True
+
+	#Creates a dictionary for renaming variables in a relation
+	def _get_rename_dict(self,relation,prefix):
+		rename={}
+
+		#Make sure we are given a PresRelation
+		if not self._like_pres_relation(relation):
+			raise ValueError("The given relation, '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%relation)
+
+		for var in relation.tuple_in.vars:
+			rename[var.id]=prefix+'_in_'+var.id
+		for var in relation.tuple_out.vars:
+			rename[var.id]=prefix+'_out_'+var.id
+
+		return rename
+
+	#Returns a dictionary that is the inverse of that returned by _get_rename_dict
+	def _get_unrename_dict(self,relation,prefix):
+		from iegen.util import invert_dict
+		return invert_dict(self._get_rename_dict(relation,prefix))
 #-----------------------------------
 
 
@@ -111,6 +147,32 @@ class Set(Formula):
 				raise ValueError('Cannot union sets with differing arity (%d and %d).'%(self.arity(),other.arity()))
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+
+	#Application of a relation to a set: self(other)
+	#Application of unions of relations to unions of sets is defined as:
+	#Let S=A union B
+	#Let R=C union D
+	#
+	#Then R(S)=C(A) union C(B) union D(A) union D(B)
+	def apply(self,other):
+		from copy import deepcopy
+
+		#Make sure we are given a Relation
+		if not self._like_relation(other):
+			raise ValueError('Apply failure: Can only apply objects that look like a Relation object to a Set')
+
+		#Make sure the arities are valid
+		if other.arity_in()!=self.arity():
+			raise ValueError('Apply failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
+
+		#Collection of new composed relations
+		new_relations=[]
+
+		for rel1 in self.relations:
+			for rel2 in other.relations:
+				new_relations.append(self._compose(rel1,rel2))
+
+		return Relation(relations=new_relations)
 
 
 #	#Given a collection of scattering functions for each statement
@@ -249,6 +311,10 @@ class Relation(Formula):
 	def compose(self,other):
 		from copy import deepcopy
 
+		#Make sure we are given a Relation
+		if not self._like_relation(other):
+			raise ValueError("Compose failure: The given relation, '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%(other))
+
 		#Make sure the arities are valid
 		if other.arity_out()!=self.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
@@ -288,10 +354,8 @@ class Relation(Formula):
 		r2_unrename=self._get_unrename_dict(r2,'r2')
 
 		#Rename the tuple varibles in r1 and r2
-		v=RenameVisitor(r1_rename)
-		v.visit(r1)
-		v=RenameVisitor(r2_rename)
-		v.visit(r2)
+		RenameVisitor(r1_rename).visit(r1)
+		RenameVisitor(r2_rename).visit(r2)
 
 		#Create a new relation
 		new_rel=PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([]))
@@ -323,30 +387,8 @@ class Relation(Formula):
 		new_rel.conjunct.constraint_list.sort()
 
 		#Rename the variables back to what the were before
-		v=RenameVisitor(r1_unrename)
-		v.visit(new_rel)
-		v=RenameVisitor(r2_unrename)
-		v.visit(new_rel)
+		RenameVisitor(r1_unrename).visit(new_rel)
+		RenameVisitor(r2_unrename).visit(new_rel)
 
 		return new_rel
-
-	#Creates a dictionary for renaming variables in a relation
-	def _get_rename_dict(self,relation,prefix):
-		rename={}
-
-		#Make sure we are given a PresRelation
-		if not self._like_pres_relation(relation):
-			raise ValueError("The given relation, '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%r1)
-
-		for var in relation.tuple_in.vars:
-			rename[var.id]=prefix+'_in_'+var.id
-		for var in relation.tuple_out.vars:
-			rename[var.id]=prefix+'_out_'+var.id
-
-		return rename
-
-	#Returns a dictionary that is the inverse of that returned by _get_rename_dict
-	def _get_unrename_dict(self,relation,prefix):
-		from iegen.util import invert_dict
-		return invert_dict(self._get_rename_dict(relation,prefix))
 #------------------------------------

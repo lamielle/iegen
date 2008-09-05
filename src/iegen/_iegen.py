@@ -87,7 +87,7 @@ class Statement(object):
 
 	def add_access_relation(self,access_relation):
 		#Checking
-		if self.iter_space.set.arity()!=access_relation.iter_to_data.arity_in():
+		if self.iter_space.arity()!=access_relation.iter_to_data.arity_in():
 			raise iegen.util.DimensionalityError('The input arity of the access relation (%d) should be the arity of the iteration space (%d).'%(access_relation.iter_to_data.arity_in(),self.iter_space.set.arity()))
 
 		self.access_relations.append(access_relation)
