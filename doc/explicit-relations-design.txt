@@ -260,7 +260,7 @@ ER_ctor
         -This is great, but since don't know number of out_tuples per in_tuple can only insert directly into this format if doing an ordered insert on the in_tuple.
         
     if isFunction, but no in_domain is provided.
-        Without an in_domain specification, we can't sort until after everything is put in.  Therefore, I think that if no in_domain is provided, then we should have insert just put all of the relations into the raw data array.  Each entry will take in_arity+out_arity spots in the raw_data array.  insert can then keep track of the in_domain.
+        Without an in_domain specification, we can't sort until after everything is put in.  Therefore, I think that if no in_domain is provided, then we should have insert just put all of the relations into the raw data array.  Each entry will take in_arity+out_arity spots in the raw_data array.  Insert can then keep track of the in_domain.
         The fact that it is a function just means that we don't need the out_index array.
     
 ER_insert

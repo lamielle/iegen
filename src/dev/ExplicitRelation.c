@@ -7,7 +7,8 @@
 int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
 /*----------------------------------------------------------------*//*! 
   \short Given an in tuple calculate the index into out_vals array where
-         the out tuple is stored.  
+         the out tuple is stored.  If relptr is not storing a function
+         then calculates index into out_index.
 
     <pre>
         in_tuple: <x_0, x_1, ..., x_k>
@@ -17,15 +18,21 @@ int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
                       + (x_k-lb_k)) * out_arity ]
     </pre>
          
-    Assumes we are dealing with a function.
+    Or for a non function:
+    <pre>
+        in_tuple: <x_0, x_1, ..., x_k>
+        index into out_vals will be stored at 
+            out_index[ ((x_0-lb_0)*(RD_size(1)*...*RD_size(k)) 
+                      + (x_1-lb_0)*(RD_size(2)* ... *RD_size(k))
+                      + (x_k-lb_k)) * out_arity ]
+    </pre>
+    
     
     FIXME? Possible performance problem.
 
   \author Michelle Strout 8/30/08
 *//*----------------------------------------------------------------*/
 {
-    assert(relptr->isFunction);
-
     int i, j, index;
     index = 0;
     RectDomain * in_domain = ER_in_domain(relptr);
@@ -582,7 +589,7 @@ void ER_in_ordered_insert(ExplicitRelation* self,
         // the out tuple.
         
         // check that out_index is big enough
-        if ( self->unique_in_count > self->out_index_size ) {
+        if ( self->unique_in_count >= self->out_index_size ) {
             expand_array( &(self->out_index), &(self->out_index_size) );
         }
         

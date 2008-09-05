@@ -63,7 +63,7 @@ Assumptions
    - c1 and c2 do not involve existentially quantified variables
 
 ---------------------------------
-Application of a relation to a set
+Application of a relation to a set (Implemented 9/5/2008)
 ---------------------------------
 S := { x : c2 }
 R := { y -> z : c1 }
@@ -73,7 +73,7 @@ Correctness
    - arity(x)=arity(y)
 
 --------------------
-Set Size Calculation
+Set Size Calculation (9/5/08, MMS, don't think we need this due to domain and range info that explicit relation maintains)
 --------------------
 Anytime we need to allocate an index array, we need to generate code that at runtime will determine the size of the index array.  See (8b), (1d), and (5d) as examples where this will be needed.
 
@@ -95,9 +95,9 @@ For S1 and S2 to be equal, the following must hold:
     arity(x) == arity(y)
     bounds(x_i) == bounds(y_i) for all i in arity(x)
 The variable names in the x and y tuples do not have to be identical.  The bounds are all of the equalities and inequalities in c1 and c2.
-FIXME: this still needs to be fleshed out a bit.
 
-FIXME: what about when a set is a list of set unions?
+    -> Need comparison function that does renaming for PresSet and PresRelation.
+    -> Need comparison at Set and Relation level.
 
 --------------------------------
 Comparison between two relations
@@ -109,7 +109,7 @@ Similar to the comparison between sets.
 Simplification
 --------------
 After we do an operation such as composition, we are going to have some free variables in the resulting constraints.  These free variables are implicitly existentially quantified.  We think we need to get rid of them, because they complicate code gen if they are in sets and they complicate further operations if they are in relations.
-FIXME: need some examples of these two things (see moldyn-data-iter-reord.txt for some)
+(see moldyn-data-iter-reord.txt for some examples)
 
 These simplification rules can be applied in a loop until none of them are relevant.
 
@@ -120,19 +120,21 @@ S1) Removing equalities between a variable and an expr
         Remove v=e from the constraints
 
 S2) Removing inequalities. v <= e or v >= e
-    v is a scalar variable.
+    v is a scalar free variable.
     If v is only involved in inequalities where e is constant or a scalar symbolic constant, then remove all inequalities involving v.
 
 S3) Remove variable by creating the inverse of a permutation.
     If have an existential variable that is input to two or more uninterpreted function symbols and at least one of them is a non-nested uninterp function where the associated index array is a permutation, then solve for existential variable using the inverse of the permutation.  Then apply S1 to eliminate existential variable in other places where it is an input.
-        Example: a = delta(i), where i is not in input, output, or set tuple
+        Example: a = delta(i), where i is not in input, output, or set tuple and is not a symbolic.
         If delta is a permutation iag (FIXME: note that index array specifications will need a flag indicating if they are a permutation), then replace "a=delta(i)" with "i=delta_inv(a)".
 
 We also should simplify across disjunction (IOW the list of relation or set unions).  We use this when coming up with summary access relations for an iteration subspace or summary data dependences between two subspaces.
 
 S4) If two relations in the union list are equivalent, then remove one of them.
+        This will be implemented in the maintenance of the Set class, which will maintain a sorted list of PresSets.  Same thing for Relations.
 
 S5) If a relation/set has a non-satisfiable constraint then make that an empty relation.  For example c1=c2, where c1!=c2 is an unsatisfiable constraint.  Se example 4.
+    Tricker examples: v<6 and v>=6 where v is a tuple var or symbolic var.  Probably handle later.
 
 ---------------------
 Code Gen for Relation
