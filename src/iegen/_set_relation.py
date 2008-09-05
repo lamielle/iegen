@@ -1,15 +1,12 @@
 # Definitions of the Set and Relation classes that represent Presburger Sets and Relations.
 
 from iegen.parser import PresParser
+from iegen.lib.decorator import decorator
+from iegen.util import sort_self,sort_result
 
 #---------- Formula class ----------
 #Parent class for Sets and Relations
 class Formula(object):
-
-	#Uses the sort visitor to sort all lists in this formula and the ASTs it contains
-	def _sort(self):
-		from iegen.ast.visitor import SortVisitor
-		SortVisitor().visit(self)
 
 	#Check method that makes sure its argument 'looks like' a Set
 	#Returns True if it does, False otherwise
@@ -94,9 +91,6 @@ class Formula(object):
 		for constraint in form1.conjunct.constraint_list+form2.conjunct.constraint_list:
 			new_form.conjunct.constraint_list.append(deepcopy(constraint))
 
-		#Sort the constraints
-		new_form.conjunct.constraint_list.sort()
-
 		#Rename the variables back to what the were before
 		RenameVisitor(form1_unrename).visit(new_form)
 		RenameVisitor(form2_unrename).visit(new_form)
@@ -138,6 +132,7 @@ class Set(Formula):
 	#Takes EITHER a set string, ex {[a]: a>10}, in set_string
 	#OR a collection of PresSet instances in sets
 	#but NOT both
+	@sort_self
 	def __init__(self,set_string=None,sets=None):
 		if None!=set_string and None==sets:
 			self.sets=[PresParser.parse_set(set_string)]
@@ -151,7 +146,6 @@ class Set(Formula):
 
 		self._set_check()
 		self._arity_check()
-		self._sort()
 
 	def __repr__(self):
 		return "Set(sets=%s)"%(self.sets)
@@ -197,6 +191,7 @@ class Set(Formula):
 		self.sets.extend(set.sets)
 
 	#Takes the union of this Set and the given Set
+	@sort_result
 	def union(self,other):
 		from copy import deepcopy
 
@@ -205,12 +200,12 @@ class Set(Formula):
 				self=deepcopy(self)
 				other=deepcopy(other)
 				self._add_set(other)
-				self._sort()
-				return self
 			else:
 				raise ValueError('Cannot union sets with differing arity (%d and %d).'%(self.arity(),other.arity()))
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
+
+		return self
 
 	#Application of a relation to a set: other(self)
 	#Application of unions of relations to unions of sets is defined as:
@@ -277,6 +272,7 @@ class Relation(Formula):
 	#Takes EITHER a relation string, ex {[a]->[a']: a>10}, in relation_string
 	#OR a collection of PresRelation instances in relations
 	#but NOT both
+	@sort_self
 	def __init__(self,relation_string=None,relations=None):
 		if None!=relation_string and None==relations:
 			self.relations=[PresParser.parse_relation(relation_string)]
@@ -290,7 +286,6 @@ class Relation(Formula):
 
 		self._relation_check()
 		self._arity_check()
-		self._sort()
 
 	def __repr__(self):
 		return "Relation(relations=%s)"%(self.relations)
@@ -359,6 +354,7 @@ class Relation(Formula):
 		self.relations.extend(relation.relations)
 
 	#Takes the union of this Relation and the given Relation
+	@sort_result
 	def union(self,other):
 		from copy import deepcopy
 
@@ -367,15 +363,16 @@ class Relation(Formula):
 				self=deepcopy(self)
 				other=deepcopy(other)
 				self._add_relation(other)
-				self._sort()
-				return self
 			else:
 				raise ValueError('Cannot union relations with differing arity ((%d->%d) and (%d->%d)).'%(self.arity_in(),self.arity_out(),other.arity_in(),other.arity_out()))
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 
+		return self
+
 
 	#Takes the inverse of all of the PresRelations in this Relation
+	@sort_result
 	def inverse(self):
 		from copy import deepcopy
 
@@ -384,7 +381,6 @@ class Relation(Formula):
 			#Swap input and output tuples
 			relation.tuple_in,relation.tuple_out=relation.tuple_out,relation.tuple_in
 
-		self._sort()
 		return self
 
 	#Relation composition: self(other)
@@ -395,7 +391,7 @@ class Relation(Formula):
 	#Then R1(R2)=R11(R21) union R11(R22) union ... union R11(R2M) union
 	#            R12(R21) union R12(R22) union ... union R12(R2M) union
 	#            ...
-	#            R1N(R21) union R1N(R22) union ... union R1N(R2M) union
+	#            R1N(R21) union R1N(R22) union ... union R1N(R2M)
 	def compose(self,other):
 		from copy import deepcopy
 
@@ -432,52 +428,4 @@ class Relation(Formula):
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(r2.arity_out(),r1.arity_in()))
 
 		return self._combine_pres_formulas(r1,'tuple_in',r2,'tuple_out',PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([])))
-
-		#Copy the relations so this operation is using fresh copies of the objects
-		r1=deepcopy(r1)
-		r2=deepcopy(r2)
-
-		#Create dictionaries for renaming the tuple variables
-		r1_rename=self._get_rename_dict(r1,'r1')
-		r1_unrename=self._get_unrename_dict(r1,'r1')
-		r2_rename=self._get_rename_dict(r2,'r2')
-		r2_unrename=self._get_unrename_dict(r2,'r2')
-
-		#Rename the tuple varibles in r1 and r2
-		RenameVisitor(r1_rename).visit(r1)
-		RenameVisitor(r2_rename).visit(r2)
-
-		#Create a new relation
-		new_rel=PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([]))
-
-		#Add equality constraints for the 'inner' tuple variables of the composition to the new relation
-		#We know there are the same number of variables since we checked above
-		for i in xrange(r2.arity_out()):
-			#Get the variables from the relations
-			var1=deepcopy(r1.tuple_in.vars[i])
-			var2=deepcopy(r2.tuple_out.vars[i])
-
-			#Set the coefficients on the variables:
-			#var1=var2 -> var1-var2=0
-			var1.coeff=1
-			var2.coeff=-1
-
-			#Create a constraint where these variables are equal
-			constraint=Equality(NormExp([var1,var2],0))
-
-			#Add the new constraint to the new relation
-			new_rel.conjunct.constraint_list.append(constraint)
-
-		#Add the constraints of both relations to the new relation
-		for constraint in r1.conjunct.constraint_list+r2.conjunct.constraint_list:
-			new_rel.conjunct.constraint_list.append(deepcopy(constraint))
-
-		#Sort the constraints
-		new_rel.conjunct.constraint_list.sort()
-
-		#Rename the variables back to what the were before
-		RenameVisitor(r1_unrename).visit(new_rel)
-		RenameVisitor(r2_unrename).visit(new_rel)
-
-		return new_rel
 #------------------------------------

@@ -31,6 +31,7 @@
 #
 
 from copy import deepcopy
+from iegen.util import sort_self,sort_result
 
 #---------- Base AST Node class ----------
 class Node(object):
@@ -155,9 +156,9 @@ class VarTuple(Node):
 class Conjunction(Node):
 	__slots__=('constraint_list',)
 
+	@sort_self
 	def __init__(self,constraint_list):
 		self.constraint_list=constraint_list
-		self.constraint_list.sort()
 
 	def __repr__(self):
 		return 'Conjunction(%s)'%(self.constraint_list)
@@ -288,11 +289,11 @@ class VarExp(Expression):
 class FuncExp(Expression):
 	__slots__=('coeff','name','args')
 
+	@sort_self
 	def __init__(self,coeff,name,args):
 		self.coeff=coeff
 		self.name=name
 		self.args=args
-		self.args.sort()
 
 		#Make sure all arguments 'look like' NormExps
 		for arg in self.args:
@@ -345,9 +346,9 @@ class FuncExp(Expression):
 class NormExp(Expression):
 	__slots__=('terms','const')
 
+	@sort_self
 	def __init__(self,terms,const):
 		self.terms=terms
-		self.terms.sort()
 		self.const=const
 
 		self._check_terms()
@@ -362,7 +363,6 @@ class NormExp(Expression):
 					raise ValueError("The given expression, '%s', must have the 'coeff', 'name', and 'args' attributes."%term)
 
 	def __repr__(self):
-		self.terms.sort()
 		return 'NormExp(%s,%s)'%(self.terms,self.const)
 
 	#Returns True if this NormExp has any variables or functions (terms)
@@ -374,8 +374,6 @@ class NormExp(Expression):
 	#Comparison operator
 	def __cmp__(self,other):
 		if hasattr(other,'terms') and hasattr(other,'const'):
-			self.terms.sort()
-			other.terms.sort()
 			return cmp((self.const,self.terms),(other.const,other.terms))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -384,12 +382,10 @@ class NormExp(Expression):
 	#Adds the two given NormExp expressions
 	#This operator is non-destructive: A complete copy of the arguments
 	#are made while leaving 'self' and 'other' untouched
+	@sort_result
 	def __add__(self,other):
 		if not hasattr(self,'terms') or not hasattr(self,'const') or not hasattr(other,'terms') or not hasattr(other,'const'):
 			raise ValueError("Addition between a '%s' and a '%s' is undefined."%(type(self),type(other)))
-
-		self.terms.sort()
-		other.terms.sort()
 
 		self=deepcopy(self)
 		other=deepcopy(other)
@@ -405,9 +401,6 @@ class NormExp(Expression):
 		#Add the constant value from other to self
 		self.const+=other.const
 
-		#Sort the terms
-		self.terms.sort()
-
 		return self
 
 	#Multiplication operator:
@@ -416,6 +409,7 @@ class NormExp(Expression):
 	#Multiplication of two NormExps that both have terms is undefined
 	#This operator is non-destructive: A complete copy of the arguments
 	#are made while leaving 'self' and 'other' untouched
+	@sort_result
 	def __mul__(self,other):
 		if not hasattr(self,'terms') or not hasattr(self,'const') or not hasattr(other,'terms') or not hasattr(other,'const'):
 			raise ValueError("Multiplication between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -424,9 +418,6 @@ class NormExp(Expression):
 		#Multiplication of variablies is undefined here
 		if self._has_terms() and other._has_terms():
 			raise ValueError("Multiplication of variables/functions with other variables/functions is not defined.");
-
-		self.terms.sort()
-		other.terms.sort()
 
 		self=deepcopy(self)
 		other=deepcopy(other)
@@ -444,9 +435,6 @@ class NormExp(Expression):
 
 		other.const*=const
 
-		#Sort the terms
-		other.terms.sort()
-
 		return other
 
 	#Negation operator
@@ -459,12 +447,10 @@ class NormExp(Expression):
 
 	#Returns a collection of all of the variable terms in this expression
 	def _vars(self):
-		self.terms.sort()
 		return [term for term in terms if hasattr(term,'id')]
 
 	#Returns a collection of all of the function terms in this expression
 	def _funcs(self):
-		self.terms.sort()
 		return [term for term in self.terms if hasattr(term,'name') and hasattr(term,'args')]
 
 	def apply_visitor(self,visitor):

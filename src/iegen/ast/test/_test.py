@@ -620,6 +620,8 @@ class NormExpTestCase(TestCase):
 			def __init__(self):
 				self.coeff=None
 				self.id=None
+			def apply_visitor(self,visitor):
+				visitor.visitVarExp(self)
 
 		NormExp([DummyVarExp()],0)
 
@@ -630,7 +632,9 @@ class NormExpTestCase(TestCase):
 			def __init__(self):
 				self.coeff=None
 				self.name=None
-				self.args=None
+				self.args=[]
+			def apply_visitor(self,visitor):
+				visitor.visitFuncExp(self)
 		NormExp([DummyFuncExp()],0)
 
 	#Tests that an object that 'looks like' neither a VarExp nor a FuncExp is not a valid term for a NormExp

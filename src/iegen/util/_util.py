@@ -34,3 +34,26 @@ def _set(self,value): self._%s=value'''%(name,name)
 
 class DimensionalityError(Exception):
 	pass
+
+#---------- Decorators ----------
+from iegen.lib.decorator import decorator
+
+#Runs the SortVisitor on the given object
+def sort_visit(obj):
+	from iegen.ast.visitor import SortVisitor
+	SortVisitor().visit(obj)
+
+#Decorator that uses the SortVisitor to sort the first implicit 'self' argument of the decorated function
+@decorator
+def sort_self(func,*args,**kw):
+	result=func(*args,**kw)
+	sort_visit(args[0])
+	return result
+
+#Decorator that uses the SortVisitor to sort the result of the decorated function
+@decorator
+def sort_result(func,*args,**kw):
+	result=func(*args,**kw)
+	sort_visit(result)
+	return result
+#--------------------------------
