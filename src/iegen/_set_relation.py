@@ -43,18 +43,82 @@ class Formula(object):
 		else:
 			return True
 
+	#Private utility method that combines the given formulas
+	#
+	#form{1,2} are either PresSets or PresRelations
+	#form{1,2}_tuple are strings that name the attribute of that formulas tuple
+	#Equality constraints will be added between these tuples
+	#These tuples MUST have the same arity
+	#new_form is the new formula object that will be manipulated
+	def _combine_pres_formulas(self,form1,form1_tuple,form2,form2_tuple,new_form):
+		from copy import deepcopy
+		from iegen.ast import Equality,NormExp
+		from iegen.ast.visitor import RenameVisitor
+
+		#Copy the formulas so this operation is using fresh copies of the objects
+		form1=deepcopy(form1)
+		form2=deepcopy(form2)
+
+		#Create dictionaries for renaming the tuple variables
+		form1_rename=self._get_rename_dict(form1,'form1')
+		form1_unrename=self._get_unrename_dict(form1,'form1')
+		form2_rename=self._get_rename_dict(form2,'form2')
+		form2_unrename=self._get_unrename_dict(form2,'form2')
+
+		#Rename the tuple varibles in form1 and form2
+		RenameVisitor(form1_rename).visit(form1)
+		RenameVisitor(form2_rename).visit(form2)
+
+		#Get the formula variable tuples
+		form1_tuple=getattr(form1,form1_tuple)
+		form2_tuple=getattr(form2,form2_tuple)
+
+		#Add equality constraints for form1_tuple = form2_tuple
+		for i in xrange(len(form1_tuple.vars)):
+			#Get the variables from the formulas
+			var1=deepcopy(form1_tuple.vars[i])
+			var2=deepcopy(form2_tuple.vars[i])
+
+			#Set the coefficients on the variables:
+			#var1=var2 -> var1-var2=0
+			var1.coeff=1
+			var2.coeff=-1
+
+			#Create a constraint where these variables are equal
+			constraint=Equality(NormExp([var1,var2],0))
+
+			#Add the new constraint to the new relation
+			new_form.conjunct.constraint_list.append(constraint)
+
+		#Add the constraints of both relations to the new relation
+		for constraint in form1.conjunct.constraint_list+form2.conjunct.constraint_list:
+			new_form.conjunct.constraint_list.append(deepcopy(constraint))
+
+		#Sort the constraints
+		new_form.conjunct.constraint_list.sort()
+
+		#Rename the variables back to what the were before
+		RenameVisitor(form1_unrename).visit(new_form)
+		RenameVisitor(form2_unrename).visit(new_form)
+
+		return new_form
+
 	#Creates a dictionary for renaming variables in a relation
-	def _get_rename_dict(self,relation,prefix):
+	def _get_rename_dict(self,formula,prefix):
 		rename={}
 
 		#Make sure we are given a PresRelation
-		if not self._like_pres_relation(relation):
-			raise ValueError("The given relation, '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%relation)
+		if not self._like_pres_set(formula) and not self._like_pres_relation(formula):
+			raise ValueError("The given formula, '%s', must ehter have the 'tuple_set' and 'conjunct' attributes or the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%formula)
 
-		for var in relation.tuple_in.vars:
-			rename[var.id]=prefix+'_in_'+var.id
-		for var in relation.tuple_out.vars:
-			rename[var.id]=prefix+'_out_'+var.id
+		if self._like_pres_set(formula):
+			for var in formula.tuple_set.vars:
+				rename[var.id]=prefix+'_'+var.id
+		else:
+			for var in formula.tuple_in.vars:
+				rename[var.id]=prefix+'_in_'+var.id
+			for var in formula.tuple_out.vars:
+				rename[var.id]=prefix+'_out_'+var.id
 
 		return rename
 
@@ -148,12 +212,15 @@ class Set(Formula):
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 
-	#Application of a relation to a set: self(other)
+	#Application of a relation to a set: other(self)
 	#Application of unions of relations to unions of sets is defined as:
-	#Let S=A union B
-	#Let R=C union D
+	#Let S=S1 union S2 union ... union SN
+	#Let R=R1 union R2 union ... union RM
 	#
-	#Then R(S)=C(A) union C(B) union D(A) union D(B)
+	#Then R(S)=R1(S1) union R1(S2) union ... union R1(SN) union
+	#          R2(S1) union R2(S2) union ... union R2(SN) union
+	#          ...
+	#          RM(S1) union RM(S2) union ... union RM(SN)
 	def apply(self,other):
 		from copy import deepcopy
 
@@ -163,17 +230,35 @@ class Set(Formula):
 
 		#Make sure the arities are valid
 		if other.arity_in()!=self.arity():
-			raise ValueError('Apply failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
+			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(other.arity_out(),self.arity()))
 
-		#Collection of new composed relations
-		new_relations=[]
+		#Collection of new applied sets
+		new_sets=[]
 
-		for rel1 in self.relations:
-			for rel2 in other.relations:
-				new_relations.append(self._compose(rel1,rel2))
+		for set in self.sets:
+			for rel in other.relations:
+				new_sets.append(self._apply(set,rel))
 
-		return Relation(relations=new_relations)
+		return Set(sets=new_sets)
 
+	#Private utility method to perform the apply operation between a PresSet and a PresRelation
+	#Returns the PresSet resulting from the apply operation rel(set)
+	def _apply(self,set,rel):
+		from copy import deepcopy
+		from iegen.ast import PresSet,Conjunction
+		from iegen.ast.visitor import RenameVisitor
+
+		#Make sure we are given a PresSet and a PresRelation
+		if not self._like_pres_set(set):
+			raise ValueError("Apply failure: The given set, '%s', must have the 'tuple_set' and 'conjunct' attributes."%(set))
+		elif not self._like_pres_relation(rel):
+			raise ValueError("Apply failure: The given relation, '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%(rel))
+
+		#Make sure the arities are valid
+		if rel.arity_in()!=set.arity():
+			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(rel.arity_out(),set.arity()))
+
+		return self._combine_pres_formulas(set,'tuple_set',rel,'tuple_in',PresSet(deepcopy(rel.tuple_out),Conjunction([])))
 
 #	#Given a collection of scattering functions for each statement
 #	#Returns the code that iterates over the tuples in this set
@@ -304,10 +389,13 @@ class Relation(Formula):
 
 	#Relation composition: self(other)
 	#Composition of unions of relations is defined as:
-	#Let R1=A union B
-	#Let R2=C union D
+	#Let R1=R11 union R12 union ... union R1N
+	#Let R2=R21 union R22 union ... union R2M
 	#
-	#Then R1(R2)=A(C) union A(D) union B(C) union B(D)
+	#Then R1(R2)=R11(R21) union R11(R22) union ... union R11(R2M) union
+	#            R12(R21) union R12(R22) union ... union R12(R2M) union
+	#            ...
+	#            R1N(R21) union R1N(R22) union ... union R1N(R2M) union
 	def compose(self,other):
 		from copy import deepcopy
 
@@ -343,6 +431,8 @@ class Relation(Formula):
 		if r2.arity_out()!=r1.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(r2.arity_out(),r1.arity_in()))
 
+		return self._combine_pres_formulas(r1,'tuple_in',r2,'tuple_out',PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([])))
+
 		#Copy the relations so this operation is using fresh copies of the objects
 		r1=deepcopy(r1)
 		r2=deepcopy(r2)
@@ -367,9 +457,10 @@ class Relation(Formula):
 			var1=deepcopy(r1.tuple_in.vars[i])
 			var2=deepcopy(r2.tuple_out.vars[i])
 
-			#Set the coefficient on the first variable to -1 since:
-			#var2=var1 -> var2-var1=0
-			var1.coeff=-1
+			#Set the coefficients on the variables:
+			#var1=var2 -> var1-var2=0
+			var1.coeff=1
+			var2.coeff=-1
 
 			#Create a constraint where these variables are equal
 			constraint=Equality(NormExp([var1,var2],0))
@@ -378,9 +469,7 @@ class Relation(Formula):
 			new_rel.conjunct.constraint_list.append(constraint)
 
 		#Add the constraints of both relations to the new relation
-		for constraint in r1.conjunct.constraint_list:
-			new_rel.conjunct.constraint_list.append(deepcopy(constraint))
-		for constraint in r2.conjunct.constraint_list:
+		for constraint in r1.conjunct.constraint_list+r2.conjunct.constraint_list:
 			new_rel.conjunct.constraint_list.append(deepcopy(constraint))
 
 		#Sort the constraints

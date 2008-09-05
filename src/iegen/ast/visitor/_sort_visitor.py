@@ -7,20 +7,20 @@ class SortVisitor(DFVisitor):
 	def defaultIn(self,node): pass
 	def defaultOut(self,node): pass
 
-	def inSet(self,node):
+	def outSet(self,node):
 		node.sets.sort()
 
-	def inRelation(self,node):
+	def outRelation(self,node):
 		node.relations.sort()
 
-	def inConjunction(self,node):
+	def outConjunction(self,node):
 		node.constraint_list.sort()
 
-	def inEquality(self,node):
+	def outEquality(self,node):
 		node._set_largest_exp()
 
-	def inFuncExp(self,node):
+	def outFuncExp(self,node):
 		node.args.sort()
 
-	def inNormExp(self,node):
+	def outNormExp(self,node):
 		node.terms.sort()

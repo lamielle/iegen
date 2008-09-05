@@ -186,12 +186,22 @@ class SetTestCase(TestCase):
 
 		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
 
+	#Tests that apply is not destructive
+	def testApplyNonDestructive(self):
+		from iegen import Set,Relation
+
+		set=Set('{[a]}')
+		relation=Relation('{[a]->[b]}')
+		applied=set.apply(relation)
+
+		self.failIf(applied is set,'%s is %s'%(applied,set))
+
 	#Tests that apply fails when the arity of the set does not match the input arity of the relation
 	@raises(ValueError)
 	def testApplyArityFail1(self):
 		from iegen import Set,Relation
 
-		set=Set('{[a]}')
+		set=Set('{[a,b]}')
 		relation=Relation('{[b]->[b]}')
 		applied=set.apply(relation)
 
@@ -200,7 +210,7 @@ class SetTestCase(TestCase):
 		from iegen import Set,Relation
 
 		set=Set('{[a,b,c]}')
-		relation=Relation('{[a,b,c]->[e,f]}')
+		relation=Relation('{[a,b]->[e,f]}')
 		applied=set.apply(relation)
 
 	#Tests the apply operation
@@ -211,35 +221,11 @@ class SetTestCase(TestCase):
 		relation=Relation('{[d]->[e,f]:e=d && -10<=f and f<=0}')
 
 		applied=set.apply(relation)
-		applied_res=Set('{[e,f]: 1<=d and d<=10 && and e=d and -10<=f and f<=0 and a=d}')
+		applied_res=Set('{[e,f]: 1<=a and a<=10 && e=d and -10<=f and f<=0 and a=d}')
 		#Once simplification is implemented, this should be the result
 		#applied_res=Set('{[e,f]: 1<=e and e<=10 && -10<=f and f<=0}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
-
-	#Tests the apply operation on a real-world use case from moldyn-FST.in
-	def testApplyReal(self):
-		from iegen import Set,Relation
-
-		I_0=Set('{ [s1,i,s2] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1)  }').union(Set('{ [s1,ii,s2] : s1=2 and s2=1 and 0 <= ii and ii <= (n_inter-1)  }')).union(Set('{ [s1,ii,s2] : s1=2 and s2=2 and 0 <= ii  and ii <= (n_inter-1)  }'))
-		iter_ssr=Relation('{ [ k, ii, j ] -> [ ii ] : k=2 }')
-
-		I_0_applied=I_0.apply(iter_ssr)
-
-		I_0_res=Set('{ [ii] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and ii=i and s2=j }').union(Set('{ [ii] : s1=2 and s2=1 and 0 <= ii and ii <= (n_inter-1) and s1=k and i=ii and s2=j and k=2 }')).union(Set('{ [ii] : s1=2 and s2=2 and 0 <= ii  and ii <= (n_inter-1) and s1=k and i=ii and s2=j and k=2 }'))
-		#Once simplification is implemented, this should be the result
-		#I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }').union(Set('{ [ii] : 0 <= ii and ii <= (n_inter-1) }')).union(Set('{ [ii] : 0 <= ii  and ii <= (n_inter-1) }'))
-
-		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
-
-		iter_reordering=Relation('{ [ in ] -> [ i ] : i=delta(in) }')
-		I_0_applied.apply(iter_reordering)
-
-		I_0_res=Set('{ [i] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and ii=i and s2=j and in=ii and i=delta(in) }').union(Set('{ [i] : s1=2 and s2=1 and 0 <= ii and ii <= (n_inter-1) and s1=k and i=ii and s2=j and k=2 and in=ii and i=delta(in) }')).union(Set('{ [i] : s1=2 and s2=2 and 0 <= ii  and ii <= (n_inter-1) and s1=k and i=ii and s2=j and k=2 and in=ii and i=delta(in) }'))
-		#Once simplification is implemented, this should be the result
-		#I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }').union(Set('{ [ii] : 0 <= delta(i) and delta(i) <= (n_inter-1) }')).union(Set('{ [ii] : 0 <= delta(i)  and delta(i) <= (n_inter-1) }'))
-
-		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
 	#Tests the apply operation with equality constraints
 	def testApplyEquality(self):
@@ -249,9 +235,9 @@ class SetTestCase(TestCase):
 		relation=Relation('{[d]->[e,f]:e=d and f=d}')
 
 		applied=set.apply(relation)
-		applied_res=Relation('{[e,f]: a=d and e=d and f=d}')
+		applied_res=Set('{[e,f]: a=d and e=d and f=d}')
 		#Once simplification is implemented, this should be the result
-		#applied_res=Relation('{[e,f]: e=f}')
+		#applied_res=Set('{[e,f]: e=f}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -262,12 +248,60 @@ class SetTestCase(TestCase):
 		set=Set('{[a,b]:1<=a and a<=10 and 1<=b and b<=10}')
 		relation=Relation('{[a,b]->[b,c]:-10<=a and a<=0}')
 
-		applied=relation1.apply(relation2)
-		applied_res=Relation('{[b,c]: -10<=a and a<=0 and 1<=a and a<=10 and 1<=b and b<=10 and a=a and b=b}')
+		applied=set.apply(relation)
+		applied_res=Set('{[b,c]: -10<=a and a<=0 and 1<=a and a<=10 and 1<=b and b<=10 and a=a and b=b}')
 		#Once simplification is implemented, this should be the result
-		#applied_res=Relation('{[b,c]:1<=a and a<=10 and 1<=b and b<=10 and -10<=a and a<=0}')
+		#applied_res=Set('{[b,c]:1<=a and a<=10 and 1<=b and b<=10 and -10<=a and a<=0}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
+
+	#Tests the apply operation on a real-world use case from moldyn-FST.in
+	def testApplyReal(self):
+		from iegen import Set,Relation
+
+		I_0=Set('{ [s1,i,s2] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1)  }')
+		iter_ssr=Relation('{ [ k, ii, j ] -> [ ii ] : k=2 }')
+
+		I_0_applied=I_0.apply(iter_ssr)
+
+		I_0_res=Set('{ [ii] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }')
+		#Once simplification is implemented, this should be the result
+		#I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }')
+
+		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
+
+		iter_reordering=Relation('{ [ in ] -> [ i ] : i=delta(in) }')
+		I_0_applied=I_0_applied.apply(iter_reordering)
+
+		I_0_res=Set('{ [i] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }')
+		#Once simplification is implemented, this should be the result
+		#I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }')
+
+		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
+
+	#Tests the apply operation on a real-world use case from moldyn-FST.in
+	def testApplyRealUnion(self):
+		from iegen import Set,Relation
+
+		I_0=Set('{ [s1,i,s2] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1)  }').union(Set('{ [s1,i,s2] : s1=2 and s2=2 and 0 <= i and i <= (n_atom-1)  }')).union(Set('{ [s1,i,s2] : s1=3 and s2=3 and 0 <= i and i <= (n_atom-1)  }'))
+		iter_ssr=Relation('{ [ k, ii, j ] -> [ ii ] : k=2 }')
+
+		I_0_applied=I_0.apply(iter_ssr)
+
+		I_0_res=Set('{ [ii] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }').union(Set('{ [ii] : s1=2 and s2=2 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }')).union(Set('{ [ii] : s1=3 and s2=3 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }'))
+		#Once simplification is implemented, this should be the result
+		#I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }').union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }')).union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }'))
+
+		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
+
+		iter_reordering=Relation('{ [ in ] -> [ i ] : i=delta(in) }')
+		I_0_applied=I_0_applied.apply(iter_reordering)
+
+		I_0_res=Set('{ [i] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }').union(Set('{ [i] : s1=2 and s2=2 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }')).union(Set('{ [i] : s1=3 and s2=3 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }'))
+		#Once simplification is implemented, this should be the result
+		#I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }').union(Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }')).union(Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }'))
+
+		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
 	#Tests the _get_rename_dict method
 	def testGetRenameDict(self):
@@ -276,18 +310,18 @@ class SetTestCase(TestCase):
 		set=Set('{[a,b,c]:1<=a and a<=10}')
 
 		rename=set._get_rename_dict(set.sets[0],'pre')
-		rename_res={'a':'pre_in_a','b':'pre_in_b','c':'pre_out_c'}
+		rename_res={'a':'pre_a','b':'pre_b','c':'pre_c'}
 
 		self.failUnless(rename==rename_res,'%s!=%s'%(rename,rename_res))
 
 	#Tests the _get_unrename_dict method
 	def testGetUnrenameDict(self):
-		from iegen import Set 
+		from iegen import Set
 
 		set=Set('{[a,b]:1<=a and a<=10}')
 
 		unrename=set._get_unrename_dict(set.sets[0],'pre')
-		unrename_res={'pre_in_a':'a','pre_in_b':'b'}
+		unrename_res={'pre_a':'a','pre_b':'b'}
 
 		self.failUnless(unrename==unrename_res,'%s!=%s'%(unrename,unrename_res))
 #-------------------------------
@@ -546,20 +580,6 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
-	#Tests the compose operation on a real-world use case from moldyn-FST.in
-	def testComposeReal(self):
-		from iegen import Relation
-
-		ar=Relation('{[ii,s]->[ar_out]:s=1 and ar_out=inter(ii)}')
-		data_reordering=Relation('{[k]->[dr_out]:dr_out=sigma(k)}')
-
-		ar_composed=data_reordering.compose(ar)
-		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}')
-		#Once simplification is implemented, this should be the result
-		#ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}')
-
-		self.failUnless(ar_composed==ar_res,'%s!=%s'%(ar_composed,ar_res))
-
 	#Tests the compose operation with equality constraints
 	def testComposeEquality(self):
 		from iegen import Relation
@@ -587,6 +607,34 @@ class RelationTestCase(TestCase):
 		#composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests the compose operation on a real-world use case from moldyn-FST.in
+	def testComposeReal(self):
+		from iegen import Relation
+
+		ar=Relation('{[ii,s]->[ar_out]:s=1 and ar_out=inter(ii)}')
+		data_reordering=Relation('{[k]->[dr_out]:dr_out=sigma(k)}')
+
+		ar_composed=data_reordering.compose(ar)
+		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}')
+		#Once simplification is implemented, this should be the result
+		#ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}')
+
+		self.failUnless(ar_composed==ar_res,'%s!=%s'%(ar_composed,ar_res))
+
+	#Tests the compose operation on a real-world use case from moldyn-FST.in
+	def testComposeRealUnion(self):
+		from iegen import Relation
+
+		ar=Relation('{[ii,s]->[ar_out]:s=1 and ar_out=inter(ii)}').union(Relation('{[ii,s]->[ar_out]:s=2 and ar_out=inter(ii)}')).union(Relation('{[ii,s]->[ar_out]:s=3 and ar_out=inter(ii)}'))
+		data_reordering=Relation('{[k]->[dr_out]:dr_out=sigma(k)}')
+
+		ar_composed=data_reordering.compose(ar)
+		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}').union(Relation('{[ii,s]->[dr_out]:s=2 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}')).union(Relation('{[ii,s]->[dr_out]:s=3 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}'))
+		#Once simplification is implemented, this should be the result
+		#ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}').union(Relation('{[ii,s]->[dr_out]:s=2 and dr_out=sigma(inter(ii))}')).union(Relation('{[ii,s]->[dr_out]:s=3 and dr_out=sigma(inter(ii))}'))
+
+		self.failUnless(ar_composed==ar_res,'%s!=%s'%(ar_composed,ar_res))
 
 	#Tests the _get_rename_dict method of Relation
 	def testGetRenameDict(self):

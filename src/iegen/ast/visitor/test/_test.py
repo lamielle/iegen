@@ -205,3 +205,29 @@ class RenameVisitorTestCase(TestCase):
 
 		self.failUnless(relation==relation_renamed,'%s!=%s'%(relation,relation_renamed))
 #--------------------------------------------
+
+#---------- Sort Visitor Tests ----------
+#Test sort visitor
+class SortVisitorTestCase(TestCase):
+
+	#Tests that the _set_largest_exp method of Equality is called following sorting all of the lists in the Set/Relation object
+	#BUG FIX:
+	#This tests a subtle bug in which the largest expression of the Equality was selected first
+	#followed by sorting the list of terms in this expression
+	#Since the terms' order may change, it is possible that the largest expression was not selected after all
+	def testSortChooseLargestExpLast(self):
+		from iegen import Set
+		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,NormExp,VarExp
+		from iegen.ast.visitor import RenameVisitor,SortVisitor
+
+		unrename={'form1_s2': 's2', 'form1_s1': 's1', 'form2_in_k': 'k', 'form2_in_j': 'j'}
+
+		set=Set(sets=[PresSet(VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'form2_in_k'), VarExp(1,'form1_s1')],0)), Equality(NormExp([VarExp(-1,'form2_in_j'), VarExp(1,'form1_s2')],0))]))])
+
+		RenameVisitor(unrename).visit(set)
+		SortVisitor().visit(set)
+
+		set_res=Set('{[]: k=s1 and j=s2}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+#----------------------------------------
