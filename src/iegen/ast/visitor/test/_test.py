@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------

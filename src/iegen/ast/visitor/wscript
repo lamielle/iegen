@@ -17,5 +17,6 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_trans_visitor.py')
 	install_files('PREFIX',inst_dir,'_rename_visitor.py')
 	install_files('PREFIX',inst_dir,'_sort_visitor.py')
+	install_files('PREFIX',inst_dir,'_check_visitor.py')
 
 	bld.add_subdirs('test')

@@ -201,6 +201,24 @@ class VarTupleTestCase(TestCase):
 		self.failUnless(1==len(v1),'len(%s)!=1'%v1)
 		self.failUnless(2==len(v2),'len(%s)!=2'%v2)
 		self.failUnless(3==len(v3),'len(%s)!=3'%v3)
+
+	#Tests that an object does not 'look like' a VarExp is invalid
+	@raises(ValueError)
+	def testNormExpInvalid(self):
+		from iegen.ast import VarTuple,NormExp
+		VarTuple([NormExp([],0)])
+	@raises(ValueError)
+	def testFuncExpInvalid(self):
+		from iegen.ast import VarTuple,FuncExp
+		VarTuple([FuncExp(1,'f',[])])
+	@raises(ValueError)
+	def testIntInvalid(self):
+		from iegen.ast import VarTuple
+		VarTuple([10])
+	@raises(ValueError)
+	def testStrInvalid(self):
+		from iegen.ast import VarTuple
+		VarTuple(['hello'])
 #------------------------------------
 
 #---------- Conjunction Tests ----------
@@ -618,8 +636,8 @@ class NormExpTestCase(TestCase):
 		from iegen.ast import NormExp,Node
 		class DummyVarExp(Node):
 			def __init__(self):
-				self.coeff=None
-				self.id=None
+				self.coeff=0
+				self.id=''
 			def apply_visitor(self,visitor):
 				visitor.visitVarExp(self)
 
@@ -630,8 +648,8 @@ class NormExpTestCase(TestCase):
 		from iegen.ast import NormExp,Node
 		class DummyFuncExp(Node):
 			def __init__(self):
-				self.coeff=None
-				self.name=None
+				self.coeff=0
+				self.name=''
 				self.args=[]
 			def apply_visitor(self,visitor):
 				visitor.visitFuncExp(self)

@@ -2,43 +2,11 @@
 
 from iegen.parser import PresParser
 from iegen.lib.decorator import decorator
-from iegen.util import sort_self,sort_result
+from iegen.util import sort_self,sort_result,like_type,raise_objs_not_like_types
 
 #---------- Formula class ----------
 #Parent class for Sets and Relations
 class Formula(object):
-
-	#Check method that makes sure its argument 'looks like' a Set
-	#Returns True if it does, False otherwise
-	def _like_set(self,exp):
-		if not hasattr(exp,'sets'):
-			return False
-		else:
-			return True
-
-	#Check method that makes sure its argument 'looks like' a Relation
-	#Returns True if it does, False otherwise
-	def _like_relation(self,exp):
-		if not hasattr(exp,'relations'):
-			return False
-		else:
-			return True
-
-	#Check method that makes sure its argument 'looks like' a PresSet
-	#Returns True if it does, False otherwise
-	def _like_pres_set(self,exp):
-		if not hasattr(exp,'tuple_set') or not hasattr(exp,'conjunct'):
-			return False
-		else:
-			return True
-
-	#Check method that makes sure its argument 'looks like' a PresRelation
-	#Returns True if it does, False otherwise
-	def _like_pres_relation(self,exp):
-		if not hasattr(exp,'tuple_in') or not hasattr(exp,'tuple_out') or not hasattr(exp,'conjunct'):
-			return False
-		else:
-			return True
 
 	#Private utility method that combines the given formulas
 	#
@@ -99,13 +67,14 @@ class Formula(object):
 
 	#Creates a dictionary for renaming variables in a relation
 	def _get_rename_dict(self,formula,prefix):
+		from iegen.ast import PresSet,PresRelation
+
 		rename={}
 
-		#Make sure we are given a PresRelation
-		if not self._like_pres_set(formula) and not self._like_pres_relation(formula):
-			raise ValueError("The given formula, '%s', must ehter have the 'tuple_set' and 'conjunct' attributes or the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%formula)
+		#Make sure we are given a PresSet or a PresRelation
+		raise_objs_not_like_types(formula,[PresSet,PresRelation])
 
-		if self._like_pres_set(formula):
+		if like_type(formula,PresSet):
 			for var in formula.tuple_set.vars:
 				rename[var.id]=prefix+'_'+var.id
 		else:
@@ -220,8 +189,7 @@ class Set(Formula):
 		from copy import deepcopy
 
 		#Make sure we are given a Relation
-		if not self._like_relation(other):
-			raise ValueError('Apply failure: Can only apply objects that look like a Relation object to a Set')
+		raise_objs_not_like_types(other,Relation,'Apply failure: Can only apply objects that look like a Relation object to a Set')
 
 		#Make sure the arities are valid
 		if other.arity_in()!=self.arity():
@@ -240,14 +208,12 @@ class Set(Formula):
 	#Returns the PresSet resulting from the apply operation rel(set)
 	def _apply(self,set,rel):
 		from copy import deepcopy
-		from iegen.ast import PresSet,Conjunction
+		from iegen.ast import PresSet,PresRelation,Conjunction
 		from iegen.ast.visitor import RenameVisitor
 
 		#Make sure we are given a PresSet and a PresRelation
-		if not self._like_pres_set(set):
-			raise ValueError("Apply failure: The given set, '%s', must have the 'tuple_set' and 'conjunct' attributes."%(set))
-		elif not self._like_pres_relation(rel):
-			raise ValueError("Apply failure: The given relation, '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%(rel))
+		raise_objs_not_like_types(set,PresSet)
+		raise_objs_not_like_types(rel,PresRelation)
 
 		#Make sure the arities are valid
 		if rel.arity_in()!=set.arity():
@@ -396,8 +362,7 @@ class Relation(Formula):
 		from copy import deepcopy
 
 		#Make sure we are given a Relation
-		if not self._like_relation(other):
-			raise ValueError("Compose failure: The given relation, '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%(other))
+		raise_objs_not_like_types(other,Relation)
 
 		#Make sure the arities are valid
 		if other.arity_out()!=self.arity_in():
@@ -420,8 +385,7 @@ class Relation(Formula):
 		from iegen.ast.visitor import RenameVisitor
 
 		#Make sure we are given PresRelations
-		if not self._like_pres_relation(r1) or not self._like_pres_relation(r2):
-			raise ValueError("Compose failure: The given relations, '%s' and '%s', must have the 'tuple_in', 'tuple_out', and 'conjunct' attributes."%(r1,r2))
+		raise_objs_not_like_types([r1,r2],PresRelation)
 
 		#Make sure the arities are valid
 		if r2.arity_out()!=r1.arity_in():

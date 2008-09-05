@@ -31,35 +31,10 @@
 #
 
 from copy import deepcopy
-from iegen.util import sort_self,sort_result
+from iegen.util import sort_self,sort_result,check
 
 #---------- Base AST Node class ----------
 class Node(object):
-
-	#Check method that makes sure its argument 'looks like' a NormExp
-	#Returns True if it does, False otherwise
-	def _like_norm_exp(self,exp):
-		if not hasattr(exp,'terms') or not hasattr(exp,'const'):
-			return False
-		else:
-			return True
-
-	#Check method that makes sure its argument 'looks like' a VarExp
-	#Returns True if it does, False otherwise
-	def _like_var_exp(self,exp):
-		if not hasattr(exp,'coeff') or not hasattr(exp,'id'):
-			return False
-		else:
-			return True
-
-	#Check method that makes sure its argument 'looks like' a FuncExp
-	#Returns True if it does, False otherwise
-	def _like_func_exp(self,exp):
-		if not hasattr(exp,'coeff') or not hasattr(exp,'name') or not hasattr(exp,'args'):
-			return False
-		else:
-			return True
-
 	def apply_visitor(self,visitor):
 		raise NotImplementedError('All node types should override the apply_visitor method.')
 #-----------------------------------------
@@ -69,6 +44,7 @@ class Node(object):
 class PresSet(Node):
 	__slots__=('tuple_set','conjunct')
 
+	@check
 	def __init__(self,tuple_set,conjunct):
 		self.tuple_set=tuple_set
 		self.conjunct=conjunct
@@ -96,6 +72,7 @@ class PresSet(Node):
 class PresRelation(Node):
 	__slots__=('tuple_in','tuple_out','conjunct')
 
+	@check
 	def __init__(self,tuple_in,tuple_out,conjunct):
 		self.tuple_in=tuple_in
 		self.tuple_out=tuple_out
@@ -126,12 +103,9 @@ class PresRelation(Node):
 class VarTuple(Node):
 	__slots__=('vars',)
 
+	@check
 	def __init__(self,vars):
 		self.vars=vars
-
-		for var in self.vars:
-			if not self._like_var_exp(var):
-				raise ValueError("The given variable, '%s', must have the 'coeff' and 'id' attributes."%var)
 
 	def __repr__(self):
 		return 'VarTuple(%s)'%(self.vars)
@@ -157,6 +131,7 @@ class Conjunction(Node):
 	__slots__=('constraint_list',)
 
 	@sort_self
+	@check
 	def __init__(self,constraint_list):
 		self.constraint_list=constraint_list
 
@@ -191,14 +166,10 @@ class Constraint(Node):
 class Equality(Constraint):
 	__slots__=('exp',)
 
+	@check
 	def __init__(self,exp):
 		self.exp=exp
 		self._equality=True
-
-		#Make sure the given expression 'looks like' a NormExp
-		if not self._like_norm_exp(exp):
-			raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
-
 		self._set_largest_exp()
 
 	#Canonicalize the expression by taking the 'larger' of exp and -1*exp since Equality is reflexive and both expressions are equivalent in this case
@@ -220,11 +191,10 @@ class Equality(Constraint):
 class Inequality(Constraint):
 	__slots__=('exp',)
 
+	@check
 	def __init__(self,exp):
 		self.exp=exp
 		self._equality=False
-		if not self._like_norm_exp(exp):
-			raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%exp)
 
 	def __repr__(self):
 		return 'Inequality(%s)'%self.exp
@@ -241,6 +211,7 @@ class Expression(Node):
 class VarExp(Expression):
 	__slots__=('coeff','id')
 
+	@check
 	def __init__(self,coeff,id):
 		self.coeff=coeff
 		self.id=id
@@ -290,15 +261,11 @@ class FuncExp(Expression):
 	__slots__=('coeff','name','args')
 
 	@sort_self
+	@check
 	def __init__(self,coeff,name,args):
 		self.coeff=coeff
 		self.name=name
 		self.args=args
-
-		#Make sure all arguments 'look like' NormExps
-		for arg in self.args:
-			if not self._like_norm_exp(arg):
-				raise ValueError("The given expression, '%s', must have the 'terms' and 'const' attributes."%arg)
 
 	def __repr__(self):
 		#Use double quotes if this function's name has a "'" in it
@@ -347,20 +314,10 @@ class NormExp(Expression):
 	__slots__=('terms','const')
 
 	@sort_self
+	@check
 	def __init__(self,terms,const):
 		self.terms=terms
 		self.const=const
-
-		self._check_terms()
-
-	#Tests that all terms in this NormExp are either VarExps or FuncExps
-	def _check_terms(self):
-		for term in self.terms:
-			if not self._like_var_exp(term) and not self._like_func_exp(term):
-				if not self._like_var_exp(term):
-					raise ValueError("The given expression, '%s', must have the 'coeff' and 'id' attributes."%term)
-				else:
-					raise ValueError("The given expression, '%s', must have the 'coeff', 'name', and 'args' attributes."%term)
 
 	def __repr__(self):
 		return 'NormExp(%s,%s)'%(self.terms,self.const)
