@@ -17,85 +17,86 @@ from iegen import Statement,AccessRelation
 moldyn_spec=MapIR()
 
 #Define the symbolic constants for the computation
-moldyn_spec.symbolics['N']=Symbolic('N') #Number of atoms
-moldyn_spec.symbolics['n_inter']=Symbolic('n_inter') #Number of interactions
+moldyn_spec.add_symbolic('N') #Number of atoms
+moldyn_spec.add_symbolic('n_inter') #Number of interactions
+syms=moldyn_spec.symbolics()
 
 #Define the data spaces for the computation
 X_0=DataSpace(name='x',
-              set=Set('{ [k] : 0 <= k && k <= (N-1) }'),
+              set=Set('{ [k] : 0 <= k && k <= (N-1) }',syms),
               is_index_array=False)
 moldyn_spec.data_spaces['x']=X_0
 
 FX_0=DataSpace(name='fx',
-               set=Set('{ [k] : 0 <= k && k <= (N-1) }'),
+               set=Set('{ [k] : 0 <= k && k <= (N-1) }',syms),
                is_index_array=False)
 moldyn_spec.data_spaces['fx']=FX_0
 
 INTER1_0=DataSpace(
 	name='inter1',
-	set=Set('{ [k] : 0 <= k && k <= (n_inter-1) }'),
+	set=Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms),
 	is_index_array=True)
 moldyn_spec.data_spaces['inter1']=INTER1_0
 
 INTER2_0=DataSpace(
 	name='inter2',
-	set=Set('{ [k] : 0 <= k && k <= (n_inter-1) }'),
+	set=Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms),
 	is_index_array=True)
 moldyn_spec.data_spaces['inter2']=INTER2_0
 
 #Define the index arrays for the computation
 inter1=IndexArray(data_space=INTER1_0,
                   is_permutation=False,
-                  input_bounds=[Set('{ [k] : 0 <= k && k <= (n_inter-1) }')],
-                  output_bounds=Set('{ [k] : 0 <= k && k <= (N-1) }'))
+                  input_bounds=[Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms)],
+                  output_bounds=Set('{ [k] : 0 <= k && k <= (N-1) }',syms))
 moldyn_spec.add_index_array(inter1)
 
 inter2=IndexArray(data_space=INTER2_0,
                   is_permutation=False,
-                  input_bounds=[Set('{ [k] : 0 <= k && k <= (n_inter-1) }')],
-                  output_bounds=Set('{ [k] : 0 <= k && k <= (N-1) }'))
+                  input_bounds=[Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms)],
+                  output_bounds=Set('{ [k] : 0 <= k && k <= (N-1) }',syms))
 moldyn_spec.add_index_array(inter2)
 
 #Define the statements for the computation
 S1=Statement(statement='`a1 += `a2 - `a3;',
-             iter_space=Set('{[ii] : 0 <= ii && ii <= (n_inter-1) }'),
-             scatter=Relation('{[ii] -> [ii,j] : j=1}'))
+             iter_space=Set('{[ii] : 0 <= ii && ii <= (n_inter-1) }',syms),
+             scatter=Relation('{[ii] -> [ii,j] : j=1}',syms))
 moldyn_spec.add_statement(S1)
 
 S2=Statement(statement='`a4 += `a5 - `a6;',
-             iter_space=Set('{[ii] : 0 <= ii && ii <= (n_inter-1) }'),
-             scatter=Relation('{[ii] -> [ii,j] : j=2}'))
+             iter_space=Set('{[ii] : 0 <= ii && ii <= (n_inter-1) }',syms),
+             scatter=Relation('{[ii] -> [ii,j] : j=2}',syms))
 moldyn_spec.add_statement(S2)
 
 #Define the access relations for the statements
 a1=AccessRelation(name='a1',
                   data_space=FX_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }'))
+                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }',syms))
 S1.add_access_relation(a1)
 
 a2=AccessRelation(name='a2',
                   data_space=X_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }'))
+                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }',syms))
 S1.add_access_relation(a2)
 
 a3=AccessRelation(name='a3',
                   data_space=X_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }'))
+                  iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }',syms))
 S1.add_access_relation(a3)
 
 a4=AccessRelation(name='a4',
                   data_space=FX_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }'))
+                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }',syms))
 S2.add_access_relation(a4)
 
 a5=AccessRelation(name='a5',
                   data_space=X_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }'))
+                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }',syms))
 S2.add_access_relation(a5)
 
 a6=AccessRelation(name='a6',
                   data_space=X_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }'))
+                  iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }',syms))
 S2.add_access_relation(a6)
 
 #Data Dependences

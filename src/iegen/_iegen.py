@@ -6,10 +6,10 @@ iegen.dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('symbolics','data_spaces','index_arrays','statements','full_iter_space')
+	__slots__=('_symbolics','data_spaces','index_arrays','statements','full_iter_space')
 
 	def __init__(self):
-		self.symbolics={}
+		self._symbolics={}
 		self.data_spaces={}
 		self.index_arrays=[]
 		self.statements=[]
@@ -17,7 +17,11 @@ class MapIR(object):
 
 	#Adds the given symbolic to the dictionary of symbolic variables
 	def add_symbolic(self,symbolic):
-		self.symbolics[symbolic.name]=symbolic
+		self._symbolics[symbolic]=Symbolic(symbolic)
+
+	#Returns a collection of instances of iegen.Symbolic
+	def symbolics(self):
+		return self._symbolics.values()
 
 	#Adds the given index array to the collection of index arrays
 	def add_index_array(self,index_array):
@@ -35,7 +39,7 @@ class MapIR(object):
 		#Step 0) Calculate the full iteration space based on the iteration spaces of the statements
 		self.full_iter_space=iegen.util.full_iter_space(self.statements)
 
-		print mapir_space.full_iter
+		print self.full_iter_space
 	#-----------------------------------------
 
 #---------------------------------
