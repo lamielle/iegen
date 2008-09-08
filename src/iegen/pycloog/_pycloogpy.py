@@ -132,7 +132,7 @@ def _get_pycloog_names(names):
 class Statement(object):
 	__slots__=('domains','scatter')
 
-	def __init__(self,domains,scatter):
+	def __init__(self,domains,scatter=None):
 		self.domains=domains
 		self.scatter=scatter
 

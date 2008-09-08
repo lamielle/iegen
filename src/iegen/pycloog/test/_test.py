@@ -53,4 +53,31 @@ for (i=1;i<=n;i++) {
 
 		res=codegen(stmts,names)
 		self.failUnless(code==res,'PYCLooG generated:\n\n%s\n\nbut test expected:\n\n%s'%(res,code))
+
+	def testPYCLooGNoScattering(self):
+		from iegen.pycloog import Statement,Names,codegen
+
+		code='''for (i=1;i<=n;i++) {
+  for (j=1;j<=n;j++) {
+    S1 ;
+    S2 ;
+  }
+}'''
+
+		dom1=[[1, 1, 0,0, -1],
+		      [1,-1, 0,1, 0],
+		      [1, 0, 1,0, -1],
+		      [1, 0,-1,1,0]]
+		dom2=[[1, 1, 0,0, -1],
+		      [1,-1, 0,1, 0],
+		      [1, 0, 1,0, -1],
+		      [1, 0,-1,1,0]]
+
+		stmt1=Statement([dom1])
+		stmt2=Statement([dom2])
+		stmts=(stmt1,stmt2)
+		names=Names(['i','j'],['n'])
+
+		res=codegen(stmts,names)
+		self.failUnless(code==res,'PYCLooG generated:\n\n%s\n\nbut test expected:\n\n%s'%(res,code))
 #----------------------------------
