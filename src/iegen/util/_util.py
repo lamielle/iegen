@@ -1,7 +1,17 @@
 #Runs all of the IEGen tests
 def run_tests():
-	import iegen,nose
-	nose.run(argv=['','-v','-s','-w%s'%iegen.dir])
+	import iegen.lib.nose
+	iegen.lib.nose.run(argv=['','-v','-s','-w%s'%iegen.dir])
+
+#Runs all of the IEGen tests with coverage turned on
+def run_coverage():
+	import sys
+	import iegen.lib.coverage
+	iegen.lib.coverage.start()
+	run_tests()
+	iegen.lib.coverage.stop()
+	mods=[module for module in sys.modules.values() if str(module).find('iegen.')>=0 and str(module).find('iegen.lib.')<0]
+	iegen.lib.coverage.report(mods)
 
 #Given a MapIR object, calculates the combined iteration space of all statements
 def full_iter_space(statements):

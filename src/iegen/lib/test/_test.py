@@ -54,4 +54,19 @@ class ImportTestCase(TestCase):
 			from iegen.lib.decorator import decorator,getinfo,new_wrapper
 		except Exception,e:
 			self.fail("Importing classes from iegen.lib.decorator failed: "+str(e))
+
+	#Test simple importing of iegen.lib.coverage
+	def testImportCoverage(self):
+		try:
+			import iegen.lib.coverage
+		except Exception,e:
+			self.fail("'import iegen.lib.coverage' failed: "+str(e))
+
+	#Test simple importing of iegen.ast.visitor classes
+	def testNameImportCoverage(self):
+		try:
+			from iegen.lib.coverage import start,stop,analysis,report
+		except Exception,e:
+			self.fail("Importing classes from iegen.lib.coverage failed: "+str(e))
+
 #----------------------------------
