@@ -244,7 +244,7 @@ void ER_order_by_in(ExplicitRelation* relptr);
 //! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   Variable in which to store the input tuple single entry.
 #define FOREACH_in_tuple_1d1d(relptr, in_int) \
-    for ((in_int)=0; (in_int)<(relptr)->in_count; (in_int)++) 
+    for ((in_int)=0; (in_int)<RD_size((relptr)->in_domain); (in_int)++) 
 
 //! Iterate over output ints given input ints for 1D-to-1D arity relations.
 //! \param relptr   Pointer to a ExplicitRelation.

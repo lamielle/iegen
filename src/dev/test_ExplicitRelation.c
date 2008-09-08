@@ -55,16 +55,24 @@ int main()
         }
     }
     
+    ER_in_ordered_insert(relptr, 6, 3);
     
     ER_dump(relptr);
     
     ER_dtor(&relptr);
 
-/*
+    //======= test creation and use of ER for access relation
+    printf("==== test creation and use of ER for access relation\n");
     //------- testing code that will be used in IAG_cpack
-    // first construct an explicit relation and fill it
-    // the explicit relation will be passed to IAG_cpack
-    relptr = ER_ctor(1,1);
+    // first construct an explicit relation for the access
+    // relation and fill it.
+    // The explicit relation will be passed to IAG_cpack.
+    in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 0);
+    RD_set_ub(in_domain, 0, (NUM_IN - 1));
+    // We know in_domain for access relations, but they are not functions.
+    // Notice also that this is a 1Dto1D relation example.
+    relptr = ER_ctor(1,1, in_domain, false);
 
     // add only some out vals for each in val
     for (in=0; in<NUM_IN; in++) {
@@ -76,13 +84,45 @@ int main()
     ER_dump(relptr);
     
     // Iterate over the integer tuple relations
-    printf("\nTraversing in order of input tuples\n");
+    printf("\nTraversing 1Dto1D relation in order of input tuples\n");
+    ER_order_by_in(relptr);
     FOREACH_in_tuple_1d1d(relptr, in) {
         FOREACH_out_given_in_1d1d(relptr, in, out) {
             printf("\t[%d] -> [%d]\n", in, out);
         }
     }
-*/
+
+    ER_dtor(&relptr);
+
+    //======= test creation and use of ER for sigma and delta, 
+    //======= which are permutations and 1D to 1D
+    printf("==== test creation and use of ER for for sigma and delta\n");
+
+    in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 0);
+    RD_set_ub(in_domain, 0, (NUM_IN - 1));
+    // We know in_domain for permutations and a permutation is a function.
+    relptr = ER_ctor(1,1, in_domain, true);
+
+    // create a permutation that is just a modular shift
+    for (in=0; in<NUM_IN; in++) {
+        ER_in_ordered_insert( relptr, in, (in+1) % NUM_IN);
+    }
+
+    ER_dump(relptr);
+
+    // Iterate over the integer tuple relations
+    printf("\nTraversing sigma example\n");
+    ER_order_by_in(relptr);
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        FOREACH_out_given_in_1d1d(relptr, in, out) {
+            printf("\t[%d] -> [%d]\n", in, out);
+        }
+    }
+
+    ER_dtor(&relptr);
+
+
 /*
     //----- testing IAG_cpack itself
     int* new2old 

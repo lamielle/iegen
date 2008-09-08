@@ -163,8 +163,9 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
         RD_set_ub( self->out_range, i, 0 );
     }
 
-    // By default not ordered.
-    self->ordered_by_in = false;
+    // By default ordered by in tuples.  Will change if generic insert is
+    // used.
+    self->ordered_by_in = true;
     self->ordered_by_out = false;
 
     // check for special conditions
@@ -540,13 +541,13 @@ void ER_in_ordered_insert(ExplicitRelation* self,
         // determine if the input tuple is a new unique
         // input tuple or the same as previously seen
         if (self->in_domain_given) {
-            // check that indexing matches unique_in_count
+            // check that indexing matches unique_in_count-1
             // or is greater
-            assert(self->unique_in_count <= ER_calcIndex(self, in_tuple));
-            if (self->unique_in_count < ER_calcIndex(self, in_tuple)) {
+            assert((self->unique_in_count-1) <= ER_calcIndex(self, in_tuple));
+            if ((self->unique_in_count - 1) < ER_calcIndex(self, in_tuple)) {
                 // doing assignment because could be skipping something
                 // in the in_domain
-                self->unique_in_count = ER_calcIndex(self, in_tuple);
+                self->unique_in_count = ER_calcIndex(self, in_tuple)+1;
             }
             
         // otherwise we need to look at previous input
@@ -798,8 +799,8 @@ void ER_dump( ExplicitRelation* self )
     // FIXME: not keeping track of in_vals yet
     //printf("in_vals = "); 
     //printArray(self->in_vals, self->in_vals_size);
-    printf("out_index = "); 
-//    printArray(self->out_index, self->in_count+1);
-    printf("out_vals = ");
+    printf("\nout_index = "); 
+    printArray(self->out_index, self->out_index_size);
+    printf("\nout_vals = ");
     printArray(self->out_vals, self->out_vals_size);
 }
