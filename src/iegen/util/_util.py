@@ -95,7 +95,7 @@ def sort_result(func,*args,**kw):
 	sort_visit(result)
 	return result
 
-#Decorator that uses the SortVisitor to sort the result of the decorated function
+#Decorator that uses the CheckVisitor to check the first implicit 'self' argument of the decorated function
 @decorator
 def check(func,*args,**kw):
 	result=func(*args,**kw)

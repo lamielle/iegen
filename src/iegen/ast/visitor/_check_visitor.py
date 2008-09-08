@@ -2,22 +2,45 @@ from iegen.ast.visitor import DFVisitor
 from iegen.util import raise_objs_not_like_types,raise_objs_not_like_types
 
 class CheckVisitor(DFVisitor):
-	def __init__(self): pass
+	def __init__(self):
+		self.arity=None
 
 	#Do nothing by default
 	def defaultIn(self,node): pass
 	def defaultOut(self,node): pass
+
+	def inSet(self,node):
+		from iegen import Symbolic
+		from iegen.ast import PresSet
+		raise_objs_not_like_types(node.symbolics,Symbolic)
+		raise_objs_not_like_types(node.sets,PresSet,True)
+
+	def inRelation(self,node):
+		from iegen import Symbolic
+		from iegen.ast import PresRelation
+		raise_objs_not_like_types(node.symbolics,Symbolic)
+		raise_objs_not_like_types(node.relations,PresRelation)
 
 	def inPresSet(self,node):
 		from iegen.ast import VarTuple,Conjunction
 		raise_objs_not_like_types(node.tuple_set,VarTuple)
 		raise_objs_not_like_types(node.conjunct,Conjunction)
 
+		if None is self.arity:
+			self.arity=node.arity()
+		elif node.arity()!=self.arity:
+					raise ValueError('All sets in a Set must have the same arity.')
+
 	def inPresRelation(self,node):
 		from iegen.ast import VarTuple,Conjunction
 		raise_objs_not_like_types(node.tuple_in,VarTuple)
 		raise_objs_not_like_types(node.tuple_out,VarTuple)
 		raise_objs_not_like_types(node.conjunct,Conjunction)
+
+		if None is self.arity:
+			self.arity=node.arity()
+		elif node.arity()!=self.arity:
+			raise ValueError('All relations in a Relation must have the same input and output arity.')
 
 	def inVarTuple(self,node):
 		from iegen.ast import VarExp

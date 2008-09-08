@@ -15,6 +15,10 @@ class MapIR(object):
 		self.statements=[]
 		self.full_iter_space=None
 
+	#Adds the given symbolic to the dictionary of symbolic variables
+	def add_symbolic(self,symbolic):
+		self.symbolics[symbolic.name]=symbolic
+
 	#Adds the given index array to the collection of index arrays
 	def add_index_array(self,index_array):
 		self.index_arrays.append(index_array)
@@ -38,12 +42,17 @@ class MapIR(object):
 
 #---------- Symbolic class ----------
 class Symbolic(object):
-	__slots__=('_name')
+	__slots__=('name',)
 
 	def __init__(self,name):
-		self.m_name=name
+		self.name=name
 
-iegen.util.define_properties(Symbolic,('name',))
+	def __repr__(self):
+		#Use double quotes if this symbolic's name has a "'" in it
+		if self.name.find("'")>=0:
+			return 'Symbolic("%s")'%(self.name)
+		else:
+			return "Symbolic('%s')"%(self.name)
 #------------------------------------
 
 #---------- DataSpace class ----------

@@ -30,6 +30,13 @@ class SetTestCase(TestCase):
 		set=Set('{[a]:a>10}')
 		set=Set(set_string='{[a]:a>10}')
 
+	#Tests that we can create a Set by specifying a set string and symbolic variables
+	def testSetStringSymbolic(self):
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]:a>10 and a<n}',[Symbolic('n')])
+		set=Set(set_string='{[a]:a>10 and a<n}',symbolics=[Symbolic('n')])
+
 	#Tests that we can create a Set by specifying a collection of PresSets
 	def testSets(self):
 		from iegen import Set
@@ -39,6 +46,16 @@ class SetTestCase(TestCase):
 		set2=PresParser.parse_set('{[b]:b>10}')
 
 		set=Set(sets=[set1,set2])
+
+	#Tests that we can create a Set by specifying a collection of PresSets and Symbolics
+	def testSetsSymbolic(self):
+		from iegen import Set,Symbolic
+		from iegen.parser import PresParser
+
+		set1=PresParser.parse_set('{[a]:a>10 and a<n}')
+		set2=PresParser.parse_set('{[b]:b>10 and b<m}')
+
+		set=Set(symbolics=[Symbolic('n'),Symbolic('m')],sets=[set1,set2])
 
 	#Tests that we must specify something to the Set constructor
 	@raises(ValueError)
@@ -59,12 +76,17 @@ class SetTestCase(TestCase):
 	def testBothFail1(self):
 		from iegen import Set
 
-		Set('{[]}',[])
+		Set('{[]}',[],[])
 	@raises(ValueError)
 	def testBothFail2(self):
 		from iegen import Set
 
 		Set(set_string='{[]}',sets=[])
+	@raises(ValueError)
+	def testBothFail3(self):
+		from iegen import Set
+
+		Set(set_string='{[]}',symbolics=[],sets=[])
 
 	#Tests that all objects in the sets collection must 'look like' PresSets
 	@raises(ValueError)
@@ -73,7 +95,7 @@ class SetTestCase(TestCase):
 		from iegen.parser import PresParser
 
 		set=PresParser.parse_set('{[]}')
-		Set(sets=[set,"hello!"])
+		Set(sets=[set,'hello!'])
 
 	#Tests that all objects in the sets collection must 'look like' PresSets
 	def testLikePresSet(self):
@@ -93,6 +115,43 @@ class SetTestCase(TestCase):
 		set=PresParser.parse_set('{[]}')
 		Set(sets=[set,DummyPresSet()])
 
+	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+	@raises(ValueError)
+	def testNonSymbolicFail1(self):
+		from iegen import Set,Symbolic
+		from iegen.parser import PresParser
+
+		Set('{[]}',[Symbolic('n'),'m'])
+	@raises(ValueError)
+	def testNonSymbolicFail2(self):
+		from iegen import Set,Symbolic
+		from iegen.parser import PresParser
+		set=PresParser.parse_set('{[]}')
+		Set(sets=[set],symbolics=[Symbolic('n'),'m'])
+
+	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+	def testLikeSymbolic1(self):
+		from iegen import Set
+		from iegen.ast import VarTuple,Conjunction,Node
+		from iegen.parser import PresParser
+
+		class DummySymbolic(Node):
+			def __init__(self,name):
+				self.name=name
+
+		set=Set('{[]}',[DummySymbolic('n')])
+	def testLikeSymbolic2(self):
+		from iegen import Set
+		from iegen.ast import VarTuple,Conjunction,Node
+		from iegen.parser import PresParser
+
+		class DummySymbolic(Node):
+			def __init__(self,name):
+				self.name=name
+
+		set=PresParser.parse_set('{[]}')
+		Set(sets=[set],symbolics=[DummySymbolic('n')])
+
 	#Tests that we cannot create a set from two PresSets of differing arity
 	@raises(ValueError)
 	def testDiffArity(self):
@@ -108,7 +167,7 @@ class SetTestCase(TestCase):
 		from iegen import Set
 		from iegen.ast import PresSet,VarTuple,Conjunction,VarExp
 
-		set_str="Set(sets=[PresSet(VarTuple([VarExp(1,'a')]),Conjunction([]))])"
+		set_str="Set(symbolics=[],sets=[PresSet(VarTuple([VarExp(1,'a')]),Conjunction([]))])"
 		exec('set='+set_str)
 		self.failUnless(repr(set)==set_str,'%s!=%s'%(repr(set),set_str))
 
@@ -336,6 +395,13 @@ class RelationTestCase(TestCase):
 		relation=Relation('{[a]->[b]:a>10}')
 		relation=Relation(relation_string='{[a]->[b]:a>10}')
 
+	#Tests that we can create a Relation by specifying a relation string and symbolic variables
+	def testRelationStringSymbolic(self):
+		from iegen import Relation,Symbolic
+
+		relation=Relation('{[a]->[b]:a>10 and a<n}',[Symbolic('n')])
+		relation=Relation(relation_string='{[a]->[b]:a>10 and a<n}',symbolics=[Symbolic('n')])
+
 	#Tests that we can create a Relation by specifying a collection of PresRelations
 	def testRelations(self):
 		from iegen import Relation
@@ -345,6 +411,16 @@ class RelationTestCase(TestCase):
 		relation2=PresParser.parse_relation('{[b]->[c]:b>10}')
 
 		relation=Relation(relations=[relation1,relation2])
+
+	#Tests that we can create a Relation by specifying a collection of PresRelations and Symbolics
+	def testRelations(self):
+		from iegen import Relation,Symbolic
+		from iegen.parser import PresParser
+
+		relation1=PresParser.parse_relation('{[a]->[b]:a>10 and a<n}')
+		relation2=PresParser.parse_relation('{[b]->[c]:b>10 and b<m}')
+
+		relation=Relation(symbolics=[Symbolic('n'),Symbolic('m')],relations=[relation1,relation2])
 
 	#Tests that we must specify something to the Relation constructor
 	@raises(ValueError)
@@ -365,12 +441,17 @@ class RelationTestCase(TestCase):
 	def testBothFail1(self):
 		from iegen import Relation
 
-		Relation('{[]->[]}',[])
+		Relation('{[]->[]}',[],[])
 	@raises(ValueError)
 	def testBothFail2(self):
 		from iegen import Relation
 
 		Relation(relation_string='{[]->[]}',relations=[])
+	@raises(ValueError)
+	def testBothFail3(self):
+		from iegen import Relation
+
+		Relation(relation_string='{[]->[]}',symbolics=[],relations=[])
 
 	#Tests that all objects in the relations collection must 'look like' PresRelations
 	@raises(ValueError)
@@ -392,15 +473,54 @@ class RelationTestCase(TestCase):
 				self.tuple_in=VarTuple([])
 				self.tuple_out=VarTuple([])
 				self.conjunct=Conjunction([])
-			def arity_in(self):
-				return 0
-			def arity_out(self):
-				return 0
+#			def arity_in(self):
+#				return 0
+#			def arity_out(self):
+#				return 0
+			def arity(self):
+				return (0,0)
 			def apply_visitor(self,visitor):
 				visitor.visitPresRelation(self)
 
 		relation=PresParser.parse_relation('{[]->[]}')
 		Relation(relations=[relation,DummyPresRelation()])
+
+	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+	@raises(ValueError)
+	def testNonSymbolicFail1(self):
+		from iegen import Relation,Symbolic
+		from iegen.parser import PresParser
+
+		Relation('{[]->[]}',[Symbolic('n'),'m'])
+	@raises(ValueError)
+	def testNonSymbolicFail2(self):
+		from iegen import Relation,Symbolic
+		from iegen.parser import PresParser
+		relation=PresParser.parse_relation('{[]->[]}')
+		Relation(relations=[relation],symbolics=[Symbolic('n'),'m'])
+
+	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+	def testLikeSymbolic1(self):
+		from iegen import Relation
+		from iegen.ast import VarTuple,Conjunction,Node
+		from iegen.parser import PresParser
+
+		class DummySymbolic(Node):
+			def __init__(self,name):
+				self.name=name
+
+		relation=Relation('{[]->[]}',[DummySymbolic('n')])
+	def testLikeSymbolic2(self):
+		from iegen import Relation
+		from iegen.ast import VarTuple,Conjunction,Node
+		from iegen.parser import PresParser
+
+		class DummySymbolic(Node):
+			def __init__(self,name):
+				self.name=name
+
+		relation=PresParser.parse_relation('{[]->[]}')
+		Relation(relations=[relation],symbolics=[DummySymbolic('n')])
 
 	#Tests that we cannot create a relation from two PresRelations of differing arity
 	@raises(ValueError)
@@ -433,7 +553,7 @@ class RelationTestCase(TestCase):
 		from iegen import Relation
 		from iegen.ast import PresRelation,VarTuple,Conjunction,VarExp
 
-		relation_str="Relation(relations=[PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([]))])"
+		relation_str="Relation(symbolics=[],relations=[PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([]))])"
 		exec('relation='+relation_str)
 		self.failUnless(repr(relation)==relation_str,'%s!=%s'%(repr(relation),relation_str))
 
@@ -460,18 +580,22 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(relation1==relation2,'%s!=%s'%(relation1,relation2))
 
-	#Tests the arity method
+	#Tests the arity_in, arity_out, and arity methods
 	def testArity(self):
 		from iegen import Relation
 		from iegen.util import lower_gen
 		from string import lowercase
 
-		for size in xrange(26):
-			var_tuple=lowercase[:size]
-			var_tuple='['+','.join(var_tuple)+']'
-			relation=Relation('{'+var_tuple+'->'+var_tuple+'}')
-			self.failUnless(relation.arity_in()==size,"Input arity of '%s'!=%d"%(relation,size))
-			self.failUnless(relation.arity_out()==size,"Output arity of '%s'!=%d"%(relation,size))
+		for size_in in xrange(10):
+			for size_out in xrange(10):
+				var_tuple_in=lowercase[:size_in]
+				var_tuple_in='['+','.join(var_tuple_in)+']'
+				var_tuple_out=lowercase[:size_out]
+				var_tuple_out='['+','.join(var_tuple_out)+']'
+				relation=Relation('{'+var_tuple_in+'->'+var_tuple_out+'}')
+				self.failUnless(relation.arity_in()==size_in,"Input arity of '%s'!=%d"%(relation,size_in))
+				self.failUnless(relation.arity_out()==size_out,"Output arity of '%s'!=%d"%(relation,size_out))
+				self.failUnless(relation.arity()==(size_in,size_out),"Inpyut/Output arity of '%s'!=%s"%(relation,(size_in,size_out)))
 
 	#Tests that union does not allow relations of differing arity
 	@raises(ValueError)

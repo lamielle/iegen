@@ -2,7 +2,7 @@
 
 from iegen.parser import PresParser
 from iegen.lib.decorator import decorator
-from iegen.util import sort_self,sort_result,like_type,raise_objs_not_like_types
+from iegen.util import sort_self,sort_result,check,like_type,raise_objs_not_like_types
 
 #---------- Formula class ----------
 #Parent class for Sets and Relations
@@ -95,17 +95,20 @@ class Formula(object):
 #---------- Set class ----------
 #Presburger Set that is a disjunction of a collection of PresSet instances
 class Set(Formula):
-	__slots__=('sets',)
+	__slots__=('sets','symbolics')
 
 	#Constructor for Set:
 	#Takes EITHER a set string, ex {[a]: a>10}, in set_string
 	#OR a collection of PresSet instances in sets
 	#but NOT both
+	#Also, an optional parameter, 'symbolics', is a collection
+	#of instances of the iegen.Symbolic class.
 	@sort_self
-	def __init__(self,set_string=None,sets=None):
-		if None!=set_string and None==sets:
+	@check
+	def __init__(self,set_string=None,symbolics=[],sets=None):
+		if None is not set_string and None is sets:
 			self.sets=[PresParser.parse_set(set_string)]
-		elif None!=sets and None==set_string:
+		elif None is not sets and None is set_string:
 			if len(sets)>0:
 				self.sets=sets
 			else:
@@ -113,11 +116,10 @@ class Set(Formula):
 		else:
 			raise ValueError('Set.__init__ takes either a set string or a collection of sets.')
 
-		self._set_check()
-		self._arity_check()
+		self.symbolics=symbolics
 
 	def __repr__(self):
-		return "Set(sets=%s)"%(self.sets)
+		return "Set(symbolics=%s,sets=%s)"%(self.symbolics,self.sets)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -126,20 +128,6 @@ class Set(Formula):
 			return cmp(self.sets,other.sets)
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
-
-	#Makes sure all sets 'look like' PresSets
-	def _set_check(self):
-		if len(self.sets)>0:
-			for set in self.sets:
-				if not hasattr(set,'tuple_set') or not hasattr(set,'conjunct'):
-					raise ValueError("Object of type '%s' does not have the required attributes 'tuple_set' and 'conjunct'."%(type(set)))
-
-	def _arity_check(self):
-		if len(self.sets)>0:
-			set_arity=self.sets[0].arity()
-			for set in self.sets[1:]:
-				if set.arity()!=set_arity:
-					raise ValueError('All sets in a Set must have the same arity.')
 
 	#Returns the arity (size of the tuples) of this set
 	#Assumption: All PresSet instances in sets have the same arity
@@ -238,11 +226,14 @@ class Relation(Formula):
 	#Takes EITHER a relation string, ex {[a]->[a']: a>10}, in relation_string
 	#OR a collection of PresRelation instances in relations
 	#but NOT both
+	#Also, an optional parameter, 'symbolics', is a collection
+	#of instances of the iegen.Symbolic class.
 	@sort_self
-	def __init__(self,relation_string=None,relations=None):
-		if None!=relation_string and None==relations:
+	@check
+	def __init__(self,relation_string=None,symbolics=[],relations=None):
+		if None is not relation_string and None is relations:
 			self.relations=[PresParser.parse_relation(relation_string)]
-		elif None!=relations and None==relation_string:
+		elif None is not relations and None is relation_string:
 			if len(relations)>0:
 				self.relations=relations
 			else:
@@ -250,11 +241,10 @@ class Relation(Formula):
 		else:
 			raise ValueError('Relation.__init__ takes either a relation string or a collection of relations.')
 
-		self._relation_check()
-		self._arity_check()
+		self.symbolics=symbolics
 
 	def __repr__(self):
-		return "Relation(relations=%s)"%(self.relations)
+		return "Relation(symbolics=%s,relations=%s)"%(self.symbolics,self.relations)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -264,33 +254,11 @@ class Relation(Formula):
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
-	#Makes sure all relations 'look like' PresRelations
-	def _relation_check(self):
-		if len(self.relations)>0:
-			for relation in self.relations:
-				if not hasattr(relation,'tuple_in') or not hasattr(relation,'tuple_out') or not hasattr(relation,'conjunct'):
-					raise ValueError("Object of type '%s' does not have the required attributes 'tuple_in', 'tuple_out', and 'conjunct'."%(type(relation)))
-
-	#Checks that all relations in this Relation have the same input and output arity
-	def _arity_check(self):
-		self._arity_in_check()
-		self._arity_out_check()
-
-	#Checks that all relations in this Relation have the same input arity
-	def _arity_in_check(self):
-		if len(self.relations)>0:
-			relation_arity=self.relations[0].arity_in()
-			for relation in self.relations[1:]:
-				if relation.arity_in()!=relation_arity:
-					raise ValueError('All relations in a Relation must have the same input arity.')
-
-	#Checks that all relations in this Relation have the same output arity
-	def _arity_out_check(self):
-		if len(self.relations)>0:
-			relation_arity=self.relations[0].arity_out()
-			for relation in self.relations[1:]:
-				if relation.arity_out()!=relation_arity:
-					raise ValueError('All relations in a Relation must have the same output arity.')
+	#Returns a tuple of the input and output arities of this relation
+	#Assumption: All PresRelation instances in relations have the same input and output arities
+	#This should be checked with _arity_check upon creation
+	def arity(self):
+		return (self.arity_in(),self.arity_out())
 
 	#Returns the input arity of this relation
 	#Assumption: All PresRelation instances in relations have the same input arity
@@ -335,7 +303,6 @@ class Relation(Formula):
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 
 		return self
-
 
 	#Takes the inverse of all of the PresRelations in this Relation
 	@sort_result

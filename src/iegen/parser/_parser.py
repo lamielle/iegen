@@ -144,7 +144,7 @@ class PresParser(object):
 	#Parser error routine
 	def p_error(self,t):
 		from ply import yacc
-		if None==t:
+		if None is t:
 			raise SyntaxError("Syntax when parsing '%s'" %(self._formula,))
 		else:
 			raise SyntaxError("Syntax error at '%s' [%d,%d] when parsing '%s'" %(t.value,t.lineno,t.lexpos,self._formula))

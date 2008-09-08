@@ -89,6 +89,8 @@ class PresRelation(Node):
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
+	def arity(self):
+		return (self.arity_in(),self.arity_out())
 	def arity_in(self):
 		return len(self.tuple_in)
 	def arity_out(self):
@@ -219,7 +221,7 @@ class VarExp(Expression):
 	def __repr__(self):
 		#Use double quotes if this variable's name has a "'" in it
 		if self.id.find("'")>=0:
-			return "VarExp(%s,\"%s\")"%(self.coeff,self.id)
+			return 'VarExp(%s,"%s")'%(self.coeff,self.id)
 		else:
 			return "VarExp(%s,'%s')"%(self.coeff,self.id)
 
@@ -270,7 +272,7 @@ class FuncExp(Expression):
 	def __repr__(self):
 		#Use double quotes if this function's name has a "'" in it
 		if self.name.find("'")>=0:
-			return "FuncExp(%s,\"%s\",%s)"%(self.coeff,self.name,self.args)
+			return 'FuncExp(%s,"%s",%s)'%(self.coeff,self.name,self.args)
 		else:
 			return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.args)
 

@@ -108,7 +108,7 @@ def _get_pycloog_statements(statements):
 		new_statements[s].num_domains=num_domains
 
 		#Set the scattering function related fields
-		if None==statements[s].scatter:
+		if None is statements[s].scatter:
 			new_statements[s].scatter=POINTER(_PYCLOOG_DOMAIN)()
 		else:
 			new_statements[s].scatter=pointer(_get_pycloog_domain(statements[s].scatter))

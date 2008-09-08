@@ -136,6 +136,7 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(hasattr(PresRelation,'arity_in'),"PresRelation has no 'arity_in' method.")
 		self.failUnless(hasattr(PresRelation,'arity_out'),"PresRelation has no 'arity_out' method.")
+		self.failUnless(hasattr(PresRelation,'arity'),"PresRelation has no 'arity' method.")
 #----------------------------------------
 
 #---------- VarTuple Tests ----------
