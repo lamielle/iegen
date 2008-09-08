@@ -478,6 +478,30 @@ class VarExpTestCase(TestCase):
 				else:
 					self.failUnless(v2<v,'%s>%s'%(v2,v))
 
+	#Tests that using something other than a string for the name fails
+	@raises(ValueError)
+	def testNonStringNameFail1(self):
+		from iegen.ast import VarExp
+
+		VarExp(1,10)
+	@raises(ValueError)
+	def testNonStringNameFail2(self):
+		from iegen.ast import VarExp
+
+		VarExp(1,['a'])
+
+	#Tests that using something other than an integer for the coefficient fails
+	@raises(ValueError)
+	def testNonIntCoeffFail1(self):
+		from iegen.ast import VarExp
+
+		VarExp('a','a')
+	@raises(ValueError)
+	def testNonIntCoeffFail2(self):
+		from iegen.ast import VarExp
+
+		VarExp([1],'a')
+
 	#Tests the __mul__ method
 	def testMul(self):
 		from iegen.ast import VarExp
@@ -558,6 +582,30 @@ class FuncExpTestCase(TestCase):
 				else:
 					self.failUnless(f2<f,'%s>%s'%(f2,f))
 
+	#Tests that using something other than a string for the name fails
+	@raises(ValueError)
+	def testNonStringNameFail1(self):
+		from iegen.ast import FuncExp
+
+		FuncExp(1,10,[])
+	@raises(ValueError)
+	def testNonStringNameFail2(self):
+		from iegen.ast import FuncExp
+
+		FuncExp(1,['a'],[])
+
+	#Tests that using something other than an integer for the coefficient fails
+	@raises(ValueError)
+	def testNonIntCoeffFail1(self):
+		from iegen.ast import FuncExp
+
+		FuncExp('a','a',[])
+	@raises(ValueError)
+	def testNonIntCoeffFail2(self):
+		from iegen.ast import FuncExp
+
+		FuncExp([1],'a',[])
+
 	#Tests the __mul__ method
 	def testMul(self):
 		from iegen.ast import FuncExp,VarExp,NormExp
@@ -631,6 +679,18 @@ class NormExpTestCase(TestCase):
 					self.failUnless(n2>n,'%s<%s'%(n2,n))
 				else:
 					self.failUnless(n2<n,'%s>%s'%(n2,n))
+
+	#Tests that using something other than an integer for the constant fails
+	@raises(ValueError)
+	def testNonIntConstFail1(self):
+		from iegen.ast import NormExp
+
+		NormExp([],'a')
+	@raises(ValueError)
+	def testNonIntConstFail2(self):
+		from iegen.ast import NormExp
+
+		NormExp([],['a'])
 
 	#Tests that objects that 'look like' VarExps are valid terms for a NormExp
 	def testVarExpValid(self):
