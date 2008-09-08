@@ -40,18 +40,24 @@ def like_type(obj,type):
 			return False
 	return True
 
+#Determines if the given object is iterable
+#If so, returns True, otherwise returns False
+def is_iterable(obj):
+	try:
+		iter(obj)
+		iterable=True
+	except:
+		iterable=False
+	return iterable
+
 #Raises a ValueError if the any of the given objects are not like any of the given types
 #If either of objs of types are not iterable, they will be added as the lone element to a new list
 #If a message is given, it will be used as the exception string rather than the default
 def raise_objs_not_like_types(objs,types,message=''):
-	try:
-		iter(objs)
-	except:
+	if not is_iterable(objs):
 		objs=[objs]
 
-	try:
-		iter(types)
-	except:
+	if not is_iterable(types):
 		types=[types]
 
 	attrs=[[type.__slots__] for type in types]

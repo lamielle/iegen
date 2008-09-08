@@ -16,8 +16,8 @@
 # AML 8/13/2008: Modified to use rewritten expressions and their operators
 # AML 8/25/2008: Removed union support from parser
 
-from iegen.ast import *
-import types
+from iegen.util import is_iterable
+from iegen.ast import PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
 
 #---------- Presburger Formula Parser Class ----------
 class PresParser(object):
@@ -210,7 +210,7 @@ class PresParser(object):
 			t[0]=[t[1]]
 		#Adding to an existing list
 		else:
-			if (isinstance(t[3],types.ListType)):
+			if is_iterable(t[3]):
 				t[1].extend(t[3])
 			else:
 				t[1].append(t[3])

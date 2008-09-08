@@ -31,7 +31,7 @@
 #
 
 from copy import deepcopy
-from iegen.util import sort_self,sort_result,check
+from iegen.util import like_type,sort_self,sort_result,check
 
 #---------- Base AST Node class ----------
 class Node(object):
@@ -55,7 +55,7 @@ class PresSet(Node):
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare PresSets by their VarTuple and Conjunction
-		if hasattr(other,'tuple_set') and hasattr(other,'conjunct'):
+		if like_type(other,PresSet):
 			return cmp((self.tuple_set,self.conjunct),(other.tuple_set,other.conjunct))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -84,7 +84,7 @@ class PresRelation(Node):
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare PresRelations by their VarTuple and Conjunction
-		if hasattr(other,'tuple_in') and hasattr(other,'tuple_out') and hasattr(other,'conjunct'):
+		if like_type(other,PresRelation):
 			return cmp((self.tuple_in,self.tuple_out,self.conjunct),(other.tuple_in,self.tuple_out,other.conjunct))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -117,8 +117,8 @@ class VarTuple(Node):
 
 	#Comparison operator
 	def __cmp__(self,other):
-		#Compare VarTuples by their varss
-		if hasattr(other,'vars'):
+		#Compare VarTuples by their vars
+		if like_type(other,VarTuple):
 			return cmp(self.vars,other.vars)
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -143,7 +143,7 @@ class Conjunction(Node):
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare Conjunctions by their constraint_lists
-		if hasattr(other,'constraint_list'):
+		if like_type(other,Conjunction):
 			return cmp(self.constraint_list,other.constraint_list)
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -154,20 +154,18 @@ class Conjunction(Node):
 
 #---------- Constraint Nodes ----------
 class Constraint(Node):
-	__slots__=('_equality',)
+	__slots__=('_equality','exp')
 
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare Constraints by their expression and Equality/Inequality type
-		if hasattr(other,'exp') and hasattr(other,'_equality'):
+		if like_type(other,Constraint):
 			return cmp((self._equality,self.exp),(other._equality,other.exp))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 
 class Equality(Constraint):
-	__slots__=('exp',)
-
 	@check
 	def __init__(self,exp):
 		self.exp=exp
@@ -191,8 +189,6 @@ class Equality(Constraint):
 #It is assummed that all constraints are converted to GTE
 #inequalities.
 class Inequality(Constraint):
-	__slots__=('exp',)
-
 	@check
 	def __init__(self,exp):
 		self.exp=exp
@@ -228,10 +224,10 @@ class VarExp(Expression):
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare other variables by their coefficients and ids
-		if hasattr(other,'id'):
+		if like_type(other,VarExp):
 			return cmp((self.coeff,self.id),(other.coeff,other.id))
 		#Variables are 'greater' than functions
-		elif hasattr(other,'name') and hasattr(other,'args'):
+		elif like_type(other,FuncExp):
 			return -1
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -239,16 +235,12 @@ class VarExp(Expression):
 	#Multiplication operator:
 	#This is only defined between a variable and an integer
 	def __mul__(self,other):
-		if hasattr(self,'coeff') and hasattr(other,'coeff'):
+		if type(0) is not type(other):
 			raise ValueError("Multiplication between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
-		#Swap self and other if necessary so that self is the constant expression
-		if hasattr(self,'coeff'):
-			self,other=other,self
-
-		other=deepcopy(other)
-		other.coeff*=self
-		return other
+		self=deepcopy(self)
+		self.coeff*=other
+		return self
 
 	#Reflexive multiplication
 	def __rmul__(self,other):
@@ -279,9 +271,9 @@ class FuncExp(Expression):
 	#Comparison operator
 	def __cmp__(self,other):
 		#Functions are 'less' than IDs
-		if hasattr(other,'id'):
+		if like_type(other,VarExp):
 			return 1
-		elif hasattr(other,'name') and hasattr(other,'args'):
+		elif like_type(other,FuncExp):
 			return cmp((self.coeff,self.name,self.args),(other.coeff,other.name,other.args))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -289,16 +281,12 @@ class FuncExp(Expression):
 	#Multiplication operator:
 	#This is only defined between a function and an integer
 	def __mul__(self,other):
-		if hasattr(self,'coeff') and hasattr(other,'coeff'):
+		if type(0) is not type(other):
 			raise ValueError("Multiplication between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
-		#Swap self and other if necessary so that self is the constant expression
-		if hasattr(self,'coeff'):
-			self,other=other,self
-
-		other=deepcopy(other)
-		other.coeff*=self
-		return other
+		self=deepcopy(self)
+		self.coeff*=other
+		return self
 
 	#Reflexive multiplication
 	def __rmul__(self,other):
@@ -332,7 +320,7 @@ class NormExp(Expression):
 
 	#Comparison operator
 	def __cmp__(self,other):
-		if hasattr(other,'terms') and hasattr(other,'const'):
+		if like_type(other,NormExp):
 			return cmp((self.const,self.terms),(other.const,other.terms))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -343,7 +331,7 @@ class NormExp(Expression):
 	#are made while leaving 'self' and 'other' untouched
 	@sort_result
 	def __add__(self,other):
-		if not hasattr(self,'terms') or not hasattr(self,'const') or not hasattr(other,'terms') or not hasattr(other,'const'):
+		if not like_type(other,NormExp):
 			raise ValueError("Addition between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 		self=deepcopy(self)
@@ -370,7 +358,7 @@ class NormExp(Expression):
 	#are made while leaving 'self' and 'other' untouched
 	@sort_result
 	def __mul__(self,other):
-		if not hasattr(self,'terms') or not hasattr(self,'const') or not hasattr(other,'terms') or not hasattr(other,'const'):
+		if not like_type(other,NormExp):
 			raise ValueError("Multiplication between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
 		#Make sure one of the terms is only a constant and has no terms
@@ -406,11 +394,11 @@ class NormExp(Expression):
 
 	#Returns a collection of all of the variable terms in this expression
 	def _vars(self):
-		return [term for term in terms if hasattr(term,'id')]
+		return [term for term in terms if like_type(term,VarExp)]
 
 	#Returns a collection of all of the function terms in this expression
 	def _funcs(self):
-		return [term for term in self.terms if hasattr(term,'name') and hasattr(term,'args')]
+		return [term for term in self.terms if like_type(term,FuncExp)]
 
 	def apply_visitor(self,visitor):
 		visitor.visitNormExp(self)

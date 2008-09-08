@@ -7,6 +7,7 @@ from iegen.util import sort_self,sort_result,check,like_type,raise_objs_not_like
 #---------- Formula class ----------
 #Parent class for Sets and Relations
 class Formula(object):
+	__slots__=('symbolics',)
 
 	#Private utility method that combines the given formulas
 	#
@@ -95,7 +96,7 @@ class Formula(object):
 #---------- Set class ----------
 #Presburger Set that is a disjunction of a collection of PresSet instances
 class Set(Formula):
-	__slots__=('sets','symbolics')
+	__slots__=('sets',)
 
 	#Constructor for Set:
 	#Takes EITHER a set string, ex {[a]: a>10}, in set_string
@@ -124,7 +125,7 @@ class Set(Formula):
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare Sets by their set collection
-		if hasattr(other,'sets') and hasattr(other,'sets'):
+		if like_type(other,Set):
 			return cmp(self.sets,other.sets)
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -143,7 +144,7 @@ class Set(Formula):
 
 	#Adds all of the PresSets in the given Set to this Set
 	def _add_set(self,set):
-		if not hasattr(set,'sets'):
+		if not like_type(set,Set):
 			raise ValueError("Cannot add object of type '%s' to Set."%type(set))
 		self.sets.extend(set.sets)
 
@@ -152,7 +153,7 @@ class Set(Formula):
 	def union(self,other):
 		from copy import deepcopy
 
-		if hasattr(other,'sets'):
+		if like_type(other,Set):
 			if self.arity()==other.arity():
 				self=deepcopy(self)
 				other=deepcopy(other)
@@ -249,7 +250,7 @@ class Relation(Formula):
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare Relations by their relation collection
-		if hasattr(other,'relations') and hasattr(other,'relations'):
+		if like_type(other,Relation):
 			return cmp(self.relations,other.relations)
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -283,7 +284,7 @@ class Relation(Formula):
 
 	#Adds all of the PresRelations in the given Relation to this Relation
 	def _add_relation(self,relation):
-		if not hasattr(relation,'relations'):
+		if not like_type(relation,Relation):
 			raise ValueError("Cannot add object of type '%s' to Relation."%type(relation))
 		self.relations.extend(relation.relations)
 
@@ -292,7 +293,7 @@ class Relation(Formula):
 	def union(self,other):
 		from copy import deepcopy
 
-		if hasattr(other,'relations'):
+		if like_type(other,Relation):
 			if self.arity_in()==other.arity_in() and self.arity_out()==other.arity_out():
 				self=deepcopy(self)
 				other=deepcopy(other)
