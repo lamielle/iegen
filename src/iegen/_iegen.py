@@ -2,7 +2,7 @@ import iegen,iegen.util
 import os.path
 
 #Store the directory where the iegen module is located
-iegen.dir=os.path.dirname(os.path.abspath(iegen.__file__))
+iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):

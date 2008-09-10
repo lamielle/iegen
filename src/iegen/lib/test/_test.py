@@ -68,5 +68,4 @@ class ImportTestCase(TestCase):
 			from iegen.lib.coverage import start,stop,analysis,report
 		except Exception,e:
 			self.fail("Importing classes from iegen.lib.coverage failed: "+str(e))
-
 #----------------------------------
