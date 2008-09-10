@@ -4,6 +4,7 @@ from iegen.util import raise_objs_not_like_types,raise_objs_not_like_types
 class CheckVisitor(DFVisitor):
 	def __init__(self):
 		self.arity=None
+		self.in_var_tuple=False
 
 	#Do nothing by default
 	def defaultIn(self,node): pass
@@ -45,6 +46,10 @@ class CheckVisitor(DFVisitor):
 	def inVarTuple(self,node):
 		from iegen.ast import VarExp
 		raise_objs_not_like_types(node.vars,VarExp)
+		self.in_var_tuple=True
+
+	def outVarTuple(self,node):
+		self.in_var_tuple=False
 
 	def inConjunction(self,node):
 		from iegen.ast import Equality,Inequality
@@ -63,6 +68,10 @@ class CheckVisitor(DFVisitor):
 			raise ValueError('VarExp.id must be a string.')
 		if type(0)!=type(node.coeff):
 			raise ValueError('VarExp.coeff must be an integer.')
+
+		if self.in_var_tuple:
+			if node.coeff!=1:
+				raise ValueError('VarExp.coeff must be 1 for VarTuple variables.')
 
 	def inFuncExp(self,node):
 		from iegen.ast import NormExp

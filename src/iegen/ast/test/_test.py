@@ -220,6 +220,13 @@ class VarTupleTestCase(TestCase):
 	def testStrInvalid(self):
 		from iegen.ast import VarTuple
 		VarTuple(['hello'])
+
+	#Tests that only VarExps with coefficient 1 are allowed in a VarTuple
+	@raises(ValueError)
+	def testCoeffNotOneFail(self):
+		from iegen.ast import VarTuple,VarExp
+
+		VarTuple([VarExp(2,'a')])
 #------------------------------------
 
 #---------- Conjunction Tests ----------
