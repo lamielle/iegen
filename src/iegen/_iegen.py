@@ -1,5 +1,6 @@
 import iegen,iegen.util
 import os.path
+from iegen.ast import Node
 
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
@@ -45,7 +46,7 @@ class MapIR(object):
 #---------------------------------
 
 #---------- Symbolic class ----------
-class Symbolic(object):
+class Symbolic(Node):
 	__slots__=('name',)
 
 	def __init__(self,name):
@@ -57,6 +58,9 @@ class Symbolic(object):
 			return 'Symbolic("%s")'%(self.name)
 		else:
 			return "Symbolic('%s')"%(self.name)
+
+	def apply_visitor(self,visitor):
+		visitor.visitSymbolic(self)
 #------------------------------------
 
 #---------- DataSpace class ----------

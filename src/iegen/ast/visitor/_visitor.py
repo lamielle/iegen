@@ -8,10 +8,9 @@
 class DFVisitor(object):
 
 	#---------- Default In/Out Methods ----------
-	def defaultIn(self,node):
-		print 'In:',node
-	def defaultOut(self,node):
-		print 'Out:',node
+	#Do nothing by default
+	def defaultIn(self,node): pass
+	def defaultOut(self,node): pass
 	#--------------------------------------------
 
 	#---------- In/Out Methods ----------
@@ -33,6 +32,11 @@ class DFVisitor(object):
 	def inPresRelation(self,node):
 		self.defaultIn(node)
 	def outPresRelation(self,node):
+		self.defaultOut(node)
+
+	def inSymbolic(self,node):
+		self.defaultIn(node)
+	def outSymbolic(self,node):
 		self.defaultOut(node)
 
 	def inVarTuple(self,node):
@@ -74,9 +78,12 @@ class DFVisitor(object):
 	#---------- Visit methods ----------
 	def visit(self,node):
 		node.apply_visitor(self)
+		return self
 
 	def visitSet(self,node):
 		self.inSet(node)
+		for symbolic in node.symbolics:
+			symbolic.apply_visitor(self)
 		for set in node.sets:
 			set.apply_visitor(self)
 		self.outSet(node)
@@ -89,6 +96,8 @@ class DFVisitor(object):
 
 	def visitRelation(self,node):
 		self.inRelation(node)
+		for symbolic in node.symbolics:
+			symbolic.apply_visitor(self)
 		for relation in node.relations:
 			relation.apply_visitor(self)
 		self.outRelation(node)
@@ -99,6 +108,10 @@ class DFVisitor(object):
 		node.tuple_out.apply_visitor(self)
 		node.conjunct.apply_visitor(self)
 		self.outPresRelation(node)
+
+	def visitSymbolic(self,node):
+		self.inSymbolic(node)
+		self.outSymbolic(node)
 
 	def visitVarTuple(self,node):
 		self.inVarTuple(node)

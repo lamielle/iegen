@@ -3,10 +3,6 @@ from iegen.ast.visitor import DFVisitor
 class SortVisitor(DFVisitor):
 	def __init__(self): pass
 
-	#Do nothing by default
-	def defaultIn(self,node): pass
-	def defaultOut(self,node): pass
-
 	def outSet(self,node):
 		node.sets.sort()
 

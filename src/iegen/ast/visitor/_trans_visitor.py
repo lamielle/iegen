@@ -11,10 +11,6 @@ class TransVisitor(DFVisitor):
 		self.num_params=len(params)
 		self.at_var_tuple=False
 
-	#Do nothing by default
-	def defaultIn(self,node): pass
-	def defaultOut(self,node): pass
-
 	def inSet(self,node):
 		self.mats=[]
 

@@ -6,10 +6,6 @@ class CheckVisitor(DFVisitor):
 		self.arity=None
 		self.in_var_tuple=False
 
-	#Do nothing by default
-	def defaultIn(self,node): pass
-	def defaultOut(self,node): pass
-
 	def inSet(self,node):
 		from iegen import Symbolic
 		from iegen.ast import PresSet

@@ -1,12 +1,13 @@
 # Definitions of the Set and Relation classes that represent Presburger Sets and Relations.
 
+from iegen.ast import Node
 from iegen.parser import PresParser
 from iegen.lib.decorator import decorator
 from iegen.util import sort_self,sort_result,check,like_type,raise_objs_not_like_types
 
 #---------- Formula class ----------
 #Parent class for Sets and Relations
-class Formula(object):
+class Formula(Node):
 	__slots__=('symbolics',)
 
 	#Private utility method that combines the given formulas
@@ -90,6 +91,33 @@ class Formula(object):
 	def _get_unrename_dict(self,relation,prefix):
 		from iegen.util import invert_dict
 		return invert_dict(self._get_rename_dict(relation,prefix))
+
+	#Determines if the given variable name exists as a variable anywhere in the formula
+	#Returns True if the variable name exists
+	#Returns False otherwise
+	def is_var(self,var_name):
+		from iegen.ast.visitor import IsVarVisitor
+		return IsVarVisitor(var_name).visit(self).is_var
+
+	#Determines if the given variable name is a symbolic variable
+	#Returns True if the name is a symbolic variable
+	#Returns False otherwise
+	def is_symbolic_var(self,var_name):
+		from iegen.ast.visitor import IsSymbolicVarVisitor
+		return IsSymbolicVarVisitor(var_name).visit(self).is_symbolic_var
+
+	#Determines if the given variable name is a tuple variable
+	#Returns True if the name is a tuple variable
+	#Returns False otherwise
+	def is_tuple_var(self,var_name):
+		from iegen.ast.visitor import IsTupleVarVisitor
+		return IsTupleVarVisitor(var_name).visit(self).is_tuple_var
+
+	#Determines if the given variable name is a free variable
+	#Returns True if the name is neither a tuple variable nor a symbolic variable
+	#Returns False otherwise
+	def is_free_var(self,var_name):
+		return self.is_var(var_name) and not self.is_symbolic_var(var_name) and not self.is_tuple_var(var_name)
 #-----------------------------------
 
 
