@@ -104,7 +104,7 @@ Automatically Generating Straight-Forward Inspector/Executor
 
 Generating the composed inspector
 
-0) Generate PresSet that represents the full iteration space based on all of the statement scattering functions.
+0) Generate Set that represents the full iteration space based on all of the statement scattering functions.
     input:
         statements with their scattering functions
 
@@ -130,7 +130,7 @@ Generating the composed inspector
         This is output that we will want to share with a user of our system to help them in the specification of RTRTs.
 
 1) DataPermuteRTRT
-    a) generate AccessRelation that will be input for data reordering
+    a) generate AccessRelation specification that will be input for data reordering
         input:
             MapIR, or statement specifications
             DataPermuteRTRT
@@ -139,7 +139,7 @@ Generating the composed inspector
             AccessRelation artt;    // access_relation_to_traverse
 
         algorithm:
-            Intuitively we want to take each access relation to the target data space and expand its domain to the full iteration space using the statements scattering function.  The restrict the iteration space to the subspace on which the data reordering will depend.  If the original iteration space domain for the access relation does not overlap with the subspace for the transformation, then the access relation will be empty.
+            Intuitively we want to take each access relation to the target data space and expand its domain to the full iteration space using the statements scattering function.  Then restrict the iteration space to the subspace on which the data reordering will depend.  If the original iteration space domain for the access relation does not overlap with the subspace for the transformation, then the access relation will be empty.
 
             artt = new AccessRelation (
                 name = "A_I_sub_to_TARGET",
@@ -180,45 +180,51 @@ Generating the composed inspector
 
 
 
-    b) generate code that explicitly creates explicit representation of access relation at runtime. (see src/dev/test_ExplicitRelation.c for example usage)
+    b) generate code that creates explicit representation of access relation at runtime. (see src/dev/test_ExplicitRelation.c for example usage)
         input:
             access_relation_to_traverse, artt
         output:
             code
-                // data index calc for each disjunct in access relation
-                #define s1(i_1, ..., i_d) data_index = ...; \
-                    ExplicitRelation_in_ordered_insert([artt.name], \                     count,data_index);
-                    count++;
+                FIXME
+                // output tuple calculation  for each disjunct in 
+                // access relation.
+                // Will capture the pointer to the explicit relation 
+                // for the access relation ([artt.name]) and pointers to
+                // explicit relations for any index arrays.
+                #define s1(i_1, ..., i_d) \
+                    ExplicitRelation_in_ordered_insert([artt.name], \                     
+                        Tuple_make(i_1, ..., i_d),  \
+                        Tuple_make([expressions for output tuple vals]);
+                    ...
 
                 
                 // initialize variables
-                // For now assuming 1D-to-1D arity.
-                ExplicitRelation* [artt.name] = ExplicitRelation_ctor(1,1);
-                int count=0;
-                int data_index=0;
+                ExplicitRelation* [artt.name] = 
+                    ExplicitRelation_ctor([artt.in_arity],[artt.out_arity]);
+
                 int t1, ..., ;  // declare index variables omega will use
 
-                // loop that traverses [artt.iter_space]
+                // loop that traverses [artt.iter_space or Domain(artt)] 
+                // (Qrelation1)
                 for ...
                     s1(i_1, ..., i_d);
 
                 // between the above code and the next piece of the
-                // inspector, only [artt.name] variable needs passed
+                // inspector, only [artt.name] variable needs passed.
+                // It is the pointer to the ExplicitRelation.
 
           For the example, output is the following:
-                // this macro captures artt, count, and data_index
-                #define s1(t1) data_index = inter1[t1]; \
-                    ExplicitRelation_in_ordered_insert(artt,count, \
-                    data_index); \
-                    data_index = inter2[t1]; \
-                    ExplicitRelation_in_ordered_insert(artt,count, \
-                    data_index); \
-                    count++
+                // this macro captures A_I_0_sub_to_X_0 inter1_ER and inter2_ER.
+                #define s1(t1) \
+                    ExplicitRelation_in_ordered_insert(A_I_0_sub_to_X_0,
+                        Tuple_make(t1), \
+                        ER_out_given_in(inter1_ER, Tuple_make(t1)) ); \
+                    ExplicitRelation_in_ordered_insert(artt,
+                        Tuple_make(t1), \
+                        ER_out_given_in(inter2_ER, Tuple_make(t1)) ); 
 
                 // initialize variables
-                ExplicitRelation* artt = ExplicitRelation_ctor(1,1);
-                int count=0;
-                int data_index=0;
+                ExplicitRelation* A_I_0_sub_to_X_0 = ExplicitRelation_ctor(1,1);
 
                 // this specific example
                 for(t1 = 0; t1 <= n_inter-1; t1++) {
@@ -226,6 +232,7 @@ Generating the composed inspector
                 }
 
 
+LEFTOFF editing for ER stuff, MMS 09/10/08
     c) Automatically generate the IndexArray specification for sigma
     This algorithm should be implemented by passing the appropriate parameters to the IAG_Permute constructor.  See MapIR-design.txt for more info.
         input:

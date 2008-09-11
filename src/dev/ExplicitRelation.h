@@ -168,6 +168,11 @@ typedef struct {
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
                           RectDomain *in_domain, bool isFunction);
 
+//! Construct an empty ExplicitRelation by passing in a 1D array.
+//! Assumes isFunction and has 1D-to-1D arity for now.
+ExplicitRelation* ER_ctor(int * index_array, int size);
+
+
 //! Deallocate all of the memory for the ExplicitRelation.
 void ER_dtor(ExplicitRelation**);
 
@@ -178,6 +183,7 @@ void ER_dtor(ExplicitRelation**);
 Tuple Tuple_make(int x1);
 Tuple Tuple_make(int x1, int x2);
 Tuple Tuple_make(int x1, int x2, int x3);
+Tuple Tuple_make(int x1, int x2, int x3, int x4);
 
 
 int Tuple_val(Tuple t, int k);
@@ -205,6 +211,11 @@ void ER_in_ordered_insert(ExplicitRelation* relptr,
 //! If the explicit relation is storing a function,
 //! return the single output tuple for the given input tuple.
 Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple);
+
+//! If the explicit relation is storing a function and is 1D-to-1D,
+//! return the single output integer for the given input integer.
+int ER_out_given_in( ExplicitRelation* relptr, int in_int);
+
 
 //! Returns the kth element value in the tuple.
 int Tuple_val(Tuple t, int k);
@@ -250,7 +261,9 @@ void ER_order_by_in(ExplicitRelation* relptr);
 //! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   input tuple value
 //! \param out_int  Variable in which to store the output tuple value.
+//! Only works for non function explicit relations.
 #define FOREACH_out_given_in_1d1d(relptr, in_int, out_int) \
+    assert(! relptr->isFunction );  \
     int _FE_iter;  \
     for (_FE_iter=(relptr)->out_index[(in_int)],    \
             out_int=(relptr)->out_vals[_FE_iter];      \

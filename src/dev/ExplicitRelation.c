@@ -74,6 +74,7 @@ int ER_calcIndex( ExplicitRelation* relptr, int in_val )
 }
 
 
+
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
                           RectDomain *in_domain=NULL, bool isFunction=false)
 /*----------------------------------------------------------------*//*! 
@@ -166,15 +167,82 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     // By default ordered by in tuples.  Will change if generic insert is
     // used.
     self->ordered_by_in = true;
-    self->ordered_by_out = false;
-
-    // check for special conditions
-    if ( isFunction && in_domain!=NULL ) {
-        self->ordered_by_in = true;
-    }   
+    self->ordered_by_out = false;  
     
     return self;
 }
+
+ExplicitRelation* ER_ctor(int * index_array, int size)
+/*----------------------------------------------------------------*//*! 
+  \short Construct ExplicitRelation structure based on given index array
+         and returns a pointer to it.
+  
+  Assumes the explicit relation should be a function and has 1D-to-1D
+  arity.  Also assumes that the input domain is 0 <= i < size.
+  
+  Keeps a pointer to index_array, so index_array should not be externally
+  deallocated.  
+  FIXME: We could copy the output values to another array since we are
+  traversing them anyway to determine the output value range.
+  
+  \param index_array        Flat index array.
+  \param size               Number of entries in flat index array.
+
+  \return Returns a ptr to the constructed ExplicitRelation structure.
+
+  \author Michelle Strout 9/10/08
+*//*----------------------------------------------------------------*/
+{
+    ExplicitRelation* self 
+        = (ExplicitRelation*)malloc(sizeof(ExplicitRelation));
+    
+    self->in_arity = 1;
+    self->out_arity = 1;  
+    self->isFunction = true;
+    
+    RectDomain *in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 0); RD_set_ub(in_domain, 0, size-1);
+    self->in_domain = in_domain;
+
+    self->in_vals = NULL;
+    self->unique_in_count = size;
+    self->out_index = NULL;
+    self->out_vals = index_array; 
+    self->raw_data = NULL;
+    self->raw_num = 0;
+    
+    self->in_vals_size = 0;
+    self->out_index_size = 0;
+    self->out_vals_size = size;
+    self->raw_data_size = 0;
+    
+    // Determine domain for out values.
+    // set up out_range
+    self->out_range = RD_ctor(self->out_arity);
+    int i;
+    // first set up default values
+    for (i=0; i<self->out_arity; i++ ) {
+        RD_set_lb( self->out_range, i, INT_MAX );
+        RD_set_ub( self->out_range, i, 0 );
+    }
+    // then iterate through actual out values and determine range
+    for (i=0; i<size; i++) {
+        if (index_array[i] < RD_lb(self->out_range, 0) ) {
+            RD_set_lb( self->out_range, 0, index_array[i] );
+        }
+        if (index_array[i] > RD_ub(self->out_range, 0) ) {
+            RD_set_ub( self->out_range, 0, index_array[i] );
+        }
+    }
+    
+    // By default ordered by in tuples.  Will change if generic insert is
+    // used.
+    self->ordered_by_in = true;
+    self->ordered_by_out = false;   
+    
+    return self;
+}
+
 
 
 /*----------------------------------------------------------------*//*! 
@@ -249,6 +317,26 @@ Tuple Tuple_make(int x1, int x2, int x3)
     valptr[2] = x3;
     
     Tuple retval = { valptr, 3 };
+    return retval;
+}
+
+Tuple Tuple_make(int x1, int x2, int x3, int x4)
+/*----------------------------------------------------------------*//*! 
+  \short Creates a 4D Tuple and returns a copy of it.
+
+  \author Michelle Strout 9/10/08
+*//*----------------------------------------------------------------*/
+{
+    // first create array to store both values
+    int * valptr = (int*)malloc(sizeof(int)*4);
+    
+    // put values in array
+    valptr[0] = x1;
+    valptr[1] = x2;
+    valptr[2] = x3;
+    valptr[3] = x4;
+    
+    Tuple retval = { valptr, 4 };
     return retval;
 }
 
