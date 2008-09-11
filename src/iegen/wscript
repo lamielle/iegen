@@ -8,6 +8,7 @@ def set_options(opt):
 
 	opt.sub_options('ast')
 	opt.sub_options('parser')
+	opt.sub_options('codegen')
 	opt.sub_options('pycloog')
 	opt.sub_options('util')
 	opt.sub_options('lib')
@@ -38,6 +39,7 @@ def configure(conf):
 
 	conf.sub_config('ast')
 	conf.sub_config('parser')
+	conf.sub_config('codegen')
 	conf.sub_config('pycloog')
 	conf.sub_config('util')
 	conf.sub_config('lib')
@@ -57,6 +59,7 @@ def build(bld):
 
 	bld.add_subdirs('ast')
 	bld.add_subdirs('parser')
+	bld.add_subdirs('codegen')
 	bld.add_subdirs('pycloog')
 	bld.add_subdirs('util')
 	bld.add_subdirs('lib')

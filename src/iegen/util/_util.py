@@ -13,18 +13,6 @@ def run_coverage():
 	mods=[module for module in sys.modules.values() if str(module).find('iegen.')>=0 and str(module).find('iegen.lib.')<0]
 	iegen.lib.coverage.report(mods)
 
-#Given a MapIR object, calculates the combined iteration space of all statements
-def full_iter_space(statements):
-	#Get the iteration space of the first statement
-	statement=statements[0]
-	full_iter=statement.iter_space.apply(statement.scatter)
-
-	#Now union this with the rest of the statement's iteration spaces
-	for statement in statements[1:]:
-		full_iter=full_iter.union(statement.iter_space.apply(statement.scatter))
-
-	return full_iter
-
 #Inverts key/value pairs of the given dictionary
 def invert_dict(d):
 	return dict(((v,k) for k,v in d.iteritems()))
