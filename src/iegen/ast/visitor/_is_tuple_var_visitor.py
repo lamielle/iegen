@@ -1,5 +1,9 @@
 from iegen.ast.visitor import DFVisitor
 
+#Given a variable name, 'var_name', searches all tuple variables
+#of as Set/Relation for that name.
+#If that name is found in the tuple variables, True is placed in 'is_tuple_var'
+#Otherwise, False is placed in 'is_tuple_var'
 class IsTupleVarVisitor(DFVisitor):
 	def __init__(self,var_name):
 		self.in_var_tuple=False
