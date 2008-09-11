@@ -166,11 +166,11 @@ class Constraint(Node):
 
 
 class Equality(Constraint):
+	@sort_self
 	@check
 	def __init__(self,exp):
 		self.exp=exp
 		self._equality=True
-		self._set_largest_exp()
 
 	#Canonicalize the expression by taking the 'larger' of exp and -1*exp since Equality is reflexive and both expressions are equivalent in this case
 	def _set_largest_exp(self):
