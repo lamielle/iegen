@@ -79,6 +79,7 @@ def _simplify_free_var_equality(formula):
 def _remove_zero_coefficients(obj):
 	from iegen.ast import NormExp
 	if like_type(obj,NormExp):
+		res=False
 		removed=True
 		while removed:
 			removed=False
@@ -86,7 +87,14 @@ def _remove_zero_coefficients(obj):
 				if 0==term.coeff:
 					obj.terms.remove(term)
 					removed=True
+					res=True
 					break
+		return res
+
+#Uses the MergeExpTermsVisitor to combine common terms in NormExps
+def _merge_terms(obj):
+	from iegen.ast.visitor import MergeExpTermsVisitor
+	return MergeExpTermsVisitor().visit(obj).merged_terms
 
 #Given an object of the following types:
 #Set,Relation,PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
@@ -104,6 +112,9 @@ def simplify(obj):
 
 		#Remove terms in expressions with a coefficient of 0
 		changed=_remove_zero_coefficients(obj) or changed
+
+		#Merge common terms in NormExps
+		changed=_merge_terms(obj) or changed
 
 		#changed=_simplify_free_var_equality(obj) or changed
 #--------------------------------------------

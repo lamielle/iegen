@@ -541,7 +541,7 @@ class FuncExpTestCase(TestCase):
 	func_exps=(
 	          "FuncExp(0,'',[])",
 	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(1,'f',[NormExp([VarExp(1,'a'), VarExp(1,'a')],0)])",
+	          "FuncExp(1,'f',[NormExp([VarExp(1,'a'), VarExp(1,'b')],0)])",
 	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
 	          "FuncExp(1,'g',[NormExp([VarExp(1,'a')],0)])",
 	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",

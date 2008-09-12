@@ -325,28 +325,6 @@ class NormExp(Expression):
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
-	#Given a term (VarExp of FuncExp), returns the equivalent term
-	#With a coefficient of 1
-	#Returns a new object that is a copy of the given term
-	def _get_basic_term(self,term):
-		term=deepcopy(term)
-		term.coeff=1
-		return term
-
-	#Search for the given term in the given collection of terms
-	#Searching is done by variable name and function name/arguments
-	#Coefficients are not used
-	#
-	#Returns the position of the term if found, None otherwise
-	def _find_term(self,term,terms):
-		term=self._get_basic_term(term)
-		terms=[self._get_basic_term(term_term) for term_term in terms]
-		if term in terms:
-			res=terms.index(term)
-		else:
-			res=None
-		return res
-
 	#Addition operator:
 	#Adds the two given NormExp expressions
 	#This operator is non-destructive: A complete copy of the arguments
@@ -359,13 +337,9 @@ class NormExp(Expression):
 		self=deepcopy(self)
 		other=deepcopy(other)
 
-		#Add the terms from other to self
+		#Add the terms from other to self (merging will happen during normalization)
 		for term in other.terms:
-			pos=self._find_term(term,self.terms)
-			if None is pos:
-				self.terms.append(term)
-			else:
-				self.terms[pos].coeff+=term.coeff
+			self.terms.append(term)
 
 		#Add the constant value from other to self
 		self.const+=other.const

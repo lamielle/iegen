@@ -661,8 +661,8 @@ class MergeExpTermsVisitorTestCase(TestCase):
 		from iegen.ast.visitor import MergeExpTermsVisitor
 		from iegen.ast import NormExp,VarExp,FuncExp
 
-		e=NormExp([],0)
-		e.terms=[FuncExp(1,'f',[NormExp([VarExp(1,'a'),VarExp(2,'a'),FuncExp(3,'b',[]),FuncExp(-1,'b',[])],0)])]
+		e=NormExp([FuncExp(1,'f',[NormExp([],0)])],0)
+		e.terms[0].args[0].terms=[VarExp(1,'a'),VarExp(2,'a'),FuncExp(3,'b',[]),FuncExp(-1,'b',[])]
 		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
 		e.terms.sort()
 
