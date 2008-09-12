@@ -75,26 +75,21 @@ def _simplify_free_var_equality(formula):
 
 	return res
 
-#TEMPORARY: Rewrite as a visitor!
-def _remove_zero_coefficients(obj):
-	from iegen.ast import NormExp
-	if like_type(obj,NormExp):
-		res=False
-		removed=True
-		while removed:
-			removed=False
-			for term in obj.terms:
-				if 0==term.coeff:
-					obj.terms.remove(term)
-					removed=True
-					res=True
-					break
-		return res
 
 #Uses the MergeExpTermsVisitor to combine common terms in NormExps
 def _merge_terms(obj):
 	from iegen.ast.visitor import MergeExpTermsVisitor
 	return MergeExpTermsVisitor().visit(obj).merged_terms
+
+#Uses the RemoveZeroCoeffVisitor to remove any terms in NormExps with a coefficient of 0
+def _remove_zero_coefficients(obj):
+	from iegen.ast.visitor import RemoveZeroCoeffVisitor
+	return RemoveZeroCoeffVisitor().visit(obj).removed_term
+
+#Uses the RemoveEmptyConstraintsVisitor to remove any empty constraints from a conjunction
+def _remove_empty_constraints(obj):
+	from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
+	return RemoveEmptyConstraintsVisitor().visit(obj).removed_constraint
 
 #Given an object of the following types:
 #Set,Relation,PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
@@ -110,11 +105,14 @@ def simplify(obj):
 	while changed:
 		changed=False
 
+		#Merge common terms in NormExps
+		changed=_merge_terms(obj) or changed
+
 		#Remove terms in expressions with a coefficient of 0
 		changed=_remove_zero_coefficients(obj) or changed
 
-		#Merge common terms in NormExps
-		changed=_merge_terms(obj) or changed
+		#Remove empty constraints
+		changed=_remove_empty_constraints(obj) or changed
 
 		#changed=_simplify_free_var_equality(obj) or changed
 #--------------------------------------------

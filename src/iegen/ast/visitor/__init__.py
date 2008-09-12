@@ -8,3 +8,5 @@ from _is_symbolic_var_visitor import *
 from _is_tuple_var_visitor import *
 from _find_free_var_equality_visitor import *
 from _merge_exp_terms_visitor import *
+from _remove_empty_constraint_visitor import *
+from _remove_zero_coeff_visitor import *

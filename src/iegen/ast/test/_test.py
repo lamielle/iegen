@@ -376,6 +376,16 @@ class EqualityTestCase(TestCase):
 		l2.sort()
 
 		self.failUnless(l1==l2,'%s!=%s'%(l1,l2))
+
+	#Tests that the Equality.empty() method works
+	def testEmpty(self):
+		from iegen.ast import Equality,NormExp,VarExp
+
+		i=Equality(NormExp([],0))
+		self.failUnless(i.empty(),'%s is not empty.'%i)
+
+		i=Equality(NormExp([VarExp(1,'a')],0))
+		self.failIf(i.empty(),'%s is empty'%i)
 #------------------------------------
 
 #---------- Inequality Tests ----------
@@ -439,6 +449,16 @@ class InequalityTestCase(TestCase):
 
 		self.failUnless(i<e)
 		self.failUnless(e>i)
+
+	#Tests that the Inequality.empty() method works
+	def testEmpty(self):
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		i=Inequality(NormExp([],0))
+		self.failUnless(i.empty(),'%s is not empty.'%i)
+
+		i=Inequality(NormExp([VarExp(1,'a')],0))
+		self.failIf(i.empty(),'%s is empty'%i)
 #--------------------------------------
 
 #---------- VarExp Tests ----------
@@ -736,6 +756,22 @@ class NormExpTestCase(TestCase):
 	def testStrInvalid(self):
 		from iegen.ast import NormExp
 		NormExp(['hello'],0)
+
+	#Tests the empty method
+	def testEmpty(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		e=NormExp([],0)
+		self.failUnless(e.empty(),'%s is not empty'%e)
+
+		e=NormExp([VarExp(1,'a')],0)
+		self.failIf(e.empty(),'%s is empty'%e)
+
+		e=NormExp([FuncExp(1,'f',[])],0)
+		self.failIf(e.empty(),'%s is empty'%e)
+
+		e=NormExp([],1)
+		self.failIf(e.empty(),'%s is empty'%e)
 
 	#Tests the __mul__ method
 	def testMul(self):

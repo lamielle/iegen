@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -671,3 +671,163 @@ class MergeExpTermsVisitorTestCase(TestCase):
 		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
 		self.failUnless(True==merged_terms,'merged_terms!=True')
 #----------------------------------------------------
+
+#---------- Remove Empty Constraint Visitor ----------
+class RemoveEmptyConstraintsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the removed_constraint
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=RemoveEmptyConstraintsVisitor().visit(set)
+		self.failUnless(hasattr(v,'removed_constraint'),"RemoveEmptyConstraintsVisitor doesn't place result in the 'removed_constraint' property.")
+
+	#Make sure non-empty Equalities are not removed
+	def testNoRemoveEquality(self):
+		from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
+		from iegen import Set
+
+		set=Set('{[a]:a=6}')
+		removed_constraint=RemoveEmptyConstraintsVisitor().visit(set).removed_constraint
+
+		set_res=Set('{[a]:a=6}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==removed_constraint,'removed_constraint!=False')
+
+	#Make sure empty Equalities are removed
+	def testRemoveEquality(self):
+		from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp
+
+		set=Set('{[a]:a=a}')
+		i=Equality(NormExp([],0))
+		i.exp=NormExp([],0)
+		set.sets[0].conjunct.constraint_list=[i]
+		removed_constraint=RemoveEmptyConstraintsVisitor().visit(set).removed_constraint
+
+		set_res=Set('{[a]}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_constraint,'removed_constraint!=True')
+
+	#Make sure non-empty Inequalities are not removed
+	def testNoRemoveInequality(self):
+		from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
+		from iegen import Set
+
+		set=Set('{[a]:a>=6}')
+		removed_constraint=RemoveEmptyConstraintsVisitor().visit(set).removed_constraint
+
+		set_res=Set('{[a]:a>=6}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==removed_constraint,'removed_constraint!=False')
+
+	#Make sure empty Inequalities are removed
+	def testRemoveInequality(self):
+		from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
+		from iegen import Set
+		from iegen.ast import Inequality,NormExp
+
+		set=Set('{[a]}')
+		i=Inequality(NormExp([],0))
+		i.exp=NormExp([],0)
+		set.sets[0].conjunct.constraint_list=[i]
+		removed_constraint=RemoveEmptyConstraintsVisitor().visit(set).removed_constraint
+
+		set_res=Set('{[a]}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_constraint,'removed_constraint!=True')
+#-----------------------------------------------------
+
+#---------- Remove Zero Coeff Visitor ----------
+class RemoveZeroCoeffVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the removed_term attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveZeroCoeffVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=RemoveZeroCoeffVisitor().visit(set)
+		self.failUnless(hasattr(v,'removed_term'),"RemoveZeroCoeffVisitor doesn't place result in the 'removed_term' property.")
+
+	#Make sure non-zero coefficient variables are not removed
+	def testNoRemoveVar(self):
+		from iegen.ast.visitor import RemoveZeroCoeffVisitor,SortVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a]:a=6}')
+		eq=Equality(NormExp([],1))
+		eq.exp.terms.append(VarExp(-1,'a'))
+		set.sets[0].conjunct.constraint_list.append(eq)
+		removed_term=RemoveZeroCoeffVisitor().visit(set).removed_term
+		SortVisitor().visit(set)
+
+		set_res=Set('{[a]:a=6 and a=1}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==removed_term,'removed_term!=False')
+
+	#Make sure zero coefficient variables are removed
+	def testRemoveVar(self):
+		from iegen.ast.visitor import RemoveZeroCoeffVisitor,SortVisitor,RemoveEmptyConstraintsVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a]:a=6}')
+		eq=Equality(NormExp([],0))
+		eq.exp.terms.append(VarExp(0,'a'))
+		set.sets[0].conjunct.constraint_list.append(eq)
+		removed_term=RemoveZeroCoeffVisitor().visit(set).removed_term
+		SortVisitor().visit(set)
+		RemoveEmptyConstraintsVisitor().visit(set)
+
+		set_res=Set('{[a]:a=6}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_term,'removed_term!=True')
+
+	#Make sure non-zero coefficient functions are not removed
+	def testNoRemoveFunc(self):
+		from iegen.ast.visitor import RemoveZeroCoeffVisitor,SortVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp,FuncExp
+
+		set=Set('{[a]:a=6}')
+		eq=Equality(NormExp([],1))
+		eq.exp.terms.append(FuncExp(-1,'a',[NormExp([VarExp(1,'x')],0)]))
+		set.sets[0].conjunct.constraint_list.append(eq)
+		removed_term=RemoveZeroCoeffVisitor().visit(set).removed_term
+		SortVisitor().visit(set)
+
+		set_res=Set('{[a]:a=6 and a(x)=1}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==removed_term,'removed_term!=False')
+
+	#Make sure zero coefficient functions are removed
+	def testRemoveFunc(self):
+		from iegen.ast.visitor import RemoveZeroCoeffVisitor,SortVisitor,RemoveEmptyConstraintsVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,FuncExp
+
+		set=Set('{[a]:a=6}')
+		eq=Equality(NormExp([],0))
+		eq.exp.terms.append(FuncExp(0,'a',[]))
+		set.sets[0].conjunct.constraint_list.append(eq)
+		removed_term=RemoveZeroCoeffVisitor().visit(set).removed_term
+		SortVisitor().visit(set)
+		RemoveEmptyConstraintsVisitor().visit(set)
+
+		set_res=Set('{[a]:a=6}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_term,'removed_term!=True')
+#-----------------------------------------------------

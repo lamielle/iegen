@@ -156,6 +156,11 @@ class Conjunction(Node):
 class Constraint(Node):
 	__slots__=('_equality','exp')
 
+	#Returns True if this constraints expression is empty
+	#Returns False otherwise
+	def empty(self):
+		return self.exp.empty()
+
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare Constraints by their expression and Equality/Inequality type
@@ -317,6 +322,11 @@ class NormExp(Expression):
 	#and has no variables or functions
 	def _has_terms(self):
 		return True if 0!=len(self.terms) else False
+
+	#Returns True if this NormExp has no terms and the constant is 0
+	#Returns False otherwise
+	def empty(self):
+		return not self._has_terms() and 0==self.const
 
 	#Comparison operator
 	def __cmp__(self,other):
