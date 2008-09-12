@@ -1,5 +1,5 @@
 from unittest import TestCase
-from nose.tools import raises
+from iegen.lib.nose.tools import raises
 
 #---------- Import Tests ----------
 #Test importing of iegen

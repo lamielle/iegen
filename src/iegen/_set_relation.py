@@ -3,7 +3,7 @@
 from iegen.ast import Node
 from iegen.parser import PresParser
 from iegen.lib.decorator import decorator
-from iegen.util import sort_self,sort_result,check,like_type,raise_objs_not_like_types
+from iegen.util import normalize_self,normalize_result,check,like_type,raise_objs_not_like_types
 
 #---------- Formula class ----------
 #Parent class for Sets and Relations
@@ -132,7 +132,7 @@ class Set(Formula):
 	#but NOT both
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
-	@sort_self
+	@normalize_self
 	@check
 	def __init__(self,set_string=None,symbolics=[],sets=None):
 		if None is not set_string and None is sets:
@@ -177,7 +177,7 @@ class Set(Formula):
 		self.sets.extend(set.sets)
 
 	#Takes the union of this Set and the given Set
-	@sort_result
+	@normalize_result
 	def union(self,other):
 		from copy import deepcopy
 
@@ -257,7 +257,7 @@ class Relation(Formula):
 	#but NOT both
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
-	@sort_self
+	@normalize_self
 	@check
 	def __init__(self,relation_string=None,symbolics=[],relations=None):
 		if None is not relation_string and None is relations:
@@ -317,7 +317,7 @@ class Relation(Formula):
 		self.relations.extend(relation.relations)
 
 	#Takes the union of this Relation and the given Relation
-	@sort_result
+	@normalize_result
 	def union(self,other):
 		from copy import deepcopy
 
@@ -334,7 +334,7 @@ class Relation(Formula):
 		return self
 
 	#Takes the inverse of all of the PresRelations in this Relation
-	@sort_result
+	@normalize_result
 	def inverse(self):
 		from copy import deepcopy
 

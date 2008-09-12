@@ -14,7 +14,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.util classes
 	def testNameImport(self):
 		try:
-			from iegen.util import run_tests,invert_dict,define_properties,like_type,is_iterable,raise_objs_not_like_types,DimensionalityError,sort_self,sort_result,check
+			from iegen.util import run_tests,invert_dict,define_properties,like_type,is_iterable,raise_objs_not_like_types,DimensionalityError,normalize_self,normalize_result,check
 			from iegen.util import tuple_gen,lower_gen,upper_gen,parse_test,ast_equality_test,test_sets,test_relations
 		except Exception,e:
 			self.fail("Importing classes from iegen.util failed: "+str(e))

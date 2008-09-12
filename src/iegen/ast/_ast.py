@@ -31,7 +31,7 @@
 #
 
 from copy import deepcopy
-from iegen.util import like_type,sort_self,sort_result,check
+from iegen.util import like_type,normalize_self,normalize_result,check
 
 #---------- Base AST Node class ----------
 class Node(object):
@@ -132,7 +132,7 @@ class VarTuple(Node):
 class Conjunction(Node):
 	__slots__=('constraint_list',)
 
-	@sort_self
+	@normalize_self
 	@check
 	def __init__(self,constraint_list):
 		self.constraint_list=constraint_list
@@ -166,7 +166,7 @@ class Constraint(Node):
 
 
 class Equality(Constraint):
-	@sort_self
+	@normalize_self
 	@check
 	def __init__(self,exp):
 		self.exp=exp
@@ -254,7 +254,7 @@ class VarExp(Expression):
 class FuncExp(Expression):
 	__slots__=('coeff','name','args')
 
-	@sort_self
+	@normalize_self
 	@check
 	def __init__(self,coeff,name,args):
 		self.coeff=coeff
@@ -303,7 +303,7 @@ class FuncExp(Expression):
 class NormExp(Expression):
 	__slots__=('terms','const')
 
-	@sort_self
+	@normalize_self
 	@check
 	def __init__(self,terms,const):
 		self.terms=terms
@@ -325,11 +325,33 @@ class NormExp(Expression):
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
+	#Given a term (VarExp of FuncExp), returns the equivalent term
+	#With a coefficient of 1
+	#Returns a new object that is a copy of the given term
+	def _get_basic_term(self,term):
+		term=deepcopy(term)
+		term.coeff=1
+		return term
+
+	#Search for the given term in the given collection of terms
+	#Searching is done by variable name and function name/arguments
+	#Coefficients are not used
+	#
+	#Returns the position of the term if found, None otherwise
+	def _find_term(self,term,terms):
+		term=self._get_basic_term(term)
+		terms=[self._get_basic_term(term_term) for term_term in terms]
+		if term in terms:
+			res=terms.index(term)
+		else:
+			res=None
+		return res
+
 	#Addition operator:
 	#Adds the two given NormExp expressions
 	#This operator is non-destructive: A complete copy of the arguments
 	#are made while leaving 'self' and 'other' untouched
-	@sort_result
+	@normalize_result
 	def __add__(self,other):
 		if not like_type(other,NormExp):
 			raise ValueError("Addition between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -339,11 +361,11 @@ class NormExp(Expression):
 
 		#Add the terms from other to self
 		for term in other.terms:
-			if term in self.terms:
-				index=self.terms.index(term)
-				self.terms[index].coeff+=term.coeff
-			else:
+			pos=self._find_term(term,self.terms)
+			if None is pos:
 				self.terms.append(term)
+			else:
+				self.terms[pos].coeff+=term.coeff
 
 		#Add the constant value from other to self
 		self.const+=other.const
@@ -356,7 +378,7 @@ class NormExp(Expression):
 	#Multiplication of two NormExps that both have terms is undefined
 	#This operator is non-destructive: A complete copy of the arguments
 	#are made while leaving 'self' and 'other' untouched
-	@sort_result
+	@normalize_result
 	def __mul__(self,other):
 		if not like_type(other,NormExp):
 			raise ValueError("Multiplication between a '%s' and a '%s' is undefined."%(type(self),type(other)))

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from nose.tools import raises
+from iegen.lib.nose.tools import raises
 
 #---------- Import Tests ----------
 #Test importing of iegen.ast.visitor
@@ -385,6 +385,15 @@ class IsTupleVarVisitorTestCase(TestCase):
 #---------- Find Free Variable Equality Visitor ----------
 class FindFreeVarEqualityVisitorTestCase(TestCase):
 
+	#Make sure the result of the visiting is placed in the var_equality_tuple attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=FindFreeVarEqualityVisitor().visit(set)
+		self.failUnless(hasattr(v,'var_equality_tuple'),"FindFreeVarEqualityVisitor doesn't place result in 'var_equality_tuple' property.")
+
 	#Tests that the visitor finds a simple equality
 	def testFindSimpleSet(self):
 		from iegen.ast.visitor import FindFreeVarEqualityVisitor
@@ -393,9 +402,11 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[]:a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
-		equality_res=Equality(NormExp([VarExp(1,'a')],-5))
+		eq=Equality(NormExp([VarExp(1,'a')],-5))
+		var=eq.exp.terms[0]
+		equality_res=(var,eq)
 
 		self.failUnless(equality_res==equality,'%s!=%s'%(equality_res,equality))
 
@@ -407,9 +418,11 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Relation('{[]->[]:a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
-		equality_res=Equality(NormExp([VarExp(1,'a')],-5))
+		eq=Equality(NormExp([VarExp(1,'a')],-5))
+		var=eq.exp.terms[0]
+		equality_res=(var,eq)
 
 		self.failUnless(equality_res==equality,'%s!=%s'%(equality_res,equality))
 
@@ -421,9 +434,11 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[a]:b=5 and a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
-		equality_res=Equality(NormExp([VarExp(1,'b')],-5))
+		eq=Equality(NormExp([VarExp(1,'b')],-5))
+		var=eq.exp.terms[0]
+		equality_res=(var,eq)
 
 		self.failUnless(equality_res==equality,'%s!=%s'%(equality_res,equality))
 
@@ -435,9 +450,11 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[a]:a=5 and b>=5 and b=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
-		equality_res=Equality(NormExp([VarExp(1,'b')],-5))
+		eq=Equality(NormExp([VarExp(1,'b')],-5))
+		var=eq.exp.terms[0]
+		equality_res=(var,eq)
 
 		self.failUnless(equality_res==equality,'%s!=%s'%(equality_res,equality))
 
@@ -449,9 +466,11 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[a]:a=5 and b>=5 and b=5}',[Symbolic('n')])
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
-		equality_res=Equality(NormExp([VarExp(1,'b')],-5))
+		eq=Equality(NormExp([VarExp(1,'b')],-5))
+		var=eq.exp.terms[0]
+		equality_res=(var,eq)
 
 		self.failUnless(equality_res==equality,'%s!=%s'%(equality_res,equality))
 
@@ -463,9 +482,11 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[a]:-b=5 and b>=5 and a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
-		equality_res=Equality(NormExp([VarExp(-1,'b')],-5))
+		eq=Equality(NormExp([VarExp(-1,'b')],-5))
+		var=eq.exp.terms[0]
+		equality_res=(var,eq)
 
 		self.failUnless(equality_res==equality,'%s!=%s'%(equality_res,equality))
 
@@ -476,7 +497,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[a]:a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
@@ -487,7 +508,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[]:n=5}',[Symbolic('n')])
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
@@ -498,7 +519,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[a]:f(b)=5 and b>=5 and a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
@@ -509,7 +530,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[a]:f(g(b))=5 and b>=5 and a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
@@ -520,7 +541,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[a]:5b=5 and b>=5 and a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).equality
+		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 #---------------------------------------------------------

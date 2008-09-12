@@ -85,17 +85,28 @@ def check_visit(obj):
 	from iegen.ast.visitor import CheckVisitor
 	CheckVisitor().visit(obj)
 
-#Decorator that uses the SortVisitor to sort the first implicit 'self' argument of the decorated function
+#Calls the simplification routine on the given object
+def run_simplify(obj):
+	from iegen.codegen import simplify
+	simplify(obj)
+
+#Decorator that normalizes the first implicit 'self' argument of the decorated function
+#Normalization is sorting -> simplification -> sorting
 @decorator
-def sort_self(func,*args,**kw):
+def normalize_self(func,*args,**kw):
 	result=func(*args,**kw)
+	sort_visit(args[0])
+	run_simplify(args[0])
 	sort_visit(args[0])
 	return result
 
-#Decorator that uses the SortVisitor to sort the result of the decorated function
+#Decorator that normalizes the result of the decorated function
+#Normalization is sorting -> simplification -> sorting
 @decorator
-def sort_result(func,*args,**kw):
+def normalize_result(func,*args,**kw):
 	result=func(*args,**kw)
+	sort_visit(result)
+	run_simplify(result)
 	sort_visit(result)
 	return result
 

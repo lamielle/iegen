@@ -1,5 +1,5 @@
 from unittest import TestCase
-from nose.tools import raises
+from iegen.lib.nose.tools import raises
 
 #---------- Import Tests ----------
 #Test importing of iegen.ast
@@ -834,6 +834,93 @@ class NormExpTestCase(TestCase):
 				#Make sure addition works correctly
 				self.failUnless(n_n2==new_n,'%s!=%s'%(n_n2,new_n))
 				self.failUnless(n2_n==new_n,'%s!=%s'%(n2_n,new_n))
+
+	#Tests the __add__ method by adding a single variable
+	def testAddVar(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+		n=n+NormExp([VarExp(4,'a')],0)
+
+		n_res=NormExp([VarExp(8,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+
+		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+
+	#Tests the __add__ method by adding a single function
+	def testAddFunc(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+		n=n+NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],0)
+
+		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)]),FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],2)
+
+		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+
+	#Tests the __add__ method by adding a variable and a function
+	def testAddVarFunc(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+		n=n+NormExp([VarExp(4,'a'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],0)
+
+		n_res=NormExp([VarExp(8,'a'),VarExp(6,'b'),FuncExp(4,'f',[NormExp([VarExp(1,'x')],0)])],2)
+
+		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+
+	#Tests the __sub__ method by subtracting a single variable
+	def testSubVar(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+		n=n-NormExp([VarExp(4,'a')],0)
+
+		n_res=NormExp([VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+
+		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+
+	#Tests the __sub__ method by subtracting multiple variables
+	def testSubMultipleVars(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+		n=n-NormExp([VarExp(4,'a'),VarExp(6,'b')],0)
+
+		n_res=NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+
+		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+
+	#Tests the __sub__ method by subtracting a function
+	def testSubFunc1(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+		n=n-NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],0)
+
+		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b')],2)
+
+		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+
+	#Tests the __sub__ method by subtracting a function
+	def testSubFunc2(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+		n=n-NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],0)
+
+		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)]),FuncExp(-2,'f',[NormExp([VarExp(1,'y')],0)])],2)
+		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+
+	#Tests the __sub__ method by subtracting all terms from the expression
+	def testSubAll(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+		n=n-NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+
+		n_res=NormExp([],0)
+
+		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
 
 	#Tests the __cmp__ by making sure the NormExp terms are sorted properly
 	def testSort(self):
