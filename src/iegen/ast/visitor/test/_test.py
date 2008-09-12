@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -75,7 +75,7 @@ class TransVisitorTestCase(TestCase):
 		set=Set('{[]}')
 		v=TransVisitor([]).visit(set)
 
-		self.failUnless(hasattr(v,'mats'),"TransVisitor doesn't place result in 'mats' property.")
+		self.failUnless(hasattr(v,'mats'),"TransVisitor doesn't place result in the 'mats' property.")
 
 	set_tests=(('{[a]: a=n}',[[[0,1,-1,0]]],['n']),
 	           ('{[a,b]: a=n && b=m}',[[[0,1,0,-1,0,0],
@@ -243,7 +243,7 @@ class IsVarVisitorTestCase(TestCase):
 
 		set=Set('{[]}')
 		v=IsVarVisitor('a').visit(set)
-		self.failUnless(hasattr(v,'is_var'),"IsVarVisitor doesn't place result in 'is_var' property.")
+		self.failUnless(hasattr(v,'is_var'),"IsVarVisitor doesn't place result in the 'is_var' property.")
 
 	#Tests that vars in the Symbolics are searched
 	def testSearchSymbolics(self):
@@ -293,7 +293,7 @@ class IsSymbolicVarVisitorTestCase(TestCase):
 
 		set=Set('{[]}')
 		v=IsSymbolicVarVisitor('a').visit(set)
-		self.failUnless(hasattr(v,'is_symbolic_var'),"IsSymbolicVarVisitor doesn't place result in 'is_symbolic_var' property.")
+		self.failUnless(hasattr(v,'is_symbolic_var'),"IsSymbolicVarVisitor doesn't place result in the 'is_symbolic_var' property.")
 
 	#Tests that vars in the Symbolics are searched
 	def testSearchSymbolics(self):
@@ -343,7 +343,7 @@ class IsTupleVarVisitorTestCase(TestCase):
 
 		set=Set('{[]}')
 		v=IsTupleVarVisitor('a').visit(set)
-		self.failUnless(hasattr(v,'is_tuple_var'),"IsTupleVarVisitor doesn't place result in 'is_tuple_var' property.")
+		self.failUnless(hasattr(v,'is_tuple_var'),"IsTupleVarVisitor doesn't place result in the 'is_tuple_var' property.")
 
 	#Tests that vars in the Tuples are not searched
 	def testNoSearchSymbolics(self):
@@ -392,7 +392,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		set=Set('{[]}')
 		v=FindFreeVarEqualityVisitor().visit(set)
-		self.failUnless(hasattr(v,'var_equality_tuple'),"FindFreeVarEqualityVisitor doesn't place result in 'var_equality_tuple' property.")
+		self.failUnless(hasattr(v,'var_equality_tuple'),"FindFreeVarEqualityVisitor doesn't place result in the 'var_equality_tuple' property.")
 
 	#Tests that the visitor finds a simple equality
 	def testFindSimpleSet(self):
@@ -545,3 +545,116 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 #---------------------------------------------------------
+
+#---------- Merge Expression Terms Visitor ----------
+class MergeExpTermsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the merged_terms attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import MergeExpTermsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=MergeExpTermsVisitor().visit(set)
+		self.failUnless(hasattr(v,'merged_terms'),"MergeExpTermsVisitor doesn't place result in the 'merged_terms' property.")
+
+	#Tests that False is the result of not merging anything
+	def testNoMerge(self):
+		from iegen.ast.visitor import MergeExpTermsVisitor
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		e=NormExp([],0)
+		e.terms=[VarExp(1,'a'),FuncExp(1,'f',[])]
+		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
+		e.terms.sort()
+
+		e_res=NormExp([VarExp(1,'a'),FuncExp(1,'f',[])],0)
+
+		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
+		self.failUnless(False==merged_terms,'merged_terms!=False')
+
+	#Tests that variables are merged
+	def testMergeVars(self):
+		from iegen.ast.visitor import MergeExpTermsVisitor
+		from iegen.ast import NormExp,VarExp
+
+		e=NormExp([],0)
+		e.terms=[VarExp(1,'a'),VarExp(2,'a'),VarExp(3,'a')]
+		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
+		e.terms.sort()
+
+		e_res=NormExp([VarExp(6,'a')],0)
+
+		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
+		self.failUnless(True==merged_terms,'merged_terms!=True')
+
+	#Tests that multiple variables are merged
+	def testMergeMultipleVars(self):
+		from iegen.ast.visitor import MergeExpTermsVisitor
+		from iegen.ast import NormExp,VarExp
+
+		e=NormExp([],0)
+		e.terms=[VarExp(1,'a'),VarExp(2,'a'),VarExp(3,'b'),VarExp(-1,'b')]
+		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
+		e.terms.sort()
+
+		e_res=NormExp([VarExp(3,'a'),VarExp(2,'b')],0)
+
+		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
+		self.failUnless(True==merged_terms,'merged_terms!=True')
+
+	#Tests that functions are merged
+	def testMergeFunctions(self):
+		from iegen.ast.visitor import MergeExpTermsVisitor
+		from iegen.ast import NormExp,FuncExp
+
+		e=NormExp([],0)
+		e.terms=[FuncExp(1,'a',[]),FuncExp(2,'a',[]),FuncExp(3,'a',[])]
+		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
+		e.terms.sort()
+
+		e_res=NormExp([FuncExp(6,'a',[])],0)
+
+		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
+		self.failUnless(True==merged_terms,'merged_terms!=True')
+
+	#Tests that multiple functions are merged
+	def testMergeMultipleFunctions(self):
+		from iegen.ast.visitor import MergeExpTermsVisitor
+		from iegen.ast import NormExp,FuncExp
+
+		e=NormExp([],0)
+		e.terms=[FuncExp(1,'a',[]),FuncExp(2,'a',[]),FuncExp(3,'b',[]),FuncExp(-1,'b',[])]
+		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
+		e.terms.sort()
+
+		e_res=NormExp([FuncExp(3,'a',[]),FuncExp(2,'b',[])],0)
+
+		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
+		self.failUnless(True==merged_terms,'merged_terms!=True')
+
+	#Tests that both vars and funcs are merged
+	def testMergeAll(self):
+		from iegen.ast.visitor import MergeExpTermsVisitor
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		e=NormExp([],0)
+		e.terms=[VarExp(1,'a'),
+               VarExp(2,'a'),
+               VarExp(1,'b'),
+               FuncExp(3,'b',[]),
+               FuncExp(-1,'b',[NormExp([VarExp(1,'x')],0)]),
+               FuncExp(-1,'b',[NormExp([VarExp(1,'x')],0)])]
+
+		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
+		e.terms.sort()
+
+		e_res=NormExp([VarExp(3,'a'),
+                     VarExp(1,'b'),
+                     FuncExp(3,'b',[]),
+                     FuncExp(-2,'b',[NormExp([VarExp(1,'x')],0)])],0)
+
+		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
+		self.failUnless(True==merged_terms,'merged_terms!=True')
+#----------------------------------------------------
+

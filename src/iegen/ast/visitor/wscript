@@ -22,5 +22,6 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_is_symbolic_var_visitor.py')
 	install_files('PREFIX',inst_dir,'_is_tuple_var_visitor.py')
 	install_files('PREFIX',inst_dir,'_find_free_var_equality_visitor.py')
+	install_files('PREFIX',inst_dir,'_merge_exp_terms_visitor.py')
 
 	bld.add_subdirs('test')
