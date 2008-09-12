@@ -645,7 +645,6 @@ class MergeExpTermsVisitorTestCase(TestCase):
                FuncExp(3,'b',[]),
                FuncExp(-1,'b',[NormExp([VarExp(1,'x')],0)]),
                FuncExp(-1,'b',[NormExp([VarExp(1,'x')],0)])]
-
 		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
 		e.terms.sort()
 
@@ -656,5 +655,19 @@ class MergeExpTermsVisitorTestCase(TestCase):
 
 		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
 		self.failUnless(True==merged_terms,'merged_terms!=True')
-#----------------------------------------------------
 
+	#Tests that terms within a function's arguments are merged
+	def testMergeFuncArgs(self):
+		from iegen.ast.visitor import MergeExpTermsVisitor
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		e=NormExp([],0)
+		e.terms=[FuncExp(1,'f',[NormExp([VarExp(1,'a'),VarExp(2,'a'),FuncExp(3,'b',[]),FuncExp(-1,'b',[])],0)])]
+		merged_terms=MergeExpTermsVisitor().visit(e).merged_terms
+		e.terms.sort()
+
+		e_res=NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a'),FuncExp(2,'b',[])],0)])],0)
+
+		self.failUnless(e_res==e,'%s!=%s'%(e_res,e))
+		self.failUnless(True==merged_terms,'merged_terms!=True')
+#----------------------------------------------------
