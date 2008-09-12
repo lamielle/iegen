@@ -30,6 +30,31 @@ def _set(self,value): self._%s=value'''%(name,name)
 		#Create a property from these methods and assign it to the class
 		exec '''add_to_class.m_%s=property(_get,_set)'''%(name,)
 
+#Given a term (VarExp or FuncExp), returns the equivalent term
+#With a coefficient of 1
+#Returns a new object that is a copy of the given term
+def get_basic_term(term):
+	from copy import deepcopy
+	term=deepcopy(term)
+	term.coeff=1
+	return term
+
+#Search for the given term in the given collection of terms
+#Searching is done by variable name and function name/arguments
+#Coefficients are not used
+#
+#Returns the position of the term if found, None otherwise
+def find_term(term,terms):
+	term=get_basic_term(term)
+	terms=[get_basic_term(t) for t in terms]
+
+	#Try to find the index of the term
+	try:
+		res=terms.index(term)
+	except:
+		res=None
+	return res
+
 #Checks that the given object has all attributes of the __slots__ property of the given class
 #Returns True if so, False otherwise
 def like_type(obj,type):
