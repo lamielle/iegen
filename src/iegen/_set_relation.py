@@ -1,5 +1,6 @@
 # Definitions of the Set and Relation classes that represent Presburger Sets and Relations.
 
+from cStringIO import StringIO
 from iegen.ast import Node
 from iegen.parser import PresParser
 from iegen.lib.decorator import decorator
@@ -9,6 +10,18 @@ from iegen.util import normalize_self,normalize_result,check,like_type,raise_obj
 #Parent class for Sets and Relations
 class Formula(Node):
 	__slots__=('symbolics',)
+
+	def __str__(self,formulas):
+		s=StringIO()
+		if len(self.symbolics)>0:
+			s.write('[')
+			for symbolic in self.symbolics:
+				s.write('%s%s'%(str(symbolic),','))
+			s.seek(-1,1)
+			s.write(']: ')
+		for formula in formulas:
+			s.write('%s%s'%(str(formula),' union '))
+		return s.getvalue()[:-7]
 
 	#Private utility method that combines the given formulas
 	#
@@ -150,6 +163,9 @@ class Set(Formula):
 	def __repr__(self):
 		return "Set(symbolics=%s,sets=%s)"%(self.symbolics,self.sets)
 
+	def __str__(self):
+		return Formula.__str__(self,self.sets)
+
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare Sets by their set collection
@@ -274,6 +290,9 @@ class Relation(Formula):
 
 	def __repr__(self):
 		return "Relation(symbolics=%s,relations=%s)"%(self.symbolics,self.relations)
+
+	def __str__(self):
+		return Formula.__str__(self,self.relations)
 
 	#Comparison operator
 	def __cmp__(self,other):

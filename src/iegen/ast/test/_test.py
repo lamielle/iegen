@@ -36,6 +36,38 @@ class SetTestCase(TestCase):
 			self.failUnless(new_set_exp2==new_set_exp,'%s!=%s'%(new_set_exp2,new_set_exp))
 			self.failUnless(new_set_exp2==set_exp,'%s!=%s'%(new_set_exp2,set_exp))
 
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,NormExp,VarExp
+
+		set=PresSet(VarTuple([]),Conjunction([]))
+		set_str='{[]}'
+		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
+
+		set=PresSet(VarTuple([VarExp(1,'a')]),Conjunction([]))
+		set_str='{[a]}'
+		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
+
+		set=PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'b')]),Conjunction([]))
+		set_str='{[a,b]}'
+		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
+
+		set=PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')]),Conjunction([]))
+		set_str='{[a,b,c]}'
+		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
+
+		set=PresSet(VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5))]))
+		set_str='{[]: -1a+5=0}'
+		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
+
+		set=PresSet(VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5))]))
+		set_str='{[]: -1a+5=0 and -1b+5=0}'
+		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
+
+		set=PresSet(VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5)),Equality(NormExp([VarExp(-1,'c')],5))]))
+		set_str='{[]: -1a+5=0 and -1b+5=0 and -1c+5=0}'
+		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
+
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
@@ -94,6 +126,58 @@ class RelationTestCase(TestCase):
 			self.failUnless(new_rel_exp2==new_rel_exp,'%s!=%s'%(new_rel_exp2,new_rel_exp))
 			self.failUnless(new_rel_exp2==rel_exp,'%s!=%s'%(new_rel_exp2,rel_exp))
 
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,NormExp,VarExp
+
+		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]))
+		rel_str='{[]->[]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([]),Conjunction([]))
+		rel_str='{[a]->[]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([VarExp(1,'a'),VarExp(1,'b')]),VarTuple([]),Conjunction([]))
+		rel_str='{[a,b]->[]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')]),VarTuple([]),Conjunction([]))
+		rel_str='{[a,b,c]->[]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]))
+		rel_str='{[]->[]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([]),VarTuple([VarExp(1,'a')]),Conjunction([]))
+		rel_str='{[]->[a]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([]),VarTuple([VarExp(1,'a'),VarExp(1,'b')]),Conjunction([]))
+		rel_str='{[]->[a,b]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([]),VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')]),Conjunction([]))
+		rel_str='{[]->[a,b,c]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]))
+		rel_str='{[]->[]}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5))]))
+		rel_str='{[]->[]: -1a+5=0}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5))]))
+		rel_str='{[]->[]: -1a+5=0 and -1b+5=0}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
+		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5)),Equality(NormExp([VarExp(-1,'c')],5))]))
+		rel_str='{[]->[]: -1a+5=0 and -1b+5=0 and -1c+5=0}'
+		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
@@ -151,6 +235,26 @@ class VarTupleTestCase(TestCase):
 
 		self.failUnless(vs==repr(v),'%s!=%s'%(vs,repr(v)))
 
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import VarTuple,VarExp
+
+		v=VarTuple([])
+		v_str='[]'
+		self.failUnless(v_str==str(v),'%s!=%s'%(v_str,str(v)))
+
+		v=VarTuple([VarExp(1,'a')])
+		v_str='[a]'
+		self.failUnless(v_str==str(v),'%s!=%s'%(v_str,str(v)))
+
+		v=VarTuple([VarExp(1,'a'),VarExp(1,'b')])
+		v_str='[a,b]'
+		self.failUnless(v_str==str(v),'%s!=%s'%(v_str,str(v)))
+
+		v=VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')])
+		v_str='[a,b,c]'
+		self.failUnless(v_str==str(v),'%s!=%s'%(v_str,str(v)))
+
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen.ast import VarTuple,VarExp
@@ -195,10 +299,12 @@ class VarTupleTestCase(TestCase):
 	def testLen(self):
 		from iegen.ast import VarTuple,VarExp
 
+		v0=VarTuple([])
 		v1=VarTuple([VarExp(1,'a')])
 		v2=VarTuple([VarExp(1,'a'),VarExp(1,'b')])
 		v3=VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')])
 
+		self.failUnless(0==len(v0),'len(%s)!=0'%v1)
 		self.failUnless(1==len(v1),'len(%s)!=1'%v1)
 		self.failUnless(2==len(v2),'len(%s)!=2'%v2)
 		self.failUnless(3==len(v3),'len(%s)!=3'%v3)
@@ -241,6 +347,26 @@ class ConjunctionTestCase(TestCase):
 
 		self.failUnless(cs==repr(c),'%s!=%s'%(cs,repr(c)))
 
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import Conjunction,Equality,NormExp,VarExp
+
+		c=Conjunction([])
+		c_str=''
+		self.failUnless(c_str==str(c),'%s!=%s'%(c_str,str(c)))
+
+		c=Conjunction([Equality(NormExp([VarExp(-1,'a')],5))])
+		c_str='-1a+5=0'
+		self.failUnless(c_str==str(c),'%s!=%s'%(c_str,str(c)))
+
+		c=Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5))])
+		c_str='-1a+5=0 and -1b+5=0'
+		self.failUnless(c_str==str(c),'%s!=%s'%(c_str,str(c)))
+
+		c=Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5)),Equality(NormExp([VarExp(-1,'c')],5))])
+		c_str='-1a+5=0 and -1b+5=0 and -1c+5=0'
+		self.failUnless(c_str==str(c),'%s!=%s'%(c_str,str(c)))
+
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen.ast import Conjunction,Equality,NormExp,VarExp
@@ -279,6 +405,21 @@ class ConjunctionTestCase(TestCase):
 		self.failUnless(c==dc,'%s!=%s'%(c,dc))
 		c.constraint_list.append(VarExp(1,'b'))
 		self.failIf(c==dc,'%s==%s'%(c,dc))
+
+	#Validate Conjunction's __len__ method
+	def testLen(self):
+		from iegen.ast import Conjunction,Equality,NormExp,VarExp
+
+		c0=Conjunction([])
+		c1=Conjunction([Equality(NormExp([VarExp(1,'a')],0))])
+		c2=Conjunction([Equality(NormExp([VarExp(1,'a')],0)),Equality(NormExp([VarExp(1,'a')],0))])
+		c3=Conjunction([Equality(NormExp([VarExp(1,'a')],0)),Equality(NormExp([VarExp(1,'a')],0)),Equality(NormExp([VarExp(1,'a')],0))])
+
+		self.failUnless(0==len(c0),'len(%s)!=0'%c0)
+		self.failUnless(1==len(c1),'len(%s)!=1'%c1)
+		self.failUnless(2==len(c2),'len(%s)!=2'%c2)
+		self.failUnless(3==len(c3),'len(%s)!=3'%c3)
+
 #---------------------------------------
 
 #---------- Equality Tests ----------
@@ -292,6 +433,34 @@ class EqualityTestCase(TestCase):
 		exec('e1='+es1)
 
 		self.failUnless(es1==repr(e1),'%s!=%s'%(es1,repr(e1)))
+
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import Equality,NormExp,VarExp
+
+		e=Equality(NormExp([],0))
+		e_str='0=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Equality(NormExp([],5))
+		e_str='5=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Equality(NormExp([VarExp(1,'a')],0))
+		e_str='a=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Equality(NormExp([VarExp(1,'a'),VarExp(1,'b')],0))
+		e_str='a+b=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Equality(NormExp([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')],0))
+		e_str='a+b+c=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Equality(NormExp([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')],5))
+		e_str='a+b+c+5=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
@@ -400,6 +569,34 @@ class InequalityTestCase(TestCase):
 
 		self.failUnless(is1==repr(i1),'%s!=%s'%(is1,repr(i1)))
 
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		e=Inequality(NormExp([],0))
+		e_str='0>=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Inequality(NormExp([],5))
+		e_str='5>=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Inequality(NormExp([VarExp(1,'a')],0))
+		e_str='a>=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Inequality(NormExp([VarExp(1,'a'),VarExp(1,'b')],0))
+		e_str='a+b>=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Inequality(NormExp([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')],0))
+		e_str='a+b+c>=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=Inequality(NormExp([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')],5))
+		e_str='a+b+c+5>=0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen.ast import Inequality,NormExp,VarExp
@@ -481,7 +678,30 @@ class VarExpTestCase(TestCase):
 
 			#Test VarExp's repr function
 			self.failUnless(repr(v)==var_exp,'%s!=%s'%(repr(v),var_exp))
-			self.failUnless(str(v)==var_exp,'%s!=%s'%(str(v),var_exp))
+
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import VarExp
+
+		e=VarExp(0,'a')
+		e_str='0a'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=VarExp(1,'a')
+		e_str='a'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=VarExp(2,'a')
+		e_str='2a'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=VarExp(5,'a')
+		e_str='5a'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=VarExp(-5,'a')
+		e_str='-5a'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
@@ -585,7 +805,42 @@ class FuncExpTestCase(TestCase):
 
 			#Test FuncExp's repr function
 			self.failUnless(repr(f)==func_exp,'%s!=%s'%(repr(f),func_exp))
-			self.failUnless(str(f)==func_exp,'%s!=%s'%(str(f),func_exp))
+
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import FuncExp,VarExp,NormExp
+
+		e=FuncExp(0,'f',[])
+		e_str='0f()'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=FuncExp(1,'f',[])
+		e_str='f()'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=FuncExp(2,'f',[])
+		e_str='2f()'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=FuncExp(5,'f',[])
+		e_str='5f()'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=FuncExp(-5,'f',[])
+		e_str='-5f()'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])
+		e_str='f(a)'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=FuncExp(1,'f',[NormExp([VarExp(1,'a')],0),NormExp([VarExp(1,'b')],0)])
+		e_str='f(a,b)'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=FuncExp(1,'f',[NormExp([VarExp(1,'a')],0),NormExp([VarExp(1,'b')],0),NormExp([VarExp(1,'c')],0)])
+		e_str='f(a,b,c)'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
@@ -683,7 +938,38 @@ class NormExpTestCase(TestCase):
 
 			#Test NormExp's repr function
 			self.failUnless(repr(n)==norm_exp,'%s!=%s'%(repr(n),norm_exp))
-			self.failUnless(str(n)==norm_exp,'%s!=%s'%(str(n),norm_exp))
+
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen.ast import FuncExp,VarExp,NormExp
+
+		e=NormExp([],0)
+		e_str='0'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=NormExp([],1)
+		e_str='1'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=NormExp([],-1)
+		e_str='-1'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=NormExp([VarExp(1,'a')],0)
+		e_str='a'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=NormExp([VarExp(1,'a'),VarExp(1,'b')],0)
+		e_str='a+b'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=NormExp([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')],0)
+		e_str='a+b+c'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
+
+		e=NormExp([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')],5)
+		e_str='a+b+c+5'
+		self.failUnless(e_str==str(e),'%s!=%s'%(e_str,str(e)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):

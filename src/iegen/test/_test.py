@@ -175,6 +175,44 @@ class SetTestCase(TestCase):
 		exec('set='+set_str)
 		self.failUnless(repr(set)==set_str,'%s!=%s'%(repr(set),set_str))
 
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen import Set,Symbolic
+		from iegen.parser import PresParser
+
+		set_str1='{[a]: -1a+5=0}'
+		pset1=PresParser.parse_set(set_str1)
+
+		set_str2='{[b]: -1b+5=0}'
+		pset2=PresParser.parse_set(set_str2)
+
+		set_str3='{[c]: -1c+5=0}'
+		pset3=PresParser.parse_set(set_str3)
+
+		set=Set(sets=[pset1])
+		set_str='%s'%(set_str1)
+		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
+
+		set=Set(sets=[pset1,pset2])
+		set_str='%s union %s'%(set_str1,set_str2)
+		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
+
+		set=Set(sets=[pset1,pset2,pset3])
+		set_str='%s union %s union %s'%(set_str1,set_str2,set_str3)
+		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
+
+		set=Set(sets=[pset1],symbolics=[Symbolic('n')])
+		set_str='[n]: %s'%(set_str1)
+		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
+
+		set=Set(sets=[pset1,pset2],symbolics=[Symbolic('n'),Symbolic('m')])
+		set_str='[n,m]: %s union %s'%(set_str1,set_str2)
+		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
+
+		set=Set(sets=[pset1,pset2,pset3],symbolics=[Symbolic('n'),Symbolic('m'),Symbolic('l')])
+		set_str='[n,m,l]: %s union %s union %s'%(set_str1,set_str2,set_str3)
+		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
+
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen import Set
@@ -600,6 +638,44 @@ class RelationTestCase(TestCase):
 		relation_str="Relation(symbolics=[],relations=[PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([]))])"
 		exec('relation='+relation_str)
 		self.failUnless(repr(relation)==relation_str,'%s!=%s'%(repr(relation),relation_str))
+
+	#Tests the __str__ method
+	def testStr(self):
+		from iegen import Relation,Symbolic
+		from iegen.parser import PresParser
+
+		relation_str1='{[a]->[ap]: -1a+5=0}'
+		prelation1=PresParser.parse_relation(relation_str1)
+
+		relation_str2='{[b]->[bp]: -1b+5=0}'
+		prelation2=PresParser.parse_relation(relation_str2)
+
+		relation_str3='{[c]->[cp]: -1c+5=0}'
+		prelation3=PresParser.parse_relation(relation_str3)
+
+		relation=Relation(relations=[prelation1])
+		relation_str='%s'%(relation_str1)
+		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
+
+		relation=Relation(relations=[prelation1,prelation2])
+		relation_str='%s union %s'%(relation_str1,relation_str2)
+		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
+
+		relation=Relation(relations=[prelation1,prelation2,prelation3])
+		relation_str='%s union %s union %s'%(relation_str1,relation_str2,relation_str3)
+		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
+
+		relation=Relation(relations=[prelation1],symbolics=[Symbolic('n')])
+		relation_str='[n]: %s'%(relation_str1)
+		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
+
+		relation=Relation(relations=[prelation1,prelation2],symbolics=[Symbolic('n'),Symbolic('m')])
+		relation_str='[n,m]: %s union %s'%(relation_str1,relation_str2)
+		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
+
+		relation=Relation(relations=[prelation1,prelation2,prelation3],symbolics=[Symbolic('n'),Symbolic('m'),Symbolic('l')])
+		relation_str='[n,m,l]: %s union %s union %s'%(relation_str1,relation_str2,relation_str3)
+		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
 
 	#Tests the __cmp__ method
 	def testCmp(self):

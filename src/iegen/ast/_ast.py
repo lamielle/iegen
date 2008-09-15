@@ -31,6 +31,7 @@
 #
 
 from copy import deepcopy
+from cStringIO import StringIO
 from iegen.util import like_type,normalize_self,normalize_result,check
 
 #---------- Base AST Node class ----------
@@ -50,7 +51,13 @@ class PresSet(Node):
 		self.conjunct=conjunct
 
 	def __repr__(self):
-		return 'PresSet(%s,%s)'%(self.tuple_set,self.conjunct)
+		return 'PresSet(%s,%s)'%(repr(self.tuple_set),repr(self.conjunct))
+
+	def __str__(self):
+		if len(self.conjunct)>0:
+			return '{%s: %s}'%(self.tuple_set,self.conjunct)
+		else:
+			return '{%s}'%self.tuple_set
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -79,7 +86,13 @@ class PresRelation(Node):
 		self.conjunct=conjunct
 
 	def __repr__(self):
-		return 'PresRelation(%s,%s,%s)'%(self.tuple_in,self.tuple_out,self.conjunct)
+		return 'PresRelation(%s,%s,%s)'%(repr(self.tuple_in),repr(self.tuple_out),repr(self.conjunct))
+
+	def __str__(self):
+		if len(self.conjunct)>0:
+			return '{%s->%s: %s}'%(self.tuple_in,self.tuple_out,self.conjunct)
+		else:
+			return '{%s->%s}'%(self.tuple_in,self.tuple_out)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -110,7 +123,13 @@ class VarTuple(Node):
 		self.vars=vars
 
 	def __repr__(self):
-		return 'VarTuple(%s)'%(self.vars)
+		return 'VarTuple(%s)'%repr(self.vars)
+
+	def __str__(self):
+		s=StringIO()
+		for var in self.vars:
+			s.write('%s%s'%(str(var),','))
+		return '%s%s%s'%('[',s.getvalue()[:-1],']')
 
 	def __len__(self):
 		return len(self.vars)
@@ -138,7 +157,16 @@ class Conjunction(Node):
 		self.constraint_list=constraint_list
 
 	def __repr__(self):
-		return 'Conjunction(%s)'%(self.constraint_list)
+		return 'Conjunction(%s)'%repr(self.constraint_list)
+
+	def __str__(self):
+		s=StringIO()
+		for constraint in self.constraint_list:
+			s.write('%s%s'%(str(constraint),' and '))
+		return s.getvalue()[:-5]
+
+	def __len__(self):
+		return len(self.constraint_list)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -156,11 +184,6 @@ class Conjunction(Node):
 class Constraint(Node):
 	__slots__=('_equality','exp')
 
-	#Returns True if this constraints expression is empty
-	#Returns False otherwise
-	def empty(self):
-		return self.exp.empty()
-
 	#Comparison operator
 	def __cmp__(self,other):
 		#Compare Constraints by their expression and Equality/Inequality type
@@ -168,6 +191,11 @@ class Constraint(Node):
 			return cmp((self._equality,self.exp),(other._equality,other.exp))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
+
+	#Returns True if this constraints expression is empty
+	#Returns False otherwise
+	def empty(self):
+		return self.exp.empty()
 
 
 class Equality(Constraint):
@@ -185,7 +213,10 @@ class Equality(Constraint):
 			self.exp=neg_exp
 
 	def __repr__(self):
-		return 'Equality(%s)'%self.exp
+		return 'Equality(%s)'%repr(self.exp)
+
+	def __str__(self):
+		return '%s=0'%str(self.exp)
 
 	def apply_visitor(self,visitor):
 		visitor.visitEquality(self)
@@ -200,7 +231,10 @@ class Inequality(Constraint):
 		self._equality=False
 
 	def __repr__(self):
-		return 'Inequality(%s)'%self.exp
+		return 'Inequality(%s)'%repr(self.exp)
+
+	def __str__(self):
+		return '%s>=0'%str(self.exp)
 
 	def apply_visitor(self,visitor):
 		visitor.visitInequality(self)
@@ -222,9 +256,15 @@ class VarExp(Expression):
 	def __repr__(self):
 		#Use double quotes if this variable's name has a "'" in it
 		if self.id.find("'")>=0:
-			return 'VarExp(%s,"%s")'%(self.coeff,self.id)
+			return 'VarExp(%s,"%s")'%(repr(self.coeff),self.id)
 		else:
-			return "VarExp(%s,'%s')"%(self.coeff,self.id)
+			return "VarExp(%s,'%s')"%(repr(self.coeff),self.id)
+
+	def __str__(self):
+		if self.coeff==1:
+			return self.id
+		else:
+			return '%s%s'%(self.coeff,self.id)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -269,9 +309,20 @@ class FuncExp(Expression):
 	def __repr__(self):
 		#Use double quotes if this function's name has a "'" in it
 		if self.name.find("'")>=0:
-			return 'FuncExp(%s,"%s",%s)'%(self.coeff,self.name,self.args)
+			return 'FuncExp(%s,"%s",%s)'%(repr(self.coeff),self.name,repr(self.args))
 		else:
-			return "FuncExp(%s,'%s',%s)"%(self.coeff,self.name,self.args)
+			return "FuncExp(%s,'%s',%s)"%(repr(self.coeff),self.name,repr(self.args))
+
+	def __str__(self):
+		arg_str=StringIO()
+		for arg in self.args:
+			arg_str.write('%s%s'%(str(arg),','))
+		arg_str=arg_str.getvalue()[:-1]
+
+		if self.coeff==1:
+			return '%s(%s)'%(self.name,arg_str)
+		else:
+			return '%s%s(%s)'%(self.coeff,self.name,arg_str)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -315,7 +366,21 @@ class NormExp(Expression):
 		self.const=const
 
 	def __repr__(self):
-		return 'NormExp(%s,%s)'%(self.terms,self.const)
+		return 'NormExp(%s,%s)'%(repr(self.terms),repr(self.const))
+
+	def __str__(self):
+		terms_str=StringIO()
+		for term in self.terms:
+			terms_str.write('%s%s'%(str(term),'+'))
+		terms_str=terms_str.getvalue()[:-1]
+
+		if len(self.terms)>0:
+			if 0!=self.const:
+				return '%s%s%s'%(terms_str,'+',self.const)
+			else:
+				return terms_str
+		else:
+			return str(self.const)
 
 	#Returns True if this NormExp has any variables or functions (terms)
 	#Returns False if this NormExp is only a constant value

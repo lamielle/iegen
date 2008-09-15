@@ -59,6 +59,9 @@ class Symbolic(Node):
 		else:
 			return "Symbolic('%s')"%(self.name)
 
+	def __str__(self):
+		return self.name
+
 	def apply_visitor(self,visitor):
 		visitor.visitSymbolic(self)
 #------------------------------------
