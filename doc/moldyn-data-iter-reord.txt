@@ -97,6 +97,7 @@ Composition and choice of RTRTs
             iter_reordering = { [ i,x ] -> [ k,x ] : k = delta( i ) }
             iteration_space = I_0
             access_relation = A_I_0_to_X_1
+            iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
             iag_func_name = IAG_lexmin
             iag_type = IAG_Permute
 
