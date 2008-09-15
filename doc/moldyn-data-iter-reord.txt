@@ -37,12 +37,14 @@ Data Spaces
 Index Arrays
 
     inter1 = new IndexArray (
+        name = "inter1",
         dataspace = INTER1_0,
         isPermutation = false,
         input_bounds = { [k] : 0 <= k <= (n_inter-1) },
         output_bounds = { [k] : 0 <= k <= (N-1) }
     )
     inter2 = new IndexArray (
+        name = "inter2",
         dataspace = INTER2_0,
         isPermutation = false,
         input_bounds = { [k] : 0 <= k <= (n_inter-1) },
@@ -177,7 +179,7 @@ Generating the composed inspector
             ...
                 // apply S1
             = {[ii] -> [k] : k=inter1(ii)}
-
+              ....
 
 
     b) generate code that creates explicit representation of access relation at runtime. (see src/dev/test_ExplicitRelation.c for example usage)
@@ -185,7 +187,6 @@ Generating the composed inspector
             access_relation_to_traverse, artt
         output:
             code
-                FIXME
                 // output tuple calculation  for each disjunct in 
                 // access relation.
                 // Will capture the pointer to the explicit relation 
