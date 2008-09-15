@@ -5,6 +5,7 @@ from iegen import MapIR
 from iegen import Symbolic,DataSpace,IndexArray
 from iegen import Set,Relation
 from iegen import Statement,AccessRelation
+from iegen import DataPermuteRTRT,IterPermuteRTRT
 
 #Original Code:
 #    for (ii=0; ii<n_inter; ii++) {
@@ -99,25 +100,30 @@ a6=AccessRelation(name='a6',
                   iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }',syms))
 S2.add_access_relation(a6)
 
+
+data_reordering=DataPermuteRTRT(
+                data_reordering=Relation('{ [ k ] -> [ r ] : r=sigma( k ) }',syms),
+                data_spaces=[X_0,FX_0],
+                iter_sub_space_relation=Relation('{[ ii, j ] -> [ ii ] }',syms),
+                target_data_space=X_0,
+                iag_func_name='IAG_cpack')
+
+iter_reordering=None
+#iter_reordering=IterPermuteRTRT(
+#                iter_reordering=Relation('{ [ i,x ] -> [ k,x ] : k = delta( i ) }',syms),
+##User doesn't specify?
+##This is calculated in step 0
+##               iteration_space=I_0,
+##User doesn's specify?
+##This is calculated in step 1a
+##               access_relation=A_I_0_to_X_1,
+#                iter_sub_space_relation=Relation('{ [ ii, j ] -> [ ii ] }',syms),
+#                iag_func_name='IAG_lexmin',
+#                iag_type='IAG_Permute')
+
 #Data Dependences
 #    Only reduction dependences.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically if the loop is being parallelized.
 
 #XXX: What is the best way that this should be specified using the MapIR specification?
 
-moldyn_spec.codegen()
-
-#DataPermuteRTRT(
-#	Relation('{ [ k ] -> [ sigma ] : sigma=sigma(k) }'),
-#	(X_0,FX_0),
-#	A_I0_to_X0,
-#	Relation('{ [ ii, j ] -> [ ii ] }'),
-#	'CPackHyper',
-#	'IAG_Permute')
-#
-#IterPermuteRTRT(
-#	Relation('{ [ i ] -> [ delta ] : delta=delta( i ) }'),
-#	(I_0,),
-#	A_I0_to_X0,
-#	Relation('{ [ ii, j ] -> [ ii ] }'),
-#	'LexMin',
-#	'IAG_Permute')
+moldyn_spec.codegen(data_reordering,iter_reordering)

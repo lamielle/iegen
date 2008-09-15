@@ -1,13 +1,15 @@
-import iegen,iegen.util
+from __future__ import with_statement
 import os.path
+from cStringIO import StringIO
 from iegen.ast import Node
+import iegen,iegen.util,iegen.codegen
 
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('_symbolics','data_spaces','index_arrays','statements','full_iter_space')
+	__slots__=('_symbolics','data_spaces','index_arrays','statements','full_iter_space','artt')
 
 	def __init__(self):
 		self._symbolics={}
@@ -36,11 +38,21 @@ class MapIR(object):
 	#This is the main interface that starts the whole code generation process
 	#Given is a filled-in MapIR data structure
 	#Code is generated based upon this data
-	def codegen(self):
-		#Step 0) Calculate the full iteration space based on the iteration spaces of the statements
-		self.full_iter_space=iegen.util.full_iter_space(self.statements)
+	def codegen(self,data_reordering,iter_reordering,file_name=None):
+		#Create a string buffer to hold the code that is generated
+		code=StringIO()
 
-		print self.full_iter_space
+		#Run code generation
+		iegen.codegen.codegen(self,data_reordering,iter_reordering,code)
+
+		#Write out the code to the given file if one was specified
+		if file_name:
+			print "Writing generated code to file '%s'..."%file_name
+			with file(file_name):
+				file.write(code.getvalue())
+
+		#Return the generated code
+		return code.getvalue()
 	#-----------------------------------------
 
 #---------------------------------
@@ -126,16 +138,35 @@ class AccessRelation(object):
 			raise iegen.util.DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.iter_to_data.arity_out(),self.data_space.set.arity()))
 #------------------------------------------
 
-#---------- IterationSpace class ----------
-class IterationSpace(object):
-	__slots__=('_name','_spec')
+#---------- RTRT base class ----------
+class RTRT(object):
+	pass
+#-------------------------------------
 
-	def __init__(self,name,spec):
-		self.m_name=name
-		self.m_spec=spec
+#---------- DataPermuteRTRT class ----------
+class DataPermuteRTRT(RTRT):
+	__slots__=('data_reordering','data_spaces','iter_sub_space_relation','target_data_space','iag_func_name')
 
-iegen.util.define_properties(IterationSpace,('name','spec'))
-#------------------------------------------
+	def __init__(self,data_reordering,data_spaces,iter_sub_space_relation,target_data_space,iag_func_name):
+		self.data_reordering=data_reordering
+		self.data_spaces=data_spaces
+		self.iter_sub_space_relation=iter_sub_space_relation
+		self.target_data_space=target_data_space
+		self.iag_func_name=iag_func_name
+#-------------------------------------------
+
+#---------- IterPermuteRTRT class ----------
+class IterPermuteRTRT(RTRT):
+	__slots__=('iter_reordering','iter_space','access_relation','iter_sub_space_relation','iag_func_name','iag_type')
+
+	def __init__(self,iter_reordering,iter_space,access_relation,iter_sub_space_relation,iag_func_name,iag_type):
+		self.iter_reordering=iter_reordering
+		self.iter_space=iter_space
+		self.access_relation=access_relation
+		self.iter_sub_space_relation=iter_sub_space_relation
+		self.iag_func_name=iag_func_name
+		self.iag_type=iag_type
+#-------------------------------------------
 
 #---------- DataDependence class ----------
 class DataDependence(object):
@@ -152,40 +183,6 @@ class DataDependence(object):
 iegen.util.define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
 #------------------------------------------
 
-#---------- RTRT base class ----------
-class RTRT(object):
-	pass
-#-------------------------------------
-
-#---------- DataPermuteRTRT class ----------
-class DataPermuteRTRT(RTRT):
-	__slots__=('_data_reordering','_data_spaces','_access_relation','_iter_sub_space_relation','_iag_func_name','_iag_type')
-
-	def __init__(self,data_reordering,data_spaces,access_relation,iter_sub_space_relation,iag_func_name,iag_type):
-		m_data_reordering=data_reordering
-		m_data_spaces=data_spaces
-		m_access_relation=access_relation
-		m_iter_sub_space_relation=iter_sub_space_relation
-		m_iag_func_name=iag_func_name
-		m_iag_type=iag_type
-
-iegen.util.define_properties(DataPermuteRTRT,('data_reordering','data_spaces','access_relation','iter_sub_space_relation','iag_func_name','iag_type'))
-#-------------------------------------------
-
-#---------- IterPermuteRTRT class ----------
-class IterPermuteRTRT(RTRT):
-	__slots__=('_iter_reordering','_iter_space','_access_relation','_iter_sub_space_relation','_iag_func_name','_iag_type')
-
-	def __init__(self,iter_reordering,iter_spaces,access_relation,iter_sub_space_relation,iag_func_name,iag_type):
-		m_iter_reordering=iter_reordering
-		m_iter_spaces=iter_spaces
-		m_access_relation=access_relation
-		m_iter_sub_space_relation=iter_sub_space_relation
-		m_iag_func_name=iag_func_name
-		m_iag_type=iag_type
-
-iegen.util.define_properties(IterPermuteRTRT,('iter_reordering','iter_space','access_relation','iter_sub_space_relation','iag_func_name','iag_type'))
-#-------------------------------------------
 
 #
 #    // Base class

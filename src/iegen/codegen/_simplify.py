@@ -29,6 +29,10 @@ def _remove_empty_constraints(obj):
 	from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
 	return RemoveEmptyConstraintsVisitor().visit(obj).removed_constraint
 
+def _remove_duplicate_formulas(obj):
+	from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
+	return RemoveDuplicateFormulasVisitor().visit(obj).removed_formula
+
 #Given an object of the following types:
 #Set,Relation,PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
 #Applies various simplification rules to reduce the complexity of the object
@@ -53,7 +57,11 @@ def simplify(obj):
 		#Remove empty constraints
 		changed=_remove_empty_constraints(obj) or changed
 
+		#Remove equalities that contain a free variable
 		changed=_remove_free_var_equality(obj) or changed
+
+		#Remove duplicate equivalent formulas
+		changed=_remove_duplicate_formulas(obj) or changed
 
 	SortVisitor().visit(obj)
 #--------------------------------------------

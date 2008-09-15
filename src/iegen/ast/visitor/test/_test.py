@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarEqualityVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarEqualityVisitor,RemoveDuplicateFormulasVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -858,4 +858,81 @@ class RemoveFreeVarEqualityVisitorTestCase(TestCase):
 		set=Set('{[]}')
 		v=RemoveFreeVarEqualityVisitor().visit(set)
 		self.failUnless(hasattr(v,'changed'),"RemoveFreeVarEqualityVisitor doesn't place result in the 'changed' property.")
+#------------------------------------------------------
+
+#---------- Remove Duplicate Formulas Visitor ----------
+class RemoveDuplicateFormulasVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the changed attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=RemoveDuplicateFormulasVisitor().visit(set)
+		self.failUnless(hasattr(v,'removed_formula'),"RemoveDuplicateFormulasVisitor doesn't place result in the 'removed_formula' property.")
+
+	#Tests that non-duplicated sets are not removed
+	def testNoRemoveSet(self):
+		from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
+		from iegen import Set
+		from iegen.parser import PresParser
+
+		set=Set('{[a]:a=5}')
+		set.sets.append(PresParser.parse_set('{[b]:b=6}'))
+		removed_formula=RemoveDuplicateFormulasVisitor().visit(set).removed_formula
+
+		set_res=Set('{[a]:a=5}').union(Set('{[b]:b=6}'))
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==removed_formula,'removed_formula!=False')
+
+	#Tests that duplicated sets are removed
+	def testRemoveSet(self):
+		from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
+		from iegen import Set
+		from iegen.parser import PresParser
+
+		set=Set('{[a]:a=5}')
+		set.sets.append(PresParser.parse_set('{[a]:a=5}'))
+		set.sets.append(PresParser.parse_set('{[b]:b=6}'))
+		set.sets.append(PresParser.parse_set('{[b]:b=6}'))
+		removed_formula=RemoveDuplicateFormulasVisitor().visit(set).removed_formula
+
+		set_res=Set('{[a]:a=5}').union(Set('{[b]:b=6}'))
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_formula,'removed_formula!=True')
+
+	#Tests that non-duplicated relations are not removed
+	def testNoRemoveRelation(self):
+		from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
+		from iegen import Relation
+		from iegen.parser import PresParser
+
+		relation=Relation('{[a]->[ap]:a=5}')
+		relation.relations.append(PresParser.parse_relation('{[b]->[bp]:b=6}'))
+		removed_formula=RemoveDuplicateFormulasVisitor().visit(relation).removed_formula
+
+		relation_res=Relation('{[a]->[ap]:a=5}').union(Relation('{[b]->[bp]:b=6}'))
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(False==removed_formula,'removed_formula!=False')
+
+	#Tests that duplicated relations are removed
+	def testRemoveRelation(self):
+		from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
+		from iegen import Relation
+		from iegen.parser import PresParser
+
+		relation=Relation('{[a]->[ap]:a=5}')
+		relation.relations.append(PresParser.parse_relation('{[a]->[ap]:a=5}'))
+		relation.relations.append(PresParser.parse_relation('{[b]->[bp]:b=6}'))
+		relation.relations.append(PresParser.parse_relation('{[b]->[bp]:b=6}'))
+		removed_formula=RemoveDuplicateFormulasVisitor().visit(relation).removed_formula
+
+		relation_res=Relation('{[a]->[ap]:a=5}').union(Relation('{[b]->[bp]:b=6}'))
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_formula,'removed_formula!=True')
 #------------------------------------------------------
