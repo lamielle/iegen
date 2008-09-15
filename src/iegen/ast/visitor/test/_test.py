@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarEqualityVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -63,8 +63,10 @@ class TransVisitorTestCase(TestCase):
 	def testExistentialFail(self):
 		from iegen.ast.visitor import TransVisitor
 		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
 
-		set=Set('{[a]:a=1 && b=1}')
+		set=Set('{[a]:a=1}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
 		TransVisitor([]).visit(set)
 
 	#Make sure the result of the visiting is placed in the mat attribute
@@ -104,11 +106,16 @@ class TransVisitorTestCase(TestCase):
 	#Test that the sets in set_tests are translated properly
 	def testTrans(self):
 		from iegen.ast.visitor import TransVisitor
-		from iegen import Set
+		from iegen import Set,Symbolic
 
 		for set_string,res_mats,params in self.set_tests:
+			#Create a list of symbolics for the set
+			symbolics=[]
+			for param in params:
+				symbolics.append(Symbolic(param))
+
 			#Create a set from set string
-			set=Set(set_string)
+			set=Set(set_string,symbolics)
 
 			#Visit the set
 			v=TransVisitor(params).visit(set)
@@ -272,9 +279,12 @@ class IsVarVisitorTestCase(TestCase):
 	def testSearchConstraints(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
+		from iegen.ast import Equality,NormExp,VarExp
 
-		set=Set('{[]: a>=10 and b=5}')
-		relation=Relation('{[]->[]: a>=10 and b=5}')
+		set=Set('{[]: a>=10}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation=Relation('{[]->[]: a>=10}')
+		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
 
 		self.failUnless(IsVarVisitor('a').visit(set).is_var,"'a' is not a var in %s"%set)
 		self.failUnless(IsVarVisitor('b').visit(set).is_var,"'b' is not a var in %s"%set)
@@ -400,7 +410,8 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 		from iegen import Set
 		from iegen.ast import Equality,NormExp,VarExp
 
-		set=Set('{[]:a=5}')
+		set=Set('{[]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
 
 		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
@@ -416,9 +427,10 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 		from iegen import Relation
 		from iegen.ast import Equality,NormExp,VarExp
 
-		set=Relation('{[]->[]:a=5}')
+		relation=Relation('{[]->[]:a=5}')
+		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarEqualityVisitor().visit(relation).var_equality_tuple
 
 		eq=Equality(NormExp([VarExp(1,'a')],-5))
 		var=eq.exp.terms[0]
@@ -432,7 +444,8 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 		from iegen import Set
 		from iegen.ast import Equality,NormExp,VarExp
 
-		set=Set('{[a]:b=5 and a=5}')
+		set=Set('{[a]:a=5}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
 
 		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
@@ -446,9 +459,11 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 	def testFindInConstraints(self):
 		from iegen.ast.visitor import FindFreeVarEqualityVisitor
 		from iegen import Set
-		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
-		set=Set('{[a]:a=5 and b>=5 and b=5}')
+		set=Set('{[a]:a=5}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
 		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
@@ -462,9 +477,11 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 	def testFindInConstraintsWithSymbolic(self):
 		from iegen.ast.visitor import FindFreeVarEqualityVisitor
 		from iegen import Set,Symbolic
-		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
-		set=Set('{[a]:a=5 and b>=5 and b=5}',[Symbolic('n')])
+		set=Set('{[a]:a=5}',[Symbolic('n')])
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
 		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
@@ -478,17 +495,15 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 	def testFindCoefficientNeg1(self):
 		from iegen.ast.visitor import FindFreeVarEqualityVisitor
 		from iegen import Set
-		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
-		set=Set('{[a]:-b=5 and b>=5 and a=5}')
+		set=Set('{[a]: a=5}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(-6,'b')],5)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
 		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
 
-		eq=Equality(NormExp([VarExp(-1,'b')],-5))
-		var=eq.exp.terms[0]
-		equality_res=(var,eq)
-
-		self.failUnless(equality_res==equality,'%s!=%s'%(equality_res,equality))
+		self.failUnless(None is equality,'%s is not None'%equality)
 
 	#Tests that the visitor does not find any equalities
 	def testNoFind1(self):
@@ -831,3 +846,16 @@ class RemoveZeroCoeffVisitorTestCase(TestCase):
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(True==removed_term,'removed_term!=True')
 #-----------------------------------------------------
+
+#---------- Remove Free Var Equality Visitor ----------
+class RemoveFreeVarEqualityVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the changed attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveFreeVarEqualityVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=RemoveFreeVarEqualityVisitor().visit(set)
+		self.failUnless(hasattr(v,'changed'),"RemoveFreeVarEqualityVisitor doesn't place result in the 'changed' property.")
+#------------------------------------------------------

@@ -327,18 +327,18 @@ class SetTestCase(TestCase):
 
 		I_0_applied=I_0.apply(iter_ssr)
 
-		I_0_res=Set('{ [ii] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }')
+		#I_0_res=Set('{ [ii] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }')
 		#Once simplification is implemented, this should be the result
-		#I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }')
+		I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }')
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
 		iter_reordering=Relation('{ [ in ] -> [ i ] : i=delta(in) }')
 		I_0_applied=I_0_applied.apply(iter_reordering)
 
-		I_0_res=Set('{ [i] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }')
+		#I_0_res=Set('{ [i] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }')
 		#Once simplification is implemented, this should be the result
-		#I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }')
+		I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }')
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
