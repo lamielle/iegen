@@ -1,44 +1,9 @@
 #!/usr/bin/env python
 
+from sys import argv
 import iegen.util
-iegen.util.run_tests()
 
-#---------- Routines for running the script itself ----------
-#def build_test_suite(test_cases):
-#	#Build a large test suite by collecting test from each test case specified
-#	suite=defaultTestLoader.loadTestsFromTestCase(test_cases[0])
-#	for test_case in test_cases[1:]:
-#		suite.addTest(defaultTestLoader.loadTestsFromTestCase(test_case))
-#	return suite
-#
-#if '__main__'==__name__:
-#	#Test case categories
-#	all_test_cases=(IEGenImportTestCase,IEGenASTTestCase,IEGenPYCLooGTestCase)
-#	import_test_cases=(IEGenImportTestCase,)
-#	pycloog_test_cases=(IEGenPYCLooGTestCase,)
-#	ast_test_cases=(IEGenASTTestCase,)
-#
-#	#Determine what test cases to run based on the given arguments
-#	test_cases=()
-#	if len(argv)==1:
-#		test_cases=test_cases+all_test_cases
-#	else:
-#		for arg in argv[1:]:
-#			if 'all'==arg:
-#				test_cases+=all_test_cases
-#			elif 'import'==arg:
-#				test_cases+=import_test_cases
-#			elif 'pycloog'==arg:
-#				test_cases+=pycloog_test_cases
-#			elif 'ast'==arg:
-#				test_cases+=ast_test_cases
-#			else:
-#				test_cases=test_cases+(globals()[arg],)
-#
-#	#Remove duplicate test cases
-#	final_test_cases=tuple(set(test_cases))
-#
-#	#Get the test suite to run and run it
-#	suite=build_test_suite(final_test_cases)
-#	TextTestRunner(verbosity=2).run(suite)
-#--------------------------------------------------
+if len(argv)>1:
+	iegen.util.run_tests(argv[1])
+else:
+	iegen.util.run_tests()

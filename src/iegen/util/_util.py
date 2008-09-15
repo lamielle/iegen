@@ -1,7 +1,9 @@
+import os
+
 #Runs all of the IEGen tests
-def run_tests():
+def run_tests(subdir=''):
 	import iegen.lib.nose
-	iegen.lib.nose.run(argv=['','-v','-s','-w%s'%iegen.base_dir])
+	iegen.lib.nose.run(argv=['','-v','-s','-w%s'%iegen.base_dir+os.sep+subdir])
 
 #Runs all of the IEGen tests with coverage turned on
 def run_coverage():
