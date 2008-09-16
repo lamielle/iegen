@@ -65,37 +65,32 @@ class SetTestCase(TestCase):
 			self.failUnless(new_set_exp2==new_set_exp,'%s!=%s'%(new_set_exp2,new_set_exp))
 			self.failUnless(new_set_exp2==set_exp,'%s!=%s'%(new_set_exp2,set_exp))
 
+	#Tests the __repr__ method's support of symbolics
+	def testReprSymbolics(self):
+		from iegen import Symbolic
+		from iegen.ast import PresSet,VarTuple,Conjunction
+
+		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n')])"
+		exec('new_set_str=repr(%s)'%set_str)
+		self.failUnless(set_str==new_set_str,'%s!=%s'%(set_str,new_set_str))
+
+		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n'), Symbolic('m')])"
+		exec('new_set_str=repr(%s)'%set_str)
+		self.failUnless(set_str==new_set_str,'%s!=%s'%(set_str,new_set_str))
+
+		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n'), Symbolic('m'), Symbolic('o')])"
+		exec('new_set_str=repr(%s)'%set_str)
+		self.failUnless(set_str==new_set_str,'%s!=%s'%(set_str,new_set_str))
+
 	#Tests the __str__ method
 	def testStr(self):
+		from iegen.util import test_set_strings
 		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,NormExp,VarExp
+		from iegen import Symbolic
 
-		set=PresSet(VarTuple([]),Conjunction([]))
-		set_str='{[]}'
-		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
-
-		set=PresSet(VarTuple([VarExp(1,'a')]),Conjunction([]))
-		set_str='{[a]}'
-		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
-
-		set=PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'b')]),Conjunction([]))
-		set_str='{[a,b]}'
-		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
-
-		set=PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')]),Conjunction([]))
-		set_str='{[a,b,c]}'
-		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
-
-		set=PresSet(VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5))]))
-		set_str='{[]: -1a+5=0}'
-		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
-
-		set=PresSet(VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5))]))
-		set_str='{[]: -1a+5=0 and -1b+5=0}'
-		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
-
-		set=PresSet(VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5)),Equality(NormExp([VarExp(-1,'c')],5))]))
-		set_str='{[]: -1a+5=0 and -1b+5=0 and -1c+5=0}'
-		self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
+		for set_str,set_exp in test_set_strings:
+			exec('set=%s'%set_exp)
+			self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
@@ -184,57 +179,32 @@ class RelationTestCase(TestCase):
 			self.failUnless(new_rel_exp2==new_rel_exp,'%s!=%s'%(new_rel_exp2,new_rel_exp))
 			self.failUnless(new_rel_exp2==rel_exp,'%s!=%s'%(new_rel_exp2,rel_exp))
 
+	#Tests the __repr__ method's support of symbolics
+	def testReprSymbolics(self):
+		from iegen import Symbolic
+		from iegen.ast import PresRelation,VarTuple,Conjunction
+
+		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n')])"
+		exec('new_rel_str=repr(%s)'%rel_str)
+		self.failUnless(rel_str==new_rel_str,'%s!=%s'%(rel_str,new_rel_str))
+
+		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n'), Symbolic('m')])"
+		exec('new_rel_str=repr(%s)'%rel_str)
+		self.failUnless(rel_str==new_rel_str,'%s!=%s'%(rel_str,new_rel_str))
+
+		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n'), Symbolic('m'), Symbolic('o')])"
+		exec('new_rel_str=repr(%s)'%rel_str)
+		self.failUnless(rel_str==new_rel_str,'%s!=%s'%(rel_str,new_rel_str))
+
 	#Tests the __str__ method
 	def testStr(self):
+		from iegen.util import test_relation_strings
 		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,NormExp,VarExp
+		from iegen import Symbolic
 
-		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]))
-		rel_str='{[]->[]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([]),Conjunction([]))
-		rel_str='{[a]->[]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([VarExp(1,'a'),VarExp(1,'b')]),VarTuple([]),Conjunction([]))
-		rel_str='{[a,b]->[]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')]),VarTuple([]),Conjunction([]))
-		rel_str='{[a,b,c]->[]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]))
-		rel_str='{[]->[]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([]),VarTuple([VarExp(1,'a')]),Conjunction([]))
-		rel_str='{[]->[a]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([]),VarTuple([VarExp(1,'a'),VarExp(1,'b')]),Conjunction([]))
-		rel_str='{[]->[a,b]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([]),VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c')]),Conjunction([]))
-		rel_str='{[]->[a,b,c]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]))
-		rel_str='{[]->[]}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5))]))
-		rel_str='{[]->[]: -1a+5=0}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5))]))
-		rel_str='{[]->[]: -1a+5=0 and -1b+5=0}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
-
-		rel=PresRelation(VarTuple([]),VarTuple([]),Conjunction([Equality(NormExp([VarExp(-1,'a')],5)),Equality(NormExp([VarExp(-1,'b')],5)),Equality(NormExp([VarExp(-1,'c')],5))]))
-		rel_str='{[]->[]: -1a+5=0 and -1b+5=0 and -1c+5=0}'
-		self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
+		for rel_str,rel_exp in test_relation_strings:
+			exec('rel=%s'%rel_exp)
+			self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
