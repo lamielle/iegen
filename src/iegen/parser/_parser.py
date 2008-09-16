@@ -24,7 +24,7 @@ class PresParser(object):
 
 	#---------- Public Interface ----------
 	#Parse the given set string and return the associated AST
-	def parse_set(set,debug=False):
+	def parse_set(set,symbolics=[]):
 		#Remove relation-only tokens and rules
 		relation_rule=PresParser.p_relation
 		del PresParser.p_relation
@@ -36,7 +36,9 @@ class PresParser(object):
 			PresParser.tokens=PresParser.set_tokens
 
 			#Return the parsed AST
-			return PresParser.get_set_parser(set).parse(set)
+			set=PresParser.get_set_parser(set).parse(set)
+			set.symbolics=symbolics
+			return set
 		finally:
 			#Replace the relation-only tokens and rules
 			PresParser.p_relation=relation_rule
@@ -44,7 +46,7 @@ class PresParser(object):
 	parse_set=staticmethod(parse_set)
 
 	#Parse the given relation string and return the associated AST
-	def parse_relation(relation,debug=False):
+	def parse_relation(relation,symbolics=[]):
 		#Remove set-only tokens and rules
 		p_set=PresParser.p_set
 		del PresParser.p_set
@@ -54,7 +56,9 @@ class PresParser(object):
 			PresParser.tokens=PresParser.relation_tokens
 
 			#Return the parsed AST
-			return PresParser.get_relation_parser(relation).parse(relation)
+			relation=PresParser.get_relation_parser(relation).parse(relation)
+			relation.symbolics=symbolics
+			return relation
 		finally:
 			#Replace the set-only tokens and rules
 			PresParser.p_set=p_set

@@ -40,30 +40,54 @@ class Node(object):
 		raise NotImplementedError('All node types should override the apply_visitor method.')
 #-----------------------------------------
 
+#---------- Presburger Formula ----------
+#A presburger formula: either a set or a relation
+class PresForm(Node):
+
+	def __str__(self,vars,constraints=''):
+		if len(self.symbolics)>0:
+			syms=StringIO()
+			syms.write(' | ')
+			for symbolic in self.symbolics:
+				syms.write('%s,'%symbolic.name)
+			syms=syms.getvalue()[:-1]
+		else:
+			syms=''
+
+		if len(constraints)>0:
+			return '{%s: %s%s}'%(vars,constraints,syms)
+		else:
+			return '{%s%s}'%(vars,syms)
+#----------------------------------------
+
 #---------- Presburger Set ----------
 #A single presburger set
-class PresSet(Node):
-	__slots__=('tuple_set','conjunct')
+class PresSet(PresForm):
+	__slots__=('tuple_set','conjunct','symbolics')
 
 	@check
-	def __init__(self,tuple_set,conjunct):
+	def __init__(self,tuple_set,conjunct,symbolics=[]):
 		self.tuple_set=tuple_set
 		self.conjunct=conjunct
+		self.symbolics=symbolics
 
 	def __repr__(self):
-		return 'PresSet(%s,%s)'%(repr(self.tuple_set),repr(self.conjunct))
+		if len(self.symbolics)>0:
+			return 'PresSet(%s,%s,%s)'%(repr(self.tuple_set),repr(self.conjunct),repr(self.symbolics))
+		else:
+			return 'PresSet(%s,%s)'%(repr(self.tuple_set),repr(self.conjunct))
 
 	def __str__(self):
 		if len(self.conjunct)>0:
-			return '{%s: %s}'%(self.tuple_set,self.conjunct)
+			return PresForm.__str__(self,str(self.tuple_set),str(self.conjunct))
 		else:
-			return '{%s}'%self.tuple_set
+			return PresForm.__str__(self,str(self.tuple_set))
 
 	#Comparison operator
 	def __cmp__(self,other):
-		#Compare PresSets by their VarTuple and Conjunction
+		#Compare PresSets by their VarTuple, Conjunction, and Symbolics
 		if like_type(other,PresSet):
-			return cmp((self.tuple_set,self.conjunct),(other.tuple_set,other.conjunct))
+			return cmp((self.tuple_set,self.conjunct,self.symbolics),(other.tuple_set,other.conjunct,self.symbolics))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
@@ -76,29 +100,33 @@ class PresSet(Node):
 
 #---------- Presburger Relation ----------
 #A single presburger relation
-class PresRelation(Node):
-	__slots__=('tuple_in','tuple_out','conjunct')
+class PresRelation(PresForm):
+	__slots__=('tuple_in','tuple_out','conjunct','symbolics')
 
 	@check
-	def __init__(self,tuple_in,tuple_out,conjunct):
+	def __init__(self,tuple_in,tuple_out,conjunct,symbolics=[]):
 		self.tuple_in=tuple_in
 		self.tuple_out=tuple_out
 		self.conjunct=conjunct
+		self.symbolics=symbolics
 
 	def __repr__(self):
-		return 'PresRelation(%s,%s,%s)'%(repr(self.tuple_in),repr(self.tuple_out),repr(self.conjunct))
+		if len(self.symbolics)>0:
+			return 'PresRelation(%s,%s,%s,%s)'%(repr(self.tuple_in),repr(self.tuple_out),repr(self.conjunct),repr(self.symbolics))
+		else:
+			return 'PresRelation(%s,%s,%s)'%(repr(self.tuple_in),repr(self.tuple_out),repr(self.conjunct))
 
 	def __str__(self):
 		if len(self.conjunct)>0:
-			return '{%s->%s: %s}'%(self.tuple_in,self.tuple_out,self.conjunct)
+			return PresForm.__str__(self,'%s->%s'%(self.tuple_in,self.tuple_out),str(self.conjunct))
 		else:
-			return '{%s->%s}'%(self.tuple_in,self.tuple_out)
+			return PresForm.__str__(self,'%s->%s'%(self.tuple_in,self.tuple_out))
 
 	#Comparison operator
 	def __cmp__(self,other):
-		#Compare PresRelations by their VarTuple and Conjunction
+		#Compare PresRelations by their VarTuples, Conjunction, and Symbolics
 		if like_type(other,PresRelation):
-			return cmp((self.tuple_in,self.tuple_out,self.conjunct),(other.tuple_in,self.tuple_out,other.conjunct))
+			return cmp((self.tuple_in,self.tuple_out,self.conjunct,self.symbolics),(other.tuple_in,self.tuple_out,other.conjunct,self.symbolics))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 

@@ -23,6 +23,35 @@ class ImportTestCase(TestCase):
 #---------- PresSet Tests ----------
 class SetTestCase(TestCase):
 
+	#Tests that the PresSet constructor takes an optional symbolics argument for the collection of symbolics
+	def testSetSymbolics(self):
+		from iegen.ast import PresSet,Conjunction,VarTuple
+		from iegen import Symbolic
+
+		set=PresSet(VarTuple([]),Conjunction([]),[Symbolic('n')])
+		set=PresSet(VarTuple([]),Conjunction([]),symbolics=[Symbolic('n')])
+
+	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+	@raises(ValueError)
+	def testNonSymbolicFail(self):
+		from iegen import Symbolic
+		from iegen.ast import PresSet,VarTuple,Conjunction
+		from iegen.parser import PresParser
+
+		PresSet(VarTuple([]),Conjunction([]),[Symbolic('n'),'m'])
+
+	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+	def testLikeSymbolic(self):
+		from iegen.ast import PresSet,VarTuple,Conjunction,Node
+
+		class DummySymbolic(Node):
+			def __init__(self,name):
+				self.name=name
+			def apply_visitor(self,visitor):
+				visitor.visitSymbolic(self)
+
+		PresSet(VarTuple([]),Conjunction([]),[DummySymbolic('n')])
+
 	#Tests the __repr__ method
 	def testRepr(self):
 		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
@@ -94,6 +123,7 @@ class SetTestCase(TestCase):
 			def __init__(self,tuple_set,conjunct):
 				self.tuple_set=tuple_set
 				self.conjunct=conjunct
+				self.symbolics=[]
 
 		for set_str,set_exp in test_sets:
 			exec('new_set_exp1='+set_exp)
@@ -112,6 +142,34 @@ class SetTestCase(TestCase):
 
 #---------- PresRelation Tests ----------
 class RelationTestCase(TestCase):
+
+	#Tests that the PresRelation constructor takes an optional symbolics argument for the collection of symbolics
+	def testRelationSymbolics(self):
+		from iegen.ast import PresRelation,Conjunction,VarTuple
+		from iegen import Symbolic
+
+		set=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n')])
+		set=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),symbolics=[Symbolic('n')])
+
+	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+	@raises(ValueError)
+	def testNonSymbolicFail(self):
+		from iegen import Symbolic
+		from iegen.ast import PresRelation,VarTuple,Conjunction
+
+		PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n'),'m'])
+
+	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+	def testLikeSymbolic(self):
+		from iegen.ast import PresRelation,VarTuple,Conjunction,Node
+
+		class DummySymbolic(Node):
+			def __init__(self,name):
+				self.name=name
+			def apply_visitor(self,visitor):
+				visitor.visitSymbolic(self)
+
+		PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[DummySymbolic('n')])
 
 	#Tests the __repr__ method
 	def testRepr(self):
@@ -205,6 +263,7 @@ class RelationTestCase(TestCase):
 				self.tuple_in=tuple_in
 				self.tuple_out=tuple_out
 				self.conjunct=conjunct
+				self.symbolics=[]
 
 		for rel_str,rel_exp in test_relations:
 			exec('new_rel_exp1='+rel_exp)

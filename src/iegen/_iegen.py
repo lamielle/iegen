@@ -74,6 +74,12 @@ class Symbolic(Node):
 	def __str__(self):
 		return self.name
 
+	def __cmp__(self,other):
+		if iegen.util.like_type(other,Symbolic):
+			return cmp(self.name,other.name)
+		else:
+			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
+
 	def apply_visitor(self,visitor):
 		visitor.visitSymbolic(self)
 #------------------------------------

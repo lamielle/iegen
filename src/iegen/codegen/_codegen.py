@@ -28,6 +28,7 @@ def calc_artt(mapir,data_permute):
 
 	print mapir.full_iter_space
 	print data_permute.iter_sub_space_relation
+	print iter_to_data
 
 	artt=AccessRelation(
               name='A_I_sub_to_%s'%(data_permute.target_data_space.name),

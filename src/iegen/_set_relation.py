@@ -9,16 +9,9 @@ from iegen.util import normalize_self,normalize_result,check,like_type,raise_obj
 #---------- Formula class ----------
 #Parent class for Sets and Relations
 class Formula(Node):
-	__slots__=('symbolics',)
 
 	def __str__(self,formulas):
 		s=StringIO()
-		if len(self.symbolics)>0:
-			s.write('[')
-			for symbolic in self.symbolics:
-				s.write('%s%s'%(str(symbolic),','))
-			s.seek(-1,1)
-			s.write(']: ')
 		for formula in formulas:
 			s.write('%s%s'%(str(formula),' union '))
 		return s.getvalue()[:-7]
@@ -149,19 +142,19 @@ class Set(Formula):
 	@check
 	def __init__(self,set_string=None,symbolics=[],sets=None):
 		if None is not set_string and None is sets:
-			self.sets=[PresParser.parse_set(set_string)]
+			self.sets=[PresParser.parse_set(set_string,symbolics)]
 		elif None is not sets and None is set_string:
+			if len(symbolics)>0:
+				raise ValueError('Cannot specify symbolics when specifying a collection of sets.')
 			if len(sets)>0:
 				self.sets=sets
 			else:
-				raise ValueError('Must specify at least one set in the sets collection')
+				raise ValueError('Must specify at least one set in the sets collection.')
 		else:
 			raise ValueError('Set.__init__ takes either a set string or a collection of sets.')
 
-		self.symbolics=symbolics
-
 	def __repr__(self):
-		return "Set(symbolics=%s,sets=%s)"%(self.symbolics,self.sets)
+		return "Set(sets=%s)"%(self.sets)
 
 	def __str__(self):
 		return Formula.__str__(self,self.sets)
@@ -253,7 +246,7 @@ class Set(Formula):
 		if rel.arity_in()!=set.arity():
 			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(rel.arity_out(),set.arity()))
 
-		return self._combine_pres_formulas(set,'tuple_set',rel,'tuple_in',PresSet(deepcopy(rel.tuple_out),Conjunction([])))
+		return self._combine_pres_formulas(set,'tuple_set',rel,'tuple_in',PresSet(deepcopy(rel.tuple_out),Conjunction([]),deepcopy(set.symbolics)+deepcopy(rel.symbolics)))
 
 #	#Given a collection of scattering functions for each statement
 #	#Returns the code that iterates over the tuples in this set
@@ -278,8 +271,10 @@ class Relation(Formula):
 	@check
 	def __init__(self,relation_string=None,symbolics=[],relations=None):
 		if None is not relation_string and None is relations:
-			self.relations=[PresParser.parse_relation(relation_string)]
+			self.relations=[PresParser.parse_relation(relation_string,symbolics)]
 		elif None is not relations and None is relation_string:
+			if len(symbolics)>0:
+				raise ValueError('Cannot specify symbolics when specifying a collection of relations.')
 			if len(relations)>0:
 				self.relations=relations
 			else:
@@ -287,10 +282,8 @@ class Relation(Formula):
 		else:
 			raise ValueError('Relation.__init__ takes either a relation string or a collection of relations.')
 
-		self.symbolics=symbolics
-
 	def __repr__(self):
-		return "Relation(symbolics=%s,relations=%s)"%(self.symbolics,self.relations)
+		return "Relation(relations=%s)"%(self.relations)
 
 	def __str__(self):
 		return Formula.__str__(self,self.relations)
@@ -408,5 +401,5 @@ class Relation(Formula):
 		if r2.arity_out()!=r1.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(r2.arity_out(),r1.arity_in()))
 
-		return self._combine_pres_formulas(r1,'tuple_in',r2,'tuple_out',PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([])))
+		return self._combine_pres_formulas(r1,'tuple_in',r2,'tuple_out',PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([]),deepcopy(r1.symbolics)+deepcopy(r2.symbolics)))
 #------------------------------------

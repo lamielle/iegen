@@ -82,8 +82,6 @@ class DFVisitor(object):
 
 	def visitSet(self,node):
 		self.inSet(node)
-		for symbolic in node.symbolics:
-			symbolic.apply_visitor(self)
 		for set in node.sets:
 			set.apply_visitor(self)
 		self.outSet(node)
@@ -92,12 +90,12 @@ class DFVisitor(object):
 		self.inPresSet(node)
 		node.tuple_set.apply_visitor(self)
 		node.conjunct.apply_visitor(self)
+		for symbolic in node.symbolics:
+			symbolic.apply_visitor(self)
 		self.outPresSet(node)
 
 	def visitRelation(self,node):
 		self.inRelation(node)
-		for symbolic in node.symbolics:
-			symbolic.apply_visitor(self)
 		for relation in node.relations:
 			relation.apply_visitor(self)
 		self.outRelation(node)
@@ -107,6 +105,8 @@ class DFVisitor(object):
 		node.tuple_in.apply_visitor(self)
 		node.tuple_out.apply_visitor(self)
 		node.conjunct.apply_visitor(self)
+		for symbolic in node.symbolics:
+			symbolic.apply_visitor(self)
 		self.outPresRelation(node)
 
 	def visitSymbolic(self,node):

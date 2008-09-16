@@ -7,21 +7,19 @@ class CheckVisitor(DFVisitor):
 		self.in_var_tuple=False
 
 	def inSet(self,node):
-		from iegen import Symbolic
 		from iegen.ast import PresSet
-		raise_objs_not_like_types(node.symbolics,Symbolic)
 		raise_objs_not_like_types(node.sets,PresSet,True)
 
 	def inRelation(self,node):
-		from iegen import Symbolic
 		from iegen.ast import PresRelation
-		raise_objs_not_like_types(node.symbolics,Symbolic)
 		raise_objs_not_like_types(node.relations,PresRelation)
 
 	def inPresSet(self,node):
+		from iegen import Symbolic
 		from iegen.ast import VarTuple,Conjunction
 		raise_objs_not_like_types(node.tuple_set,VarTuple)
 		raise_objs_not_like_types(node.conjunct,Conjunction)
+		raise_objs_not_like_types(node.symbolics,Symbolic)
 
 		if None is self.arity:
 			self.arity=node.arity()
@@ -29,10 +27,12 @@ class CheckVisitor(DFVisitor):
 					raise ValueError('All sets in a Set must have the same arity.')
 
 	def inPresRelation(self,node):
+		from iegen import Symbolic
 		from iegen.ast import VarTuple,Conjunction
 		raise_objs_not_like_types(node.tuple_in,VarTuple)
 		raise_objs_not_like_types(node.tuple_out,VarTuple)
 		raise_objs_not_like_types(node.conjunct,Conjunction)
+		raise_objs_not_like_types(node.symbolics,Symbolic)
 
 		if None is self.arity:
 			self.arity=node.arity()
