@@ -11,38 +11,30 @@ def full_iter_space(statements):
 	return full_iter
 
 def calc_artt(mapir,data_permute):
+	from iegen import AccessRelation
 	#Iteration Sub Space Relation
 	issr=data_permute.iter_sub_space_relation
 
 	#Calculate the iteration space to data space relation
 	iter_to_data=None
 	for stmt in mapir.statements:
-		print 'stmt.iter_space=%s'%stmt.iter_space
-		print 'stmt.scatter=%s'%stmt.scatter
 		if not iter_to_data:
-			print 'ar.iter_to_data=%s'%stmt.access_relations[0].iter_to_data
-			print 'component=%s'%issr.compose(stmt.scatter.compose(stmt.access_relations[0].iter_to_data.inverse())).inverse()
 			iter_to_data=issr.compose(stmt.scatter.compose(stmt.access_relations[0].iter_to_data.inverse())).inverse()
-			print '---iter_to_data=%s'%iter_to_data
 		else:
-			print 'ar.iter_to_data=%s'%stmt.access_relations[0].iter_to_data
-			print 'component=%s'%issr.compose(stmt.scatter.compose(stmt.access_relations[0].iter_to_data.inverse())).inverse()
 			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(stmt.access_relations[0].iter_to_data.inverse())).inverse())
-			print '---iter_to_data=%s'%iter_to_data
 
 		for ar in stmt.access_relations[1:]:
-			print 'ar.iter_to_data=%s'%ar.iter_to_data
-			print 'component=%s'%issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse()
 			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse())
-			print '---iter_to_data=%s'%iter_to_data
 
-	print '---iter_to_data=%s'%iter_to_data
+	print mapir.full_iter_space
+	print data_permute.iter_sub_space_relation
 
-#	artt=AccessRelation(
-#              name='A_I_sub_to_%s'%(data_permute.target_data_space.name),
-#              iter_space=mapir.full_iter_space.apply(data_permute.iter_sub_space_relation)
-#              data_space=data_permute.target_data_space,
-#              iter_to_data=
+	artt=AccessRelation(
+              name='A_I_sub_to_%s'%(data_permute.target_data_space.name),
+              iter_space=mapir.full_iter_space.apply(data_permute.iter_sub_space_relation),
+              data_space=data_permute.target_data_space,
+              iter_to_data=iter_to_data)
+	return artt
 
 #---------- Public Interface Function ----------
 def codegen(mapir,data_permute,iter_permute,code):

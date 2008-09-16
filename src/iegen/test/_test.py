@@ -322,9 +322,8 @@ class SetTestCase(TestCase):
 		relation=Relation('{[d]->[e,f]:e=d && -10<=f and f<=0}')
 
 		applied=set.apply(relation)
-		applied_res=Set('{[e,f]: 1<=a and a<=10 && e=d and -10<=f and f<=0 and a=d}')
-		#Once simplification is implemented, this should be the result
-		#applied_res=Set('{[e,f]: 1<=e and e<=10 && -10<=f and f<=0}')
+
+		applied_res=Set('{[e,f]: 1<=e and e<=10 && -10<=f and f<=0}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -336,9 +335,8 @@ class SetTestCase(TestCase):
 		relation=Relation('{[d]->[e,f]:e=d and f=d}')
 
 		applied=set.apply(relation)
-		applied_res=Set('{[e,f]: a=d and e=d and f=d}')
-		#Once simplification is implemented, this should be the result
-		#applied_res=Set('{[e,f]: e=f}')
+
+		applied_res=Set('{[e,f]: e=f}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -350,9 +348,8 @@ class SetTestCase(TestCase):
 		relation=Relation('{[a,b]->[b,c]:-10<=a and a<=0}')
 
 		applied=set.apply(relation)
-		applied_res=Set('{[b,c]: -10<=a and a<=0 and 1<=a and a<=10 and 1<=b and b<=10 and a=a and b=b}')
-		#Once simplification is implemented, this should be the result
-		#applied_res=Set('{[b,c]:1<=a and a<=10 and 1<=b and b<=10 and -10<=a and a<=0}')
+
+		applied_res=Set('{[b,c]:1<=a and a<=10 and 1<=b and b<=10 and -10<=a and a<=0}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -385,18 +382,14 @@ class SetTestCase(TestCase):
 
 		I_0_applied=I_0.apply(iter_ssr)
 
-		I_0_res=Set('{ [ii] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }').union(Set('{ [ii] : s1=2 and s2=2 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }')).union(Set('{ [ii] : s1=3 and s2=3 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j }'))
-		#Once simplification is implemented, this should be the result
-		#I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }').union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }')).union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }'))
+		I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }').union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }')).union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }'))
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
 		iter_reordering=Relation('{ [ in ] -> [ i ] : i=delta(in) }')
 		I_0_applied=I_0_applied.apply(iter_reordering)
 
-		I_0_res=Set('{ [i] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }').union(Set('{ [i] : s1=2 and s2=2 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }')).union(Set('{ [i] : s1=3 and s2=3 and 0 <= i and i <= (n_atom-1) and k=2 and s1=k and i=ii and s2=j and ii=in and i=delta(in) }'))
-		#Once simplification is implemented, this should be the result
-		#I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }').union(Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }')).union(Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }'))
+		I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }').union(Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }')).union(Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }'))
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
@@ -814,9 +807,8 @@ class RelationTestCase(TestCase):
 		relation2=Relation('{[d]->[e,f]:-10<=d and d<=0}')
 
 		composed=relation1.compose(relation2)
-		composed_res=Relation('{[d]->[c]: -10<=d and d<=0 and 1<=a and a<=10 and 1<=b and b<=10 and a=e and b=f}')
-		#Once simplification is implemented, this should be the result
-		#composed_res=Relation('{[d]->[c]: -10<=d and d<=0}')
+
+		composed_res=Relation('{[d]->[c]: -10<=d and d<=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -828,9 +820,8 @@ class RelationTestCase(TestCase):
 		relation2=Relation('{[d]->[e,f]:e=d and f=d}')
 
 		composed=relation1.compose(relation2)
-		composed_res=Relation('{[d]->[c]: a=e and b=f and e=d and f=d and c=a}')
-		#Once simplification is implemented, this should be the result
-		#composed_res=Relation('{[d]->[c]: d=c}')
+
+		composed_res=Relation('{[d]->[c]: d=c}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -842,9 +833,8 @@ class RelationTestCase(TestCase):
 		relation2=Relation('{[a]->[b,c]:-10<=a and a<=0}')
 
 		composed=relation1.compose(relation2)
-		composed_res=Relation('{[a]->[c]: -10<=a and a<=0 and 1<=a and a<=10 and 1<=b and b<=10 and a=b and b=c}')
-		#Once simplification is implemented, this should be the result
-		#composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
+
+		composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -856,9 +846,8 @@ class RelationTestCase(TestCase):
 		data_reordering=Relation('{[k]->[dr_out]:dr_out=sigma(k)}')
 
 		ar_composed=data_reordering.compose(ar)
-		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}')
-		#Once simplification is implemented, this should be the result
-		#ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}')
+
+		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}')
 
 		self.failUnless(ar_composed==ar_res,'%s!=%s'%(ar_composed,ar_res))
 
@@ -870,9 +859,8 @@ class RelationTestCase(TestCase):
 		data_reordering=Relation('{[k]->[dr_out]:dr_out=sigma(k)}')
 
 		ar_composed=data_reordering.compose(ar)
-		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}').union(Relation('{[ii,s]->[dr_out]:s=2 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}')).union(Relation('{[ii,s]->[dr_out]:s=3 and ar_out=inter(ii) and dr_out=sigma(k) and ar_out=k}'))
-		#Once simplification is implemented, this should be the result
-		#ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}').union(Relation('{[ii,s]->[dr_out]:s=2 and dr_out=sigma(inter(ii))}')).union(Relation('{[ii,s]->[dr_out]:s=3 and dr_out=sigma(inter(ii))}'))
+
+		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}').union(Relation('{[ii,s]->[dr_out]:s=2 and dr_out=sigma(inter(ii))}')).union(Relation('{[ii,s]->[dr_out]:s=3 and dr_out=sigma(inter(ii))}'))
 
 		self.failUnless(ar_composed==ar_res,'%s!=%s'%(ar_composed,ar_res))
 

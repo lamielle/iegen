@@ -126,4 +126,4 @@ iter_reordering=None
 
 #XXX: What is the best way that this should be specified using the MapIR specification?
 
-moldyn_spec.codegen(data_reordering,iter_reordering)
+print moldyn_spec.codegen(data_reordering,iter_reordering)

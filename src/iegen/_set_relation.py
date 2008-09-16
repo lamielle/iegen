@@ -218,6 +218,7 @@ class Set(Formula):
 	#          R2(S1) union R2(S2) union ... union R2(SN) union
 	#          ...
 	#          RM(S1) union RM(S2) union ... union RM(SN)
+	@normalize_result
 	def apply(self,other):
 		from copy import deepcopy
 
@@ -373,6 +374,7 @@ class Relation(Formula):
 	#            R12(R21) union R12(R22) union ... union R12(R2M) union
 	#            ...
 	#            R1N(R21) union R1N(R22) union ... union R1N(R2M)
+	@normalize_result
 	def compose(self,other):
 		from copy import deepcopy
 
