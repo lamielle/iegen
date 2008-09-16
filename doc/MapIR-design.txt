@@ -52,7 +52,7 @@ Need a MapIR specification.
             boolean isPermutation;  // is this index array a permutation?
 
             // boundary can be constant or sym const
-            List<Set> input_bounds;
+            Set input_bounds;
             Set output_bounds;
         }
     Checking

@@ -234,8 +234,7 @@ Generating the composed inspector
                 }
 
 
-LEFTOFF editing for ER stuff, MMS 09/10/08
-    c) Automatically generate the IndexArray specification for sigma
+    c) Automatically generate the IAG (index array generator) and IndexArray specification for sigma
     This algorithm should be implemented by passing the appropriate parameters to the IAG_Permute constructor.  See MapIR-design.txt for more info.
         input:
             DataPermuteRTRT instance
@@ -244,14 +243,14 @@ LEFTOFF editing for ER stuff, MMS 09/10/08
         output:
             iag_spec = new IAG_Permute(
                 String name = rtrt.iag_func_name
-                AccessRelation input = access_relation_to_traverse
+                AccessRelation input = artt
                 IndexArray result = new IndexArray(
                     data_space = [name of uninterp func in data_reordering],
                                  [specification from data space in RTRT],
                                  index array,
                     isPermutation = true,
-                    input_bounds = [ (same bounds as for data space) ],
-                    output_bounds = (same bounds as for data space)
+                    input_bounds = [ Set that describes data space ],
+                    output_bounds = [ Set that describes data space ]
                 )
             )
 
@@ -266,29 +265,49 @@ LEFTOFF editing for ER stuff, MMS 09/10/08
                 IndexArray result = new IndexArray(
                     data_space = "sigma", X_0.spec, index array,
                     isPermutation = true,
-                    input_bounds = [(0,(N-1))],
-                    output_bounds = (0,(N-1))
+                    input_bounds = { [k] : 0 <= k <= (N-1) },
+                    output_bounds = { [k] : 0 <= k <= (N-1) }
                 )
 
             )
+            
 
     d) generate code that passes explicit relation to IAG
+    Note: could have IAG call the ER_ctor, but we want to have "library" programmers do the least amount of work possible.
+    
         input:
             iag_spec for sigma
 
         output:
             code
-                [iag_spec.result.data_space.name] = malloc( ... );
+                RectDomain * in_domain 
+                    = RD_ctor( [iag_spec.result.input_bounds.arity] )
+                RD_set_lb(in_domain, 0, [iag_spec.result.input_bounds.lb ] );
+                RD_set_ub(in_domain, 0, [iag_spec.result.input_bounds.ub ] );
+                ... // set lb and ub for each dimension of input_bounds
+                
+                ExplicitRelation * [iag_spec.result.data_space.name] 
+                    = ER_ctor( [iag_spec.result.input_bounds.arity],
+                               [iag_spec.result.output_bounds.arity],
+                               in_domain,
+                               [iag_spec.result.isPermutation] );
+                               
                 [iag_spec.name]( [iag_spec.input.name],
                                  [iag_spec.result.data_space.name] );
 
         For this example:
-                int *sigma;
-                MALLOC(sigma,int,N);
+                RectDomain * in_domain = RD_ctor(1,1);
+                RD_set_lb(in_domain, 0, 0);
+                RD_set_ub(in_domain, 0, n_inter-1);
+                ExplicitRelation * sigma = ER_ctor(1,1,in_domain,true);
                 IAG_cpack( artt, sigma );
+                
 
+LEFTOFF, MMS, 9/16/08
+FIXME: still need to rewrite IAG_cpack
     e) generate code that does data reordering
-    FIXME: eventually all the data reordering will be done only once per composition.  This example has only one data reordering, so this is somewhat mute.
+    FIXME: eventually all the data reordering will be done only once per composition.  This example has only one data reordering.
+    
         input:
             iag_spec for sigma
             DataPermuteRTRT.data_spaces to be reordered
