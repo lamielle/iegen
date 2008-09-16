@@ -58,6 +58,35 @@ class PresForm(Node):
 			return '{%s: %s%s}'%(vars,constraints,syms)
 		else:
 			return '{%s%s}'%(vars,syms)
+
+	#Determines if the given variable name exists as a variable anywhere in the formula
+	#Returns True if the variable name exists
+	#Returns False otherwise
+	def is_var(self,var_name):
+		from iegen.ast.visitor import IsVarVisitor
+		return IsVarVisitor(var_name).visit(self).is_var
+
+	#Determines if the given variable name is a symbolic variable
+	#Returns True if the name is a symbolic variable
+	#Returns False otherwise
+	def is_symbolic_var(self,var_name):
+		from iegen.ast.visitor import IsVarVisitor
+		return IsVarVisitor(var_name).visit(self).is_symbolic_var
+
+	#Determines if the given variable name is a tuple variable
+	#Returns True if the name is a tuple variable
+	#Returns False otherwise
+	def is_tuple_var(self,var_name):
+		from iegen.ast.visitor import IsVarVisitor
+		return IsVarVisitor(var_name).visit(self).is_tuple_var
+
+	#Determines if the given variable name is a free variable
+	#Returns True if the name is neither a tuple variable nor a symbolic variable
+	#Returns False otherwise
+	def is_free_var(self,var_name):
+		from iegen.ast.visitor import IsVarVisitor
+		v=IsVarVisitor(var_name).visit(self)
+		return v.is_var and not v.is_symbolic_var and not v.is_tuple_var
 #----------------------------------------
 
 #---------- Presburger Set ----------

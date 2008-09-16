@@ -395,42 +395,6 @@ class SetTestCase(TestCase):
 		unrename_res={'pre_a':'a','pre_b':'b'}
 
 		self.failUnless(unrename==unrename_res,'%s!=%s'%(unrename,unrename_res))
-
-	#Tests the is_symbolic_var method
-	def testIsSymbolicVar(self):
-		from iegen import Set,Symbolic
-
-		set=Set('{[a,b]:0<=a and a<=n and c>0}',[Symbolic('n')])
-
-		self.failUnless(set.is_symbolic_var('n'),"'n' is not a symbolic var in %s"%set)
-		self.failIf(set.is_symbolic_var('a'),"'a' is a symbolic var in %s"%set)
-		self.failIf(set.is_symbolic_var('b'),"'b' is a symbolic var in %s"%set)
-		self.failIf(set.is_symbolic_var('c'),"'c' is a symbolic var in %s"%set)
-		self.failIf(set.is_symbolic_var('d'),"'d' is a symbolic var in %s"%set)
-
-	#Tests the is_tuple_var method
-	def testIsTupleVar(self):
-		from iegen import Set,Symbolic
-
-		set=Set('{[a,b]:0<=a and a<=n and c>0}',[Symbolic('n')])
-
-		self.failIf(set.is_tuple_var('n'),"'n' is a tuple var in %s"%set)
-		self.failUnless(set.is_tuple_var('a'),"'a' is not a tuple var in %s"%set)
-		self.failUnless(set.is_tuple_var('b'),"'b' is not a tuple var in %s"%set)
-		self.failIf(set.is_tuple_var('c'),"'c' is a tuple var in %s"%set)
-		self.failIf(set.is_tuple_var('d'),"'d' is a tuple var in %s"%set)
-
-	#Tests the is_free_var method
-	def testIsFreeVar(self):
-		from iegen import Set,Symbolic
-
-		set=Set('{[a,b]:0<=a and a<=n and c>0}',[Symbolic('n')])
-
-		self.failIf(set.is_free_var('n'),"'n' is a free var in %s"%set)
-		self.failIf(set.is_free_var('a'),"'a' is a free var in %s"%set)
-		self.failIf(set.is_free_var('b'),"'b' is a free var in %s"%set)
-		self.failUnless(set.is_free_var('c'),"'c' is not a free var in %s"%set)
-		self.failIf(set.is_free_var('d'),"'d' is a free var in %s"%set)
 #-------------------------------
 
 #---------- Relation Tests ----------
@@ -843,40 +807,4 @@ class RelationTestCase(TestCase):
 		unrename_res={'pre_in_a':'a','pre_in_b':'b','pre_out_c':'c','pre_out_d':'d','pre_out_e':'e'}
 
 		self.failUnless(unrename==unrename_res,'%s!=%s'%(unrename,unrename_res))
-
-	#Tests the is_symbolic_var method
-	def testIsSymbolicVar(self):
-		from iegen import Relation,Symbolic
-
-		relation=Relation('{[a]->[b]:0<=a and a<=n and c>0}',[Symbolic('n')])
-
-		self.failUnless(relation.is_symbolic_var('n'),"'n' is not a symbolic var in %s"%relation)
-		self.failIf(relation.is_symbolic_var('a'),"'a' is a symbolic var in %s"%relation)
-		self.failIf(relation.is_symbolic_var('b'),"'b' is a symbolic var in %s"%relation)
-		self.failIf(relation.is_symbolic_var('c'),"'c' is a symbolic var in %s"%relation)
-		self.failIf(relation.is_symbolic_var('d'),"'d' is a symbolic var in %s"%relation)
-
-	#Tests the is_tuple_var method
-	def testIsTupleVar(self):
-		from iegen import Relation,Symbolic
-
-		relation=Relation('{[a]->[b]:0<=a and a<=n and c>0}',[Symbolic('n')])
-
-		self.failIf(relation.is_tuple_var('n'),"'n' is a tuple var in %s"%relation)
-		self.failUnless(relation.is_tuple_var('a'),"'a' is not a tuple var in %s"%relation)
-		self.failUnless(relation.is_tuple_var('b'),"'b' is not a tuple var in %s"%relation)
-		self.failIf(relation.is_tuple_var('c'),"'c' is a tuple var in %s"%relation)
-		self.failIf(relation.is_tuple_var('d'),"'d' is a tuple var in %s"%relation)
-
-	#Tests the is_free_var method
-	def testIsFreeVar(self):
-		from iegen import Relation,Symbolic
-
-		relation=Relation('{[a]->[b]:0<=a and a<=n and c>0}',[Symbolic('n')])
-
-		self.failIf(relation.is_free_var('n'),"'n' is a free var in %s"%relation)
-		self.failIf(relation.is_free_var('a'),"'a' is a free var in %s"%relation)
-		self.failIf(relation.is_free_var('b'),"'b' is a free var in %s"%relation)
-		self.failUnless(relation.is_free_var('c'),"'c' is not a free var in %s"%relation)
-		self.failIf(relation.is_free_var('d'),"'d' is a free var in %s"%relation)
 #------------------------------------

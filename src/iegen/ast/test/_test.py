@@ -133,6 +133,45 @@ class SetTestCase(TestCase):
 		from iegen.ast import PresSet
 
 		self.failUnless(hasattr(PresSet,'arity'),"PresSet has no 'arity' method.")
+
+	#Tests the is_symbolic_var method
+	def testIsSymbolicVar(self):
+		from iegen import Set,Symbolic
+		from iegen.parser import PresParser
+
+		set=PresParser.parse_set('{[a,b]:0<=a and a<=n and c>0}',[Symbolic('n')])
+
+		self.failUnless(set.is_symbolic_var('n'),"'n' is not a symbolic var in %s"%set)
+		self.failIf(set.is_symbolic_var('a'),"'a' is a symbolic var in %s"%set)
+		self.failIf(set.is_symbolic_var('b'),"'b' is a symbolic var in %s"%set)
+		self.failIf(set.is_symbolic_var('c'),"'c' is a symbolic var in %s"%set)
+		self.failIf(set.is_symbolic_var('d'),"'d' is a symbolic var in %s"%set)
+
+	#Tests the is_tuple_var method
+	def testIsTupleVar(self):
+		from iegen import Set,Symbolic
+		from iegen.parser import PresParser
+
+		set=PresParser.parse_set('{[a,b]:0<=a and a<=n and c>0}',[Symbolic('n')])
+
+		self.failIf(set.is_tuple_var('n'),"'n' is a tuple var in %s"%set)
+		self.failUnless(set.is_tuple_var('a'),"'a' is not a tuple var in %s"%set)
+		self.failUnless(set.is_tuple_var('b'),"'b' is not a tuple var in %s"%set)
+		self.failIf(set.is_tuple_var('c'),"'c' is a tuple var in %s"%set)
+		self.failIf(set.is_tuple_var('d'),"'d' is a tuple var in %s"%set)
+
+	#Tests the is_free_var method
+	def testIsFreeVar(self):
+		from iegen import Symbolic
+		from iegen.parser import PresParser
+
+		set=PresParser.parse_set('{[a,b]:0<=a and a<=n and c>0}',[Symbolic('n')])
+
+		self.failIf(set.is_free_var('n'),"'n' is a free var in %s"%set)
+		self.failIf(set.is_free_var('a'),"'a' is a free var in %s"%set)
+		self.failIf(set.is_free_var('b'),"'b' is a free var in %s"%set)
+		self.failUnless(set.is_free_var('c'),"'c' is not a free var in %s"%set)
+		self.failIf(set.is_free_var('d'),"'d' is a free var in %s"%set)
 #-----------------------------------
 
 #---------- PresRelation Tests ----------
@@ -250,6 +289,45 @@ class RelationTestCase(TestCase):
 		self.failUnless(hasattr(PresRelation,'arity_in'),"PresRelation has no 'arity_in' method.")
 		self.failUnless(hasattr(PresRelation,'arity_out'),"PresRelation has no 'arity_out' method.")
 		self.failUnless(hasattr(PresRelation,'arity'),"PresRelation has no 'arity' method.")
+
+	#Tests the is_symbolic_var method
+	def testIsSymbolicVar(self):
+		from iegen import Symbolic
+		from iegen.parser import PresParser
+
+		relation=PresParser.parse_relation('{[a]->[b]:0<=a and a<=n and c>0}',[Symbolic('n')])
+
+		self.failUnless(relation.is_symbolic_var('n'),"'n' is not a symbolic var in %s"%relation)
+		self.failIf(relation.is_symbolic_var('a'),"'a' is a symbolic var in %s"%relation)
+		self.failIf(relation.is_symbolic_var('b'),"'b' is a symbolic var in %s"%relation)
+		self.failIf(relation.is_symbolic_var('c'),"'c' is a symbolic var in %s"%relation)
+		self.failIf(relation.is_symbolic_var('d'),"'d' is a symbolic var in %s"%relation)
+
+	#Tests the is_tuple_var method
+	def testIsTupleVar(self):
+		from iegen import Symbolic
+		from iegen.parser import PresParser
+
+		relation=PresParser.parse_relation('{[a]->[b]:0<=a and a<=n and c>0}',[Symbolic('n')])
+
+		self.failIf(relation.is_tuple_var('n'),"'n' is a tuple var in %s"%relation)
+		self.failUnless(relation.is_tuple_var('a'),"'a' is not a tuple var in %s"%relation)
+		self.failUnless(relation.is_tuple_var('b'),"'b' is not a tuple var in %s"%relation)
+		self.failIf(relation.is_tuple_var('c'),"'c' is a tuple var in %s"%relation)
+		self.failIf(relation.is_tuple_var('d'),"'d' is a tuple var in %s"%relation)
+
+	#Tests the is_free_var method
+	def testIsFreeVar(self):
+		from iegen import Symbolic
+		from iegen.parser import PresParser
+
+		relation=PresParser.parse_relation('{[a]->[b]:0<=a and a<=n and c>0}',[Symbolic('n')])
+
+		self.failIf(relation.is_free_var('n'),"'n' is a free var in %s"%relation)
+		self.failIf(relation.is_free_var('a'),"'a' is a free var in %s"%relation)
+		self.failIf(relation.is_free_var('b'),"'b' is a free var in %s"%relation)
+		self.failUnless(relation.is_free_var('c'),"'c' is not a free var in %s"%relation)
+		self.failIf(relation.is_free_var('d'),"'d' is a free var in %s"%relation)
 #----------------------------------------
 
 #---------- VarTuple Tests ----------

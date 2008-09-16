@@ -30,10 +30,10 @@ class FindFreeVarEqualityVisitor(DFVisitor):
 		self.free_var=None
 		#----------------------------------------------
 
-	def inSet(self,node):
+	def inPresSet(self,node):
 		#Save the Set for use later
 		self.formula=node
-	def inRelation(self,node):
+	def inPresRelation(self,node):
 		#Save the Relation for use later
 		self.formula=node
 

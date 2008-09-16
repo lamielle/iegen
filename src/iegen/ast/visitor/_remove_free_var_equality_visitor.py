@@ -41,14 +41,14 @@ class RemoveFreeVarEqualityVisitor(DFVisitor):
 		self.equality=None
 		self.exp=None
 
-	def inSet(self,node):
+	def inPresSet(self,node):
 		self._inFormula(node)
-	def outSet(self,node):
+	def outPresSet(self,node):
 		self._outFormula(node)
 
-	def inRelation(self,node):
+	def inPresRelation(self,node):
 		self._inFormula(node)
-	def outRelation(self,node):
+	def outPresRelation(self,node):
 		self._outFormula(node)
 
 	def inConjunction(self,node):

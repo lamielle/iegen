@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,IsSymbolicVarVisitor,IsTupleVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarEqualityVisitor,RemoveDuplicateFormulasVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarEqualityVisitor,RemoveDuplicateFormulasVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -243,7 +243,7 @@ class SortVisitorTestCase(TestCase):
 #Test var visitor
 class IsVarVisitorTestCase(TestCase):
 
-	#Make sure the result of the visiting is placed in the is_var attribute
+	#Make sure the results of the visiting are placed in the is_var, is_symbolic_var, and is_tuple_var attributes
 	def testResultPresent(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set
@@ -251,9 +251,11 @@ class IsVarVisitorTestCase(TestCase):
 		set=Set('{[]}')
 		v=IsVarVisitor('a').visit(set)
 		self.failUnless(hasattr(v,'is_var'),"IsVarVisitor doesn't place result in the 'is_var' property.")
+		self.failUnless(hasattr(v,'is_symbolic_var'),"IsVarVisitor doesn't place result in the 'is_symbolic_var' property.")
+		self.failUnless(hasattr(v,'is_tuple_var'),"IsVarVisitor doesn't place result in the 'is_tuple_var' property.")
 
 	#Tests that vars in the Symbolics are searched
-	def testSearchSymbolics(self):
+	def testIsVarSearchSymbolics(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation,Symbolic
 
@@ -264,7 +266,7 @@ class IsVarVisitorTestCase(TestCase):
 		self.failUnless(IsVarVisitor('n').visit(relation).is_var,"'n' is not a var in %s"%relation)
 
 	#Tests that vars in variable tuples are searched
-	def testSearchVarTuple(self):
+	def testIsVarSearchVarTuple(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
 
@@ -276,7 +278,7 @@ class IsVarVisitorTestCase(TestCase):
 		self.failUnless(IsVarVisitor('b').visit(relation).is_var,"'b' is not a var in %s"%relation)
 
 	#Tests that vars in the constraints are searched
-	def testSearchConstraints(self):
+	def testIsVarSearchConstraints(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
 		from iegen.ast import Equality,NormExp,VarExp
@@ -290,106 +292,78 @@ class IsVarVisitorTestCase(TestCase):
 		self.failUnless(IsVarVisitor('b').visit(set).is_var,"'b' is not a var in %s"%set)
 		self.failUnless(IsVarVisitor('a').visit(relation).is_var,"'a' is not a var in %s"%relation)
 		self.failUnless(IsVarVisitor('b').visit(relation).is_var,"'b' is not a var in %s"%relation)
-#---------------------------------------
-
-#---------- Symbolic Var Visitor Tests ----------
-#Test var visitor
-class IsSymbolicVarVisitorTestCase(TestCase):
-
-	#Make sure the result of the visiting is placed in the is_symbolic_var attribute
-	def testResultPresent(self):
-		from iegen.ast.visitor import IsSymbolicVarVisitor
-		from iegen import Set
-
-		set=Set('{[]}')
-		v=IsSymbolicVarVisitor('a').visit(set)
-		self.failUnless(hasattr(v,'is_symbolic_var'),"IsSymbolicVarVisitor doesn't place result in the 'is_symbolic_var' property.")
 
 	#Tests that vars in the Symbolics are searched
-	def testSearchSymbolics(self):
-		from iegen.ast.visitor import IsSymbolicVarVisitor
+	def testIsSymSearchSymbolics(self):
+		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation,Symbolic
 
 		set=Set('{[]}',[Symbolic('n')])
 		relation=Relation('{[]->[]}',[Symbolic('n')])
 
-		self.failUnless(IsSymbolicVarVisitor('n').visit(set).is_symbolic_var,"'n' is not a symbolic var in %s"%set)
-		self.failUnless(IsSymbolicVarVisitor('n').visit(relation).is_symbolic_var,"'n' is not a symbolic var in %s"%relation)
+		self.failUnless(IsVarVisitor('n').visit(set).is_symbolic_var,"'n' is not a symbolic var in %s"%set)
+		self.failUnless(IsVarVisitor('n').visit(relation).is_symbolic_var,"'n' is not a symbolic var in %s"%relation)
 
 	#Tests that vars in variable tuples are not searched
-	def testNoSearchVarTuple(self):
-		from iegen.ast.visitor import IsSymbolicVarVisitor
+	def testIsSymNoSearchVarTuple(self):
+		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
 
 		set=Set('{[a]}')
 		relation=Relation('{[a]->[b]}')
 
-		self.failIf(IsSymbolicVarVisitor('a').visit(set).is_symbolic_var,"'a' is a symbolic var in %s"%set)
-		self.failIf(IsSymbolicVarVisitor('a').visit(relation).is_symbolic_var,"'a' is a symbolic var in %s"%relation)
-		self.failIf(IsSymbolicVarVisitor('b').visit(relation).is_symbolic_var,"'b' is a symbolic var in %s"%relation)
+		self.failIf(IsVarVisitor('a').visit(set).is_symbolic_var,"'a' is a symbolic var in %s"%set)
+		self.failIf(IsVarVisitor('a').visit(relation).is_symbolic_var,"'a' is a symbolic var in %s"%relation)
+		self.failIf(IsVarVisitor('b').visit(relation).is_symbolic_var,"'b' is a symbolic var in %s"%relation)
 
 	#Tests that vars in the constraints are not searched
-	def testNoSearchConstraints(self):
-		from iegen.ast.visitor import IsSymbolicVarVisitor
+	def testIsSymNoSearchConstraints(self):
+		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
 
 		set=Set('{[]: a>=10 and b=5}')
 		relation=Relation('{[]->[]: a>=10 and b=5}')
 
-		self.failIf(IsSymbolicVarVisitor('a').visit(set).is_symbolic_var,"'a' is a symbolic var in %s"%set)
-		self.failIf(IsSymbolicVarVisitor('b').visit(set).is_symbolic_var,"'b' is a symbolic var in %s"%set)
-		self.failIf(IsSymbolicVarVisitor('a').visit(relation).is_symbolic_var,"'a' is a symbolic var in %s"%relation)
-		self.failIf(IsSymbolicVarVisitor('b').visit(relation).is_symbolic_var,"'b' is a symbolic var in %s"%relation)
-#---------------------------------------
-
-#---------- Tuple Var Visitor Tests ----------
-#Test var visitor
-class IsTupleVarVisitorTestCase(TestCase):
-
-	#Make sure the result of the visiting is placed in the is_tuple_var attribute
-	def testResultPresent(self):
-		from iegen.ast.visitor import IsTupleVarVisitor
-		from iegen import Set
-
-		set=Set('{[]}')
-		v=IsTupleVarVisitor('a').visit(set)
-		self.failUnless(hasattr(v,'is_tuple_var'),"IsTupleVarVisitor doesn't place result in the 'is_tuple_var' property.")
+		self.failIf(IsVarVisitor('a').visit(set).is_symbolic_var,"'a' is a symbolic var in %s"%set)
+		self.failIf(IsVarVisitor('b').visit(set).is_symbolic_var,"'b' is a symbolic var in %s"%set)
+		self.failIf(IsVarVisitor('a').visit(relation).is_symbolic_var,"'a' is a symbolic var in %s"%relation)
+		self.failIf(IsVarVisitor('b').visit(relation).is_symbolic_var,"'b' is a symbolic var in %s"%relation)
 
 	#Tests that vars in the Tuples are not searched
-	def testNoSearchSymbolics(self):
-		from iegen.ast.visitor import IsTupleVarVisitor
+	def testIsTupleNoSearchSymbolics(self):
+		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation,Symbolic
 
 		set=Set('{[]}',[Symbolic('n')])
 		relation=Relation('{[]->[]}',[Symbolic('n')])
 
-		self.failIf(IsTupleVarVisitor('n').visit(set).is_tuple_var,"'n' is a tuple var in %s"%set)
-		self.failIf(IsTupleVarVisitor('n').visit(relation).is_tuple_var,"'n' is a tuple var in %s"%relation)
+		self.failIf(IsVarVisitor('n').visit(set).is_tuple_var,"'n' is a tuple var in %s"%set)
+		self.failIf(IsVarVisitor('n').visit(relation).is_tuple_var,"'n' is a tuple var in %s"%relation)
 
 	#Tests that vars in variable tuples are searched
-	def testSearchVarTuple(self):
-		from iegen.ast.visitor import IsTupleVarVisitor
+	def testIsTupleSearchVarTuple(self):
+		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
 
 		set=Set('{[a]}')
 		relation=Relation('{[a]->[b]}')
 
-		self.failUnless(IsTupleVarVisitor('a').visit(set).is_tuple_var,"'a' is a not tuple var in %s"%set)
-		self.failUnless(IsTupleVarVisitor('a').visit(relation).is_tuple_var,"'a' is a not tuple var in %s"%relation)
-		self.failUnless(IsTupleVarVisitor('b').visit(relation).is_tuple_var,"'b' is a not tuple var in %s"%relation)
+		self.failUnless(IsVarVisitor('a').visit(set).is_tuple_var,"'a' is a not tuple var in %s"%set)
+		self.failUnless(IsVarVisitor('a').visit(relation).is_tuple_var,"'a' is a not tuple var in %s"%relation)
+		self.failUnless(IsVarVisitor('b').visit(relation).is_tuple_var,"'b' is a not tuple var in %s"%relation)
 
 	#Tests that vars in the constraints are not searched
-	def testNoSearchConstraints(self):
-		from iegen.ast.visitor import IsTupleVarVisitor
+	def testIsTupleNoSearchConstraints(self):
+		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
 
 		set=Set('{[]: a>=10 and b=5}')
 		relation=Relation('{[]->[]: a>=10 and b=5}')
 
-		self.failIf(IsTupleVarVisitor('a').visit(set).is_tuple_var,"'a' is a tuple var in %s"%set)
-		self.failIf(IsTupleVarVisitor('b').visit(set).is_tuple_var,"'b' is a tuple var in %s"%set)
-		self.failIf(IsTupleVarVisitor('a').visit(relation).is_tuple_var,"'a' is a tuple var in %s"%relation)
-		self.failIf(IsTupleVarVisitor('b').visit(relation).is_tuple_var,"'b' is a tuple var in %s"%relation)
+		self.failIf(IsVarVisitor('a').visit(set).is_tuple_var,"'a' is a tuple var in %s"%set)
+		self.failIf(IsVarVisitor('b').visit(set).is_tuple_var,"'b' is a tuple var in %s"%set)
+		self.failIf(IsVarVisitor('a').visit(relation).is_tuple_var,"'a' is a tuple var in %s"%relation)
+		self.failIf(IsVarVisitor('b').visit(relation).is_tuple_var,"'b' is a tuple var in %s"%relation)
 #---------------------------------------
 
 #---------- Find Free Variable Equality Visitor ----------
