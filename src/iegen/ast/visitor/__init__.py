@@ -10,3 +10,4 @@ from _remove_empty_constraints_visitor import *
 from _remove_zero_coeff_visitor import *
 from _remove_free_var_equality_visitor import *
 from _remove_duplicate_formulas_visitor import *
+from _remove_symbolics_visitor import *

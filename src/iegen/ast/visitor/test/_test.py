@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarEqualityVisitor,RemoveDuplicateFormulasVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarEqualityVisitor,RemoveDuplicateFormulasVisitor,RemoveSymbolicsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -243,7 +243,7 @@ class SortVisitorTestCase(TestCase):
 #Test var visitor
 class IsVarVisitorTestCase(TestCase):
 
-	#Make sure the results of the visiting are placed in the is_var, is_symbolic_var, and is_tuple_var attributes
+	#Make sure the results of the visiting are placed in the is_var, is_symbolic_var, is_constraint_var, and is_tuple_var attributes
 	def testResultPresent(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set
@@ -252,6 +252,7 @@ class IsVarVisitorTestCase(TestCase):
 		v=IsVarVisitor('a').visit(set)
 		self.failUnless(hasattr(v,'is_var'),"IsVarVisitor doesn't place result in the 'is_var' property.")
 		self.failUnless(hasattr(v,'is_symbolic_var'),"IsVarVisitor doesn't place result in the 'is_symbolic_var' property.")
+		self.failUnless(hasattr(v,'is_constraint_var'),"IsVarVisitor doesn't place result in the 'is_constraint_var' property.")
 		self.failUnless(hasattr(v,'is_tuple_var'),"IsVarVisitor doesn't place result in the 'is_tuple_var' property.")
 
 	#Tests that vars in the Symbolics are searched
@@ -259,8 +260,11 @@ class IsVarVisitorTestCase(TestCase):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation,Symbolic
 
-		set=Set('{[]}',[Symbolic('n')])
-		relation=Relation('{[]->[]}',[Symbolic('n')])
+		set=Set('{[]}')
+		set.sets[0].symbolics.append(Symbolic('n'))
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].symbolics.append(Symbolic('n'))
 
 		self.failUnless(IsVarVisitor('n').visit(set).is_var,"'n' is not a var in %s"%set)
 		self.failUnless(IsVarVisitor('n').visit(relation).is_var,"'n' is not a var in %s"%relation)
@@ -281,12 +285,15 @@ class IsVarVisitorTestCase(TestCase):
 	def testIsVarSearchConstraints(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
-		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
-		set=Set('{[]: a>=10}')
+		set=Set('{[]}')
 		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		relation=Relation('{[]->[]: a>=10}')
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+
+		relation=Relation('{[]->[]}')
 		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		self.failUnless(IsVarVisitor('a').visit(set).is_var,"'a' is not a var in %s"%set)
 		self.failUnless(IsVarVisitor('b').visit(set).is_var,"'b' is not a var in %s"%set)
@@ -298,8 +305,11 @@ class IsVarVisitorTestCase(TestCase):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation,Symbolic
 
-		set=Set('{[]}',[Symbolic('n')])
-		relation=Relation('{[]->[]}',[Symbolic('n')])
+		set=Set('{[]}')
+		set.sets[0].symbolics.append(Symbolic('n'))
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].symbolics.append(Symbolic('n'))
 
 		self.failUnless(IsVarVisitor('n').visit(set).is_symbolic_var,"'n' is not a symbolic var in %s"%set)
 		self.failUnless(IsVarVisitor('n').visit(relation).is_symbolic_var,"'n' is not a symbolic var in %s"%relation)
@@ -320,14 +330,65 @@ class IsVarVisitorTestCase(TestCase):
 	def testIsSymNoSearchConstraints(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
-		set=Set('{[]: a>=10 and b=5}')
-		relation=Relation('{[]->[]: a>=10 and b=5}')
+		set=Set('{[]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		self.failIf(IsVarVisitor('a').visit(set).is_symbolic_var,"'a' is a symbolic var in %s"%set)
 		self.failIf(IsVarVisitor('b').visit(set).is_symbolic_var,"'b' is a symbolic var in %s"%set)
 		self.failIf(IsVarVisitor('a').visit(relation).is_symbolic_var,"'a' is a symbolic var in %s"%relation)
 		self.failIf(IsVarVisitor('b').visit(relation).is_symbolic_var,"'b' is a symbolic var in %s"%relation)
+
+	#Tests that vars in the Symbolics are searched
+	def testIsConstraintNoSearchSymbolics(self):
+		from iegen.ast.visitor import IsVarVisitor
+		from iegen import Set,Relation,Symbolic
+
+		set=Set('{[]}',[Symbolic('n')])
+		set.sets[0].symbolics.append(Symbolic('n'))
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].symbolics.append(Symbolic('n'))
+
+		self.failIf(IsVarVisitor('n').visit(set).is_constraint_var,"'n' is a constraint var in %s"%set)
+		self.failIf(IsVarVisitor('n').visit(relation).is_constraint_var,"'n' is a constraint var in %s"%relation)
+
+	#Tests that vars in variable tuples are not searched
+	def testIsConstraintNoSearchVarTuple(self):
+		from iegen.ast.visitor import IsVarVisitor
+		from iegen import Set,Relation
+
+		set=Set('{[a]}')
+		relation=Relation('{[a]->[b]}')
+
+		self.failIf(IsVarVisitor('a').visit(set).is_constraint_var,"'a' is a constraint var in %s"%set)
+		self.failIf(IsVarVisitor('a').visit(relation).is_constraint_var,"'a' is a constraint var in %s"%relation)
+		self.failIf(IsVarVisitor('b').visit(relation).is_constraint_var,"'b' is a constraint var in %s"%relation)
+
+	#Tests that vars in the constraints are not searched
+	def testIsConstraintSearchConstraints(self):
+		from iegen.ast.visitor import IsVarVisitor
+		from iegen import Set,Relation
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
+
+		set=Set('{[]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+
+		self.failUnless(IsVarVisitor('a').visit(set).is_constraint_var,"'a' is not a constraint var in %s"%set)
+		self.failUnless(IsVarVisitor('b').visit(set).is_constraint_var,"'b' is not a constraint var in %s"%set)
+		self.failUnless(IsVarVisitor('a').visit(relation).is_constraint_var,"'a' is not a constraint var in %s"%relation)
+		self.failUnless(IsVarVisitor('b').visit(relation).is_constraint_var,"'b' is not a constraint var in %s"%relation)
 
 	#Tests that vars in the Tuples are not searched
 	def testIsTupleNoSearchSymbolics(self):
@@ -335,7 +396,10 @@ class IsVarVisitorTestCase(TestCase):
 		from iegen import Set,Relation,Symbolic
 
 		set=Set('{[]}',[Symbolic('n')])
-		relation=Relation('{[]->[]}',[Symbolic('n')])
+		set.sets[0].symbolics.append(Symbolic('n'))
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].symbolics.append(Symbolic('n'))
 
 		self.failIf(IsVarVisitor('n').visit(set).is_tuple_var,"'n' is a tuple var in %s"%set)
 		self.failIf(IsVarVisitor('n').visit(relation).is_tuple_var,"'n' is a tuple var in %s"%relation)
@@ -356,9 +420,15 @@ class IsVarVisitorTestCase(TestCase):
 	def testIsTupleNoSearchConstraints(self):
 		from iegen.ast.visitor import IsVarVisitor
 		from iegen import Set,Relation
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
-		set=Set('{[]: a>=10 and b=5}')
-		relation=Relation('{[]->[]: a>=10 and b=5}')
+		set=Set('{[]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		self.failIf(IsVarVisitor('a').visit(set).is_tuple_var,"'a' is a tuple var in %s"%set)
 		self.failIf(IsVarVisitor('b').visit(set).is_tuple_var,"'b' is a tuple var in %s"%set)
@@ -909,4 +979,127 @@ class RemoveDuplicateFormulasVisitorTestCase(TestCase):
 
 		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
 		self.failUnless(True==removed_formula,'removed_formula!=True')
+#------------------------------------------------------
+
+#---------- Remove Symbolics Visitor ----------
+class RemoveSymbolicsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the removed_symbolic attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=RemoveSymbolicsVisitor().visit(set)
+		self.failUnless(hasattr(v,'removed_symbolic'),"RemoveSymbolicsVisitor doesn't place result in the 'removed_symbolic' property.")
+
+	#Tests that non duplicated and used symbolic variables are not removed from PresSets
+	def testNoRemovePresSet(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]:a<=n}',[Symbolic('n')])
+		removed_symbolic=RemoveSymbolicsVisitor().visit(set).removed_symbolic
+
+		set_res=Set('{[a]:a<=n}',[Symbolic('n')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==removed_symbolic,'removed_symbolic!=False')
+
+	#Tests that duplicated symbolic variables are removed from PresSets
+	def testRemoveDuplicatePresSet(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]:n<=a and a<=m}',[Symbolic('n'),Symbolic('m')])
+		set.sets[0].symbolics.extend([Symbolic('n'),Symbolic('m')])
+		removed_symbolic=RemoveSymbolicsVisitor().visit(set).removed_symbolic
+
+		set_res=Set('{[a]:n<=a and a<=m}',[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_symbolic,'removed_symbolic!=True')
+
+	#Tests that unused symbolic variables are removed from PresSets
+	def testRemoveUnusedPresSet(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]:n<=a}',[Symbolic('n')])
+		set.sets[0].symbolics.append(Symbolic('m'))
+		removed_symbolic=RemoveSymbolicsVisitor().visit(set).removed_symbolic
+
+		set_res=Set('{[a]:n<=a}',[Symbolic('n')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_symbolic,'removed_symbolic!=True')
+
+	#Tests that both unused and duplicate symbolic variables are removed from PresSets
+	def testRemoveDuplicateUnusedPresSet(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]:n<=a}',[Symbolic('n')])
+		set.sets[0].symbolics.extend([Symbolic('m'),Symbolic('n'),Symbolic('m'),Symbolic('s')])
+		removed_symbolic=RemoveSymbolicsVisitor().visit(set).removed_symbolic
+
+		set_res=Set('{[a]:n<=a}',[Symbolic('n')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_symbolic,'removed_symbolic!=True')
+
+	#Tests that non duplicated and used symbolic variables are not removed from PresRelations
+	def testNoRemovePresRelation(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Relation,Symbolic
+
+		relation=Relation('{[a]->[ap]:a<=n}',[Symbolic('n')])
+		removed_symbolic=RemoveSymbolicsVisitor().visit(relation).removed_symbolic
+
+		relation_res=Relation('{[a]->[ap]:a<=n}',[Symbolic('n')])
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(False==removed_symbolic,'removed_symbolic!=False')
+
+	#Tests that duplicated symbolic variables are removed from PresRelations
+	def testRemoveDuplicatePresRelation(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Relation,Symbolic
+
+		relation=Relation('{[a]->[ap]:n<=a and a<=m}',[Symbolic('n'),Symbolic('n')])
+		relation.relations[0].symbolics.extend([Symbolic('m'),Symbolic('m')])
+		removed_symbolic=RemoveSymbolicsVisitor().visit(relation).removed_symbolic
+
+		relation_res=Relation('{[a]->[ap]:n<=a and a<=m}',[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_symbolic,'removed_symbolic!=True')
+
+	#Tests that unused symbolic variables are removed from PresRelations
+	def testRemoveUnusedPresRelation(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Relation,Symbolic
+
+		relation=Relation('{[a]->[ap]:n<=a}',[Symbolic('n')])
+		relation.relations[0].symbolics.append(Symbolic('m'))
+		removed_symbolic=RemoveSymbolicsVisitor().visit(relation).removed_symbolic
+
+		relation_res=Relation('{[a]->[ap]:n<=a}',[Symbolic('n')])
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_symbolic,'removed_symbolic!=True')
+
+	#Tests that both unused and duplicate symbolic variables are removed from PresRelations
+	def testRemoveDuplicateUnusedPresRelation(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Relation,Symbolic
+
+		relation=Relation('{[a]->[ap]:n<=a}',[Symbolic('n'),Symbolic('m')])
+		relation.relations[0].symbolics.extend([Symbolic('n'),Symbolic('m'),Symbolic('s')])
+		removed_symbolic=RemoveSymbolicsVisitor().visit(relation).removed_symbolic
+
+		relation_res=Relation('{[a]->[ap]:n<=a}',[Symbolic('n')])
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_symbolic,'removed_symbolic!=True')
 #------------------------------------------------------

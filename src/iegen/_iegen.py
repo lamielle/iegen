@@ -133,12 +133,13 @@ class Statement(object):
 
 #---------- AccessRelation class ----------
 class AccessRelation(object):
-	__slots__=('name','data_space','iter_to_data')
+	__slots__=('name','data_space','iter_to_data','iter_space')
 
-	def __init__(self,name,data_space,iter_to_data):
+	def __init__(self,name,data_space,iter_to_data,iter_space=None):
 		self.name=name
 		self.data_space=data_space
 		self.iter_to_data=iter_to_data
+		self.iter_space=iter_space
 
 		if self.data_space.set.arity()!=self.iter_to_data.arity_out():
 			raise iegen.util.DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.iter_to_data.arity_out(),self.data_space.set.arity()))

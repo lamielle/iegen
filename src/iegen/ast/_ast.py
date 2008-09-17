@@ -73,6 +73,13 @@ class PresForm(Node):
 		from iegen.ast.visitor import IsVarVisitor
 		return IsVarVisitor(var_name).visit(self).is_symbolic_var
 
+	#Determines if the given variable name is a variable used in the constraints
+	#Returns True if the name is used in the constraints
+	#Returns False otherwise
+	def is_constraint_var(self,var_name):
+		from iegen.ast.visitor import IsVarVisitor
+		return IsVarVisitor(var_name).visit(self).is_constraint_var
+
 	#Determines if the given variable name is a tuple variable
 	#Returns True if the name is a tuple variable
 	#Returns False otherwise

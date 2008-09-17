@@ -28,10 +28,15 @@ def _remove_zero_coefficients(obj):
 def _remove_empty_constraints(obj):
 	from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
 	return RemoveEmptyConstraintsVisitor().visit(obj).removed_constraint
-
+#Uses the RemoveDuplicateFormulasVisitor to remove any duplicated formulas in a Set or Relation
 def _remove_duplicate_formulas(obj):
 	from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
 	return RemoveDuplicateFormulasVisitor().visit(obj).removed_formula
+
+#Uses the RemoveSymbolicsVisitor to remove any duplicated or unused symbolic variables
+def _remove_symbolics(obj):
+	from iegen.ast.visitor import RemoveSymbolicsVisitor
+	return RemoveSymbolicsVisitor().visit(obj).removed_symbolic
 
 #Given an object of the following types:
 #Set,Relation,PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
@@ -56,6 +61,9 @@ def simplify(obj):
 
 		#Remove empty constraints
 		changed=_remove_empty_constraints(obj) or changed
+
+		#Remove redundant and unused symbolic variables
+		changed=_remove_symbolics(obj) or changed
 
 		#Remove equalities that contain a free variable
 		changed=_remove_free_var_equality(obj) or changed

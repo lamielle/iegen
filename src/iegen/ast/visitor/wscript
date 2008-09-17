@@ -25,5 +25,6 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_remove_zero_coeff_visitor.py')
 	install_files('PREFIX',inst_dir,'_remove_free_var_equality_visitor.py')
 	install_files('PREFIX',inst_dir,'_remove_duplicate_formulas_visitor.py')
+	install_files('PREFIX',inst_dir,'_remove_symbolics_visitor.py')
 
 	bld.add_subdirs('test')

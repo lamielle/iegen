@@ -7,31 +7,43 @@ from iegen.ast.visitor import DFVisitor
 #If that name is found anywhere, 'is_var' is True
 #Otherwise, 'is_var' is False
 
-#If that name is found in a variable tuple, 'is_tuple_var' is True
-#Otherwise, 'is_tuple_var' is False
-
 #If that name is found in the symbolics, 'is_symbolic_var' is True
 #Otherwise, 'is_symbolic_var' is False
+
+#If that name is used in the constraints, 'is_constraint_var' is True
+#Otherwise, 'is_constraint_var' is False
+
+#If that name is found in a variable tuple, 'is_tuple_var' is True
+#Otherwise, 'is_tuple_var' is False
 class IsVarVisitor(DFVisitor):
 	def __init__(self,var_name):
 		self.var_name=var_name
 
 		self.in_tuple_var=False
+		self.in_conjunction=False
 
 		self.is_var=False
-		self.is_tuple_var=False
 		self.is_symbolic_var=False
+		self.is_constraint_var=False
+		self.is_tuple_var=False
 
 	def inVarTuple(self,node):
 		self.in_var_tuple=True
 	def outVarTuple(self,node):
 		self.in_var_tuple=False
 
+	def inConjunction(self,node):
+		self.in_conjunction=True
+	def outConjunction(self,node):
+		self.in_conjunction=False
+
 	def inVarExp(self,node):
 		if self.var_name==node.id:
 			self.is_var=True
 			if self.in_var_tuple:
 				self.is_tuple_var=True
+			elif self.in_conjunction:
+				self.is_constraint_var=True
 
 	def inSymbolic(self,node):
 		if self.var_name==node.name:
