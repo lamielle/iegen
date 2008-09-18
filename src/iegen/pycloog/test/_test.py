@@ -26,22 +26,26 @@ class PYCLooGTestCase(TestCase):
 		from iegen.pycloog import Statement,codegen
 		from iegen import Set,Symbolic
 
-		code='''for (i=1;i<=n;i++) {
-  for (j=1;j<=n;j++) {
-    S2 ;
+		code='''if (m >= 1) {
+  for (i=1;i<=n;i++) {
+    for (j=1;j<=m;j++) {
+      S2 ;
+    }
   }
 }
-for (i=1;i<=n;i++) {
-  for (j=1;j<=n;j++) {
-    S1 ;
+if (m >= 1) {
+  for (i=1;i<=n;i++) {
+    for (j=1;j<=m;j++) {
+      S1 ;
+    }
   }
 }'''
 
-		dom1=Set('{[i,j]:1<=i and i<=n and 1<=j and j<=n}',[Symbolic('n')])
-		scat1=Set('{[p1,p2,i,j,n]: p1=1 and p2=1}')
+		dom1=Set('{[i,j]:1<=i and i<=n and 1<=j and j<=m and m>=1}',[Symbolic('n'),Symbolic('m')])
+		scat1=Set('{[p1,p2,i,j,n,m]: p1=1 and p2=1}')
 
-		dom2=Set('{[i,j]:1<=i and i<=n and 1<=j and j<=n}',[Symbolic('n')])
-		scat2=Set('{[p1,p2,i,j,n]: p1=0 and p2=0}')
+		dom2=Set('{[i,j]:1<=i and i<=n and 1<=j and j<=m and m>=1}',[Symbolic('n'),Symbolic('m')])
+		scat2=Set('{[p1,p2,i,j,n,m]: p1=0 and p2=0}')
 
 		stmt1=Statement(dom1,scat1)
 		stmt2=Statement(dom2,scat2)
