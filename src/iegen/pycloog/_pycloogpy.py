@@ -47,8 +47,10 @@ def _get_ctypes_str_arr(strs):
 	return cstrs
 
 #Allocator callback function for allocation of strings from C
+allocated=[]
 def _string_allocator(size):
-	return addressof(c_char_p(' '*size))
+	allocated.append(create_string_buffer(size))
+	return addressof(allocated[len(allocated)-1])
 
 #Returns the type of the string_allocator
 def _string_allocator_type():
