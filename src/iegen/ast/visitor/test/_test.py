@@ -47,7 +47,16 @@ class TransVisitorTestCase(TestCase):
 		from iegen import Relation
 
 		rel=Relation('{[]->[]}')
-		TransVisitor([]).visit(rel)
+		TransVisitor().visit(rel)
+
+	#Test that PresRelations are not supported
+	@raises(ValueError)
+	def testPresRelationFailure(self):
+		from iegen.ast.visitor import TransVisitor
+		from iegen.parser import PresParser
+
+		rel=PresParser.parse_relation('{[]->[]}')
+		TransVisitor().visit(rel)
 
 	#Test that functions are not supported
 	@raises(ValueError)
@@ -56,7 +65,7 @@ class TransVisitorTestCase(TestCase):
 		from iegen import Set
 
 		set=Set('{[]:f(a)=1}')
-		TransVisitor([]).visit(set)
+		TransVisitor().visit(set)
 
 	#Test that existential variables are not supported
 	@raises(ValueError)
@@ -67,7 +76,7 @@ class TransVisitorTestCase(TestCase):
 
 		set=Set('{[a]:a=1}')
 		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		TransVisitor([]).visit(set)
+		TransVisitor().visit(set)
 
 	#Make sure the result of the visiting is placed in the mat attribute
 	def testResultPresent(self):
@@ -75,7 +84,7 @@ class TransVisitorTestCase(TestCase):
 		from iegen import Set
 
 		set=Set('{[]}')
-		v=TransVisitor([]).visit(set)
+		v=TransVisitor().visit(set)
 
 		self.failUnless(hasattr(v,'mats'),"TransVisitor doesn't place result in the 'mats' property.")
 
@@ -110,15 +119,13 @@ class TransVisitorTestCase(TestCase):
 
 		for set_string,res_mats,params in self.set_tests:
 			#Create a list of symbolics for the set
-			symbolics=[]
-			for param in params:
-				symbolics.append(Symbolic(param))
+			symbolics=[Symbolic(param) for param in params]
 
-			#Create a set from set string
+			#Create a set from the set string
 			set=Set(set_string,symbolics)
 
 			#Visit the set
-			v=TransVisitor(params).visit(set)
+			v=TransVisitor().visit(set)
 
 			#Sort the rows of the matricies
 			for mat in v.mats:

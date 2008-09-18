@@ -6,9 +6,9 @@ from iegen.ast.visitor import DFVisitor
 #one for each PresSet in the Set.
 #The result is placed in the 'mats' attribute
 class TransVisitor(DFVisitor):
-	def __init__(self,params):
-		self.params=params
-		self.num_params=len(params)
+	def __init__(self):
+		self.params=None
+		self.num_params=0
 		self.at_var_tuple=False
 
 	def inSet(self,node):
@@ -17,10 +17,17 @@ class TransVisitor(DFVisitor):
 	def inPresSet(self,node):
 		self._mat=[]
 
+		#Get the params for this PresSet
+		self.params=[sym.name for sym in node.symbolics]
+		self.num_params=len(self.params)
+
 	def outPresSet(self,node):
 		self.mats.append(self._mat)
 
 	def inRelation(self,node):
+		raise ValueError('This visitor only works on Sets.')
+
+	def inPresRelation(self,node):
 		raise ValueError('This visitor only works on Sets.')
 
 	def inVarTuple(self,node):

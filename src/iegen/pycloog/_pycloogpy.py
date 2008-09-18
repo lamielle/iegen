@@ -117,45 +117,52 @@ def _get_pycloog_statements(statements):
 
 	return new_statements
 
-#Translates the given Names object to a ctypes PYCLOOG_NAMES structure
-def _get_pycloog_names(names):
-	new_names=_PYCLOOG_NAMES()
-	new_names.iters=_get_ctypes_str_arr(names.iters)
-	new_names.num_iters=len(names.iters)
-	new_names.params=_get_ctypes_str_arr(names.params)
-	new_names.num_params=len(names.params)
-	return new_names
+#Translates the given iterator and parameter names to a ctypes PYCLOOG_NAMES structure
+def _get_pycloog_names(iters,params):
+	names=_PYCLOOG_NAMES()
+	names.iters=_get_ctypes_str_arr(iters)
+	names.num_iters=len(iters)
+	names.params=_get_ctypes_str_arr(params)
+	names.num_params=len(params)
+	return names
 #---------------------------------------
 
 #---------- Public Interface ----------
 #Class representing a single statement:
-#Each statement has an associated collection of iteration domains
-#and a scattering function
+#Each statement has an associated iteration domain
+#and scattering function
+#Domains and scattering functions are Set objects
 class Statement(object):
-	__slots__=('domains','scatter')
+	__slots__=('domains','scatter','iters','params')
 
-	def __init__(self,domains,scatter=None):
-		self.domains=domains
-		self.scatter=scatter
+	def __init__(self,domain,scatter=None):
+		from iegen.util import raise_objs_not_like_types
+		from iegen import Set
+		from iegen.ast.visitor import TransVisitor
 
-#Class containing a collection of iterator names
-#and parameter names
-class Names(object):
-	__slots__=('iters','params')
+		raise_objs_not_like_types(domain,Set)
 
-	def __init__(self,iters,params):
-		self.iters=iters
-		self.params=params
+		self.domains=TransVisitor().visit(domain).mats
+
+		if None is scatter:
+			self.scatter=None
+		else:
+			raise_objs_not_like_types(scatter,Set)
+			self.scatter=TransVisitor().visit(scatter).mats[0]
+
+		#Assumes that all variable and symbolic names are the same for
+		#all sets in the union
+		self.iters=[var.id for var in domain.sets[0].tuple_set.vars]
+		self.params=[sym.name for sym in domain.sets[0].symbolics]
 
 #The only public function of this module
-#It takes a collection of Statment objects
-#and a Names object and uses CLooG to generate
-#code based on these objects
-def codegen(statements,names):
+#Uses CLooG to generate code based on the given
+#Statement objects
+def codegen(statements):
 	#Convert the parmeters to ctypes
+	names=byref(_get_pycloog_names(statements[0].iters,statements[0].params))
 	statements=_get_pycloog_statements(statements)
 	num_statements=len(statements)
-	names=byref(_get_pycloog_names(names))
 	string_allocator=_string_allocator_type()(_string_allocator)
 
 	#Get a function pointer to the pycloog_codegen function
