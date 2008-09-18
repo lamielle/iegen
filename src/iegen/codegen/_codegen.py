@@ -26,16 +26,32 @@ def calc_artt(mapir,data_permute):
 		for ar in stmt.access_relations[1:]:
 			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse())
 
-	print mapir.full_iter_space
-	print data_permute.iter_sub_space_relation
-	print iter_to_data
-
 	artt=AccessRelation(
               name='A_I_sub_to_%s'%(data_permute.target_data_space.name),
               iter_space=mapir.full_iter_space.apply(data_permute.iter_sub_space_relation),
               data_space=data_permute.target_data_space,
               iter_to_data=iter_to_data)
 	return artt
+
+def write_runtime_artt(mapir,code):
+	from iegen.pycloog import Statement,codegen
+	print mapir.artt.iter_space
+
+	s1=Statement(mapir.artt.iter_space)
+	s2=Statement(mapir.artt.iter_space)
+
+	print >>code,'ExplicitRelation* A_I_0_sub_to_X_0 = ExplicitRelation_ctor(1,1);'
+	print >>code
+	print >>code,'#define S1 ExplicitRelation_in_ordered_insert(A_I_0_sub_to_X_0,Tuple_make(t1),ER_out_given_in(inter1_ER, Tuple_make(t1)));'
+	print >>code,'#define S2 ExplicitRelation_in_ordered_insert(A_I_0_sub_to_X_0,Tuple_make(t1),ER_out_given_in(inter1_ER, Tuple_make(t1)));'
+	print >>code
+	print >>code,codegen([s1,s2])
+	print >>code
+	print >>code,'#undef S1'
+	print >>code,'#undef S2'
+
+def calc_sigma(mapir,data_permute):
+	pass
 
 #---------- Public Interface Function ----------
 def codegen(mapir,data_permute,iter_permute,code):
@@ -49,4 +65,10 @@ def codegen(mapir,data_permute,iter_permute,code):
 
 	#Step 1a) generate an AccessRelation specification that will be the input for data reordering
 	mapir.artt=calc_artt(mapir,data_permute)
+
+	#Step 1b) generate code that creates an explicit representation of the access relation artt at runtime
+	write_runtime_artt(mapir,code)
+
+	#Step 1c) Generate the IAG and Index Array for sigma
+	sigma=calc_sigma(mapir,data_permute)
 #-----------------------------------------------

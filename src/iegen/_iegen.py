@@ -48,8 +48,8 @@ class MapIR(object):
 		#Write out the code to the given file if one was specified
 		if file_name:
 			print "Writing generated code to file '%s'..."%file_name
-			with file(file_name):
-				file.write(code.getvalue())
+			with open(file_name,'w') as f:
+				f.write(code.getvalue())
 
 		#Return the generated code
 		return code.getvalue()
