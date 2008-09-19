@@ -33,7 +33,7 @@ def calc_artt(mapir,data_permute):
               iter_to_data=iter_to_data)
 	return artt
 
-def write_runtime_artt(mapir,code):
+def write_create_artt(mapir,code):
 	from iegen.pycloog import Statement,codegen
 	print mapir.artt.iter_space
 
@@ -49,9 +49,29 @@ def write_runtime_artt(mapir,code):
 	print >>code
 	print >>code,'#undef S1'
 	print >>code,'#undef S2'
+	print >>code
 
 def calc_sigma(mapir,data_permute):
-	pass
+	from copy import deepcopy
+	from iegen import DataSpace,IndexArray,Set,IAGPermute
+
+	#Hard coded to return an IAG_Permute, however, other IAGs will be possible later (IAG_Group,IAG_Part,IAG_Wavefront)
+	syms=mapir.symbolics()
+	data_space=DataSpace(name='sigma',
+	                     set=deepcopy(mapir.data_spaces['x'].set),
+	                     is_index_array=True)
+	result=IndexArray(data_space=data_space,
+	                  is_permutation=True,
+	                  input_bounds=[Set('{[k]:0<=k and k<=(N-1)}',syms)],
+	                  output_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms))
+	return IAGPermute(name='IAG_cpack',
+	                   input=mapir.artt,
+	                   result=result)
+
+def write_create_sigma(mapir,code):
+	sigma=mapir.sigma
+	print >>code,'RectDomain *in_domain=RD_ctor(%d,%d)'%(sigma.result.input_bounds[0].arity(),sigma.result.input_bounds[0].arity())
+#	print >>code,'RD_set_lb(in_domain,0,
 
 #---------- Public Interface Function ----------
 def codegen(mapir,data_permute,iter_permute,code):
@@ -67,8 +87,11 @@ def codegen(mapir,data_permute,iter_permute,code):
 	mapir.artt=calc_artt(mapir,data_permute)
 
 	#Step 1b) generate code that creates an explicit representation of the access relation artt at runtime
-	write_runtime_artt(mapir,code)
+	write_create_artt(mapir,code)
 
 	#Step 1c) Generate the IAG and Index Array for sigma
-	sigma=calc_sigma(mapir,data_permute)
+	mapir.sigma=calc_sigma(mapir,data_permute)
+
+	#Step 1d) Generate code that passes explicit relation to IAG
+	write_create_sigma(mapir,code)
 #-----------------------------------------------

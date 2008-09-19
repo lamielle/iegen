@@ -9,7 +9,7 @@ iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('_symbolics','data_spaces','index_arrays','statements','full_iter_space','artt')
+	__slots__=('_symbolics','data_spaces','index_arrays','statements','full_iter_space','artt','mapir','sigma')
 
 	def __init__(self):
 		self._symbolics={}
@@ -175,6 +175,19 @@ class IterPermuteRTRT(RTRT):
 		self.iag_type=iag_type
 #-------------------------------------------
 
+#---------- Index Array Generator classes ----------
+class IAGSpec(object):
+	pass
+
+class IAGPermute(IAGSpec):
+	__slots__=('name','input','result')
+
+	def __init__(self,name,input,result):
+		self.name=name
+		self.input=input
+		self.result=result
+#---------------------------------------------------
+
 #---------- DataDependence class ----------
 class DataDependence(object):
 	__slots__=('_iterspace','_dataspace','_data_dependence')
@@ -189,7 +202,6 @@ class DataDependence(object):
 
 iegen.util.define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
 #------------------------------------------
-
 
 #
 #    // Base class
