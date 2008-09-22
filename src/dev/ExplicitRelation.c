@@ -73,6 +73,69 @@ int ER_calcIndex( ExplicitRelation* relptr, int in_val )
     return (in_val-RD_lb(relptr->in_domain,0) )*relptr->out_arity;
 }
 
+Tuple ER_calcTuple( ExplicitRelation* relptr, int index )
+/*----------------------------------------------------------------*//*! 
+  \short Given an index into out_index, or out_vals, calculates the
+         input tuple based on information about the explicit relation
+         input domain.
+
+    <pre>
+        Size terms for each dim and then calculate tuple values.
+            in_tuple: <x_0, x_1, ..., x_k>
+            t0 = (RD_size(1)*...*RD_size(k)) 
+            t1 = (RD_size(2)* ... *RD_size(k))
+            ...
+            tk = 1
+    
+        We need to solve the following equation for x values:
+            index = (x_0-lb0)*t0 + (x_1-lb1)*t1 ... + (x_k-lbk)*tk
+            
+            x_0 = index/t0 + lb0
+            index = (x_1-lb1)*t1 + (x_2-lb2)*t2 ... + (x_k-lbk)*tk 
+                  = index % t0
+            
+            x_1 = index/t1 + lb1
+            index = (x_2-lb2)*t2 ... + (x_k-lbk)*tk 
+                  = index % t1
+
+            ...
+    </pre>
+
+  \author Michelle Strout 9/22/08
+*//*----------------------------------------------------------------*/
+{
+    int i;
+    RectDomain * in_domain = ER_in_domain(relptr);
+    
+    // allocate an array to hold size for each
+    // tuple element in array index computation.
+    int *t = (int*)malloc(sizeof(int)*relptr->in_arity);
+    
+    // calculate those sizes
+    // tk = 1
+    t[relptr->in_arity - 1] = 1;
+    for (i=relptr->in_arity - 2; i>=0; i--) {
+        // ti = (RD_size(i+1)* ... *RD_size(k))
+        t[i] = t[i+1] * RD_size(in_domain, i+1);
+    }
+
+    // Solve for the tuple entries based on the sizes and given index.
+    // first reverse computation done on index right before return
+    // in calcIndex
+    index = index/relptr->out_arity;
+    
+    Tuple retval;
+    retval.valptr = (int*)malloc(sizeof(int)*relptr->in_arity);
+    retval.arity = relptr->in_arity;
+    for (i=0; i<relptr->in_arity; i++) {
+        // x_i = index/ti + lbi
+        retval.valptr[i] = index / t[i] + RD_lb(in_domain,i);
+        // index = x_{i+1} * t_{i+1} ... x_k * tk = index % ti
+        index = index % t[i];
+    }
+    
+    return retval;
+}
 
 
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
@@ -420,6 +483,26 @@ int Tuple_compare( Tuple t1, Tuple t2)
     }
     // All elements in tuples were equal.
     return 0;
+}
+
+
+void Tuple_print(Tuple t)
+/*----------------------------------------------------------------*//*! 
+  \short Prints tuple value to standard out.
+    
+  Format of output will be (x_1, x_2, ..., x_d) where d is arity
+  of tuple.
+
+  \author Michelle Strout 9/18/08
+*//*----------------------------------------------------------------*/
+{
+    int k;
+    printf("[");
+    printf("%d", t.valptr[0]);
+    for (k=1; k<t.arity; k++) {
+        printf(",%d", t.valptr[k]);
+    }
+    printf("]");
 }
 
 

@@ -18,8 +18,8 @@ void IAG_cpack(ExplicitRelation* relptr, ExplicitRelation* old2new)
     \param relptr   Pointer to the explicit relation that represents
                     how the iterations of a loop map to a data space.
     \param old2new  Explicit relation that maps old data index 
-                    to new data index.  Will be constructed in
-                    this function.
+                    to new data index.  Should be contructed but empty 
+                    before entry to this function. 
 
     The mapping will be a permutation. 
     Another way of thinking about it is that at index 0 in old2new there
@@ -29,23 +29,23 @@ void IAG_cpack(ExplicitRelation* relptr, ExplicitRelation* old2new)
 *//*----------------------------------------------------------------*/
 {
     assert(relptr!=NULL);
+    assert(old2new!=NULL);
+    // FIXME? don't have anyway to check that old2new is empty
 
     int  in, count, out;
     bool *taken;
 
-    // number of unique output tuples in relation
-    int out_count = ER_getRangeCount(relptr);
+    // number of items we will be mapping from an old location
+    // to a new location
+    int out_count = RD_size(ER_in_domain(old2new));
 
     // allocate array that keeps track of what points in the
-    // data space have been remapped
+    // have been remapped
     MALLOC(taken, bool, out_count);
     for (out = 0; out < out_count; out++) {
             taken[out] = false;
     }
     
-    // construct the explicit relation for the mapping
-    // of old data indices to new
-    old2new = ER_ctor(1,1,out_count);
     
     // reorder data indices (out vals) on a first-touch basis
     count = 0;

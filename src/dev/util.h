@@ -19,6 +19,8 @@
 
 #define FREE(x, typ, sz)  {if (sz != 0 && x !=NULL) free(x);}
 
+#define MAXBUF 256
+
 // --------------------- Testing
 
 //! Print the values of the integer array as space delimited to stdout.

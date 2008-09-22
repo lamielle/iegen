@@ -7,7 +7,7 @@ all: test_RectDomain test_ExplicitRelation  #driver_moldyn_FST_hand
 #########
 SRCS_RELATION = ExplicitRelation.c test_ExplicitRelation.c \
                 RectDomain.c  \
-                util.c #IAG_cpack.c
+                util.c IAG_cpack.c
 
 test_ExplicitRelation: ExplicitRelation.h util.h RectDomain.h $(SRCS_RELATION)
 	g++ -Wall -g  $(SRCS_RELATION) -o test_ExplicitRelation
@@ -35,7 +35,7 @@ driver_moldyn_FST_hand: util.h Hypergraph.h $(SRCS)
 #########
 clean:
 	@echo "Cleaning up project directory ..."
-	rm -f *.o test_RectDomain test_Hypergraph driver_moldyn_FST_hand core a.out
+	rm -f *.o test_RectDomain test_Hypergraph test_ExplicitRelation driver_moldyn_FST_hand core a.out
 	rm -rf *.dSYM
 	@echo ""
 	@echo "Clean."

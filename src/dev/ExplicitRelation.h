@@ -190,6 +190,8 @@ int Tuple_val(Tuple t, int k);
 bool Tuple_in_domain(Tuple t, RectDomain * rd);
 bool Tuple_equal(Tuple t1, Tuple t2);
 
+void Tuple_print(Tuple t);
+
 //----------------------- Routines for inserting relations
 
 //! Insert relation into given explicit relation.
@@ -235,11 +237,14 @@ RectDomain* ER_in_domain( ExplicitRelation * relptr);
 RectDomain* ER_out_range( ExplicitRelation * relptr);
 
 //! Returns an index into the out_vals for the first out tuple element
-//! associated with the given in tuple.  Assumes the explicit relation
-//! is storing a function.
+//! associated with the given in tuple.  Assumes we know the in_domain for
+//! the explicit relation.
 int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple );
 
 int ER_calcIndex( ExplicitRelation* relptr, int in_val );
+
+//! Inverse of calcIndex.
+Tuple ER_calcTuple( ExplicitRelation* relptr, int index );
 
 //! Output debug text representation of ExplicitRelation to standard out.
 void ER_dump( ExplicitRelation* self );
@@ -250,6 +255,35 @@ void ER_dump( ExplicitRelation* self );
 void ER_order_by_in(ExplicitRelation* relptr);
 
 //----------------------- Macros for iterating over relations
+
+//! Iterate over general explicit relations.
+//! \param relptr   Pointer to a ExplicitRelation.
+//! \param in_tuple   Variable in which to store the input tuple.
+//! For now assuming that the ER is constructed with the in_domain or
+//! the in_domain is calculated when things are ordered by in tuples.
+#define FOREACH_in_tuple(relptr, in_tuple)                  \
+    int _FE_i;                                              \
+    for ((_FE_i)=0, in_tuple=ER_calcTuple(relptr, _FE_i);   \
+         (_FE_i)<RD_size((relptr)->in_domain);              \
+         (_FE_i)++, in_tuple=ER_calcTuple(relptr, _FE_i))
+
+//! Iterate over output tuples given input tuple.
+//! \param relptr       Pointer to a ExplicitRelation.
+//! \param in_tuple     input tuple
+//! \param out_tuple    Variable in which to store the output tuple
+//! The out_tuple will be set to point into the actual explicit
+//! relation data structure.
+//! Only works for non function explicit relations.
+#define FOREACH_out_given_in(relptr, int_tuple, out_tuple)                  \
+    assert(! relptr->isFunction );                                          \
+    int _FE_iter;                                                           \
+    out_tuple.arity = relptr->out_arity;                                    \
+    for (_FE_iter=(relptr)->out_index[ER_calcIndex(relptr,(in_tuple))],     \
+            out_tuple.valptr=&((relptr)->out_vals[_FE_iter]);               \
+         _FE_iter<(relptr)->out_index[ER_calcIndex(relptr,(in_tuple))+1];   \
+         _FE_iter+=relptr->out_arity,                                       \
+           out_tuple.valptr=&((relptr)->out_vals[_FE_iter]) )
+        
 
 //! Iterate over the special 1D-to-1D arity relations.
 //! \param relptr   Pointer to a ExplicitRelation.

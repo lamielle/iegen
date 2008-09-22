@@ -167,20 +167,42 @@ int main()
     
 
     ER_dump(relptr);
+    
+    // Iterate over the integer tuple relations
+    printf("\nTraversing access relation example\n");
+    ER_order_by_in(relptr);
+    Tuple in_tuple, out_tuple;
+    FOREACH_in_tuple(relptr, in_tuple) {
+       FOREACH_out_given_in(relptr, in_tuple, out_tuple) {
+            printf("\t");
+            Tuple_print(in_tuple);
+            printf(" -> ");
+            Tuple_print(out_tuple);
+            printf("\n");
+        }
+    }
+    printf("\n");
 
-    ER_dtor(&relptr);
 
-/*
+    //ER_dtor(&relptr);
+
+
     //----- testing IAG_cpack itself
-    int* new2old 
-        = (int*)malloc(sizeof(int)*ER_getRangeCount(relptr));
-    IAG_cpack(relptr,new2old);
-    printf("\nnew2old = ");
-    printArray(new2old,ER_getRangeCount(relptr));
-
-    free(new2old);
+    // constructing sigma
+    in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 0);
+    RD_set_ub(in_domain, 0, 10);
+    ExplicitRelation * sigma = ER_ctor(1,1,in_domain,true);
+    
+    // relptr is input to IAG_cpack and sigma is output
+    IAG_cpack( relptr, sigma );    
+    
+    printf("==== dumping sigma after IAG_cpack call\n");
+    ER_dump(sigma);
+    
     ER_dtor(&relptr);
-*/
+    ER_dtor(&sigma);
+
 
     // ok now do somewhat of a stress test of the memory management
     /* MMS, this takes a long time so only do it when MEM_ALLOC_INCREMENT
