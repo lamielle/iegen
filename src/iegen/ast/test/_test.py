@@ -1166,6 +1166,80 @@ class NormExpTestCase(TestCase):
 		e=NormExp([],1)
 		self.failIf(e.empty(),'%s is empty'%e)
 
+	#Tests that the is_constant method fails if the given list contains
+	#objects other than those that 'look like' the Symbolic class
+	@raises(ValueError)
+	def testConstantFailString(self):
+		from iegen.ast import NormExp
+		e=NormExp([],0)
+		e.is_const(['a'])
+	@raises(ValueError)
+	def testConstantFailInt(self):
+		from iegen.ast import NormExp
+		e=NormExp([],0)
+		e.is_const([1])
+	@raises(ValueError)
+	def testConstantFailVarExp(self):
+		from iegen.ast import NormExp,VarExp
+		e=NormExp([],0)
+		e.is_const([VarExp(1,'a')])
+
+	#Tests the is_const method
+	def testConstant(self):
+		from iegen import Symbolic
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		e=NormExp([],0)
+		self.failUnless(e.is_const(),'%s is not a constant'%e)
+
+		e=NormExp([],1)
+		self.failUnless(e.is_const(),'%s is not a constant'%e)
+
+		e=NormExp([],-6)
+		self.failUnless(e.is_const(),'%s is not a constant'%e)
+
+		e=NormExp([VarExp(1,'n')],0)
+		self.failIf(e.is_const(),'%s is a constant'%e)
+
+		e=NormExp([VarExp(1,'n')],1)
+		self.failIf(e.is_const(),'%s is a constant'%e)
+
+		e=NormExp([VarExp(1,'n'),VarExp(1,'a')],0)
+		self.failIf(e.is_const(),'%s is a constant'%e)
+
+		e=NormExp([VarExp(1,'n'),VarExp(1,'a')],1)
+		self.failIf(e.is_const(),'%s is a constant'%e)
+
+		e=NormExp([FuncExp(1,'f',[])],0)
+		self.failIf(e.is_const(),'%s is a constant'%e)
+
+		e=NormExp([FuncExp(1,'f',[])],1)
+		self.failIf(e.is_const(),'%s is a constant'%e)
+
+		e=NormExp([VarExp(1,'a'),FuncExp(1,'f',[])],0)
+		self.failIf(e.is_const(),'%s is a constant'%e)
+
+		e=NormExp([VarExp(1,'a'),FuncExp(1,'f',[])],1)
+		self.failIf(e.is_const(),'%s is a constant'%e)
+
+		e=NormExp([VarExp(1,'n')],0)
+		self.failUnless(e.is_const([Symbolic('n')]),'%s is not a constant'%e)
+
+		e=NormExp([VarExp(1,'n')],1)
+		self.failUnless(e.is_const([Symbolic('n')]),'%s is not a constant'%e)
+
+		e=NormExp([VarExp(1,'a'),VarExp(1,'n')],0)
+		self.failIf(e.is_const([Symbolic('n')]),'%s is a constant'%e)
+
+		e=NormExp([VarExp(1,'a'),VarExp(1,'n')],1)
+		self.failIf(e.is_const([Symbolic('n')]),'%s is a constant'%e)
+
+		e=NormExp([VarExp(1,'a'),VarExp(1,'n')],0)
+		self.failUnless(e.is_const([Symbolic('n'),Symbolic('a')]),'%s is not a constant'%e)
+
+		e=NormExp([VarExp(1,'a'),VarExp(1,'n')],1)
+		self.failUnless(e.is_const([Symbolic('n'),Symbolic('a')]),'%s is not a constant'%e)
+
 	#Tests the __mul__ method
 	def testMul(self):
 		from iegen.ast import NormExp,FuncExp,VarExp

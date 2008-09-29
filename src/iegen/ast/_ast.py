@@ -32,7 +32,7 @@
 
 from copy import deepcopy
 from cStringIO import StringIO
-from iegen.util import like_type,normalize_self,normalize_result,check
+from iegen.util import like_type,raise_objs_not_like_types,normalize_self,normalize_result,check
 
 #---------- Base AST Node class ----------
 class Node(object):
@@ -456,6 +456,30 @@ class NormExp(Expression):
 	#Returns False otherwise
 	def empty(self):
 		return not self._has_terms() and 0==self.const
+
+	#Given a collect of Symbolic constants...
+	#Returns True if this NormExp has only symbolic constants in its terms
+	#Returns False otherwise
+	#
+	#Note that providing a collection of symbolic is optional
+	#If the collection is not provided, this method will essentially
+	#check that the expression has no terms
+	def is_const(self,syms=[]):
+		from iegen import Symbolic
+		raise_objs_not_like_types(syms,Symbolic)
+
+		if not self._has_terms():
+			return True
+		else:
+			res=True
+			for term in self.terms:
+				term_matches_sym=False
+				for sym in syms:
+					if term.id==sym.name:
+						term_matches_sym=True
+				if not term_matches_sym:
+					res=False
+			return res
 
 	#Comparison operator
 	def __cmp__(self,other):
