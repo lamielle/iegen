@@ -92,6 +92,19 @@ class DataSpace(object):
 		self.name=name
 		self.set=set
 		self.is_index_array=is_index_array
+
+	def __repr__(self):
+		return 'DataSpace(%s,%s,%s)'%(self.name,self.set,self.is_index_array)
+
+	def __str__(self):
+		return self._get_string(0)
+
+	def _get_string(self,indent):
+		spaces=' '*indent
+		return '''DataSpace:
+%s-name: %s
+%s-set: %s
+%s-is_index_array: %s'''%(spaces,self.name,spaces,self.set,spaces,self.is_index_array)
 #-------------------------------------
 
 #---------- IndexArray class ----------
@@ -111,6 +124,11 @@ class IndexArray(object):
 
 		if 1!=self.output_bounds.arity():
 			raise iegen.util.DimensionalityError('The dimensionality of the output bounds of the index array (%d) should be 1.'%self.output_bounds.arity_out())
+
+	def _name(self):
+		return self.data_space.name
+
+	property(_name)
 #--------------------------------------
 
 #---------- Statement class ----------
@@ -140,6 +158,20 @@ class AccessRelation(object):
 		self.data_space=data_space
 		self.iter_to_data=iter_to_data
 		self.iter_space=iter_space
+
+	def __repr__(self):
+		return 'AccessRelation(%s,%s,%s,%s)'%(self.name,self.data_space,self.iter_to_data,self.iter_space)
+
+	def __str__(self):
+		return self._get_string(0)
+
+	def _get_string(self,indent):
+		spaces=' '*indent
+		return '''AccessRelation:
+%s-name: %s
+%s-data_space: %s
+%s-iter_to_data: %s
+%s-iter_space: %s'''%(spaces,self.name,spaces,self.data_space._get_string(indent+13),spaces,self.iter_to_data,spaces,self.iter_space)
 
 		if self.data_space.set.arity()!=self.iter_to_data.arity_out():
 			raise iegen.util.DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.iter_to_data.arity_out(),self.data_space.set.arity()))

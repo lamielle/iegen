@@ -1,5 +1,5 @@
 #Given a collection of Statement objects, calculates the combined iteration space of all statements
-def full_iter_space(statements):
+def calc_full_iter_space(statements):
 	#Get the iteration space of the first statement
 	statement=statements[0]
 	full_iter=statement.iter_space.apply(statement.scatter)
@@ -34,22 +34,40 @@ def calc_artt(mapir,data_permute):
 	return artt
 
 def write_create_artt(mapir,code):
+	from cStringIO import StringIO
 	from iegen.pycloog import Statement,codegen
-	print mapir.artt.iter_space
 
-	s1=Statement(mapir.artt.iter_space)
-	s2=Statement(mapir.artt.iter_space)
 
-	print >>code,'ExplicitRelation* A_I_0_sub_to_X_0 = ExplicitRelation_ctor(1,1);'
+	print
+	print mapir.artt
+	print
+
+	iterator_name=mapir.artt.iter_space.sets[0].tuple_set.vars[0]
+	print 'iterator_name=%s'%iterator_name
+
+	#Generate the define/undefine code
+	define_code=StringIO()
+	statements=[]
+	undefine_code=StringIO()
+	for relation_index in xrange(1,len(mapir.artt.iter_to_data.relations)+1):
+		relation=mapir.artt.iter_to_data.relations[relation_index-1]
+
+		print 'artt iter_to_data relation: %s'%(str(relation))
+
+		print >>define_code,'#define S%d ExplicitRelation_in_ordered_insert(%s,Tuple_make(%s),ER_out_given_in(%s, Tuple_make(%s)));'%(relation_index,mapir.artt.name,iterator_name,'EXPLICIT_RELATION_INDEX_ARRAY_NAME',iterator_name)
+
+		statements.append(Statement(mapir.artt.iter_space))
+
+		print >>undefine_code,'#undef S2'
+
+	#Actually write out the code
+	print >>code,'//Creation of ExplicitRelation of the ARTT'
+	print >>code,'ExplicitRelation* %s = ExplicitRelation_ctor(%d,%d);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())
 	print >>code
-	print >>code,'#define S1 ExplicitRelation_in_ordered_insert(A_I_0_sub_to_X_0,Tuple_make(t1),ER_out_given_in(inter1_ER, Tuple_make(t1)));'
-	print >>code,'#define S2 ExplicitRelation_in_ordered_insert(A_I_0_sub_to_X_0,Tuple_make(t1),ER_out_given_in(inter1_ER, Tuple_make(t1)));'
+	print >>code,define_code.getvalue()
+	print >>code,codegen(statements)
 	print >>code
-	print >>code,codegen([s1,s2])
-	print >>code
-	print >>code,'#undef S1'
-	print >>code,'#undef S2'
-	print >>code
+	print >>code,undefine_code.getvalue()
 
 def calc_sigma(mapir,data_permute):
 	from copy import deepcopy
@@ -76,7 +94,7 @@ def write_create_sigma(mapir,code):
 #---------- Public Interface Function ----------
 def codegen(mapir,data_permute,iter_permute,code):
 	#Step 0) Calculate the full iteration space based on the iteration spaces of the statements
-	mapir.full_iter_space=full_iter_space(mapir.statements)
+	mapir.full_iter_space=calc_full_iter_space(mapir.statements)
 
 	#Put the full iteration space in the iter permute rtrt
 #	iter_permute.iter_space=mapir.full_iter_space
