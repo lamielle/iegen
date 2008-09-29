@@ -14,6 +14,24 @@ def _remove_free_var_equality(formula):
 	from iegen.ast.visitor import RemoveFreeVarEqualityVisitor
 	return RemoveFreeVarEqualityVisitor().visit(formula).changed
 
+#Simplification rule 2:
+#Remove an inequality constraint of the form:
+#{free_var}++{symbolic constants}*+c>=0
+#(ie one or more free variables, zero or more symbolic constants
+# and some constant)
+#
+#This inequality is only constraining the free variable(s), and thus can be removed
+#Assumes 'formula' is a Set or Relation
+def _remove_free_var_inequality(formula):
+	pass
+#	from iegen.ast.visitor import RemoveFreeVarInequalityVisitor
+#	return RemoveFreeVarInequalityVisitor().visit(formula).changed
+
+#Returns True if any changes were made, False otherwise
+def _remove_free_var_equality(formula):
+	from iegen.ast.visitor import RemoveFreeVarEqualityVisitor
+	return RemoveFreeVarEqualityVisitor().visit(formula).changed
+
 #Uses the MergeExpTermsVisitor to combine common terms in NormExps
 def _merge_terms(obj):
 	from iegen.ast.visitor import MergeExpTermsVisitor
@@ -68,8 +86,12 @@ def simplify(obj):
 		#Remove equalities that contain a free variable
 		changed=_remove_free_var_equality(obj) or changed
 
+		#Remove inequalities that contain a free variable
+		changed=_remove_free_var_inequality(obj) or changed
+
 		#Remove duplicate equivalent formulas
 		changed=_remove_duplicate_formulas(obj) or changed
 
-	SortVisitor().visit(obj)
+		#Apply a sort just to make sure things are ordered properly
+		SortVisitor().visit(obj)
 #--------------------------------------------

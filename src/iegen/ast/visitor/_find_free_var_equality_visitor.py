@@ -3,8 +3,11 @@ from iegen.ast.visitor import DFVisitor
 #Searches a Set/Relation for an Equality constraint that is of the form:
 #free_var=exp
 #In other words, looks for an Equality that contains a free variable.
-#If such a constraint exists, it is placed in 'equality'
-#Otherwise, 'equality' will be None
+#If such a constraint exists, 'var_equality_tuple' will be a 2-tuple:
+#-The first element is a VarExp of the free variable (with a coefficient of 1)
+#-The second element is the equality itself
+
+#Otherwise, if now equality was found, 'var_equality_tuple' will be None
 class FindFreeVarEqualityVisitor(DFVisitor):
 	def __init__(self):
 
