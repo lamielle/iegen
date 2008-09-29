@@ -8,7 +8,7 @@ from iegen.ast.visitor import DFVisitor
 #-The second element is the equality itself
 
 #Otherwise, if now equality was found, 'var_equality_tuple' will be None
-class FindFreeVarEqualityVisitor(DFVisitor):
+class FindFreeVarConstraintVisitor(DFVisitor):
 	def __init__(self):
 
 		#By default we do not find an equality with a free variable

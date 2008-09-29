@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindFreeVarEqualityVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarEqualityVisitor,RemoveDuplicateFormulasVisitor,RemoveSymbolicsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveSymbolicsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -444,27 +444,27 @@ class IsVarVisitorTestCase(TestCase):
 #---------------------------------------
 
 #---------- Find Free Variable Equality Visitor ----------
-class FindFreeVarEqualityVisitorTestCase(TestCase):
+class FindFreeVarConstraintVisitorTestCase(TestCase):
 
 	#Make sure the result of the visiting is placed in the var_equality_tuple attribute
 	def testResultPresent(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 
 		set=Set('{[]}')
-		v=FindFreeVarEqualityVisitor().visit(set)
-		self.failUnless(hasattr(v,'var_equality_tuple'),"FindFreeVarEqualityVisitor doesn't place result in the 'var_equality_tuple' property.")
+		v=FindFreeVarConstraintVisitor().visit(set)
+		self.failUnless(hasattr(v,'var_equality_tuple'),"FindFreeVarConstraintVisitor doesn't place result in the 'var_equality_tuple' property.")
 
 	#Tests that the visitor finds a simple equality
 	def testFindSimpleSet(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[]}')
 		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		eq=Equality(NormExp([VarExp(1,'a')],-5))
 		var=eq.exp.terms[0]
@@ -474,14 +474,14 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 	#Tests that the visitor finds a simple equality
 	def testFindSimpleRelation(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Relation
 		from iegen.ast import Equality,NormExp,VarExp
 
 		relation=Relation('{[]->[]:a=5}')
 		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
 
-		equality=FindFreeVarEqualityVisitor().visit(relation).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(relation).var_equality_tuple
 
 		eq=Equality(NormExp([VarExp(1,'a')],-5))
 		var=eq.exp.terms[0]
@@ -491,14 +491,14 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 	#Tests that the visitor finds an equality in a collection of equalities
 	def testFindInCollection(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a]:a=5}')
 		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		eq=Equality(NormExp([VarExp(1,'b')],-5))
 		var=eq.exp.terms[0]
@@ -508,7 +508,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 	#Tests that the visitor finds an equality in a collection of constraints
 	def testFindInConstraints(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
@@ -516,7 +516,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
 		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		eq=Equality(NormExp([VarExp(1,'b')],-5))
 		var=eq.exp.terms[0]
@@ -526,7 +526,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 	#Tests that the visitor finds an equality in a collection of constraints with symbolics
 	def testFindInConstraintsWithSymbolic(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set,Symbolic
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
@@ -534,7 +534,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
 		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		eq=Equality(NormExp([VarExp(1,'b')],-5))
 		var=eq.exp.terms[0]
@@ -544,7 +544,7 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 
 	#Tests that the visitor does not find a free variable with a non-1 and non--1 coefficient
 	def testFindCoefficientNeg1(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
@@ -552,62 +552,62 @@ class FindFreeVarEqualityVisitorTestCase(TestCase):
 		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(-6,'b')],5)))
 		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
 	#Tests that the visitor does not find any equalities
 	def testNoFind1(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 
 		set=Set('{[a]:a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
 	#Tests that the visitor does not find any equalities
 	def testNoFind2(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set,Symbolic
 
 		set=Set('{[]:n=5}',[Symbolic('n')])
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
 	#Tests that the visitor does not find an equality with func(a)=exp
 	def testNoFindFuncEquality(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 
 		set=Set('{[a]:f(b)=5 and b>=5 and a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
 	#Tests that the visitor does not find an equality with func1(func2(a))=exp
 	def testNoFindNestedFuncEquality(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 
 		set=Set('{[a]:f(g(b))=5 and b>=5 and a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 
 	#Tests that the visitor does not find a free variable with a non-1 and non--1 coefficient
 	def testNoFindCoefficient(self):
-		from iegen.ast.visitor import FindFreeVarEqualityVisitor
+		from iegen.ast.visitor import FindFreeVarConstraintVisitor
 		from iegen import Set
 
 		set=Set('{[a]:5b=5 and b>=5 and a=5}')
 
-		equality=FindFreeVarEqualityVisitor().visit(set).var_equality_tuple
+		equality=FindFreeVarConstraintVisitor().visit(set).var_equality_tuple
 
 		self.failUnless(None is equality,'%s is not None'%equality)
 #---------------------------------------------------------
@@ -899,16 +899,16 @@ class RemoveZeroCoeffVisitorTestCase(TestCase):
 #-----------------------------------------------------
 
 #---------- Remove Free Var Equality Visitor ----------
-class RemoveFreeVarEqualityVisitorTestCase(TestCase):
+class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 	#Make sure the result of the visiting is placed in the changed attribute
 	def testResultPresent(self):
-		from iegen.ast.visitor import RemoveFreeVarEqualityVisitor
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 		from iegen import Set
 
 		set=Set('{[]}')
-		v=RemoveFreeVarEqualityVisitor().visit(set)
-		self.failUnless(hasattr(v,'changed'),"RemoveFreeVarEqualityVisitor doesn't place result in the 'changed' property.")
+		v=RemoveFreeVarConstraintVisitor().visit(set)
+		self.failUnless(hasattr(v,'changed'),"RemoveFreeVarConstraintVisitor doesn't place result in the 'changed' property.")
 
 	#Test that equalities with free variables are removed and
 	#replaced with their equivalent expression

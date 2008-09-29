@@ -1,11 +1,11 @@
-from iegen.ast.visitor import DFVisitor,FindFreeVarEqualityVisitor
+from iegen.ast.visitor import DFVisitor,FindFreeVarConstraintVisitor
 from iegen.util import get_basic_term,find_term
 from iegen.ast import NormExp
 
 #Searches for a free variable equality within PresSets and PresRelations
 #If one is found, removes this equality and replaces every use of the
 #free variable with the expression it is equal to
-class RemoveFreeVarEqualityVisitor(DFVisitor):
+class RemoveFreeVarConstraintVisitor(DFVisitor):
 	def __init__(self):
 
 		#By default we have not changed the formula
@@ -24,7 +24,7 @@ class RemoveFreeVarEqualityVisitor(DFVisitor):
 
 	def _inFormula(self,node):
 		#Search for an equality with a free variable
-		var_equality_tuple=FindFreeVarEqualityVisitor().visit(node).var_equality_tuple
+		var_equality_tuple=FindFreeVarConstraintVisitor().visit(node).var_equality_tuple
 		if None is not var_equality_tuple:
 			self.free_var,self.equality=var_equality_tuple
 

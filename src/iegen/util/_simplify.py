@@ -11,8 +11,8 @@ from iegen.util import raise_objs_not_like_types,like_type
 #
 #Returns True if any changes were made, False otherwise
 def _remove_free_var_equality(formula):
-	from iegen.ast.visitor import RemoveFreeVarEqualityVisitor
-	return RemoveFreeVarEqualityVisitor().visit(formula).changed
+	from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
+	return RemoveFreeVarConstraintVisitor().visit(formula).changed
 
 #Simplification rule 2:
 #Remove an inequality constraint of the form:
@@ -26,11 +26,6 @@ def _remove_free_var_inequality(formula):
 	pass
 #	from iegen.ast.visitor import RemoveFreeVarInequalityVisitor
 #	return RemoveFreeVarInequalityVisitor().visit(formula).changed
-
-#Returns True if any changes were made, False otherwise
-def _remove_free_var_equality(formula):
-	from iegen.ast.visitor import RemoveFreeVarEqualityVisitor
-	return RemoveFreeVarEqualityVisitor().visit(formula).changed
 
 #Uses the MergeExpTermsVisitor to combine common terms in NormExps
 def _merge_terms(obj):
