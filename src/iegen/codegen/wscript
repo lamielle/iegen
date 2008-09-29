@@ -14,6 +14,5 @@ def build(bld):
 
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_codegen.py')
-	install_files('PREFIX',inst_dir,'_simplify.py')
 
 	bld.add_subdirs('test')
