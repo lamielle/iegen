@@ -914,92 +914,192 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 	#replaced with their equivalent expression
 	def testSimpleSet(self):
 		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
+		from iegen.util import simplify
 
-		set=Set('{[a]: a=b and b=6}')
+		set=Set('{[a]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-6)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed
+		simplify(set)
 
 		set_res=Set('{[a]: a=6}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
 
 	#Simple free var equality test with a relation
 	def testSimpleRelation(self):
 		from iegen import Relation
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
-		rel=Relation('{[a]->[ap]: a=b and b=6 and ap=c and c=7}')
+		rel=Relation('{[a]->[ap]}')
+		rel.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		rel.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'ap'),VarExp(-1,'c')],0)))
+		rel.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-6)))
+		rel.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c')],-7)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(rel).changed
+		changed=RemoveFreeVarConstraintVisitor().visit(rel).changed and changed
 
 		rel_res=Relation('{[a]->[ap]: a=6 and ap=7}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(True==changed,'changed!=True')
 
 	#Tests for more complex 'chaining' equality constraints
 	def testChaining(self):
 		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
-		set=Set('{[a]: a=b and b=c and c=d and d=6}')
+		set=Set('{[a]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d')],-6)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
 
 		set_res=Set('{[a]: a=6}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
 
 	#Tests that symbolics are propogated along the equality chain
 	def testSymbolic(self):
 		from iegen import Set,Symbolic
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
-		set=Set('{[a]: a=b and b=c and c=d and d=n}',[Symbolic('n')])
+		set=Set('{[a]}')
+		set.sets[0].symbolics=[Symbolic('n')]
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
 
 		set_res=Set('{[a]: a=n}',[Symbolic('n')])
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
 
 	#Tests that inequality free variables are replaced
 	def testInequality(self):
 		from iegen import Set,Symbolic
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor,SortVisitor
 
-		set=Set('{[a]: a>=b and b=c and c=d and d=n and a<=c}',[Symbolic('n')])
+		set=Set('{[a]}')
+		set.sets[0].symbolics=[Symbolic('n')]
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a'),VarExp(1,'c')],0)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
+		SortVisitor().visit(set)
 
 		set_res=Set('{[a]: a>=n and a<=n}',[Symbolic('n')])
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
 
 	#Tests for multiple 'chains' of equalities
 	def testMultiple(self):
 		from iegen import Set,Symbolic
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor,SortVisitor
 
-		set=Set('{[a,b]: a=c and c=d and d=n and b=e and e=f and f=m}',[Symbolic('n'),Symbolic('m')])
+		set=Set('{[a,b]}')
+		set.sets[0].symbolics=[Symbolic('n'),Symbolic('m')]
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'e')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'e'),VarExp(-1,'f')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'f'),VarExp(-1,'m')],0)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
+		SortVisitor().visit(set)
 
 		set_res=Set('{[a,b]: a=n and b=m}',[Symbolic('n'),Symbolic('m')])
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
 
 	#Tests that free variables are replaced within a function
 	def testFunction(self):
 		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp,FuncExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
-		set=Set('{[a,b]: a=f(d) and b=c and c=d}')
+		set=Set('{[a,b]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'d')],0)])],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
 
 		set_res=Set('{[a,b]: a=f(b)}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
 
 	#Tests that free variables are replaced within a nested set of functions
 	def testFunctionNest(self):
 		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp,FuncExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
-		set=Set('{[a,b]: a=f(g(h(d))) and b=c and c=d}')
+		set=Set('{[a,b]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([FuncExp(1,'h',[NormExp([VarExp(1,'b')],0)])],0)])],0)])],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
 
 		set_res=Set('{[a,b]: a=f(g(h(b)))}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
 
 	#Tests that free variables with a non-1 coefficient are replaced properly
 	def testCoeff(self):
 		from iegen import Set,Symbolic
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
-		set=Set('{[a]: a=6b and b=2c and c=4n}',[Symbolic('n')])
+		set=Set('{[a]}')
+		set.sets[0].symbolics=[Symbolic('n')]
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-2,'c')],0)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-4,'n')],0)))
+
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed
+		changed=RemoveFreeVarConstraintVisitor().visit(set).changed and changed
 
 		set_res=Set('{[a]: a=48n}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
 #------------------------------------------------------
 
 #---------- Remove Duplicate Formulas Visitor ----------
