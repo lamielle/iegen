@@ -23,8 +23,9 @@ class RemoveFreeVarConstraintVisitor(DFVisitor):
 		#----------------------------------------------
 
 	def _inFormula(self,node):
+		from iegen.ast import Equality
 		#Search for an equality with a free variable
-		var_equality_tuple=FindFreeVarConstraintVisitor().visit(node).var_equality_tuple
+		var_equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(node).var_equality_tuple
 		if None is not var_equality_tuple:
 			self.free_var,self.equality=var_equality_tuple
 
