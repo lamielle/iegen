@@ -1,0 +1,176 @@
+\documentclass[journal,10pt]{IEEEtran}
+
+\bibliographystyle{IEEEtran}
+
+\usepackage[hmargin=1.75cm,vmargin=2cm,columnsep=.75cm]{geometry}
+
+\title{Summary and Descriptions of Operations on Sets and Relations in IEGen}
+\author{Alan LaMielle \\
+	Colorado State University}
+\date{October 2, 2008}
+
+\begin{document}
+\maketitle
+
+\begin{section}{Thursday October 2, 2008 Meeting Topics}
+
+\begin{itemize}
+\item Time
+\item Operations writeup
+\item Big Picture
+\item Inequality simplification
+\end{itemize}
+
+\end{section}
+
+\begin{section}{Introduction}
+
+\IEEEPARstart{I}{EGen} is a tool for generating irregular computational kernels optimized using the Inspector/Executor strategy.
+The user provides a description of the computational kernel and the desired runtime program transformations.
+IEGen then produces code that implements the corresponding inspector and executor for this computation.
+
+\end{section}
+
+\begin{section}{Description of formula data structure}
+
+IEGen is built upon and utilizes the mathematical concept of Presburger formulas.
+However, we have introduced one unique addition to this well-known concept: the use of uninterpreted function symbols to represent indirect array accesses.
+Few libraries have been written that work with Presburger formulas in this capacity--with full logic support for manipulating formulas that include uninterpreted functions.
+The closest library is Omega (citation needed).
+However, Omega's support for uninterpreted function symbols is lacking.
+Some operations support and work with uninterpreted functions, some don't, and some produce incorrect results. (example for thesis)
+Therefore, we were forced to develop our own implementation of Presburger formulas that includes correct 
+
+The following are some of the features included in IEGen related to working with Presburger formulas:
+
+\begin{itemize}
+\item A data structure for representing arbitrary formulas
+\item A parser for converting textual string descriptions of a formula to the equivalent in-memory data structure
+\item String generation support for producing a human-readable version of an in-memory formula
+\item Various operations for manipulating and combining formulas
+\item A variety of simplification routines that convert one formula to an equivalent, but simplified, version
+\end{itemize}
+
+We support the following aspects of presburger formulas:
+
+\begin{itemize}
+\item Sets
+\item Relations
+\item AND
+\item OR
+\item One implicit level of existential quantifiers
+\item Equality
+\item Inequality
+\item Uninterpreted function symbols
+\item Symbolic Variables
+\end{itemize}
+
+The data structure for representing formulas consists of the following classes:
+
+\begin{itemize}
+\item Formula:
+	The base class for both Set and Relation.
+	This contains any common functionality between these two classes.
+\item Set:
+	A Set represents a set of integer tuples restricted by the given constraints.
+	A Set consists of the disjunction of a collection of PresSets.
+\item Relation:
+	A Relation abstractly represents some mapping from input tuples to output tuples restricted by the given constraints.
+	A Relation consists of the disjunction of a collection of PresRelations.
+\item PresForm:
+	The base class for both PresSet and PresRelation.
+	This contains any common functionality between these two classes.
+\item PresSet:
+	Represents a Presburger set of the form `\{ [tuple variables] : constraints \}'.
+\item PresRelation:
+	Represents a Presburger relation of the form `\{ [input tuple variables] $\rightarrow$ [output tuple variables] : constraints \}'.
+\item VarTuple:
+	Contains the collection of variables that represent a PresSet's set tuple variables or a PresRelation's input or output tuple variables.
+\item Conjunction:
+	Contains a collection of Constraints that are, as it is a conjunction, ANDed together.
+\item Constraint:
+	Represents one of two types of constraints: Equality or Inequality.
+	This contains any common functionality between these two classes.
+\item Equality:
+	Represents an equality constraint of the form: NormExp $=0$.
+\item Inequality:
+	Represents an inequality constraint of the form: NormExp $>=0$.
+\item Expression:
+	The base class for all expressions.
+	This contains any common functionality between all expression types.
+\item VarExp:
+	Represents a variable expression of the form: $vc*v$ where $vc$ is an integer constant and $v$ is the variable name.
+\item FuncExp
+	Represents a function expression of the form: $fc*f(a_{1},a_{2},\ldots,a_{n})$ where $fc$ is an integer constant, $f$ is the function name, and the $n$ $a_{i}$ terms are the arguments to the functions defined as NormExps.
+\item NormExp:
+	Represents an expression of the form: $vc_{1}*v_{1} + vc_{2}*v_{2} + \ldots + vc_{n}*v_{n} + fc_{1}*f_{1} + fc_{2}*f_{2} + \ldots + fc_{m}*f_{m} + c = 0$ where the $n$ $v_{i}$ are variables (VarExps), the $vc_{i}$ are integer constants, the $m$ $f_{i}$ are functions (FuncExps), the $fc_{i}$ are integer constants, and $c$ is an integer constant.
+	This is essentially an affine expression with the addition that functions may also be included in the terms.
+\end{itemize}
+
+\end{section}
+
+\begin{section}{Description of High Level Operations}
+
+\emph{``I would like you to write up what operations you have implemented and the following information about each:
+\begin{itemize}
+\item How general the implementation is and what the limitations are
+\item How extensively each operation has been tested
+\item Other operations an operation may depend on''
+\end{itemize}}
+
+Arity querying: We are able to query a Set or Relation for its arity.
+For Sets, it is simply the set tuple's arity.
+For Relations, there is an arity method that returns a 2-tuple of (input\_arity,output\_arity).
+There are also individual methods for both the input and output arity.
+There is one comprehensive test for many tuple sizes for the Set and Relation arity methods.
+
+Union: Implemented in both Set and Relation.
+No limitations exist for this operation as it is quite simple.
+There are four tests for each of the Set and Relation union implementations.
+
+Apply: Implemented in Set.
+We are able to apply a Relation to a Set.
+This operation is limited in the naming/renaming aspects.
+If we apply a Relation to a Set with conflicting names, issues may aries.
+Apply has 8 test cases implemented.
+
+Compose: Implemented in Relation.
+We are able to compose two Relations.
+This operation has the same limitations as apply in terms of renaming.
+Compose has 8 test cases implemented.
+
+Inverse: Implemented in Relation.
+We are able to take the inverse of a Relation.
+This operation has no limitations.
+This operation has 2 test cases written.
+
+Codegen: We can generate code from a Set.
+
+Some sub operations that the main operations use:
+
+arity methods depend on arity methods of PresSet/PresRelation (not tested directly, methods checked for)
+
+inverse -> invert\_dict
+
+apply/compose -> \_combine\_pres\_formulas,\_get\_rename\_dict,\_get\_unrename\_dict
+
+\end{section}
+
+\begin{section}{Description of Simplification Operations}
+
+Simplification steps:
+
+\begin{itemize}
+\item Merge terms
+\item Remove zero coefficients
+\item Remove empty constraints
+\item remove duplicate constraints (needed, but unimplemented)
+\item remove symbolics
+\item remove free variable equalities
+\item remove free variable inequalities (partially implemented)
+\item remove duplicate formulas
+\end{itemize}
+
+\end{section}
+
+\end{document}
