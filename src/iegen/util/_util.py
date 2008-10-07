@@ -15,6 +15,15 @@ def run_coverage():
 	mods=[module for module in sys.modules.values() if str(module).find('iegen.')>=0 and str(module).find('iegen.lib.')<0]
 	iegen.lib.coverage.report(mods)
 
+#Determines the sign of the given number
+#Returns -1 if the number is <0
+#Returns 1 if the number is >=0
+def sign(num):
+	if num<0:
+		return -1
+	else:
+		return 1
+
 #Inverts key/value pairs of the given dictionary
 def invert_dict(d):
 	return dict(((v,k) for k,v in d.iteritems()))
