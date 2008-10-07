@@ -4,12 +4,27 @@
 
 #include "ExplicitRelation.h"
 
+static bool debug = true;
+
 int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
 /*----------------------------------------------------------------*//*! 
-  \short Given an in tuple calculate the index into out_vals array where
-         the out tuple is stored.  If relptr is not storing a function
-         then calculates index into out_index.
+  \short Given an in tuple calculate the index into out_index array.
+         Can also be used to calculate index into out_vals array where
+         the out tuple is stored if the relptr is a function and 
+         the value returned from this function is multiplied by
+         out_arity.
 
+    For a non function:
+    <pre>
+        in_tuple: <x_0, x_1, ..., x_k>
+        index into out_vals will be stored at 
+            out_index[ ((x_0-lb_0)*(RD_size(1)*...*RD_size(k)) 
+                      + (x_1-lb_0)*(RD_size(2)* ... *RD_size(k))
+                      + (x_k-lb_k)) ]
+    </pre>
+ 
+    For a function (NOTE that multiplication by out_arity must be
+    done externally to the ER_calcIndex function):
     <pre>
         in_tuple: <x_0, x_1, ..., x_k>
         out_tuple will be stored at 
@@ -18,16 +33,6 @@ int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
                       + (x_k-lb_k)) * out_arity ]
     </pre>
          
-    Or for a non function:
-    <pre>
-        in_tuple: <x_0, x_1, ..., x_k>
-        index into out_vals will be stored at 
-            out_index[ ((x_0-lb_0)*(RD_size(1)*...*RD_size(k)) 
-                      + (x_1-lb_0)*(RD_size(2)* ... *RD_size(k))
-                      + (x_k-lb_k)) * out_arity ]
-    </pre>
-    
-    
     FIXME? Possible performance problem.
 
   \author Michelle Strout 8/30/08
@@ -46,7 +51,7 @@ int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
         index += term;
     }
     
-    return index * relptr->out_arity;
+    return index;
 }
 
 int ER_calcIndex( ExplicitRelation* relptr, int in_val )
@@ -58,7 +63,7 @@ int ER_calcIndex( ExplicitRelation* relptr, int in_val )
     <pre>
         in_tuple: <x_0>
         out_tuple will be stored at 
-            out_vals[ (x_0-lb_0) * out_arity ]
+            out_vals[ (x_0-lb_0) ]
     </pre>
          
     Assumes we are dealing with a function.
@@ -70,14 +75,16 @@ int ER_calcIndex( ExplicitRelation* relptr, int in_val )
 {
     assert(relptr->isFunction);
     
-    return (in_val-RD_lb(relptr->in_domain,0) )*relptr->out_arity;
+    return (in_val-RD_lb(relptr->in_domain,0) );
 }
 
 Tuple ER_calcTuple( ExplicitRelation* relptr, int index )
 /*----------------------------------------------------------------*//*! 
   \short Given an index into out_index, or out_vals, calculates the
          input tuple based on information about the explicit relation
-         input domain.
+         input domain.  If the index is a raw index into out_vals, then
+         it must be divided by out_arity before being passed to this 
+         function.
 
     <pre>
         Size terms for each dim and then calculate tuple values.
@@ -120,10 +127,6 @@ Tuple ER_calcTuple( ExplicitRelation* relptr, int index )
     }
 
     // Solve for the tuple entries based on the sizes and given index.
-    // first reverse computation done on index right before return
-    // in calcIndex
-    index = index/relptr->out_arity;
-    
     Tuple retval;
     retval.valptr = (int*)malloc(sizeof(int)*relptr->in_arity);
     retval.arity = relptr->in_arity;
@@ -205,16 +208,16 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
         if (self->isFunction) {
             self->out_vals_size 
                 = self->out_arity *  RD_size(self->in_domain);
-            self->out_vals = (int*)malloc(self->out_vals_size*sizeof(int));
+            // want all out_vals to be initialized to zero
+            self->out_vals = (int*)calloc(self->out_vals_size,sizeof(int));
             
         // If we don't have a function then we don't know how many
         // output tuples are associated with each input tuple, but
         // we do know how big the out_index array must be to index into
         // the out_vals array.
         } else {
-            self->out_index_size 
-                = self->out_arity *  RD_size(self->in_domain) + 1;
-            self->out_index = (int*)malloc(self->out_index_size*sizeof(int));        
+            self->out_index_size = RD_size(self->in_domain) + 1;
+            self->out_index = (int*)calloc(self->out_index_size,sizeof(int));
         }
         
     // The in_domain is not defined.
@@ -635,7 +638,7 @@ void ER_insert(ExplicitRelation* self, Tuple in_tuple, Tuple out_tuple)
         assert( self->out_arity == out_tuple.arity );
         
         // do actual insertion of output tuple
-        int start_index = ER_calcIndex(self, in_tuple);
+        int start_index = ER_calcIndex(self, in_tuple)*self->out_arity;
         for (k=0; k< self->out_arity; k++) {        
             self->out_vals[start_index+k] = out_tuple.valptr[k];
         }
@@ -705,6 +708,12 @@ void ER_in_ordered_insert(ExplicitRelation* self,
 {    
     int k;
 
+    if (debug) {
+        printf("ER_in_ordered_insert\n");
+        printf("\tin_tuple = "); Tuple_print(in_tuple); printf("\n");
+        printf("\tout_tuple = "); Tuple_print(out_tuple); printf("\n");
+    }
+
     // If inserting into a relation that implements a function,
     // then just use the regular ER_insert.
     if (self->isFunction) { 
@@ -770,8 +779,8 @@ void ER_in_ordered_insert(ExplicitRelation* self,
 
         //=========================================================
         // At this point the self->unique_in_count is set properly
-        // to index into self->out_vals.  Now we just need to insert
-        // the out tuple.
+        // to index into self->out_index.  
+        // Now we just need to insert the out tuple.
         
         // check that out_index is big enough
         if ( self->unique_in_count >= self->out_index_size ) {
@@ -909,7 +918,8 @@ Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple)
     // that to create tuple.
     Tuple retval;
     retval.arity = relptr->out_arity;
-    retval.valptr = & (relptr->out_vals[ER_calcIndex(relptr, in_tuple)]);
+    retval.valptr = & (relptr->out_vals[
+            ER_calcIndex(relptr, in_tuple) * relptr->out_arity ]);
     return retval;
 }
 
@@ -988,3 +998,4 @@ void ER_dump( ExplicitRelation* self )
     printf("\nout_vals = ");
     printArray(self->out_vals, self->out_vals_size);
 }
+

@@ -20,6 +20,7 @@ void printArray(int *array, int num)
   \author Michelle Strout 6/30/08
 *//*--------------------------------------------------------------*/
 {
+    assert(array==NULL?(num==0):(num>=0));
     int i;
     for (i=0; i<num; i++) {
         printf("%d ", array[i]);
