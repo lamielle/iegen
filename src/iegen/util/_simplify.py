@@ -12,7 +12,8 @@ from iegen.util import raise_objs_not_like_types,like_type
 #Returns True if any changes were made, False otherwise
 def _remove_free_var_equality(formula):
 	from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
-	return RemoveFreeVarConstraintVisitor().visit(formula).changed
+	from iegen.ast import Equality
+	return RemoveFreeVarConstraintVisitor(Equality).visit(formula).changed
 
 #Simplification rule 2:
 #Remove an inequality constraint of the form:

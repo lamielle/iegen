@@ -6,10 +6,10 @@ from iegen.ast.visitor import DFVisitor
 #The type of constraint that is search for is specified as a parameter:
 #constraint_type should either be the Equality type of the Inequality type
 #
-#If such a constraint is found, either 'var_equality_tuple' or 'var_inequality_tuple' will be a 2-tuple:
+#If such a constraint is found, 'var_constraint_tuple' will be a 2-tuple:
 #-The first element is a VarExp of the free variable (with a coefficient of 1)
 #-The second element is the equality or inequality itself
-#Otherwise, if no constraint was found, 'var_equality_tuple'/'var_inequality_tuple' will be None
+#Otherwise, if no constraint was found, 'var_constraint_tuple' will be None
 #The attribute that is used depends on the type of constraint that is being searched for.
 class FindFreeVarConstraintVisitor(DFVisitor):
 
@@ -27,16 +27,13 @@ class FindFreeVarConstraintVisitor(DFVisitor):
 			self.find_equality=False
 
 		#By default we do not find a constraint with a free variable
-		if self.find_equality:
-			self.var_equality_tuple=None
-		else:
-			self.var_inequality_tuple=None
+		self.var_constraint_tuple=None
 
 		#---------- Visiting state variables ----------
 		#Used to determine if a given variable is a free variable
 		self.formula=None
 
-		#True if we are within an Equality constraint
+		#True if we are within a constraint (Equality or Inequality)
 		self.in_constraint=False
 
 		#Depth of function nesting:
@@ -67,12 +64,7 @@ class FindFreeVarConstraintVisitor(DFVisitor):
 		#If we found that this constraint has a free variable and
 		#we have not already found a constraint, store this one
 		if self.is_free_var_constraint:
-			if self.find_equality:
-				if None is self.var_equality_tuple:
-					self.var_equality_tuple=(self.free_var,node)
-			else:
-				if None is self.var_inequality_tuple:
-					self.var_inequality_tuple=(self.free_var,node)
+			self.var_constraint_tuple=(self.free_var,node)
 
 	def inEquality(self,node):
 		if self.find_equality:
