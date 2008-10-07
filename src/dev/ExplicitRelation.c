@@ -200,11 +200,24 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
         self->in_domain_given = true;
         assert(self->in_arity == RD_dim(self->in_domain));
         
-        // with a known in_domain, we know how big out_vals array must be
-        self->out_vals_size 
-            = self->out_arity *  RD_size(self->in_domain);
-        self->out_vals = (int*)malloc(self->out_vals_size*sizeof(int));
+        // with a known in_domain and if we have a function, 
+        // we know how big out_vals array must be
+        if (self->isFunction) {
+            self->out_vals_size 
+                = self->out_arity *  RD_size(self->in_domain);
+            self->out_vals = (int*)malloc(self->out_vals_size*sizeof(int));
+            
+        // If we don't have a function then we don't know how many
+        // output tuples are associated with each input tuple, but
+        // we do know how big the out_index array must be to index into
+        // the out_vals array.
+        } else {
+            self->out_index_size 
+                = self->out_arity *  RD_size(self->in_domain) + 1;
+            self->out_index = (int*)malloc(self->out_index_size*sizeof(int));        
+        }
         
+    // The in_domain is not defined.
     // set up an "undefined" rectangular domain where the starting
     // ub is 0 and the starting lb is maxint.  That way when
     // actual values are inserted, the ub and lb will be properly

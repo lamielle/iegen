@@ -120,6 +120,63 @@ int main()
 
     ER_dtor(&relptr);
 
+    //======= test creation and use of 2D-to-3D example
+    // { [i,j] -> [i,j,k] : k=1 && 1 <= i,j <= 10}
+    // union { [i,j] -> [i-1,j+1,k] : k=2 && 1 <= i,j <= 10}
+    printf("==== test creation and use of 2D-to-3D example\n");
+    printf("example: { [i,j] -> [i,j,k] : k=1 && 0 <= i,j <= 10}\n\tunion { [i,j] -> [i-1,j+1,k] : k=2 && 0 <= i,j <= 10}\n");
+    
+    in_domain = RD_ctor(2);
+    // i
+    RD_set_lb(in_domain, 0, 1); RD_set_ub(in_domain, 0, 10);
+    // j
+    RD_set_lb(in_domain, 1, 1); RD_set_ub(in_domain, 1, 10);
+    
+    // We know in_domain for data dependence, but it is not a function.
+    relptr = ER_ctor(2,3, in_domain, false);
+    
+    // code for explicitly creating the relation
+    // we should be able to automatically generate this loop from the
+    // static specification of the relation
+  {
+    
+    int i, j, k;
+    for (i=1; i<=10; i++) {
+        for (j=1; j<=10; j++) {
+            k=1;
+            ER_in_ordered_insert( relptr, 
+                Tuple_make(i,j), Tuple_make(i,j,k));
+            printf("\tER_in_ordered_insert( (%d, %d), (%d, %d, %d) )\n", 
+                   i, j, i, j, k);
+
+            k=2;
+            ER_in_ordered_insert( relptr, 
+                Tuple_make(i,j), Tuple_make(i-1,j+1,k));
+            printf("\tER_in_ordered_insert( (%d, %d), (%d, %d, %d) )\n", 
+                   i, j, i-1, j+1, k);
+        }
+    }
+
+    ER_dump(relptr);
+    
+    // Iterate over the integer tuple relations
+    printf("\nTraversing 2D-to-3D example\n");
+    ER_order_by_in(relptr);
+    Tuple in_tuple, out_tuple;
+    FOREACH_in_tuple(relptr, in_tuple) {
+       FOREACH_out_given_in(relptr, in_tuple, out_tuple) {
+            printf("\t");
+            Tuple_print(in_tuple);
+            printf(" -> ");
+            Tuple_print(out_tuple);
+            printf("\n");
+        }
+    }
+    printf("\n");
+
+    ER_dtor(&relptr);
+  }
+    
     //======= test creation and use of ER for data dependences
     // { [s,z,i,j] -> [c] : z=1 && j=1 && i=inter1(c) && s=1 && 0 <= i <= 10}
     // union { [s,z,i,j] -> [c] : z=1 && j=1 && i=inter2(c) && s=1 && 0<=i<=10}
@@ -183,7 +240,7 @@ int main()
     }
     printf("\n");
 
-
+    // keeping this relptr as input to testing IAG_cpack
     //ER_dtor(&relptr);
 
 
@@ -220,6 +277,13 @@ int main()
     //Hypergraph_dump(hg);
     */
     
+    //======= testing creation and iteration over a 2D-to-3D
+    //======= explicit relation.
+    //  - using unordered insert
+    //  - using assert to check values returned by FOREACH loops
+    //  - using a non-zero lower bound for some of the in domain dims
+    
+
     
     return 0;
 }
