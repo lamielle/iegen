@@ -32,8 +32,11 @@ int main()
     ER_insert(relptr, Tuple_make(2,3), Tuple_make(3,4));
     ER_insert(relptr, Tuple_make(1,2), Tuple_make(2,3));
     
+    // Checking with asserts.
     assert(Tuple_equal( ER_out_given_in(relptr,Tuple_make(2,3)), 
                         Tuple_make(3,4) ) );
+    assert(Tuple_equal( ER_out_given_in(relptr,Tuple_make(1,2)), 
+                        Tuple_make(2,3) ) );
     
     printf("==== After inserting some relations\n");
     ER_dump(relptr);    
@@ -45,19 +48,41 @@ int main()
     RD_set_lb(in_domain, 0, 3);
     RD_set_ub(in_domain, 0, 6);
     relptr = ER_ctor(1,1, in_domain, false);
+    
 
     // then add [in]->[out] relationships 
     // for this example doing all combos of possible
     // in and out values
+    int count=0;
     for (in=3; in<=6; in++) {
       for (out=0; out<=2; out++) {
             ER_in_ordered_insert( relptr, in, out );
+            count++;
         }
     }
     
     ER_in_ordered_insert(relptr, 6, 3);
+    count++;
     
     ER_dump(relptr);
+
+    // Checking with asserts.
+    int test_in = 3; int test_out;
+    int test_count = 0;
+    assert(RD_lb(in_domain, 0)==3);
+    assert(RD_ub(in_domain, 0)==6);
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        printf("\tin=%d\n", in);
+        test_out = 0;
+        FOREACH_out_given_in_1d1d(relptr, in, out) {
+            printf("\t[%d] -> [%d]\n", in, out);
+            assert( (in==test_in) && (out==test_out));
+            test_out++;
+            test_count++;
+        }
+        test_in++;
+    }
+    assert(test_count==count);
     
     ER_dtor(&relptr);
 
@@ -75,9 +100,11 @@ int main()
     relptr = ER_ctor(1,1, in_domain, false);
 
     // add only some out vals for each in val
+    count = 0;
     for (in=0; in<NUM_IN; in++) {
       for (out=(in)%NUM_OUT; out<NUM_OUT; out+=2) {
             ER_in_ordered_insert( relptr, in, out );
+            count++;
         }
     }
     
@@ -86,11 +113,19 @@ int main()
     // Iterate over the integer tuple relations
     printf("\nTraversing 1Dto1D relation in order of input tuples\n");
     ER_order_by_in(relptr);
+    test_in=0;
+    test_count=0;
     FOREACH_in_tuple_1d1d(relptr, in) {
+        test_out=test_in % NUM_OUT;
         FOREACH_out_given_in_1d1d(relptr, in, out) {
             printf("\t[%d] -> [%d]\n", in, out);
+            assert( (in==test_in) && (out==test_out));
+            test_out+=2;
+            test_count++;
         }
+        test_in++;
     }
+    assert(count==test_count);
 
     ER_dtor(&relptr);
 
@@ -105,8 +140,10 @@ int main()
     relptr = ER_ctor(1,1, in_domain, true);
 
     // create a permutation that is just a modular shift
+    count = 0;
     for (in=0; in<NUM_IN; in++) {
         ER_in_ordered_insert( relptr, in, (in+1) % NUM_IN);
+        count++;
     }
 
     ER_dump(relptr);
@@ -114,9 +151,16 @@ int main()
     // Iterate over the integer tuple relations
     printf("\nTraversing sigma example\n");
     ER_order_by_in(relptr);
+    test_count=0;
+    test_in = 0;
     FOREACH_in_tuple_1d1d(relptr, in) {
+        test_out = (in+1) % NUM_IN;
         printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
+        assert((in==test_in) && test_out==ER_out_given_in(relptr,in));
+        test_count++;
+        test_in++;
     }
+    assert(count==test_count);
 
     ER_dtor(&relptr);
 
@@ -141,6 +185,7 @@ int main()
   {
     
     int i, j, k;
+    count = 0;
     for (i=1; i<=10; i++) {
         for (j=1; j<=10; j++) {
             k=1;
@@ -154,6 +199,8 @@ int main()
                 Tuple_make(i,j), Tuple_make(i-1,j+1,k));
             printf("\tER_in_ordered_insert( (%d, %d), (%d, %d, %d) )\n", 
                    i, j, i-1, j+1, k);
+                   
+            count +=2;
         }
     }
 
@@ -163,16 +210,32 @@ int main()
     printf("\nTraversing 2D-to-3D example\n");
     ER_order_by_in(relptr);
     Tuple in_tuple, out_tuple;
+    test_count = 0;
     FOREACH_in_tuple(relptr, in_tuple) {
+       int out_count=0;
        FOREACH_out_given_in(relptr, in_tuple, out_tuple) {
             printf("\t");
             Tuple_print(in_tuple);
             printf(" -> ");
             Tuple_print(out_tuple);
             printf("\n");
+            // testing the output tuples being retrieved
+            if (out_count == 0) {
+                assert( Tuple_val(out_tuple,0)==Tuple_val(in_tuple,0)
+                        && Tuple_val(out_tuple,1)==Tuple_val(in_tuple,1)
+                        && Tuple_val(out_tuple,2)==1 );
+            } else { 
+                assert( Tuple_val(out_tuple,0)==(Tuple_val(in_tuple,0)-1)
+                        && Tuple_val(out_tuple,1)==(Tuple_val(in_tuple,1)+1)
+                        && Tuple_val(out_tuple,2)==2 );
+            }
+            assert(out_count<=1);
+            out_count++;
+            test_count++;
         }
     }
     printf("\n");
+    assert(count == test_count);
 
     ER_dtor(&relptr);
   }
@@ -214,12 +277,15 @@ int main()
     // loop would be generated by cloog
     int s, z, i, j;
     s = 1; z = 1;
+    count = 0;
     for (i=0; i<=10; i++) {
         j=1;
         ER_in_ordered_insert( relptr, 
             Tuple_make(s,z,i,j), Tuple_make(ER_out_given_in(inter1_ER,i)));
         ER_in_ordered_insert( relptr, 
             Tuple_make(s,z,i,j), Tuple_make(ER_out_given_in(inter2_ER,i)));
+
+        count += 2;
     }
     
 
@@ -229,16 +295,31 @@ int main()
     printf("\nTraversing access relation example\n");
     ER_order_by_in(relptr);
     Tuple in_tuple, out_tuple;
+    test_count = 0;
     FOREACH_in_tuple(relptr, in_tuple) {
-       FOREACH_out_given_in(relptr, in_tuple, out_tuple) {
+        int out_count = 0;
+        FOREACH_out_given_in(relptr, in_tuple, out_tuple) {
             printf("\t");
             Tuple_print(in_tuple);
             printf(" -> ");
             Tuple_print(out_tuple);
             printf("\n");
+            test_count++;
+            
+            // testing the output tuples being retrieved
+            if (out_count == 0) {
+                assert( Tuple_val(out_tuple,0)
+                        ==ER_out_given_in(inter1_ER,Tuple_val(in_tuple,2)) );
+            } else { 
+                assert( Tuple_val(out_tuple,0)
+                        ==ER_out_given_in(inter2_ER,Tuple_val(in_tuple,2)) );
+            }
+
+            out_count++;
         }
     }
     printf("\n");
+    assert(test_count==count);
 
     // keeping this relptr as input to testing IAG_cpack
     //ER_dtor(&relptr);
@@ -256,6 +337,7 @@ int main()
     
     printf("==== dumping sigma after IAG_cpack call\n");
     ER_dump(sigma);
+    assert(ER_verify_permutation(sigma));
     
     ER_dtor(&relptr);
     ER_dtor(&sigma);

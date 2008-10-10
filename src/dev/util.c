@@ -65,6 +65,8 @@ bool compareRealArrays(double *a1, double *a2, int num)
     return retval;
 }
 
+
+
 void pointerUpdate(int *index_array, int ia_size, int *old2new, int n_nodes)
 /*------------------------------------------------------------*//*!
   Takes the mapping specified by the reordering function old2new, which

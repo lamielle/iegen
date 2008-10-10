@@ -945,6 +945,35 @@ void ER_order_by_in( ExplicitRelation* self )
     assert(self->ordered_by_in);
 }
 
+bool ER_verify_permutation(ExplicitRelation* relptr)
+/*------------------------------------------------------------*//*!
+  \short Verifies that the given ER is a permutation.
+  
+  For now only handling 1D-to-1D explicit relations.
+
+  \param  relptr    pointer to an explicit relation
+
+  \author Michelle Strout 10/10/08
+*//*--------------------------------------------------------------*/
+{
+    assert(relptr->in_arity==1 && relptr->out_arity==1);
+    
+    // If it is a permutation then it has to be a function.
+    if (!relptr->isFunction) { return false; }
+    
+    bool * val_seen = (bool*)calloc(RD_size(relptr->out_range), sizeof(bool));
+    
+    int i;
+    for (i=0; i<RD_size(relptr->out_range); i++) {
+        val_seen[relptr->out_vals[i]] = true;
+    }
+    for (i=0; i<RD_size(relptr->out_range); i++) {
+        if (val_seen[i] == false) { return false; }
+    }
+    return true;
+}
+
+
 void ER_dump( ExplicitRelation* self )
 /*----------------------------------------------------------------*//*! 
   \short Output text representation of relation to standard out.

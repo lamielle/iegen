@@ -246,6 +246,9 @@ int ER_calcIndex( ExplicitRelation* relptr, int in_val );
 //! Inverse of calcIndex.
 Tuple ER_calcTuple( ExplicitRelation* relptr, int index );
 
+//! Verifies that the given explicit relation is a permutation.
+bool ER_verify_permutation(ExplicitRelation* relptr);
+
 //! Output debug text representation of ExplicitRelation to standard out.
 void ER_dump( ExplicitRelation* self );
 
@@ -288,20 +291,22 @@ void ER_order_by_in(ExplicitRelation* relptr);
 //! Iterate over the special 1D-to-1D arity relations.
 //! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   Variable in which to store the input tuple single entry.
-#define FOREACH_in_tuple_1d1d(relptr, in_int) \
-    for ((in_int)=0; (in_int)<RD_size((relptr)->in_domain); (in_int)++) 
+#define FOREACH_in_tuple_1d1d(relptr, in_int)               \
+    for ((in_int)=RD_lb((relptr)->in_domain,0);             \
+         (in_int)<=RD_ub((relptr)->in_domain,0); (in_int)++) 
 
 //! Iterate over output ints given input ints for 1D-to-1D arity relations.
 //! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   input tuple value
 //! \param out_int  Variable in which to store the output tuple value.
 //! Only works for non function explicit relations.
-#define FOREACH_out_given_in_1d1d(relptr, in_int, out_int) \
-    assert(! relptr->isFunction );  \
+#define FOREACH_out_given_in_1d1d(relptr, in_int, out_int)  \
+    assert(! relptr->isFunction );                          \
+    int _lb_adjust = (in_int)-RD_lb((relptr)->in_domain,0); \
     int _FE_iter;  \
-    for (_FE_iter=(relptr)->out_index[(in_int)],    \
-            out_int=(relptr)->out_vals[_FE_iter];      \
-         _FE_iter<(relptr)->out_index[(in_int)+1];  \
+    for (_FE_iter=(relptr)->out_index[_lb_adjust],          \
+            out_int=(relptr)->out_vals[_FE_iter];           \
+         _FE_iter<(relptr)->out_index[_lb_adjust+1];        \
          _FE_iter++,out_int=(relptr)->out_vals[_FE_iter]) 
         
 #endif
