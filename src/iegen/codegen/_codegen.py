@@ -10,6 +10,33 @@ def calc_full_iter_space(statements):
 
 	return full_iter
 
+def write_symbolics_decl(mapir,code):
+	from cStringIO import StringIO
+	if len(mapir.symbolics())>0:
+		decl=StringIO()
+		print >>decl,"int",
+		for sym in mapir.symbolics():
+			print >>decl,'%s=10,'%(sym.name),
+		print >>code,decl.getvalue()[:-1]+';'
+
+def write_tuple_vars_decl(set,code):
+	from cStringIO import StringIO
+	decl=StringIO()
+	print >>decl,"int",
+	for set in set.sets:
+		for var in set.tuple_set.vars:
+			print >>decl,var.id+',',
+	print >>code,decl.getvalue()[:-1]+';'
+
+def write_preamble(code):
+	print >>code,'#include "ExplicitRelation.h"'
+	print >>code
+	print >>code,'int main()'
+	print >>code,'{'
+
+def write_closing(code):
+	print >>code,'}'
+
 def calc_artt(mapir,data_permute):
 	from iegen import AccessRelation
 	#Iteration Sub Space Relation
@@ -37,7 +64,6 @@ def write_create_artt(mapir,code):
 	from cStringIO import StringIO
 	from iegen.pycloog import Statement,codegen
 
-
 	print
 	print mapir.artt
 	print
@@ -54,7 +80,7 @@ def write_create_artt(mapir,code):
 
 		print 'artt iter_to_data relation: %s'%(str(relation))
 
-		print >>define_code,'#define S%d ExplicitRelation_in_ordered_insert(%s,Tuple_make(%s),ER_out_given_in(%s, Tuple_make(%s)));'%(relation_index,mapir.artt.name,iterator_name,'EXPLICIT_RELATION_INDEX_ARRAY_NAME',iterator_name)
+		print >>define_code,'#define S%d ER_in_ordered_insert(%s,Tuple_make(%s),ER_out_given_in(%s, Tuple_make(%s)));'%(relation_index,mapir.artt.name,iterator_name,mapir.artt.name,iterator_name)
 
 		statements.append(Statement(mapir.artt.iter_space))
 
@@ -62,9 +88,10 @@ def write_create_artt(mapir,code):
 
 	#Actually write out the code
 	print >>code,'//Creation of ExplicitRelation of the ARTT'
-	print >>code,'ExplicitRelation* %s = ExplicitRelation_ctor(%d,%d);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())
+	print >>code,'ExplicitRelation* %s = ER_ctor(%d,%d,NULL,false);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())
 	print >>code
 	print >>code,define_code.getvalue()
+	write_tuple_vars_decl(mapir.artt.iter_space,code)
 	print >>code,codegen(statements)
 	print >>code
 	print >>code,undefine_code.getvalue()
@@ -88,7 +115,7 @@ def calc_sigma(mapir,data_permute):
 
 def write_create_sigma(mapir,code):
 	sigma=mapir.sigma
-	print >>code,'RectDomain *in_domain=RD_ctor(%d,%d)'%(sigma.result.input_bounds[0].arity(),sigma.result.input_bounds[0].arity())
+	print >>code,'RectDomain *in_domain=RD_ctor(%d);'%(sigma.result.input_bounds[0].arity())
 #	print >>code,'RD_set_lb(in_domain,0,
 
 #---------- Public Interface Function ----------
@@ -101,6 +128,9 @@ def codegen(mapir,data_permute,iter_permute,code):
 
 	print 'Full iteration space for all statements: %s'%mapir.full_iter_space
 
+	write_preamble(code)
+	write_symbolics_decl(mapir,code)
+
 	#Step 1a) generate an AccessRelation specification that will be the input for data reordering
 	mapir.artt=calc_artt(mapir,data_permute)
 
@@ -112,4 +142,6 @@ def codegen(mapir,data_permute,iter_permute,code):
 
 	#Step 1d) Generate code that passes explicit relation to IAG
 	write_create_sigma(mapir,code)
+
+	write_closing(code)
 #-----------------------------------------------
