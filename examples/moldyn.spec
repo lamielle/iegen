@@ -48,13 +48,13 @@ moldyn_spec.data_spaces['inter2']=INTER2_0
 #Define the index arrays for the computation
 inter1=IndexArray(data_space=INTER1_0,
                   is_permutation=False,
-                  input_bounds=[Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms)],
+                  input_bounds=Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms),
                   output_bounds=Set('{ [k] : 0 <= k && k <= (N-1) }',syms))
 moldyn_spec.add_index_array(inter1)
 
 inter2=IndexArray(data_space=INTER2_0,
                   is_permutation=False,
-                  input_bounds=[Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms)],
+                  input_bounds=Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms),
                   output_bounds=Set('{ [k] : 0 <= k && k <= (N-1) }',syms))
 moldyn_spec.add_index_array(inter2)
 

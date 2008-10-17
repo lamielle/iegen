@@ -118,9 +118,8 @@ class IndexArray(object):
 		self.output_bounds=output_bounds
 
 		#Checking
-		for input_bound in self.input_bounds:
-			if input_bound.arity()!=self.data_space.set.arity():
-				raise iegen.util.DimensionalityError("The dimensionality of all input bounds should match the dimensionality of index array's data space (%d).",self.data_space.set.arity())
+		if input_bounds.arity()!=self.data_space.set.arity():
+			raise iegen.util.DimensionalityError("The dimensionality of all input bounds should match the dimensionality of index array's data space (%d).",self.data_space.set.arity())
 
 		if 1!=self.output_bounds.arity():
 			raise iegen.util.DimensionalityError('The dimensionality of the output bounds of the index array (%d) should be 1.'%self.output_bounds.arity_out())

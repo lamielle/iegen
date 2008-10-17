@@ -10,6 +10,25 @@ def calc_full_iter_space(statements):
 
 	return full_iter
 
+def get_bound_string(bounds,func):
+	from cStringIO import StringIO
+
+	bound_string=StringIO()
+	for i in range(len(bounds)):
+		if len(bounds)-1==i:
+			bound_string.write('%s'+')'*(len(bounds)-1))
+		else:
+			bound_string.write('max(%s,')
+	return bound_string.getvalue()%tuple(bounds)
+
+#Creates a string that is a C expression that will calculate the lower bound for a given collection of NormExps
+def get_lower_bound_string(bounds):
+	return get_bound_string(bounds,'min')
+
+#Creates a string that is a C expression that will calculate the upper bound for a given collection of NormExps
+def get_upper_bound_string(bounds):
+	return get_bound_string(bounds,'max')
+
 def write_symbolics_decl(mapir,code):
 	from cStringIO import StringIO
 	if len(mapir.symbolics())>0:
@@ -67,12 +86,7 @@ def write_create_artt(mapir,code):
 	from cStringIO import StringIO
 	from iegen.pycloog import Statement,codegen
 
-	print
-	print mapir.artt
-	print
-
 	iterator_name=mapir.artt.iter_space.sets[0].tuple_set.vars[0]
-	print 'iterator_name=%s'%iterator_name
 
 	#Generate the define/undefine code
 	define_code=StringIO()
@@ -81,12 +95,9 @@ def write_create_artt(mapir,code):
 	for relation_index in xrange(1,len(mapir.artt.iter_to_data.relations)+1):
 		relation=mapir.artt.iter_to_data.relations[relation_index-1]
 
-		print 'artt iter_to_data relation: %s'%(str(relation))
-
 		print >>define_code,'#define S%d ER_in_ordered_insert(%s,Tuple_make(%s),ER_out_given_in(%s, Tuple_make(%s)));'%(relation_index,mapir.artt.name,iterator_name,mapir.artt.name,iterator_name)
 
-		statements.append(Statement(mapir.artt.iter_space))
-
+		statements.append(Statement(mapir.artt.iter_space)) 
 		print >>undefine_code,'#undef S2'
 
 	#Actually write out the code
@@ -110,35 +121,20 @@ def calc_sigma(mapir,data_permute):
 	                     is_index_array=True)
 	result=IndexArray(data_space=data_space,
 	                  is_permutation=True,
-	                  input_bounds=[Set('{[k]:0<=k and k<=(N-1)}',syms)],
+	                  input_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms),
 	                  output_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms))
 	return IAGPermute(name='IAG_cpack',
 	                   input=mapir.artt,
 	                   result=result)
 
 def write_create_sigma(mapir,code):
-	sigma=mapir.sigma
-	print >>code,'RectDomain *in_domain=RD_ctor(%d);'%(sigma.result.input_bounds[0].arity())
-#	print >>code,'RD_set_lb(in_domain,0,
+	iag=mapir.sigma.result
 
-def get_bound_string(bounds,func):
-	from cStringIO import StringIO
+	print >>code,'RectDomain *in_domain=RD_ctor(%d);'%(iag.input_bounds.arity())
 
-	bound_string=StringIO()
-	for i in range(len(bounds)):
-		if len(bounds)-1==i:
-			bound_string.write('%s'+')'*(len(bounds)-1))
-		else:
-			bound_string.write('max(%s,')
-	return bound_string.getvalue()%tuple(bounds)
-
-#Creates a string that is a C expression that will calculate the lower bound for a given collection of NormExps
-def get_lower_bound_string(bounds):
-	return get_bound_string(bounds,'min')
-
-#Creates a string that is a C expression that will calculate the upper bound for a given collection of NormExps
-def get_upper_bound_string(bounds):
-	return get_bound_string(bounds,'max')
+	for var in iag.input_bounds.sets[0].tuple_set.vars:
+		print >>code,'RD_set_lb(in_domain,0,%s);'%get_lower_bound_string(iag.input_bounds.lower_bound(var.id))
+		print >>code,'RD_set_ub(in_domain,0,%s);'%get_upper_bound_string(iag.input_bounds.upper_bound(var.id))
 
 #---------- Public Interface Function ----------
 def codegen(mapir,data_permute,iter_permute,code):
@@ -147,8 +143,6 @@ def codegen(mapir,data_permute,iter_permute,code):
 
 	#Put the full iteration space in the iter permute rtrt
 #	iter_permute.iter_space=mapir.full_iter_space
-
-	print 'Full iteration space for all statements: %s'%mapir.full_iter_space
 
 	write_preamble(code)
 	write_symbolics_decl(mapir,code)
