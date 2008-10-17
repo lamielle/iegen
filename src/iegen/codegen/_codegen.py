@@ -31,6 +31,9 @@ def write_tuple_vars_decl(set,code):
 def write_preamble(code):
 	print >>code,'#include "ExplicitRelation.h"'
 	print >>code
+	print >>code,"#define max(a,b) (((a)>(b))?(a):(b))"
+	print >>code,"#define min(a,b) (((a)<(b))?(a):(b))"
+	print >>code
 	print >>code,'int main()'
 	print >>code,'{'
 
@@ -117,6 +120,25 @@ def write_create_sigma(mapir,code):
 	sigma=mapir.sigma
 	print >>code,'RectDomain *in_domain=RD_ctor(%d);'%(sigma.result.input_bounds[0].arity())
 #	print >>code,'RD_set_lb(in_domain,0,
+
+def get_bound_string(bounds,func):
+	from cStringIO import StringIO
+
+	bound_string=StringIO()
+	for i in range(len(bounds)):
+		if len(bounds)-1==i:
+			bound_string.write('%s'+')'*(len(bounds)-1))
+		else:
+			bound_string.write('max(%s,')
+	return bound_string.getvalue()%tuple(bounds)
+
+#Creates a string that is a C expression that will calculate the lower bound for a given collection of NormExps
+def get_lower_bound_string(bounds):
+	return get_bound_string(bounds,'min')
+
+#Creates a string that is a C expression that will calculate the upper bound for a given collection of NormExps
+def get_upper_bound_string(bounds):
+	return get_bound_string(bounds,'max')
 
 #---------- Public Interface Function ----------
 def codegen(mapir,data_permute,iter_permute,code):
