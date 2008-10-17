@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveSymbolicsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -1915,3 +1915,130 @@ class RemoveSymbolicsVisitorTestCase(TestCase):
 		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
 		self.failUnless(True==removed_symbolic,'removed_symbolic!=True')
 #------------------------------------------------------
+
+#---------- Collect Bounds Visitor ----------
+class CollectBoundsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the bounds attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import CollectBoundsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=CollectBoundsVisitor('a').visit(set)
+		self.failUnless(hasattr(v,'bounds'),"RemoveSymbolicsVisitor doesn't place result in the 'bounds' property.")
+
+	#Tests that an empty set produces no bounds on 'a'
+	def testNoBounds1(self):
+		from iegen.ast.visitor import CollectBoundsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		bounds=CollectBoundsVisitor('a').visit(set).bounds
+		self.failUnless(([],[])==bounds,'Bounds not empty')
+
+	#Tests that a set with bounds on 'a' produces no bounds on 'b'
+	def testNoBounds2(self):
+		from iegen.ast.visitor import CollectBoundsVisitor
+		from iegen import Set
+
+		set=Set('{[a]:0<=a and a<=10}')
+		bounds=CollectBoundsVisitor('b').visit(set).bounds
+		self.failUnless(([],[])==bounds,'Bounds not empty')
+
+	#Tests that the bounds are found for a set with one variable
+	def testOneVarBounds(self):
+		from iegen.ast.visitor import CollectBoundsVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a]:0<=a and a<=10}')
+		bounds=CollectBoundsVisitor('a').visit(set).bounds
+
+		lb_exp=NormExp([],0)
+		lb_ineq=Inequality(NormExp([VarExp(1,'a')],0)+lb_exp)
+		ub_exp=NormExp([],10)
+		ub_ineq=Inequality(NormExp([VarExp(-1,'a')],0)+ub_exp)
+		bounds_res=([(1,lb_exp,lb_ineq)],[(1,ub_exp,ub_ineq)])
+
+		self.failUnless(bounds_res==bounds,'Incorrect bounds: %s!=%s'%(bounds_res,bounds))
+
+	#Tests that the bounds are found for a set with one variable and multiple upper and lower bounds
+	def testMultipleBounds1(self):
+		from iegen.ast.visitor import CollectBoundsVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a]:0<=a and a<=10 and -5<=a and a<=20}')
+		bounds=CollectBoundsVisitor('a').visit(set).bounds
+
+		lb_exp1=NormExp([],0)
+		lb_ineq1=Inequality(NormExp([VarExp(1,'a')],0)-lb_exp1)
+		lb_exp2=NormExp([],-5)
+		lb_ineq2=Inequality(NormExp([VarExp(1,'a')],0)-lb_exp2)
+		ub_exp1=NormExp([],10)
+		ub_ineq1=Inequality(NormExp([VarExp(-1,'a')],0)+ub_exp1)
+		ub_exp2=NormExp([],20)
+		ub_ineq2=Inequality(NormExp([VarExp(-1,'a')],0)+ub_exp2)
+		bounds_res=([(1,lb_exp1,lb_ineq1),(1,lb_exp2,lb_ineq2)],[(1,ub_exp1,ub_ineq1),(1,ub_exp2,ub_ineq2)])
+
+		self.failUnless(bounds_res==bounds,'Incorrect bounds: %s!=%s'%(bounds_res,bounds))
+
+	#Tests that the bounds are found for a set with two variables and multiple upper and lower bounds
+	def testMultipleBounds2(self):
+		from iegen.ast.visitor import CollectBoundsVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a,b]:0<=5a and a<=10 and a<=20 and b>=16 and b<=5}')
+		bounds=CollectBoundsVisitor('a').visit(set).bounds
+
+		lb_exp=NormExp([],0)
+		lb_ineq=Inequality(NormExp([VarExp(5,'a')],0)-lb_exp)
+		ub_exp1=NormExp([],10)
+		ub_ineq1=Inequality(NormExp([VarExp(-1,'a')],0)+ub_exp1)
+		ub_exp2=NormExp([],20)
+		ub_ineq2=Inequality(NormExp([VarExp(-1,'a')],0)+ub_exp2)
+		bounds_res=([(5,lb_exp,lb_ineq)],[(1,ub_exp1,ub_ineq1),(1,ub_exp2,ub_ineq2)])
+
+		self.failUnless(bounds_res==bounds,'Incorrect bounds: %s!=%s'%(bounds_res,bounds))
+
+		bounds=CollectBoundsVisitor('b').visit(set).bounds
+
+		lb_exp=NormExp([],16)
+		lb_ineq=Inequality(NormExp([VarExp(1,'b')],0)-lb_exp)
+		ub_exp=NormExp([],5)
+		ub_ineq=Inequality(NormExp([VarExp(-1,'b')],0)+ub_exp)
+		bounds_res=([(1,lb_exp,lb_ineq)],[(1,ub_exp,ub_ineq)])
+
+		self.failUnless(bounds_res==bounds,'Incorrect bounds: %s!=%s'%(bounds_res,bounds))
+
+	#Tests that bounds are found with symbolics involved
+	def testSymbolicBounds(self):
+		from iegen.ast.visitor import CollectBoundsVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a,b]:n+m<=3a and a<=2n+5 and a<=20 and 3b>=16 and b<=m-1}',[Symbolic('n'),Symbolic('m')])
+		bounds=CollectBoundsVisitor('a').visit(set).bounds
+
+		lb_exp=NormExp([VarExp(1,'n'),VarExp(1,'m')],0)
+		lb_ineq=Inequality(NormExp([VarExp(3,'a')],0)-lb_exp)
+		ub_exp1=NormExp([VarExp(2,'n')],5)
+		ub_ineq1=Inequality(NormExp([VarExp(-1,'a')],0)+ub_exp1)
+		ub_exp2=NormExp([],20)
+		ub_ineq2=Inequality(NormExp([VarExp(-1,'a')],0)+ub_exp2)
+		bounds_res=([(3,lb_exp,lb_ineq)],[(1,ub_exp1,ub_ineq1),(1,ub_exp2,ub_ineq2)])
+
+		self.failUnless(bounds_res==bounds,'Incorrect bounds: %s!=%s'%(bounds_res,bounds))
+
+		bounds=CollectBoundsVisitor('b').visit(set).bounds
+
+		lb_exp=NormExp([],16)
+		lb_ineq=Inequality(NormExp([VarExp(3,'b')],0)-lb_exp)
+		ub_exp=NormExp([VarExp(1,'m')],-1)
+		ub_ineq=Inequality(NormExp([VarExp(-1,'b')],0)+ub_exp)
+		bounds_res=([(3,lb_exp,lb_ineq)],[(1,ub_exp,ub_ineq)])
+
+		self.failUnless(bounds_res==bounds,'Incorrect bounds: %s!=%s'%(bounds_res,bounds))
+#--------------------------------------------

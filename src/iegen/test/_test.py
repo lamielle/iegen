@@ -395,6 +395,76 @@ class SetTestCase(TestCase):
 		unrename_res={'pre_a':'a','pre_b':'b'}
 
 		self.failUnless(unrename==unrename_res,'%s!=%s'%(unrename,unrename_res))
+
+	#Tests that the lower bound method fails when given variable names that aren't part of the tuple
+	@raises(ValueError)
+	def testLowerBoundNonTupleVarFail(self):
+		from iegen import Set
+		set=Set('{[a,b]: 1<=a and a<=10 and 1<=b and b<=10}')
+		set.lower_bound('c')
+
+	#Tests that the upper bound method fails when given variable names that aren't part of the tuple
+	@raises(ValueError)
+	def testUpperBoundNonTupleVarFail(self):
+		from iegen import Set
+		set=Set('{[a,b]: 1<=a and a<=10 and 1<=b and b<=10}')
+		set.upper_bound('c')
+
+	#Tests that the bounds method fails when given variable names that aren't part of the tuple
+	@raises(ValueError)
+	def testBoundsNonTupleVarFail(self):
+		from iegen import Set
+		set=Set('{[a,b]: 1<=a and a<=10 and 1<=b and b<=10}')
+		set.bounds('c')
+
+	#Tests that the proper upper and lower bounds are calculated for a 1d set
+	def testBounds1D(self):
+		from iegen import Set
+		from iegen.ast import NormExp
+
+		set=Set('{[a]: 1<=a and a<=10}')
+		self.failUnless([NormExp([],1)]==set.lower_bound('a'),"The lower bound of 'a' is not 1")
+		self.failUnless([NormExp([],10)]==set.upper_bound('a'),"The upper bound of 'a' is not 10")
+		self.failUnless(([NormExp([],1)],[NormExp([],10)])==set.bounds('a'),"The bounds of 'a' are not (1,10)")
+
+	#Tests that the proper upper and lower bounds are calculated for a 2d set
+	def testBounds2D(self):
+		from iegen import Set
+		from iegen.ast import NormExp
+
+		set=Set('{[a,b]: 5<=a and a<=20 and -10<=b and b<=0}')
+		self.failUnless([NormExp([],5)]==set.lower_bound('a'),"The lower bound of 'a' is not 5")
+		self.failUnless([NormExp([],20)]==set.upper_bound('a'),"The upper bound of 'a' is not 20")
+		self.failUnless(([NormExp([],5)],[NormExp([],20)])==set.bounds('a'),"The bounds of 'a' are not (5,20)")
+		self.failUnless([NormExp([],-10)]==set.lower_bound('b'),"The lower bound of 'b' is not -10")
+		self.failUnless([NormExp([],0)]==set.upper_bound('b'),"The upper bound of 'b' is not 0")
+		self.failUnless(([NormExp([],-10)],[NormExp([],0)])==set.bounds('b'),"The bounds of 'b' are not (-10,0)")
+
+	#Tests that the proper upper and lower bounds are calculated for a 2d set with symbolics
+	def testBoundsSymbolic(self):
+		from iegen import Set,Symbolic
+		from iegen.ast import NormExp,VarExp
+
+		set=Set('{[a,b]: 5<=a and a<=n and m<=b and b<=0}',[Symbolic('n'),Symbolic('m')])
+		self.failUnless([NormExp([],5)]==set.lower_bound('a'),"The lower bound of 'a' is not 5")
+		self.failUnless([NormExp([VarExp(1,'n')],0)]==set.upper_bound('a'),"The upper bound of 'a' is not n")
+		self.failUnless(([NormExp([],5)],[NormExp([VarExp(1,'n')],0)])==set.bounds('a'),"The bounds of 'a' are not (5,n)")
+		self.failUnless([NormExp([VarExp(1,'m')],0)]==set.lower_bound('b'),"The lower bound of 'b' is not m")
+		self.failUnless([NormExp([],0)]==set.upper_bound('b'),"The upper bound of 'b' is not 0")
+		self.failUnless(([NormExp([VarExp(1,'m')],0)],[NormExp([],0)])==set.bounds('b'),"The bounds of 'b' are not (m,0)")
+
+	#Tests that the proper upper and lower bounds are calculated for a 2d set with symbolics
+	def testBoundsSymbolicMuliTerm(self):
+		from iegen import Set,Symbolic
+		from iegen.ast import NormExp,VarExp
+
+		set=Set('{[a,b]: 5<=a and a<=n+m+10 and m-6<=b and b<=0}',[Symbolic('n'),Symbolic('m')])
+		self.failUnless([NormExp([],5)]==set.lower_bound('a'),"The lower bound of 'a' is not 5")
+		self.failUnless([NormExp([VarExp(1,'n'),VarExp(1,'m')],10)]==set.upper_bound('a'),"The upper bound of 'a' is not n+m+10")
+		self.failUnless(([NormExp([],5)],[NormExp([VarExp(1,'n'),VarExp(1,'m')],10)])==set.bounds('a'),"The bounds of 'a' are not (5,n+m+10)")
+		self.failUnless([NormExp([VarExp(1,'m')],-6)]==set.lower_bound('b'),"The lower bound of 'b' is not m-6")
+		self.failUnless([NormExp([],0)]==set.upper_bound('b'),"The upper bound of 'b' is not 0")
+		self.failUnless(([NormExp([VarExp(1,'m')],-6)],[NormExp([],0)])==set.bounds('b'),"The bounds of 'b' are not (m-6,0)")
 #-------------------------------
 
 #---------- Relation Tests ----------

@@ -220,6 +220,63 @@ class Set(Formula):
 			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(rel.arity_out(),set.arity()))
 
 		return self._combine_pres_formulas(set,'tuple_set',rel,'tuple_in',PresSet(deepcopy(rel.tuple_out),Conjunction([]),deepcopy(set.symbolics)+deepcopy(rel.symbolics)))
+
+	#Returns the lower bound of the given tuple variable
+	def lower_bound(self,var_name):
+		return self.bounds(var_name)[0]
+	#Returns the upper bound of the given tuple variable
+	def upper_bound(self,var_name):
+		return self.bounds(var_name)[1]
+
+	#Returns a 2-tuple of bounds on the given variable name:
+	#-The first element is a collection of lower bound expressions
+	#-The second element is a collection of upper bound expressions
+	def bounds(self,var_name):
+		from copy import deepcopy
+		from iegen.ast.visitor import CollectBoundsVisitor
+
+		#Make sure the given variable is a tuple variable
+		if not self.sets[0].is_tuple_var(var_name):
+			raise ValueError("'%s' is not a tuple variable"%(var_name))
+
+		#Make a copy of myself
+		mod_set=deepcopy(self)
+
+		#Project out all other variables
+		#XXX: Assumes bounds are only coming from the first set of the union
+		for var in mod_set.sets[0].tuple_set.vars:
+			if var_name!=var.id:
+				mod_set._project_out(var.id)
+				mod_set.sets[0].tuple_set.vars.remove(var)
+
+		#Collect the bounds on the variable in question
+		lower_bounds,upper_bounds=CollectBoundsVisitor(var_name).visit(mod_set).bounds
+		lower_bounds=[exp for coeff,exp,ineq in lower_bounds]
+		upper_bounds=[exp for coeff,exp,ineq in upper_bounds]
+		return (lower_bounds,upper_bounds)
+
+	#Projects the variable with the given name out of the constraints of this Set
+	#Destructive call: 'self' is modified rather than creating a new set
+	@normalize_self
+	def _project_out(self,var_name):
+		from iegen.ast import Inequality,NormExp
+		from iegen.ast.visitor import CollectBoundsVisitor
+
+		lower_bounds,upper_bounds=CollectBoundsVisitor(var_name).visit(self).bounds
+		#Fourier-Motzkin Main Loop
+		#Look at all pairs of upper and lower bounds
+		first_lb=True
+		for lb_coeff,lb_exp,lb_ineq in lower_bounds:
+			#Remove the lower bound from the constraints
+			self.sets[0].conjunct.constraint_list.remove(lb_ineq)
+			for ub_coeff,ub_exp,ub_ineq in upper_bounds:
+				#Remove the upper bound from the constraints (first time only)
+				if first_lb: self.sets[0].conjunct.constraint_list.remove(ub_ineq)
+
+				#Add a new constraint with the variable being projected out removed
+				new_ineq=Inequality(NormExp([],ub_coeff)*lb_exp-(NormExp([],lb_coeff)*ub_exp))
+				self.sets[0].conjunct.constraint_list.append(new_ineq)
+			first_lb=False
 #-------------------------------
 
 
