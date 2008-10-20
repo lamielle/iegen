@@ -14,7 +14,10 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.codegen classes
 	def testNameImport(self):
 		try:
-			from iegen.codegen import calc_full_iter_space
+			#_codegen.py
+			from iegen.codegen import calc_full_iter_space,get_bound_string,get_lower_bound_string,get_upper_bound_string
+			#_program_ast.py
+			from iegen.codegen import Program,Function,Statement
 		except ImportError,e:
 			self.fail('Importing classes from iegen.codegen failed: '+str(e))
 #----------------------------------

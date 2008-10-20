@@ -151,3 +151,4 @@ class DFVisitor(object):
 			term.apply_visitor(self)
 		self.outNormExp(node)
 	#-----------------------------------
+#-----------------------------------------

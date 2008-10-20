@@ -29,35 +29,45 @@ def get_lower_bound_string(bounds):
 def get_upper_bound_string(bounds):
 	return get_bound_string(bounds,'max')
 
-def write_symbolics_decl(mapir,code):
+def gen_symbolics_decl(mapir):
+	from iegen.codegen import Statement
 	from cStringIO import StringIO
+
+	stmts=[]
 	if len(mapir.symbolics())>0:
 		decl=StringIO()
 		print >>decl,"int",
 		for sym in mapir.symbolics():
 			print >>decl,'%s=10,'%(sym.name),
-		print >>code,decl.getvalue()[:-1]+';'
+		stmts.append(Statement(decl.getvalue()[:-1]+';'))
+	return stmts
 
-def write_tuple_vars_decl(set,code):
+def gen_tuple_vars_decl(set):
+	from iegen.codegen import Statement
 	from cStringIO import StringIO
 	decl=StringIO()
 	print >>decl,"int",
 	for set in set.sets:
 		for var in set.tuple_set.vars:
 			print >>decl,var.id+',',
-	print >>code,decl.getvalue()[:-1]+';'
+	return [Statement(decl.getvalue()[:-1]+';')]
 
-def write_preamble(code):
-	print >>code,'#include "ExplicitRelation.h"'
-	print >>code
-	print >>code,"#define max(a,b) (((a)>(b))?(a):(b))"
-	print >>code,"#define min(a,b) (((a)<(b))?(a):(b))"
-	print >>code
-	print >>code,'int main()'
-	print >>code,'{'
+def gen_preamble():
+	from iegen.codegen import Statement
+	stmts=[]
+	stmts.append(Statement('#include "ExplicitRelation.h"'))
+	stmts.append(Statement())
+	stmts.append(Statement("#define max(a,b) (((a)>(b))?(a):(b))"))
+	stmts.append(Statement("#define min(a,b) (((a)<(b))?(a):(b))"))
+	stmts.append(Statement())
+	return stmts
 
-def write_closing(code):
-	print >>code,'}'
+def gen_main_driver(mapir):
+	from iegen.codegen import Function
+	main=Function('main','int',[])
+	main.body.extend(gen_symbolics_decl(mapir))
+
+	return main
 
 def calc_artt(mapir,data_permute):
 	from iegen import AccessRelation
@@ -82,33 +92,54 @@ def calc_artt(mapir,data_permute):
               iter_to_data=iter_to_data)
 	return artt
 
-def write_create_artt(mapir,code):
+def calc_ie_args(mapir):
+	args=[]
+	for data_space in mapir.data_spaces.values():
+		if not data_space.is_index_array:
+			args.append('double *'+data_space.name)
+	for index_array in mapir.index_arrays:
+		args.append('ExplicitRelation *'+index_array.data_space.name)
+	for symbolic in mapir.symbolics():
+		args.append('int '+symbolic.name)
+	args.append('ExplicitRelation **sigma')
+	args.append('ExplicitRelation **delta')
+	return args
+
+def gen_create_artt(mapir):
 	from cStringIO import StringIO
-	from iegen.pycloog import Statement,codegen
+	import iegen.pycloog as pycloog
+	from iegen.pycloog import codegen
+	from iegen.codegen import Statement
 
 	iterator_name=mapir.artt.iter_space.sets[0].tuple_set.vars[0]
 
-	#Generate the define/undefine code
-	define_code=StringIO()
-	statements=[]
-	undefine_code=StringIO()
+	#Generate the define/undefine statements
+	cloog_stmts=[]
+	define_stmts=[]
+	undefine_stmts=[]
 	for relation_index in xrange(1,len(mapir.artt.iter_to_data.relations)+1):
 		relation=mapir.artt.iter_to_data.relations[relation_index-1]
 
-		print >>define_code,'#define S%d ER_in_ordered_insert(%s,Tuple_make(%s),ER_out_given_in(%s, Tuple_make(%s)));'%(relation_index,mapir.artt.name,iterator_name,mapir.artt.name,iterator_name)
+		define_stmts.append(Statement('#define S%d ER_in_ordered_insert(%s,Tuple_make(%s),ER_out_given_in(%s, Tuple_make(%s)));'%(relation_index,mapir.artt.name,iterator_name,mapir.artt.name,iterator_name)))
 
-		statements.append(Statement(mapir.artt.iter_space)) 
-		print >>undefine_code,'#undef S2'
+		cloog_stmts.append(pycloog.Statement(mapir.artt.iter_space)) 
+		undefine_stmts.append(Statement('#undef S%d'%(relation_index,)))
 
-	#Actually write out the code
-	print >>code,'//Creation of ExplicitRelation of the ARTT'
-	print >>code,'ExplicitRelation* %s = ER_ctor(%d,%d,NULL,false);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())
-	print >>code
-	print >>code,define_code.getvalue()
-	write_tuple_vars_decl(mapir.artt.iter_space,code)
-	print >>code,codegen(statements)
-	print >>code
-	print >>code,undefine_code.getvalue()
+	#Generate the whole set of statements
+	stmts=[]
+	stmts.append(Statement('//Creation of ExplicitRelation of the ARTT'))
+	stmts.append(Statement('//'+str(mapir.artt.iter_to_data)))
+	stmts.append(Statement('ExplicitRelation* %s = ER_ctor(%d,%d,NULL,false);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())))
+	stmts.append(Statement())
+	stmts.extend(define_stmts)
+	stmts.extend(gen_tuple_vars_decl(mapir.artt.iter_space))
+	loop_stmts=codegen(cloog_stmts).split('\n')
+	for loop_stmt in loop_stmts:
+		stmts.append(Statement(loop_stmt))
+	stmts.append(Statement())
+	stmts.extend(undefine_stmts)
+	stmts.append(Statement())
+	return stmts
 
 def calc_sigma(mapir,data_permute):
 	from copy import deepcopy
@@ -127,37 +158,52 @@ def calc_sigma(mapir,data_permute):
 	                   input=mapir.artt,
 	                   result=result)
 
-def write_create_sigma(mapir,code):
+def gen_create_sigma(mapir):
+	from iegen.codegen import Statement
 	iag=mapir.sigma.result
 
-	print >>code,'RectDomain *in_domain=RD_ctor(%d);'%(iag.input_bounds.arity())
+	stmts=[]
+	stmts.append(Statement('RectDomain *in_domain=RD_ctor(%d);'%(iag.input_bounds.arity())))
 
 	for var in iag.input_bounds.sets[0].tuple_set.vars:
-		print >>code,'RD_set_lb(in_domain,0,%s);'%get_lower_bound_string(iag.input_bounds.lower_bound(var.id))
-		print >>code,'RD_set_ub(in_domain,0,%s);'%get_upper_bound_string(iag.input_bounds.upper_bound(var.id))
+		stmts.append(Statement('RD_set_lb(in_domain,0,%s);'%get_lower_bound_string(iag.input_bounds.lower_bound(var.id))))
+		stmts.append(Statement('RD_set_ub(in_domain,0,%s);'%get_upper_bound_string(iag.input_bounds.upper_bound(var.id))))
+	return stmts
 
 #---------- Public Interface Function ----------
 def codegen(mapir,data_permute,iter_permute,code):
+	from iegen.codegen import Program,Function
+	from iegen.codegen.visitor import CPrintVisitor
+
 	#Step 0) Calculate the full iteration space based on the iteration spaces of the statements
 	mapir.full_iter_space=calc_full_iter_space(mapir.statements)
 
 	#Put the full iteration space in the iter permute rtrt
 #	iter_permute.iter_space=mapir.full_iter_space
 
-	write_preamble(code)
-	write_symbolics_decl(mapir,code)
+	program=Program()
+	program.preamble.extend(gen_preamble())
+	program.functions.append(gen_main_driver(mapir))
 
 	#Step 1a) generate an AccessRelation specification that will be the input for data reordering
 	mapir.artt=calc_artt(mapir,data_permute)
 
 	#Step 1b) generate code that creates an explicit representation of the access relation artt at runtime
-	write_create_artt(mapir,code)
+	ie_args=calc_ie_args(mapir)
+	inspector=Function('inspector','void',ie_args)
+
+	inspector.body.extend(gen_create_artt(mapir))
 
 	#Step 1c) Generate the IAG and Index Array for sigma
 	mapir.sigma=calc_sigma(mapir,data_permute)
 
 	#Step 1d) Generate code that passes explicit relation to IAG
-	write_create_sigma(mapir,code)
+	inspector.body.extend(gen_create_sigma(mapir))
 
-	write_closing(code)
+	executor=Function('executor','void',ie_args)
+
+	program.functions.append(inspector)
+	program.functions.append(executor)
+
+	CPrintVisitor(code,'  ').visit(program)
 #-----------------------------------------------

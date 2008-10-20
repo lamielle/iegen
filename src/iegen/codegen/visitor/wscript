@@ -3,20 +3,17 @@
 import os
 
 def set_options(opt):
-	opt.sub_options('visitor')
 	opt.sub_options('test')
 
 def configure(conf):
-	conf.sub_config('visitor')
 	conf.sub_config('test')
 
 def build(bld):
 
-	inst_dir='iegen'+os.sep+'codegen'
+	inst_dir='iegen'+os.sep+'codegen'+os.sep+'visitor'
 
 	install_files('PREFIX',inst_dir,'__init__.py')
-	install_files('PREFIX',inst_dir,'_codegen.py')
-	install_files('PREFIX',inst_dir,'_program_ast.py')
+	install_files('PREFIX',inst_dir,'_visitor.py')
+	install_files('PREFIX',inst_dir,'_c_print_visitor.py')
 
-	bld.add_subdirs('visitor')
 	bld.add_subdirs('test')
