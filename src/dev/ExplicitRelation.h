@@ -166,7 +166,7 @@ typedef struct {
 //! Construct an empty ExplicitRelation by specifying arity 
 //! for in and out tuples.
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
-                          RectDomain *in_domain, bool isFunction);
+                          RectDomain *in_domain=NULL, bool isFunction=false);
 
 //! Construct an empty ExplicitRelation by passing in a 1D array.
 //! Assumes isFunction and has 1D-to-1D arity for now.

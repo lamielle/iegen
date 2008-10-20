@@ -44,6 +44,7 @@ void printRealArray(double *array, int num)
     }
     printf("\n");
 }
+
 bool compareRealArrays(double *a1, double *a2, int num)
 /*------------------------------------------------------------*//*!
   Do an element-wise comparison of two double arrays.
@@ -111,7 +112,8 @@ void pointerUpdate(int *index_array, int ia_size, int *old2new, int n_nodes)
     FREE(temp, int, ia_size);
 }
 
-void reorderArray(unsigned char *ptr, int elem_size, int n_nodes, int *old2new)
+void reorderArray(unsigned char *ptr, int elem_size, int num_elem, 
+                  ExplicitRelation *old2new)
 /*------------------------------------------------------------*//*!
   Takes the mapping specified by the reordering function old2new, which
   maps old data positions
@@ -119,7 +121,7 @@ void reorderArray(unsigned char *ptr, int elem_size, int n_nodes, int *old2new)
               
   \param  ptr           pointer to array
   \param  elem_size     size of each element in array
-  \param  n_nodes       number of entries in all arrays
+  \param  num_elem      number of entries in array
   \param  old2new       mapping from old data position to new data position
 
   \author Michelle Strout 6/30/08
@@ -128,23 +130,23 @@ void reorderArray(unsigned char *ptr, int elem_size, int n_nodes, int *old2new)
     assert(elem_size>0);
     assert(ptr!=NULL);
     assert(old2new!=NULL);
-    assert(n_nodes>0);
+    assert(num_elem>0);
 
     // create a temporary array 
     unsigned char * temp;
-    MALLOC (temp, unsigned char, n_nodes*elem_size)
+    MALLOC (temp, unsigned char, num_elem*elem_size)
     
     // call macro that does reordering.  It uses temp.
     int * new2old;
-    MALLOC(new2old, int, n_nodes);
+    MALLOC(new2old, int, num_elem);
     int i;
-    for (i=0; i<n_nodes; i++) {
-        new2old[old2new[i]] = i;
+    for (i=0; i<num_elem; i++) {
+        new2old[ER_out_given_in(old2new,i)] = i;
     }
-    REPOSITION(temp, ptr, n_nodes, elem_size, new2old)
+    REPOSITION(temp, ptr, num_elem, elem_size, new2old)
 
     // get rid of temporary arrays
-    FREE(new2old, int, n_nodes);
-    FREE(temp, unsigned char, n_nodes*elem_size);
+    FREE(new2old, int, num_elem);
+    FREE(temp, unsigned char, num_elem*elem_size);
 }
 

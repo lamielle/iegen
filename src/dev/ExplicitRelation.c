@@ -142,7 +142,8 @@ Tuple ER_calcTuple( ExplicitRelation* relptr, int index )
 
 
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
-                          RectDomain *in_domain=NULL, bool isFunction=false)
+                          RectDomain *in_domain, bool isFunction)
+//                          RectDomain *in_domain=NULL, bool isFunction=false)
 /*----------------------------------------------------------------*//*! 
   \short Construct ExplicitRelation structure and return a ptr to it.
 

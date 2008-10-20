@@ -13,6 +13,8 @@
 #include <strings.h>    // needed for bcopy
 #include <assert.h>
 
+#include "ExplicitRelation.h"
+
 //! p is the pointer, typ is the data type, and sz is the number of that type
 #define MALLOC(p, typ, sz)  { if (!(p = (typ *)malloc((sz) * sizeof(typ)))) { \
                                     printf("MALLOC: No more space!!\n"); exit(1); } }
@@ -35,8 +37,9 @@ bool compareRealArrays(double *a1, double *a2, int num);
 //! Makes index arrays point to new data locations.
 void pointerUpdate(int *index_array, int ia_size, int *old2new, int n_nodes);
 
-//! Reorder an array in place using the mapping in old2new array.
-void reorderArray(unsigned char *ptr, int elem_size, int n_nodes, int *old2new);
+//! Reorder an array in place using the mapping in old2new explicit relation.
+void reorderArray(unsigned char *ptr, int elem_size, int num_elem, 
+                  ExplicitRelation *old2new);
 
 
 #define REPOSITION(tmp, x, n_nodes, u_sz, ind) { \
