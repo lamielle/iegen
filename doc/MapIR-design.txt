@@ -39,7 +39,7 @@ Need a MapIR specification.
         class DataSpace {
             String name;
             bool is_index_array;
-            PresSet spec;
+            Set spec;
         }
 
 
@@ -65,7 +65,7 @@ Need a MapIR specification.
             String name;            // need a name so can name hypergraph
             IterSpace iter_space;
             DataSpace data_space;
-            PresRelation iter_to_data;
+            Relation iter_to_data;
         }
 
     Checking
@@ -76,7 +76,7 @@ Need a MapIR specification.
 
         class DataDependence {
             IterSpace iter_space;
-            PresRelation dd;
+            Relation dd;
             DataSpace data_space;
         }
 

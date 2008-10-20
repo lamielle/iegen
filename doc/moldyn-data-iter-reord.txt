@@ -51,6 +51,11 @@ Index Arrays
         output_bounds = { [k] : 0 <= k <= (N-1) }
     )
 
+Inputs and Outputs for full computation
+    Input data spaces: x, fx, inter1, inter2
+    Input symbolics: n_inter
+    Output data spaces: fx
+
 Statements
     S1:  "`a1 += `a2 - `a3;"
     S2:  "`a4 += `a5 - `a6;"
@@ -179,8 +184,8 @@ Generating the composed inspector
             = {[ii] -> [k] : j=1 && k=inter1(ii)}
             ...
                 // apply S1
-            = {[ii] -> [k] : k=inter1(ii)}
-              ....
+            = {[ii] -> [k] : k=inter1(ii)} union 
+              union {[ii] -> [k] : k=inter2(ii) }
 
 
     b) generate code that creates explicit representation of access relation at runtime. (see src/dev/test_ExplicitRelation.c for example usage)
@@ -188,7 +193,7 @@ Generating the composed inspector
             access_relation_to_traverse, artt
         output:
             code
-                // output tuple calculation  for each disjunct in
+                // output tuple calculation  for each conjunction in
                 // access relation.
                 // Will capture the pointer to the explicit relation
                 // for the access relation ([artt.name]) and pointers to
@@ -296,17 +301,15 @@ Generating the composed inspector
                                  [iag_spec.result.data_space.name] );
 
         For this example:
-                RectDomain * in_domain = RD_ctor(1,1);
+                RectDomain * in_domain = RD_ctor(1);
                 RD_set_lb(in_domain, 0, 0);
                 RD_set_ub(in_domain, 0, n_inter-1);
                 ExplicitRelation * sigma = ER_ctor(1,1,in_domain,true);
                 IAG_cpack( artt, sigma );
 
 
-LEFTOFF, MMS, 9/16/08
-FIXME: still need to rewrite IAG_cpack
     e) generate code that does data reordering
-    FIXME: eventually all the data reordering will be done only once per composition.  This example has only one data reordering.
+    Note: eventually all the data reordering will be done only once per composition.  This example has only one data reordering.
 
         input:
             iag_spec for sigma
@@ -315,6 +318,8 @@ FIXME: still need to rewrite IAG_cpack
         output:
             code that reorders the specified data spaces with sigma
             // one call to reorderArray for each data space being reordered
+            // The last parameter should be a pointer to an explicit relation
+            // that contains the data permutation mapping.
             reorderArray((unsigned char*) [data_space.name],
                          sizeof([data_space.datatype]),
                          [data_space.num_elem],
@@ -386,6 +391,11 @@ After performing a data reordering, if index arrays that access the reordered da
     algorithm:
         -for each statement in computation
             generate macro code for statement using transformed access relations
+                - for uninterpreted function symbols that are associated with
+                data spaces that are input to the original computation, generate
+                array accesses.  For uninterp function symbols that are  
+                associated with index arrays created by the inspector, generate
+                ER_out_given_in calls.
 
         -have omega or Cloog generate code for each statement's current iteration space and scattering function
 
@@ -393,19 +403,24 @@ After performing a data reordering, if index arrays that access the reordered da
     output for this example:
         // without pointer update
         #define e1(ii,g)    if ((g)==1) { \
-            fx[sigma[inter1[ii]]] += x[sigma[inter1[ii]]]*0.1 \
-                     + x[sigma[inter2[ii]]]*0.3; \
+            fx[ER_out_given_in(sigma,inter1[ii])] \
+                     += x[ER_out_given_in(sigma,inter1[ii])]*0.1 \
+                     + x[ER_out_given_in(sigma,inter2[ii])]*0.3; \
         } else { \
-            fx[sigma[inter2[ii]]] += x[sigma[inter1[ii]]]*0.2  \
-                     + x[sigma[inter2[ii]]]*0.4; \
+            fx[ER_out_given_in(sigma,inter2[ii])] \
+                     += x[ER_out_given_in(sigma,inter1[ii])]*0.2  \
+                     + x[ER_out_given_in(sigma,inter2[ii])]*0.4; \
         }
+        
         // with pointer update
         #define e1(ii,g)    if ((g)==1) { \
-            fx[inter1_1[ii] += x[inter1_1[ii]]*0.1 \
-                     + x[inter2_1[ii]]*0.3; \
+            fx[ER_out_given_in(inter1_1,ii) \
+                    += x[ER_out_given_in(inter1_1,ii)]*0.1 \
+                     + x[ER_out_given_in(inter2_1,ii)]*0.3; \
         } else { \
-            fx[inter2_1[ii]] += x[inter1_1[ii]]*0.2  \
-                     + x[inter2_1[ii]]*0.4; \
+            fx[ER_out_given_in(inter2_1,ii)] \
+                    += x[ER_out_given_in(inter1_1,ii)]*0.2  \
+                     + x[ER_out_given_in(inter2_1,ii)]*0.4; \
         }
 
         ...
@@ -416,6 +431,7 @@ After performing a data reordering, if index arrays that access the reordered da
             e1(t1,2);
         }
 
+10/20/08, MMS LEFTOFF
 5) IterPermuteRTRT  (for now done assuming no pointer update has occurred)
     a) restrict access_relation to iteration subspace (same as 1a above)
 
