@@ -22,3 +22,7 @@ class CPrintVisitor(DFVisitor):
 			print >>self.code,self.indent+node.text
 		else:
 			print >>self.code,node.text
+
+	def inVarDecl(self,node):
+		decl='%s%s '+('%s,'*len(node.var_names))[:-1]+';'
+		print >>self.code,decl%((self.indent,node.type)+tuple(node.var_names))

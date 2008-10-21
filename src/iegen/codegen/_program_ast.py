@@ -35,3 +35,14 @@ class Statement(object):
 
 	def apply_visitor(self,visitor):
 		visitor.visitStatement(self)
+
+#Represents a variable declaration
+class VarDecl(object):
+	__slots__=('type','var_names')
+
+	def __init__(self,type,var_names=None):
+		self.type=type
+		self.var_names=[] if var_names is None else var_names
+
+	def apply_visitor(self,visitor):
+		visitor.visitVarDecl(self)

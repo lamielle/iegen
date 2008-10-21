@@ -30,27 +30,21 @@ def get_upper_bound_string(bounds):
 	return get_bound_string(bounds,'max')
 
 def gen_symbolics_decl(mapir):
-	from iegen.codegen import Statement
-	from cStringIO import StringIO
+	from iegen.codegen import VarDecl
 
-	stmts=[]
-	if len(mapir.symbolics())>0:
-		decl=StringIO()
-		print >>decl,"int",
-		for sym in mapir.symbolics():
-			print >>decl,'%s=10,'%(sym.name),
-		stmts.append(Statement(decl.getvalue()[:-1]+';'))
-	return stmts
+	var_decl=VarDecl('int')
+	for sym in mapir.symbolics():
+		var_decl.var_names.append(sym)
+	return [var_decl]
 
 def gen_tuple_vars_decl(set):
-	from iegen.codegen import Statement
-	from cStringIO import StringIO
-	decl=StringIO()
-	print >>decl,"int",
+	from iegen.codegen import VarDecl
+
+	var_decl=VarDecl('int')
 	for set in set.sets:
 		for var in set.tuple_set.vars:
-			print >>decl,var.id+',',
-	return [Statement(decl.getvalue()[:-1]+';')]
+			var_decl.var_names.append(var.id)
+	return [var_decl]
 
 def gen_preamble():
 	from iegen.codegen import Statement
@@ -63,10 +57,19 @@ def gen_preamble():
 	return stmts
 
 def gen_main_driver(mapir):
-	from iegen.codegen import Function
+	from iegen.codegen import Function,VarDecl
 	main=Function('main','int',[])
 	main.body.extend(gen_symbolics_decl(mapir))
-
+	index_array_vars=VarDecl('int')
+	for index_array in mapir.index_arrays:
+		index_array_vars.var_names.append('*'+index_array.data_space.name)
+	main.body.append(index_array_vars)
+	er_vars=VarDecl('ExplicitRelation')
+	for index_array in mapir.index_arrays:
+		er_vars.var_names.append('*'+index_array.data_space.name+'_ER')
+	er_vars.var_names.append('*sigma')
+	er_vars.var_names.append('*delta')
+	main.body.append(er_vars)
 	return main
 
 def calc_artt(mapir,data_permute):
