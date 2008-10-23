@@ -253,6 +253,18 @@ Automatically Generating Straight-Forward Inspector/Executor:
     ...
     a6_1 = data_reordering(a6)
 
+5) Determine the parameters for the inspector and executor functions.
+
+    Currently the parameters to these two functions are the same:
+    -One parameter for each non-index array dataspace: type double*
+    -One parameter for each index array: type int*
+    -One parameter for each symbolic parameter: type int
+    -One parameter for sigma: type ExplicitRelation**
+    -One parameter for delta: type ExplicitRelation**
+
+    In this example, the inspector and executor have the following signatures:
+    void inspector(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,ExplicitRelation **sigma,ExplicitRelation **delta)
+    void executor(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,ExplicitRelation **sigma,ExplicitRelation **delta)
 
 =====Code Generation Phase=====
 
