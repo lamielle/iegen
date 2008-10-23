@@ -361,23 +361,7 @@ Generating the composed inspector
             reorderArray((unsigned char *)x, sizeof(double), NUM_NODES, sigma);
             reorderArray((unsigned char *)fx, sizeof(double), NUM_NODES, sigma);
 
-2) (optional) pointer update optimization, or collapsing index arrays
-After performing a data reordering, if index arrays that access the reordered data arrays are updated with the new locations of data elements then later inspectors and the final executor will require fewer indirect accesses.  See uninterp-operations.txt for the definition of PU#.
-    PU0) note that all of the access relations for the statements (a1_1 through a6_1) contain sigma(inter1(ii)) or sigma(inter2(ii))
-
-    PU1) { [ii] -> [k] : k=sigma(inter1(ii)) && bounds for inter1 input }
-         { [ii] -> [k] : k=sigma(inter2(ii)) && bounds for inter2 input }
-
-    PU2) Do Code Gen for Relation to generate inter1_1 and inter2_1
-        #define pu1(t1) inter1_1[t1] = sigma[inter1[t1]]
-        for (t1=bounds for inter1 input) {
-            pu1(t1)
-        }
-        // similar for inter2_1
-
-    PU3) modify all access relations by replacing sigma(inter1(t1)) with inter1_1(t1)
-
-3) generate executor code for data reordering only (only for testing)
+2) generate executor code for data reordering only (only for testing)
    Note: eventually we want to generate the composed inspector/executor only, but for testing we need to be able to test as we go.
 
     input:
@@ -434,6 +418,22 @@ After performing a data reordering, if index arrays that access the reordered da
             e1(t1,1);
             e1(t1,2);
         }
+
+3) (optional) pointer update optimization, or collapsing index arrays
+After performing a data reordering, if index arrays that access the reordered data arrays are updated with the new locations of data elements then later inspectors and the final executor will require fewer indirect accesses.  See uninterp-operations.txt for the definition of PU#.
+    PU0) note that all of the access relations for the statements (a1_1 through a6_1) contain sigma(inter1(ii)) or sigma(inter2(ii))
+
+    PU1) { [ii] -> [k] : k=sigma(inter1(ii)) && bounds for inter1 input }
+         { [ii] -> [k] : k=sigma(inter2(ii)) && bounds for inter2 input }
+
+    PU2) Do Code Gen for Relation to generate inter1_1 and inter2_1
+        #define pu1(t1) inter1_1[t1] = sigma[inter1[t1]]
+        for (t1=bounds for inter1 input) {
+            pu1(t1)
+        }
+        // similar for inter2_1
+
+    PU3) modify all access relations by replacing sigma(inter1(t1)) with inter1_1(t1)
 
 10/20/08, MMS LEFTOFF
 5) IterPermuteRTRT  (for now done assuming no pointer update has occurred)
