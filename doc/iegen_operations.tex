@@ -12,6 +12,16 @@
 \begin{document}
 \maketitle
 
+\begin{section}{Friday October 23, 2008 Meeting Topics}
+
+\begin{itemize}
+\item J\&L progress report
+\item Pointer update/array alignment
+\item Codegen progress
+\end{itemize}
+
+\end{section}
+
 \begin{section}{Thursday October 2, 2008 Meeting Topics}
 
 \begin{itemize}
@@ -26,7 +36,7 @@
 \begin{section}{Introduction}
 
 \IEEEPARstart{I}{EGen} is a tool for generating irregular computational kernels optimized using the Inspector/Executor strategy.
-The user provides a description of the computational kernel and the desired runtime program transformations.
+The user provides a description of the computational kernel and the desired compiletime and runtime program transformations.
 IEGen then produces code that implements the corresponding inspector and executor for this computation.
 
 \end{section}
@@ -36,10 +46,12 @@ IEGen then produces code that implements the corresponding inspector and executo
 IEGen is built upon and utilizes the mathematical concept of Presburger formulas.
 However, we have introduced one unique addition to this well-known concept: the use of uninterpreted function symbols to represent indirect array accesses.
 Few libraries have been written that work with Presburger formulas in this capacity--with full logic support for manipulating formulas that include uninterpreted functions.
-The closest library is Omega (citation needed).
+%TODO: Add Omega citation
+The closest library is Omega.
 However, Omega's support for uninterpreted function symbols is lacking.
-Some operations support and work with uninterpreted functions, some don't, and some produce incorrect results. (example for thesis)
-Therefore, we were forced to develop our own implementation of Presburger formulas that includes correct 
+%TODO: Add examples of when Omega doesn't work properly with UFSs
+Some operations support and work with uninterpreted functions, some don't, and some produce incorrect results.
+Therefore, we were forced to develop our own implementation of Presburger formulas that includes correct manipulation of uninterpreted function symbols.
 
 The following are some of the features included in IEGen related to working with Presburger formulas:
 
@@ -99,24 +111,17 @@ The data structure for representing formulas consists of the following classes:
 	The base class for all expressions.
 	This contains any common functionality between all expression types.
 \item VarExp:
-	Represents a variable expression of the form: $vc*v$ where $vc$ is an integer constant and $v$ is the variable name.
+	Represents a variable expression of the form: $c_v*v$ where $c_v$ is an integer constant and $v$ is the variable name.
 \item FuncExp
-	Represents a function expression of the form: $fc*f(a_{1},a_{2},\ldots,a_{n})$ where $fc$ is an integer constant, $f$ is the function name, and the $n$ $a_{i}$ terms are the arguments to the functions defined as NormExps.
+	Represents a function expression of the form: $c_f*f(a_{1},a_{2},\ldots,a_{n})$ where $c_f$ is an integer constant, $f$ is the function name, and the $n$ $a_{i}$ terms are the arguments to the functions defined as NormExps.
 \item NormExp:
-	Represents an expression of the form: $vc_{1}*v_{1} + vc_{2}*v_{2} + \ldots + vc_{n}*v_{n} + fc_{1}*f_{1} + fc_{2}*f_{2} + \ldots + fc_{m}*f_{m} + c = 0$ where the $n$ $v_{i}$ are variables (VarExps), the $vc_{i}$ are integer constants, the $m$ $f_{i}$ are functions (FuncExps), the $fc_{i}$ are integer constants, and $c$ is an integer constant.
+	Represents an expression of the form: $c_{v_1}*v_{1} + c_{v_2}*v_{2} + \ldots + c_{v_n}*v_{n} + c_{f_1}*f_{1} + c_{f_2}*f_{2} + \ldots + c_{f_m}*f_{m} + c = 0$ where the $n$ $v_{i}$ are variables (VarExps), the $c_{v_i}$ are integer constants, the $m$ $f_{i}$ are functions (FuncExps), the $c_{f_i}$ are integer constants, and $c$ is an integer constant.
 	This is essentially an affine expression with the addition that functions may also be included in the terms.
 \end{itemize}
 
 \end{section}
 
 \begin{section}{Description of High Level Operations}
-
-\emph{``I would like you to write up what operations you have implemented and the following information about each:
-\begin{itemize}
-\item How general the implementation is and what the limitations are
-\item How extensively each operation has been tested
-\item Other operations an operation may depend on''
-\end{itemize}}
 
 Arity querying: We are able to query a Set or Relation for its arity.
 For Sets, it is simply the set tuple's arity.
@@ -144,15 +149,20 @@ We are able to take the inverse of a Relation.
 This operation has no limitations.
 This operation has 2 test cases written.
 
+Project Out: Implemented in Set
+We are able to project out a given tuple variable from a set.
+Currently we are only looking at inequality constraints, not equality constraints.
+Currently we are only looking at the first set in a union of sets.
+
 Codegen: We can generate code from a Set.
 
 Some sub operations that the main operations use:
 
 arity methods depend on arity methods of PresSet/PresRelation (not tested directly, methods checked for)
 
-inverse -> invert\_dict
+inverse $\rightarrow$ invert\_dict
 
-apply/compose -> \_combine\_pres\_formulas,\_get\_rename\_dict,\_get\_unrename\_dict
+apply/compose $\rightarrow$ \_combine\_pres\_formulas,\_get\_rename\_dict,\_get\_unrename\_dict
 
 \end{section}
 
