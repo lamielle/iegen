@@ -44,10 +44,10 @@ def calc_full_iter_space(statements):
 
 	return full_iter
 
-def calc_artt(mapir,data_permute):
+def calc_artt(mapir,data_reordering):
 	from iegen import AccessRelation
 	#Iteration Sub Space Relation
-	issr=data_permute.iter_sub_space_relation
+	issr=data_reordering.iter_sub_space_relation
 
 	#Calculate the iteration space to data space relation
 	iter_to_data=None
@@ -61,9 +61,9 @@ def calc_artt(mapir,data_permute):
 			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse())
 
 	artt=AccessRelation(
-              name='A_I_sub_to_%s'%(data_permute.target_data_space.name),
-              iter_space=mapir.full_iter_space.apply(data_permute.iter_sub_space_relation),
-              data_space=data_permute.target_data_space,
+              name='A_I_sub_to_%s'%(data_reordering.target_data_space.name),
+              iter_space=mapir.full_iter_space.apply(data_reordering.iter_sub_space_relation),
+              data_space=data_reordering.target_data_space,
               iter_to_data=iter_to_data)
 	return artt
 
@@ -93,6 +93,21 @@ def calc_ie_args(mapir):
 	args.append(VarDecl('ExplicitRelation **',['delta','sigma']))
 
 	return args
+
+def calc_update_data_spaces(mapir,data_reordering):
+	#Update each data space to reflect any changes
+	#TODO: Add support for examples other than moldyn where the data spaces need to be udpated
+	pass
+
+def calc_update_scattering_functions(mapir,data_reordering):
+	#Update the scattering functions of each statement
+	#TODO: Add support for examples other than moldyn where the scattering functions need to be udpated
+	pass
+
+def calc_update_access_relations(mapir,data_reordering):
+	for statement in mapir.statements:
+		for i in range(len(statement.access_relations)):
+			statement.access_relations[i].iter_to_data=data_reordering.data_reordering.compose(statement.access_relations[i].iter_to_data)
 #-------------------------------------------------
 
 #---------- Code Generation Phase Functions ----------
@@ -243,7 +258,7 @@ def gen_create_artt(mapir):
 	stmts.append(Statement())
 	return stmts
 
-def calc_sigma(mapir,data_permute):
+def calc_sigma(mapir,data_reordering):
 	from copy import deepcopy
 	from iegen import DataSpace,IndexArray,Set,IAGPermute
 
@@ -302,7 +317,7 @@ def gen_executor(mapir):
 #-----------------------------------------------------
 
 #---------- Public Interface Function ----------
-def codegen(mapir,data_permute,iter_permute,code):
+def codegen(mapir,data_reordering,iter_permute,code):
 	from iegen.codegen import Program
 	from iegen.codegen.visitor import CPrintVisitor
 
@@ -311,13 +326,15 @@ def codegen(mapir,data_permute,iter_permute,code):
 	mapir.full_iter_space=calc_full_iter_space(mapir.statements)
 
 	#Step 2) generate an AccessRelation specification that will be the input for data reordering
-	mapir.artt=calc_artt(mapir,data_permute)
+	mapir.artt=calc_artt(mapir,data_reordering)
 
 	#Step 3) Generate the IAG and Index Array for sigma
-	mapir.sigma=calc_sigma(mapir,data_permute)
+	mapir.sigma=calc_sigma(mapir,data_reordering)
 
 	#Step 4) Modify data dependences, scattering functions, and access functions based on previous transformation.
-	#TODO: Do this step
+	calc_update_data_spaces(mapir,data_reordering)
+	calc_update_scattering_functions(mapir,data_reordering)
+	calc_update_access_relations(mapir,data_reordering)
 
 	#Step 5) Determine the parameters for the inspector and executor functions
 	mapir.ie_args=calc_ie_args(mapir)

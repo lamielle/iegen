@@ -106,11 +106,12 @@ class DataSpace(object):
 		return self._get_string(0)
 
 	def _get_string(self,indent):
+		if indent>0: indent+=1
 		spaces=' '*indent
-		return '''DataSpace:
-%s-name: %s
-%s-set: %s
-%s-is_index_array: %s'''%(spaces,self.name,spaces,self.set,spaces,self.is_index_array)
+		return '''%sDataSpace:
+%s|-name: %s
+%s|-set: %s
+%s|-is_index_array: %s'''%(spaces,spaces,self.name,spaces,self.set,spaces,self.is_index_array)
 #-------------------------------------
 
 #---------- IndexArray class ----------
@@ -146,6 +147,26 @@ class Statement(object):
 		self.scatter=scatter
 		self.access_relations=[]
 
+	def __str__(self):
+		return self._get_string(0)
+
+	def _get_string(self,indent):
+		from cStringIO import StringIO
+
+		if indent>0: indent+=1
+		spaces=' '*indent
+		dashes='-'*indent
+		ar_string=StringIO()
+		for access_relation in self.access_relations:
+			print >>ar_string,access_relation._get_string(indent+5)
+		ar_string=ar_string.getvalue()
+		return '''Statement:
+%s|-statement: %s
+%s|-iter_space: %s
+%s|-scatter: %s
+%s|-access_relations:
+%s'''%(spaces,self.statement,spaces,self.iter_space,spaces,self.scatter,spaces,ar_string)
+
 	def add_access_relation(self,access_relation):
 		#Checking
 		if self.iter_space.arity()!=access_relation.iter_to_data.arity_in():
@@ -171,12 +192,14 @@ class AccessRelation(object):
 		return self._get_string(0)
 
 	def _get_string(self,indent):
+		if indent>0: indent+=1
 		spaces=' '*indent
-		return '''AccessRelation:
-%s-name: %s
-%s-data_space: %s
-%s-iter_to_data: %s
-%s-iter_space: %s'''%(spaces,self.name,spaces,self.data_space._get_string(indent+13),spaces,self.iter_to_data,spaces,self.iter_space)
+		return '''%sAccessRelation:
+%s|-name: %s
+%s|-data_space:
+%s
+%s|-iter_to_data: %s
+%s|-iter_space: %s'''%(spaces,spaces,self.name,spaces,self.data_space._get_string(indent+13),spaces,self.iter_to_data,spaces,self.iter_space)
 
 		if self.data_space.set.arity()!=self.iter_to_data.arity_out():
 			raise iegen.util.DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.iter_to_data.arity_out(),self.data_space.set.arity()))

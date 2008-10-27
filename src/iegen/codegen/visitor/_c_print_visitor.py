@@ -9,9 +9,7 @@ class CPrintVisitor(DFVisitor):
 	def _get_arg_string(self,args):
 		var_strings=[]
 		for arg in args:
-			print 'arg.var_names=%s'%(arg.var_names)
 			for var_name in arg.var_names:
-				print 'appending %s'%(arg.type+var_name)
 				var_strings.append(arg.type+var_name)
 		return ('%s,'*len(var_strings))[:-1]%tuple(var_strings)
 
