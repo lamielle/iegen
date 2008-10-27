@@ -197,6 +197,8 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     self->out_index_size = 0;
     self->out_vals_size = 0;
     self->raw_data_size = 0;
+
+    self->external_out_vals=false;
     
     // if in_domain was not provided then create one to keep track of 
     // values observed within insert.
@@ -296,6 +298,8 @@ ExplicitRelation* ER_ctor(int * index_array, int size)
     self->out_vals_size = size;
     self->raw_data_size = 0;
     
+    self->external_out_vals=true;
+
     // Determine domain for out values.
     // set up out_range
     self->out_range = RD_ctor(self->out_arity);
@@ -338,7 +342,7 @@ void ER_dtor( ExplicitRelation** self )
 {
     if ((*self)->in_vals != NULL) { free((*self)->in_vals); }
     if ((*self)->out_index != NULL) { free((*self)->out_index); }
-    if ((*self)->out_vals != NULL) { free((*self)->out_vals); }
+    if ((*self)->out_vals != NULL && !(*self)->external_out_vals) { free((*self)->out_vals); }
     if ((*self)->raw_data != NULL) { free((*self)->raw_data); }
     if ((*self)->in_domain != NULL) { free((*self)->in_domain); }
     free(*self);

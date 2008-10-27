@@ -146,6 +146,8 @@ typedef struct {
     int     out_index_size;   // number of entries in current allocation
     int     out_vals_size;    // number of entries in current allocation
     int     raw_data_size;    // number of entries in current allocation
+
+    bool    external_out_vals; //is the 'out_vals' field allocated locally or passed in to the constructor?
     
 } ExplicitRelation;
 
