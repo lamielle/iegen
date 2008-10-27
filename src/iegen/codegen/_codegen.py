@@ -67,6 +67,24 @@ def calc_artt(mapir,data_reordering):
               iter_to_data=iter_to_data)
 	return artt
 
+def calc_sigma(mapir,data_reordering):
+	from copy import deepcopy
+	from iegen import DataSpace,IndexArray,Set,IAGPermute
+
+	#Hard coded to return an IAG_Permute, however, other IAGs will be possible later (IAG_Group,IAG_Part,IAG_Wavefront)
+	syms=mapir.symbolics()
+	data_space=DataSpace(name='sigma',
+	                     #TODO: FIX this so 'x' is not hardcoded
+	                     set=deepcopy(mapir.data_spaces['x'].set),
+	                     is_index_array=True)
+	result=IndexArray(data_space=data_space,
+	                  is_permutation=True,
+	                  input_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms),
+	                  output_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms))
+	return IAGPermute(name='IAG_cpack',
+	                   input=mapir.artt,
+	                   result=result)
+
 def calc_ie_args(mapir):
 	from iegen.codegen import VarDecl
 	args=[]
@@ -148,7 +166,7 @@ def gen_main_driver(mapir):
 	#Add a declaration of the symbolic variables
 	main.body.append(Comment('Declare the symbolics'))
 	main.body.extend(gen_symbolics_decl(mapir))
-	main.body.append(Statement())
+	main.newline()
 
 	#Add declarations for the non-index array data spaces
 	main.body.append(Comment('Declare the data spaces'))
@@ -157,7 +175,7 @@ def gen_main_driver(mapir):
 		data_space_vars.var_names.append('*'+data_space.name)
 		data_space_vars.values.append('NULL');
 	main.body.append(data_space_vars);
-	main.body.append(Statement())
+	main.newline()
 
 	#Add declarations of the index arrays
 	main.body.append(Comment('Declare the index arrays'))
@@ -166,7 +184,7 @@ def gen_main_driver(mapir):
 		index_array_vars.var_names.append('*'+index_array.data_space.name)
 		index_array_vars.values.append('NULL')
 	main.body.append(index_array_vars)
-	main.body.append(Statement())
+	main.newline()
 
 	#Add declarations of sigma and delta
 	main.body.append(Comment('Declare pointers for sigma and delta'))
@@ -176,47 +194,47 @@ def gen_main_driver(mapir):
 	er_vars.var_names.append('*delta')
 	er_vars.values.append('NULL')
 	main.body.append(er_vars)
-	main.body.append(Statement())
+	main.newline()
 
 	#Allocate memory for the data spaces
 	main.body.append(Comment('Allocate memory for the data spaces'))
 	for data_space in mapir.pure_data_spaces():
 		main.body.append(Statement('%s=(double*)malloc(sizeof(double)*10);'%data_space.name))
-	main.body.append(Statement())
+	main.newline()
 
 	#Allocate memory for the index arrays
 	main.body.append(Comment('Allocate memory for the index arrays'))
 	for index_array in mapir.index_arrays:
 		main.body.append(Statement('%s=(int*)malloc(sizeof(int)*10);'%(index_array.data_space.name)))
-	main.body.append(Statement())
+	main.newline()
 
 	#Set index arrays to be 'identity' index arrays
 	main.body.append(Comment("Set index arrays to be 'identity' index arrays"))
 	for index_array in mapir.index_arrays:
 		main.body.append(Statement('for(int i=0;i<10;i++) %s[i]=i;'%(index_array.data_space.name)))
-	main.body.append(Statement())
+	main.newline()
 
 	#Call the inspector
 	main.body.append(Comment('Call the inspector'))
 	main.body.append(Statement('inspector(%s);'%(get_ie_arg_names_string(mapir))))
-	main.body.append(Statement())
+	main.newline()
 
 	#Call the executor
 	main.body.append(Comment('Call the executor'))
 	main.body.append(Statement('executor(%s);'%(get_ie_arg_names_string(mapir))))
-	main.body.append(Statement())
+	main.newline()
 
 	#Free the data space memory
 	main.body.append(Comment('Free the data space memory'))
 	for data_space in mapir.pure_data_spaces():
 		main.body.append(Statement('free(%s);'%data_space.name))
-	main.body.append(Statement())
+	main.newline()
 
 	#Free the data space memory
 	main.body.append(Comment('Free the index array memory'))
 	for index_array in mapir.index_arrays:
 		main.body.append(Statement('free(%s);'%index_array.data_space.name))
-	main.body.append(Statement())
+	main.newline()
 
 	main.body.append(Statement('return 0;'))
 
@@ -239,7 +257,7 @@ def gen_create_artt(mapir):
 
 		define_stmts.append(Statement('#define S%d ER_in_ordered_insert(%s,Tuple_make(%s),ER_out_given_in(%s, Tuple_make(%s)));'%(relation_index,mapir.artt.name,iterator_name,mapir.artt.name,iterator_name)))
 
-		cloog_stmts.append(pycloog.Statement(mapir.artt.iter_space)) 
+		cloog_stmts.append(pycloog.Statement(mapir.artt.iter_space))
 		undefine_stmts.append(Statement('#undef S%d'%(relation_index,)))
 
 	#Generate the whole set of statements
@@ -248,33 +266,18 @@ def gen_create_artt(mapir):
 	stmts.append(Comment(str(mapir.artt.iter_to_data)))
 	stmts.append(Statement('ExplicitRelation* %s = ER_ctor(%d,%d,NULL,false);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())))
 	stmts.append(Statement())
+	stmts.append(Comment('Defines for loop body statements'))
 	stmts.extend(define_stmts)
+	stmts.append(Statement())
 	stmts.extend(gen_tuple_vars_decl(mapir.artt.iter_space))
 	loop_stmts=codegen(cloog_stmts).split('\n')
 	for loop_stmt in loop_stmts:
 		stmts.append(Statement(loop_stmt))
 	stmts.append(Statement())
+	stmts.append(Comment('Unefine loop body statements'))
 	stmts.extend(undefine_stmts)
 	stmts.append(Statement())
 	return stmts
-
-def calc_sigma(mapir,data_reordering):
-	from copy import deepcopy
-	from iegen import DataSpace,IndexArray,Set,IAGPermute
-
-	#Hard coded to return an IAG_Permute, however, other IAGs will be possible later (IAG_Group,IAG_Part,IAG_Wavefront)
-	syms=mapir.symbolics()
-	data_space=DataSpace(name='sigma',
-	                     #TODO: FIX this so 'x' is not hardcoded
-	                     set=deepcopy(mapir.data_spaces['x'].set),
-	                     is_index_array=True)
-	result=IndexArray(data_space=data_space,
-	                  is_permutation=True,
-	                  input_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms),
-	                  output_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms))
-	return IAGPermute(name='IAG_cpack',
-	                   input=mapir.artt,
-	                   result=result)
 
 def gen_create_sigma(mapir):
 	from iegen.codegen import Statement
@@ -290,23 +293,38 @@ def gen_create_sigma(mapir):
 
 #Generates code for the inspector
 def gen_inspector(mapir):
-	from iegen.codegen import Function,VarDecl
+	from iegen.codegen import Function,VarDecl,Comment,Statement
 
 	inspector=Function('inspector','void',mapir.ie_args)
 
 	#Add declarations of the index array wrappers
+	inspector.body.append(Comment('Declare the index array wrappers'))
 	er_vars=VarDecl('ExplicitRelation')
 	for index_array in mapir.index_arrays:
-		er_vars.var_names.append('*'+index_array.data_space.name+'_ER')
+		er_vars.var_names.append('*%s_ER'%(index_array.data_space.name))
 	inspector.body.append(er_vars)
+	inspector.newline()
+
+	#Create the index array wrappers
+	inspector.body.append(Comment('Create the index array wrappers'))
+	for index_array in mapir.index_arrays:
+		inspector.body.append(Statement('%s_ER=ER_ctor(%s,%d);'%(index_array.data_space.name,index_array.data_space.name,index_array.data_space.set.arity())))
+	inspector.newline()
 
 	#Step 1a) generate code that creates an explicit representation of the access relation artt at runtime
 	inspector.body.extend(gen_create_artt(mapir))
+	inspector.newline()
 
 	#Step 1b) Generate code that passes explicit relation to IAG
 	inspector.body.extend(gen_create_sigma(mapir))
+	inspector.newline()
+
+	#Free the index array wrappers
+	inspector.body.append(Comment('Free the index array wrappers'))
+	for index_array in mapir.index_arrays:
+		inspector.body.append(Statement('free(%s_ER);'%(index_array.data_space.name)))
+
 	return inspector
-	return arg_names_string.getvalue()[:-1]
 
 #Generates code for the executor
 def gen_executor(mapir):

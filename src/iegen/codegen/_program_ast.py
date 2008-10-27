@@ -23,6 +23,10 @@ class Function(object):
 		self.args=args
 		self.body=[]
 
+	def newline(self):
+		from iegen.codegen import Statement
+		self.body.append(Statement())
+
 	def apply_visitor(self,visitor):
 		visitor.visitFunction(self)
 
