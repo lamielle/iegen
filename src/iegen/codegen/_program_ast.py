@@ -38,11 +38,22 @@ class Statement(object):
 
 #Represents a variable declaration
 class VarDecl(object):
-	__slots__=('type','var_names')
+	__slots__=('type','var_names','values')
 
-	def __init__(self,type,var_names=None):
+	def __init__(self,type,var_names=None,values=None):
 		self.type=type
 		self.var_names=[] if var_names is None else var_names
+		self.values=[] if values is None else values
 
 	def apply_visitor(self,visitor):
 		visitor.visitVarDecl(self)
+
+#Represents a comment
+class Comment(object):
+	__slots__=('text',)
+
+	def __init__(self,text):
+		self.text=text
+
+	def apply_visitor(self,visitor):
+		visitor.visitComment(self)

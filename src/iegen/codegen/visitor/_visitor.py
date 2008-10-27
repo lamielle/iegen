@@ -28,10 +28,15 @@ class DFVisitor(object):
 		self.defaultIn(node)
 	def outStatement(self,node):
 		self.defaultOut(node)
-	
+
 	def inVarDecl(self,node):
 		self.defaultIn(node)
 	def outVarDecl(self,node):
+		self.defaultOut(node)
+
+	def inComment(self,node):
+		self.defaultIn(node)
+	def outComment(self,node):
 		self.defaultOut(node)
 	#------------------------------------
 
@@ -61,5 +66,9 @@ class DFVisitor(object):
 	def visitVarDecl(self,node):
 		self.inVarDecl(node)
 		self.outVarDecl(node)
+
+	def visitComment(self,node):
+		self.inComment(node)
+		self.outComment(node)
 	#-----------------------------------
 #-----------------------------------------

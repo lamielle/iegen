@@ -9,7 +9,7 @@ iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('_symbolics','data_spaces','index_arrays','statements','full_iter_space','artt','mapir','sigma')
+	__slots__=('_symbolics','data_spaces','index_arrays','statements','full_iter_space','artt','mapir','sigma','ie_args')
 
 	def __init__(self):
 		self._symbolics={}
@@ -33,6 +33,12 @@ class MapIR(object):
 	#Adds the given statment to the collection of statements
 	def add_statement(self,statement):
 		self.statements.append(statement)
+
+	#Generates a collection of pure data spaces (non-index-array data spaces)
+	def pure_data_spaces(self):
+		for data_space in self.data_spaces.values():
+			if not data_space.is_index_array:
+				yield data_space
 
 	#---------- Main 'action' method ---------
 	#This is the main interface that starts the whole code generation process
