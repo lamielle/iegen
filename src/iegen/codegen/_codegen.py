@@ -157,6 +157,41 @@ def gen_preamble():
 	stmts.append(Statement())
 	return stmts
 
+def gen_declare_index_array_wrappers(mapir):
+	from iegen.codegen import Comment,VarDecl
+
+	#Declare the index array wrappers
+	decls=[]
+	decls.append(Comment('Declare the index array wrappers'))
+	er_vars=VarDecl('ExplicitRelation')
+	for index_array in mapir.index_arrays:
+		er_vars.var_names.append('*%s_ER'%(index_array.data_space.name))
+	decls.append(er_vars)
+
+	return decls
+
+def gen_create_index_array_wrappers(mapir):
+	from iegen.codegen import Comment,Statement
+
+	#Create the index array wrappers
+	stmts=[]
+	stmts.append(Comment('Create the index array wrappers'))
+	for index_array in mapir.index_arrays:
+		stmts.append(Statement('%s_ER=ER_ctor(%s,%d);'%(index_array.data_space.name,index_array.data_space.name,index_array.data_space.set.arity())))
+
+	return stmts
+
+def gen_destroy_index_array_wrappers(mapir):
+	from iegen.codegen import Comment,Statement
+
+	#Destroy the index array wrappers
+	stmts=[]
+	stmts.append(Comment('Destroy the index array wrappers'))
+	for index_array in mapir.index_arrays:
+		stmts.append(Statement('ER_dtor(&%s_ER);'%(index_array.data_space.name)))
+
+	return stmts
+
 def gen_main_driver(mapir):
 	from iegen.codegen import Function,Statement,VarDecl,Comment
 
@@ -264,9 +299,9 @@ def gen_create_artt(mapir):
 	stmts=[]
 	stmts.append(Comment('Creation of ExplicitRelation of the ARTT'))
 	stmts.append(Comment(str(mapir.artt.iter_to_data)))
-	stmts.append(Statement('ExplicitRelation* %s = ER_ctor(%d,%d,NULL,false);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())))
+	stmts.append(Statement('ExplicitRelation* %s = ER_ctor(%d,%d);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())))
 	stmts.append(Statement())
-	stmts.append(Comment('Defines for loop body statements'))
+	stmts.append(Comment('Define loop body statements'))
 	stmts.extend(define_stmts)
 	stmts.append(Statement())
 	stmts.extend(gen_tuple_vars_decl(mapir.artt.iter_space))
@@ -274,9 +309,8 @@ def gen_create_artt(mapir):
 	for loop_stmt in loop_stmts:
 		stmts.append(Statement(loop_stmt))
 	stmts.append(Statement())
-	stmts.append(Comment('Unefine loop body statements'))
+	stmts.append(Comment('Undefine loop body statements'))
 	stmts.extend(undefine_stmts)
-	stmts.append(Statement())
 	return stmts
 
 def gen_create_sigma(mapir):
@@ -297,18 +331,10 @@ def gen_inspector(mapir):
 
 	inspector=Function('inspector','void',mapir.ie_args)
 
-	#Add declarations of the index array wrappers
-	inspector.body.append(Comment('Declare the index array wrappers'))
-	er_vars=VarDecl('ExplicitRelation')
-	for index_array in mapir.index_arrays:
-		er_vars.var_names.append('*%s_ER'%(index_array.data_space.name))
-	inspector.body.append(er_vars)
+	#Create the declare/create the index array wrappers
+	inspector.body.extend(gen_declare_index_array_wrappers(mapir))
 	inspector.newline()
-
-	#Create the index array wrappers
-	inspector.body.append(Comment('Create the index array wrappers'))
-	for index_array in mapir.index_arrays:
-		inspector.body.append(Statement('%s_ER=ER_ctor(%s,%d);'%(index_array.data_space.name,index_array.data_space.name,index_array.data_space.set.arity())))
+	inspector.body.extend(gen_create_index_array_wrappers(mapir))
 	inspector.newline()
 
 	#Step 1a) generate code that creates an explicit representation of the access relation artt at runtime
@@ -319,10 +345,8 @@ def gen_inspector(mapir):
 	inspector.body.extend(gen_create_sigma(mapir))
 	inspector.newline()
 
-	#Free the index array wrappers
-	inspector.body.append(Comment('Free the index array wrappers'))
-	for index_array in mapir.index_arrays:
-		inspector.body.append(Statement('free(%s_ER);'%(index_array.data_space.name)))
+	#Destroy the index array wrappers
+	inspector.body.extend(gen_destroy_index_array_wrappers(mapir))
 
 	return inspector
 
@@ -331,6 +355,16 @@ def gen_executor(mapir):
 	from iegen.codegen import Function
 
 	executor=Function('executor','void',mapir.ie_args)
+
+	#Create the declare/create the index array wrappers
+	executor.body.extend(gen_declare_index_array_wrappers(mapir))
+	executor.newline()
+	executor.body.extend(gen_create_index_array_wrappers(mapir))
+	executor.newline()
+
+	#Destroy the index array wrappers
+	executor.body.extend(gen_destroy_index_array_wrappers(mapir))
+
 	return executor
 #-----------------------------------------------------
 
