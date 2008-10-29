@@ -177,8 +177,25 @@ def gen_create_index_array_wrappers(mapir):
 	stmts=[]
 	stmts.append(Comment('Create the index array wrappers'))
 	for index_array in mapir.index_arrays:
-		stmts.append(Statement('%s_ER=ER_ctor(%s,%d);'%(index_array.data_space.name,index_array.data_space.name,index_array.data_space.set.arity())))
-		print index_array
+		data_space_set=index_array.data_space.set
+		#Calculate the size of this index array
+		#Assumes only one set in the union...
+		if 1!=len(data_space_set.sets): raise ValueError("IndexArray's dataspace has multiple terms in the disjunction")
+		#Assumes the index array dataspace is 1D...
+		if 1!=data_space_set.sets[0].arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
+
+		#Get the single tuple variable
+		var=data_space_set.sets[0].tuple_set.vars[0]
+
+		#Get the upper/lower bounds for the variable
+		upper_bounds=data_space_set.upper_bound(var.id)
+		lower_bounds=data_space_set.lower_bound(var.id)
+
+		#Get the string that calculates the size of the ER at runtime
+		size_string='%s-%s'%(get_upper_bound_string(upper_bounds),get_lower_bound_string(lower_bounds))
+
+		#Append the construction of the wrapper the the collection of statements
+		stmts.append(Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.data_space.name,index_array.data_space.name,size_string)))
 
 		#get_lower_bound_string
 
