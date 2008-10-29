@@ -102,10 +102,10 @@ class PresSet(PresForm):
 	__slots__=('tuple_set','conjunct','symbolics')
 
 	@check
-	def __init__(self,tuple_set,conjunct,symbolics=[]):
+	def __init__(self,tuple_set,conjunct,symbolics=None):
 		self.tuple_set=tuple_set
 		self.conjunct=conjunct
-		self.symbolics=symbolics
+		self.symbolics=[] if symbolics is None else symbolics
 
 	def __repr__(self):
 		if len(self.symbolics)>0:
@@ -140,11 +140,11 @@ class PresRelation(PresForm):
 	__slots__=('tuple_in','tuple_out','conjunct','symbolics')
 
 	@check
-	def __init__(self,tuple_in,tuple_out,conjunct,symbolics=[]):
+	def __init__(self,tuple_in,tuple_out,conjunct,symbolics=None):
 		self.tuple_in=tuple_in
 		self.tuple_out=tuple_out
 		self.conjunct=conjunct
-		self.symbolics=symbolics
+		self.symbolics=[] if symbolics is None else symbolics
 
 	def __repr__(self):
 		if len(self.symbolics)>0:
@@ -464,8 +464,9 @@ class NormExp(Expression):
 	#Note that providing a collection of symbolic is optional
 	#If the collection is not provided, this method will essentially
 	#check that the expression has no terms
-	def is_const(self,syms=[]):
+	def is_const(self,syms=None):
 		from iegen import Symbolic
+		syms=[] if syms is None else syms
 		raise_objs_not_like_types(syms,Symbolic)
 
 		if not self._has_terms():

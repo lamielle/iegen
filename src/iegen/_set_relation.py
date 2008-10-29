@@ -113,7 +113,8 @@ class Set(Formula):
 	#of instances of the iegen.Symbolic class.
 	@normalize_self
 	@check
-	def __init__(self,set_string=None,symbolics=[],sets=None):
+	def __init__(self,set_string=None,symbolics=None,sets=None):
+		symbolics=[] if symbolics is None else symbolics
 		if None is not set_string and None is sets:
 			self.sets=[PresParser.parse_set(set_string,symbolics)]
 		elif None is not sets and None is set_string:
@@ -292,7 +293,8 @@ class Relation(Formula):
 	#of instances of the iegen.Symbolic class.
 	@normalize_self
 	@check
-	def __init__(self,relation_string=None,symbolics=[],relations=None):
+	def __init__(self,relation_string=None,symbolics=None,relations=None):
+		symbolics=[] if symbolics is None else symbolics
 		if None is not relation_string and None is relations:
 			self.relations=[PresParser.parse_relation(relation_string,symbolics)]
 		elif None is not relations and None is relation_string:
