@@ -178,6 +178,9 @@ def gen_create_index_array_wrappers(mapir):
 	stmts.append(Comment('Create the index array wrappers'))
 	for index_array in mapir.index_arrays:
 		stmts.append(Statement('%s_ER=ER_ctor(%s,%d);'%(index_array.data_space.name,index_array.data_space.name,index_array.data_space.set.arity())))
+		print index_array
+
+		#get_lower_bound_string
 
 	return stmts
 

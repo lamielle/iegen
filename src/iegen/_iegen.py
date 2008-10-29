@@ -133,19 +133,37 @@ class IndexArray(object):
 
 	def _name(self):
 		return self.data_space.name
-
 	property(_name)
+
+	def __repr__(self):
+		return 'IndexArray(%s,%s,%s,%s)'%(repr(self.data_space),self.is_permutation,repr(self.input_bounds),repr(self.output_bounds))
+
+	def __str__(self):
+		return self._get_string(0)
+
+	def _get_string(self,indent):
+		if indent>0: indent+=1
+		spaces=' '*indent
+		return '''%sIndexArray
+%s|-data_space:
+%s
+%s|-is_permutation: %s
+%s|-input_bounds: %s
+%s|-output_bounds: %s'''%(spaces,spaces,self.data_space._get_string(indent+5),spaces,self.is_permutation,spaces,self.input_bounds,spaces,self.output_bounds)
 #--------------------------------------
 
 #---------- Statement class ----------
 class Statement(object):
 	__slots__=('statement','iter_space','scatter','access_relations')
 
-	def __init__(self,statement,iter_space,scatter):
+	def __init__(self,statement,iter_space,scatter,access_relations=None):
 		self.statement=statement
 		self.iter_space=iter_space
 		self.scatter=scatter
-		self.access_relations=[]
+		self.access_relations=[] if None is access_relations else access_relations
+
+	def __repr__(self):
+		return 'Statement(%s,%s,%s,%s)'%(self.statement,self.iter_space,self.scatter,self.access_relations)
 
 	def __str__(self):
 		return self._get_string(0)
