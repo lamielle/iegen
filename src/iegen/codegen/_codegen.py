@@ -18,6 +18,15 @@ def get_lower_bound_string(bounds):
 def get_upper_bound_string(bounds):
 	return get_bound_string(bounds,'max')
 
+#Calculates the difference of the upper and lower bounds of the given variable in the given set
+def get_size_string(set,var_name):
+	#Get the upper/lower bounds for the variable
+	upper_bounds=set.upper_bound(var_name)
+	lower_bounds=set.lower_bound(var_name)
+
+	#Get the string that calculates the size of the ER at runtime
+	return '%s-%s'%(get_upper_bound_string(upper_bounds),get_lower_bound_string(lower_bounds))
+
 def get_ie_arg_names_string(mapir):
 	from cStringIO import StringIO
 
@@ -175,6 +184,8 @@ def gen_preamble():
 	from iegen.codegen import Statement
 	stmts=[]
 	stmts.append(Statement('#include "ExplicitRelation.h"'))
+	stmts.append(Statement('#include "IAG.h"'))
+	stmts.append(Statement('#include "util.h"'))
 	stmts.append(Statement())
 	stmts.append(Statement("#define max(a,b) (((a)>(b))?(a):(b))"))
 	stmts.append(Statement("#define min(a,b) (((a)<(b))?(a):(b))"))
@@ -211,12 +222,8 @@ def gen_create_index_array_wrappers(mapir):
 		#Get the single tuple variable
 		var=data_space_set.sets[0].tuple_set.vars[0]
 
-		#Get the upper/lower bounds for the variable
-		upper_bounds=data_space_set.upper_bound(var.id)
-		lower_bounds=data_space_set.lower_bound(var.id)
-
 		#Get the string that calculates the size of the ER at runtime
-		size_string='%s-%s'%(get_upper_bound_string(upper_bounds),get_lower_bound_string(lower_bounds))
+		size_string=get_size_string(data_space_set,var.id)
 
 		#Append the construction of the wrapper the the collection of statements
 		stmts.append(Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.data_space.name,index_array.data_space.name,size_string)))
@@ -332,7 +339,6 @@ def gen_create_artt(mapir):
 	cloog_stmts=[]
 	define_stmts=[]
 	undefine_stmts=[]
-	print mapir.artt
 	for relation_index in xrange(1,len(mapir.artt.iter_to_data.relations)+1):
 		relation=mapir.artt.iter_to_data.relations[relation_index-1]
 
@@ -363,19 +369,37 @@ def gen_create_artt(mapir):
 	return stmts
 
 def gen_create_sigma(mapir):
-	from iegen.codegen import Statement
+	from iegen.codegen import Statement,Comment
 	iag=mapir.sigma.result
 
 	stmts=[]
+	stmts.append(Comment('Create sigma'))
 	stmts.append(Statement('RectDomain *in_domain=RD_ctor(%d);'%(iag.input_bounds.arity())))
 
 	for var in iag.input_bounds.sets[0].tuple_set.vars:
 		stmts.append(Statement('RD_set_lb(in_domain,0,%s);'%get_lower_bound_string(iag.input_bounds.lower_bound(var.id))))
 		stmts.append(Statement('RD_set_ub(in_domain,0,%s);'%get_upper_bound_string(iag.input_bounds.upper_bound(var.id))))
+
+	stmts.append(Statement('(*%s)=ER_ctor(%d,%d,in_domain,%s);'%(iag.data_space.name,iag.input_bounds.arity(),iag.output_bounds.arity(),str(iag.is_permutation).lower())))
+
+	stmts.append(Statement('%s(%s,*%s);'%(mapir.sigma.name,mapir.sigma.input.name,iag.data_space.name)))
+
+	return stmts
+
+#Generates code that does the data reordering
+def gen_reorder_data(mapir,data_reordering):
+	from iegen.codegen import Statement,Comment
+	
+	stmts=[]
+	stmts.append(Comment('Reorder the data arrays'))
+
+	for data_space in data_reordering.data_spaces:
+		stmts.append(Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,*%s);'%(data_space.name,get_size_string(data_space.set,data_space.set.sets[0].tuple_set.vars[0].id),mapir.sigma.result.data_space.name)))
+
 	return stmts
 
 #Generates code for the inspector
-def gen_inspector(mapir):
+def gen_inspector(mapir,data_reordering):
 	from iegen.codegen import Function,VarDecl,Comment,Statement
 
 	inspector=Function('inspector','void',mapir.ie_args)
@@ -392,6 +416,10 @@ def gen_inspector(mapir):
 
 	#Step 1b) Generate code that passes explicit relation to IAG
 	inspector.body.extend(gen_create_sigma(mapir))
+	inspector.newline()
+
+	#Step 1c) Generate code that does data reordering
+	inspector.body.extend(gen_reorder_data(mapir,data_reordering))
 	inspector.newline()
 
 	#Destroy the index array wrappers
@@ -450,7 +478,7 @@ def codegen(mapir,data_reordering,iter_permute,code):
 	program.preamble.extend(gen_preamble())
 
 	#Generate the inspector
-	program.functions.append(gen_inspector(mapir))
+	program.functions.append(gen_inspector(mapir,data_reordering))
 
 	#Generate the executor
 	program.functions.append(gen_executor(mapir))
