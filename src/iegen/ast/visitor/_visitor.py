@@ -11,6 +11,7 @@ class DFVisitor(object):
 	#Do nothing by default
 	def defaultIn(self,node): pass
 	def defaultOut(self,node): pass
+	def defaultBetween(self,node): pass
 	#--------------------------------------------
 
 	#---------- In/Out Methods ----------
@@ -73,6 +74,8 @@ class DFVisitor(object):
 		self.defaultIn(node)
 	def outNormExp(self,node):
 		self.defaultOut(node)
+	def betweenNormExp(self,node):
+		self.defaultBetween(node)
 	#------------------------------------
 
 	#---------- Visit methods ----------
@@ -147,8 +150,10 @@ class DFVisitor(object):
 
 	def visitNormExp(self,node):
 		self.inNormExp(node)
-		for term in node.terms:
+		for i in range(len(node.terms)):
+			term=node.terms[i]
 			term.apply_visitor(self)
+			if i<len(node.terms)-1: self.betweenNormExp(node)
 		self.outNormExp(node)
 	#-----------------------------------
 #-----------------------------------------

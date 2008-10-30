@@ -29,6 +29,30 @@ def get_ie_arg_names_string(mapir):
 			else:
 				arg_names_string.write('%s,'%(var_name))
 	return arg_names_string.getvalue()[:-1]
+
+def get_equality_value(var_name,formula):
+	from iegen.ast.visitor import FindConstraintVisitor,ValueStringVisitor
+	from iegen.ast import Equality,NormExp
+
+	values=FindConstraintVisitor(Equality,var_name).visit(formula).var_constraints
+
+	if 0==len(values): raise ValueError("Tuple variable '%s' is not involved in any equality constraints"%(var_name))
+	if len(values)>1: raise ValueError("Tuple variable '%s' is equal to multiple values"%(var_name))
+
+	value=values[0]
+
+	var=value[0]
+	exp=value[1].exp
+
+	if var.coeff>0:
+		var=NormExp([],-1)*NormExp([var],0)
+		exp=NormExp([],-1)*exp
+	else:
+		var=NormExp([var],0)
+
+	value=exp-var
+
+	return ValueStringVisitor().visit(value).value
 #---------------------------------------
 
 #---------- Calculation Phase Functions ----------
@@ -301,16 +325,21 @@ def gen_create_artt(mapir):
 	from iegen.pycloog import codegen
 	from iegen.codegen import Statement,Comment
 
-	iterator_name=mapir.artt.iter_space.sets[0].tuple_set.vars[0]
+	var_in_name=mapir.artt.iter_to_data.relations[0].tuple_in.vars[0].id
+	var_out_name=mapir.artt.iter_to_data.relations[0].tuple_out.vars[0].id
 
 	#Generate the define/undefine statements
 	cloog_stmts=[]
 	define_stmts=[]
 	undefine_stmts=[]
+	print mapir.artt
 	for relation_index in xrange(1,len(mapir.artt.iter_to_data.relations)+1):
 		relation=mapir.artt.iter_to_data.relations[relation_index-1]
 
-		define_stmts.append(Statement('#define S%d ER_in_ordered_insert(%s,Tuple_make(%s),ER_out_given_in(%s, Tuple_make(%s)));'%(relation_index,mapir.artt.name,iterator_name,mapir.artt.name,iterator_name)))
+		#Get the value to insert
+		value=get_equality_value(var_out_name,relation)
+
+		define_stmts.append(Statement('#define S%d ER_in_ordered_insert(%s,Tuple_make(%s),Tuple_make(%s));'%(relation_index,mapir.artt.name,var_in_name,value)))
 
 		cloog_stmts.append(pycloog.Statement(mapir.artt.iter_space))
 		undefine_stmts.append(Statement('#undef S%d'%(relation_index,)))

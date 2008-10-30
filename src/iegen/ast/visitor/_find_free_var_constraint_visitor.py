@@ -10,7 +10,6 @@ from iegen.ast.visitor import DFVisitor
 #-The first element is a VarExp of the free variable (with a coefficient of 1)
 #-The second element is the equality or inequality itself
 #Otherwise, if no constraint was found, 'var_constraint_tuple' will be None
-#The attribute that is used depends on the type of constraint that is being searched for.
 class FindFreeVarConstraintVisitor(DFVisitor):
 
 	def __init__(self,constraint_type):
@@ -59,7 +58,7 @@ class FindFreeVarConstraintVisitor(DFVisitor):
 		self.in_constraint=True
 		self.is_free_var_constraint=False
 	def _outConstraint(self,node):
-		self.in_equality=False
+		self.in_constraint=False
 
 		#If we found that this constraint has a free variable and
 		#we have not already found a constraint, store this one

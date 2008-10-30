@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -443,7 +443,380 @@ class IsVarVisitorTestCase(TestCase):
 		self.failIf(IsVarVisitor('b').visit(relation).is_tuple_var,"'b' is a tuple var in %s"%relation)
 #---------------------------------------
 
-#---------- Find Free Variable Equality Visitor ----------
+#---------- Find Constraint Visitor ----------
+class FindConstraintVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality,Inequality
+
+		set=Set('{[]}')
+		v=FindConstraintVisitor(Equality,'a').visit(set)
+		self.failUnless(hasattr(v,'var_constraints'),"FindConstraintVisitor(Equality,'a') doesn't place result in the 'var_constraints' property.")
+
+		set=Set('{[]}')
+		v=FindConstraintVisitor(Inequality,'a').visit(set)
+		self.failUnless(hasattr(v,'var_constraints'),"FindConstraintVisitor(Inequality,'a') doesn't place result in the 'var_constraints' property.")
+
+	#Tests that the visitor only accepts Equality and Inequality as the constraint type parameter
+	@raises(ValueError)
+	def testConstraintTypeIntFail(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		FindConstraintVisitor(6,'a')
+	@raises(ValueError)
+	def testConstraintTypeStringFail(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		FindConstraintVisitor('fail!','a')
+	@raises(ValueError)
+	def testConstraintTypeConjunctionFail(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen.ast import Conjunction
+		FindConstraintVisitor(Conjunction,'a')
+
+	#Tests that the visitor finds a tuple var equality
+	def testFindTupleVarSetEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a]:a=5}')
+		equalities=FindConstraintVisitor(Equality,'a').visit(set).var_constraints
+
+		eq=Equality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(-1,'a')
+		equalities_res=[(var,eq)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that the visitor finds a free var equality
+	def testFindFreeVarSetEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+
+		equalities=FindConstraintVisitor(Equality,'a').visit(set).var_constraints
+
+		eq=Equality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(-1,'a')
+		equalities_res=[(var,eq)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that the visitor finds a tuple var inequality
+	def testFindTupleVarSetIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a]:a>=5}')
+		inequalities=FindConstraintVisitor(Inequality,'a').visit(set).var_constraints
+
+		ineq=Inequality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(1,'a')
+		inequalities_res=[(var,ineq)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that the visitor finds a free var inequality
+	def testFindFreeVarSetIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[]}')
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+
+		inequalities=FindConstraintVisitor(Inequality,'a').visit(set).var_constraints
+
+		ineq=Inequality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(1,'a')
+		inequalities_res=[(var,ineq)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that the visitor finds a tuple var equality
+	def testFindTupleVarRelationEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Relation
+		from iegen.ast import Equality,NormExp,VarExp
+
+		relation=Relation('{[a]->[b]:a=5}')
+		equalities=FindConstraintVisitor(Equality,'a').visit(relation).var_constraints
+
+		eq=Equality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(-1,'a')
+		equalities_res=[(var,eq)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that the visitor finds a simple equality
+	def testFindFreeVarRelationEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Relation
+		from iegen.ast import Equality,NormExp,VarExp
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+
+		equalities=FindConstraintVisitor(Equality,'a').visit(relation).var_constraints
+
+		eq=Equality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(-1,'a')
+		equalities_res=[(var,eq)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that the visitor finds a tuple var inequality
+	def testFindTupleVarRelationIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Relation
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		relation=Relation('{[a]->[b]:a>=5}')
+		inequalities=FindConstraintVisitor(Inequality,'a').visit(relation).var_constraints
+
+		ineq=Inequality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(1,'a')
+		inequalities_res=[(var,ineq)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that the visitor finds a simple inequality
+	def testFindFreeVarRelationIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Relation
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		relation=Relation('{[]->[]}')
+		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+
+		inequalities=FindConstraintVisitor(Inequality,'a').visit(relation).var_constraints
+
+		ineq=Inequality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(1,'a')
+		inequalities_res=[(var,ineq)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that the visitor finds an equality in a collection of equalities
+	def testFindInCollectionEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a,b,c,d]:a=5 and b=5 and c=5 and d=5}')
+		equalities=FindConstraintVisitor(Equality,'d').visit(set).var_constraints
+
+		eq=Equality(NormExp([VarExp(1,'d')],-5))
+		var=VarExp(-1,'d')
+		equalities_res=[(var,eq)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that the visitor finds an inequality in a collection of inequalities
+	def testFindInCollectionIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a,b,c,d]:a>=5 and b>=5 and c>=5 and d>=5}')
+		inequalities=FindConstraintVisitor(Inequality,'d').visit(set).var_constraints
+
+		ineq=Inequality(NormExp([VarExp(1,'d')],-5))
+		var=VarExp(1,'d')
+		inequalities_res=[(var,ineq)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that the visitor finds an equality in a collection of constraints
+	def testFindInConstraintsEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
+
+		set=Set('{[a,b]:a=5 and b=6 and b>=5}')
+		equalities=FindConstraintVisitor(Equality,'b').visit(set).var_constraints
+
+		eq=Equality(NormExp([VarExp(1,'b')],-6))
+		var=VarExp(-1,'b')
+		equalities_res=[(var,eq)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that the visitor finds an inequality in a collection of constraints
+	def testFindInConstraintsIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
+
+		set=Set('{[a,b]:a>=5 and b=6 and b>=6}')
+		inequalities=FindConstraintVisitor(Inequality,'b').visit(set).var_constraints
+
+		ineq=Inequality(NormExp([VarExp(1,'b')],-6))
+		var=VarExp(1,'b')
+		inequalities_res=[(var,ineq)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that the visitor finds an equality in a collection of constraints with symbolics
+	def testFindInConstraintsWithSymbolicEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
+
+		set=Set('{[a,b]:a=5 and b=6 and b>=5}',[Symbolic('n')])
+		equalities=FindConstraintVisitor(Equality,'b').visit(set).var_constraints
+
+		eq=Equality(NormExp([VarExp(1,'b')],-6))
+		var=VarExp(-1,'b')
+		equalities_res=[(var,eq)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that the visitor finds an inequality in a collection of constraints with symbolics
+	def testFindInConstraintsWithSymbolicIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
+
+		set=Set('{[a,b]:a>=5 and b=6 and b>=6}',[Symbolic('n')])
+		inequalities=FindConstraintVisitor(Inequality,'b').visit(set).var_constraints
+
+		ineq=Inequality(NormExp([VarExp(1,'b')],-6))
+		var=VarExp(1,'b')
+		inequalities_res=[(var,ineq)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that the visitor finds an equality with multiple free variables
+	def testFindMultipleFreeVarEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a,b,c]:a=5 and a=n and b=c+5}',[Symbolic('n')])
+		equalities=FindConstraintVisitor(Equality,'c').visit(set).var_constraints
+
+		eq=Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],-5))
+		var=VarExp(1,'c')
+		equalities_res=[(var,eq)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that the visitor finds an inequality with multiple free variables
+	def testFindMultipleFreeVarIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a,b,c]:a>=5 and a>=n and b>=c+5}',[Symbolic('n')])
+		inequalities=FindConstraintVisitor(Inequality,'b').visit(set).var_constraints
+
+		ineq=Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],-5))
+		var=VarExp(1,'b')
+		inequalities_res=[(var,ineq)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that multiple equalities are found for a variable
+	def testFindMultipleEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a,b]: a=5 and b=6 and a=7}')
+		equalities=FindConstraintVisitor(Equality,'a').visit(set).var_constraints
+
+		eq1=Equality(NormExp([VarExp(-1,'a')],5))
+		eq2=Equality(NormExp([VarExp(-1,'a')],7))
+		var=VarExp(-1,'a')
+		equalities_res=[(var,eq1),(var,eq2)]
+
+		self.failUnless(equalities_res==equalities,'%s!=%s'%(equalities_res,equalities))
+
+	#Tests that multiple inequalities are found for a variable
+	def testFindMultipleIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a,b]: a>=5 and b>=6 and a>=7}')
+		inequalities=FindConstraintVisitor(Inequality,'a').visit(set).var_constraints
+
+		ineq1=Inequality(NormExp([VarExp(1,'a')],-7))
+		ineq2=Inequality(NormExp([VarExp(1,'a')],-5))
+		var=VarExp(1,'a')
+		inequalities_res=[(var,ineq1),(var,ineq2)]
+
+		self.failUnless(inequalities_res==inequalities,'%s!=%s'%(inequalities_res,inequalities))
+
+	#Tests that the visitor does not find a free variable with a non-1 and non--1 coefficient
+	def testNoFindCoefficientEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a,b]: a=5 and 6b=5 and 5b=5}')
+		equalities=FindConstraintVisitor(Equality,'b').visit(set).var_constraints
+		self.failUnless([]==equalities,'%s!=[]'%equalities)
+
+	#Tests that the visitor does not find a free variable with a non-1 and non--1 coefficient
+	def testNoFindCoefficientNeg1Ineq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a,b]: a>=5 and 6b>=5 and 5b>=5}')
+		inequalities=FindConstraintVisitor(Inequality,'b').visit(set).var_constraints
+		self.failUnless([]==inequalities,'%s!=[]'%inequalities)
+
+	#Tests that the visitor does not find an equality with func(a)=exp
+	def testNoFindFuncEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality
+
+		set=Set('{[a,b]:f(b)=5 and a=5}')
+		equalities=FindConstraintVisitor(Equality,'b').visit(set).var_constraints
+		self.failUnless([]==equalities,'%s!=[]'%equalities)
+
+	#Tests that the visitor does not find an inequality with func(a)=exp
+	def testNoFindFuncIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Inequality
+
+		set=Set('{[a,b]:f(b)>=5 and a>=5}')
+		inequalities=FindConstraintVisitor(Inequality,'b').visit(set).var_constraints
+		self.failUnless([]==inequalities,'%s!=[]'%inequalities)
+
+	#Tests that the visitor does not find an equality with func1(func2(a))=exp
+	def testNoFindNestedFuncEq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Equality
+
+		set=Set('{[a,b]:f(g(b))=5 and a=5}')
+		equalities=FindConstraintVisitor(Equality,'b').visit(set).var_constraints
+		self.failUnless([]==equalities,'%s!=[]'%equalities)
+
+	#Tests that the visitor does not find an inequality with func1(func2(a))=exp
+	def testNoFindNestedFuncIneq(self):
+		from iegen.ast.visitor import FindConstraintVisitor
+		from iegen import Set
+		from iegen.ast import Inequality
+
+		set=Set('{[a,b]:f(g(b))>=5 and a=5}')
+		inequalities=FindConstraintVisitor(Inequality,'b').visit(set).var_constraints
+		self.failUnless([]==inequalities,'%s!=[]'%inequalities)
+#---------------------------------------------------------
+
+#---------- Find Free Variable Constraint Visitor ----------
 class FindFreeVarConstraintVisitorTestCase(TestCase):
 
 	#Make sure the result of the visiting is placed in the proper attribute
@@ -836,7 +1209,6 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
 		self.failUnless(None is inequality_tuple,'%s is not None'%inequality_tuple)
-
 
 	#Tests that the visitor does not find any equalities involving only symbolics
 	def testNoFind2Eq(self):
@@ -2042,3 +2414,177 @@ class CollectBoundsVisitorTestCase(TestCase):
 
 		self.failUnless(bounds_res==bounds,'Incorrect bounds: %s!=%s'%(bounds_res,bounds))
 #--------------------------------------------
+
+#---------- Value String Visitor ----------
+class FindFreeVarConstraintVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp
+
+		exp=NormExp([],0)
+		v=ValueStringVisitor().visit(exp)
+		self.failUnless(hasattr(v,'value'),"ValueStringVisitor doesn't place result in the 'value' property.")
+
+	#Tests that the visitor accepts NormExp, VarExp, and FuncExp for visiting
+	def testVisitingAccept(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,VarExp,FuncExp
+
+		ne=NormExp([],0)
+		ve=VarExp(0,'a')
+		fe=FuncExp(0,'f',[])
+
+		ValueStringVisitor().visit(ne)
+		ValueStringVisitor().visit(ve)
+		ValueStringVisitor().visit(fe)
+
+	#Tests that other types of nodes are not accepted for visiting
+	@raises(ValueError)
+	def testVisitingRejectSet(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen import Set
+		ValueStringVisitor().visit(Set('{[]}'))
+	@raises(ValueError)
+	def testVisitingRejectRelation(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen import Relation
+		ValueStringVisitor().visit(Relation('{[]->[]}'))
+	@raises(ValueError)
+	def testVisitingRejectPresSet(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import PresSet,VarTuple,Conjunction
+		ValueStringVisitor().visit(PresSet(VarTuple([]),Conjunction([]),[]))
+	@raises(ValueError)
+	def testVisitingRejectPresRelation(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction
+		ValueStringVisitor().visit(PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[]))
+
+	#Tests that the proper string is returned for a single variable
+	def testVisitVarExp(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import VarExp
+
+		value=ValueStringVisitor().visit(VarExp(3,'a')).value
+		value_res='3a'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with a constant
+	def testVisitNormExpConstant(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([],-5)).value
+		value_res='-5'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with one variable
+	def testVisitNormExpOneVar(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([VarExp(3,'a')],0)).value
+		value_res='3a'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with one variable and a constant
+	def testVisitNormExpOneVarConstant(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([VarExp(3,'a')],7)).value
+		value_res='3a+7'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with two variables
+	def testVisitNormExpTwoVars(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([VarExp(3,'a'),VarExp(5,'b')],0)).value
+		value_res='3a+5b'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with two variables and a constant
+	def testVisitNormExpTwoVarsConstant(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([VarExp(3,'a'),VarExp(5,'b')],9)).value
+		value_res='3a+5b+9'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with three variables
+	def testVisitNormExpThreeVars(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([VarExp(3,'a'),VarExp(5,'b'),VarExp(7,'c')],0)).value
+		value_res='3a+5b+7c'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with three variables and a constant
+	def testVisitNormExpThreeVarsConstant(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([VarExp(3,'a'),VarExp(5,'b'),VarExp(7,'c')],11)).value
+		value_res='3a+5b+7c+11'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for single function
+	def testVisitFuncExp(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value=ValueStringVisitor().visit(FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])).value
+		value_res='ER_out_given_in(f_ER,3a)'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with one function
+	def testVisitNormExpOneFunc(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],0)).value
+		value_res='ER_out_given_in(f_ER,3a)'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with one function and a constant
+	def testVisitNormExpOneFuncConstant(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],5)).value
+		value_res='ER_out_given_in(f_ER,3a)+5'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with one function (with a constant term in its arguments) and a constant
+	def testVisitNormExpOneFuncConstArgConstant(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)])],5)).value
+		value_res='ER_out_given_in(f_ER,3a+2)+5'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with two function (with constant terms in their arguments) and a constant
+	def testVisitNormExpTwoFuncConstArgConstant(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
+		value_res='ER_out_given_in(f_ER,3a+2)+ER_out_given_in(g_ER,4b+3)+5'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with mutiple terms
+	def testVisitNormExpTerms(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value=ValueStringVisitor().visit(NormExp([VarExp(9,'c'),FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
+		value_res='9c+ER_out_given_in(f_ER,3a+2)+ER_out_given_in(g_ER,4b+3)+5'
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+#------------------------------------------
