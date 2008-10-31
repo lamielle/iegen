@@ -181,8 +181,10 @@ def gen_tuple_vars_decl(set):
 	return [var_decl]
 
 def gen_preamble():
-	from iegen.codegen import Statement
+	from iegen.codegen import Statement,Comment
 	stmts=[]
+	stmts.append(Comment('To compile, run the following command from the root of the iegen source tree:'))
+	stmts.append(Comment('g++ test.c -g src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/util.c src/dev/IAG_cpack.c -o test -I./src/dev'))
 	stmts.append(Statement('#include "ExplicitRelation.h"'))
 	stmts.append(Statement('#include "IAG.h"'))
 	stmts.append(Statement('#include "util.h"'))
