@@ -59,12 +59,12 @@ inter2=IndexArray(data_space=INTER2_0,
 moldyn_spec.add_index_array(inter2)
 
 #Define the statements for the computation
-S1=Statement(statement='`a1 += `a2 - `a3;',
+S1=Statement(statement='fx[%(a1)s] += x[%(a2)s] - x[%(a3)s];',
              iter_space=Set('{[ii] : 0 <= ii && ii <= (n_inter-1) }',syms),
              scatter=Relation('{[ii] -> [ii,j] : j=1}',syms))
 moldyn_spec.add_statement(S1)
 
-S2=Statement(statement='`a4 += `a5 - `a6;',
+S2=Statement(statement='fx[%(a4)s] += x[%(a5)s] - x[%(a6)s];',
              iter_space=Set('{[ii] : 0 <= ii && ii <= (n_inter-1) }',syms),
              scatter=Relation('{[ii] -> [ii,j] : j=2}',syms))
 moldyn_spec.add_statement(S2)

@@ -3,7 +3,7 @@ def get_bound_string(bounds,func):
 	from cStringIO import StringIO
 
 	bound_string=StringIO()
-	for i in range(len(bounds)):
+	for i in xrange(len(bounds)):
 		if len(bounds)-1==i:
 			bound_string.write('%s'+')'*(len(bounds)-1))
 		else:
@@ -106,7 +106,7 @@ def calc_sigma(mapir,data_reordering):
 
 	#Hard coded to return an IAG_Permute, however, other IAGs will be possible later (IAG_Group,IAG_Part,IAG_Wavefront)
 	syms=mapir.symbolics()
-	data_space=DataSpace(name='sigma',
+	data_space=DataSpace(name='sigma_ER',
 	                     #TODO: FIX this so 'x' is not hardcoded
 	                     set=deepcopy(mapir.data_spaces['x'].set),
 	                     is_index_array=True)
@@ -157,7 +157,7 @@ def calc_update_scattering_functions(mapir,data_reordering):
 
 def calc_update_access_relations(mapir,data_reordering):
 	for statement in mapir.statements:
-		for i in range(len(statement.access_relations)):
+		for i in xrange(len(statement.access_relations)):
 			statement.access_relations[i].iter_to_data=data_reordering.data_reordering.compose(statement.access_relations[i].iter_to_data)
 #-------------------------------------------------
 
@@ -240,6 +240,16 @@ def gen_destroy_index_array_wrappers(mapir):
 	stmts.append(Comment('Destroy the index array wrappers'))
 	for index_array in mapir.index_arrays:
 		stmts.append(Statement('ER_dtor(&%s_ER);'%(index_array.data_space.name)))
+
+	return stmts
+
+def gen_declare_sigma_er():
+	from iegen.codegen import Comment,VarDecl
+
+	#Declare a sigma_ER variable
+	stmts=[]
+	stmts.append(Comment('Declare sigma_ER'))
+	stmts.append(VarDecl('ExplicitRelation',['*sigma_ER'],['*sigma']))
 
 	return stmts
 
@@ -380,9 +390,9 @@ def gen_create_sigma(mapir):
 		stmts.append(Statement('RD_set_lb(in_domain,0,%s);'%get_lower_bound_string(iag.input_bounds.lower_bound(var.id))))
 		stmts.append(Statement('RD_set_ub(in_domain,0,%s);'%get_upper_bound_string(iag.input_bounds.upper_bound(var.id))))
 
-	stmts.append(Statement('(*%s)=ER_ctor(%d,%d,in_domain,%s);'%(iag.data_space.name,iag.input_bounds.arity(),iag.output_bounds.arity(),str(iag.is_permutation).lower())))
+	stmts.append(Statement('%s=ER_ctor(%d,%d,in_domain,%s);'%(iag.data_space.name,iag.input_bounds.arity(),iag.output_bounds.arity(),str(iag.is_permutation).lower())))
 
-	stmts.append(Statement('%s(%s,*%s);'%(mapir.sigma.name,mapir.sigma.input.name,iag.data_space.name)))
+	stmts.append(Statement('%s(%s,%s);'%(mapir.sigma.name,mapir.sigma.input.name,iag.data_space.name)))
 
 	return stmts
 
@@ -394,7 +404,7 @@ def gen_reorder_data(mapir,data_reordering):
 	stmts.append(Comment('Reorder the data arrays'))
 
 	for data_space in data_reordering.data_spaces:
-		stmts.append(Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,*%s);'%(data_space.name,get_size_string(data_space.set,data_space.set.sets[0].tuple_set.vars[0].id),mapir.sigma.result.data_space.name)))
+		stmts.append(Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,%s);'%(data_space.name,get_size_string(data_space.set,data_space.set.sets[0].tuple_set.vars[0].id),mapir.sigma.result.data_space.name)))
 
 	return stmts
 
@@ -408,6 +418,10 @@ def gen_inspector(mapir,data_reordering):
 	inspector.body.extend(gen_declare_index_array_wrappers(mapir))
 	inspector.newline()
 	inspector.body.extend(gen_create_index_array_wrappers(mapir))
+	inspector.newline()
+
+	#Create a sigma_ER variable
+	inspector.body.extend(gen_declare_sigma_er())
 	inspector.newline()
 
 	#Step 1a) generate code that creates an explicit representation of the access relation artt at runtime
@@ -427,6 +441,46 @@ def gen_inspector(mapir,data_reordering):
 
 	return inspector
 
+#Generates the executor main loop statements
+def gen_executor_loop_stmts(mapir):
+	from iegen.codegen import Statement,Comment
+
+	stmts=[]
+	stmts.append(Comment('Define the executor main loop body statments'))
+	for i in xrange(len(mapir.statements)):
+		statement=mapir.statements[i]
+		stmts.append(Comment('%s'%(statement.statement)))
+		ar_dict={}
+		for access_relation in statement.access_relations:
+			stmts.append(Comment('%s: %s'%(access_relation.name,access_relation.iter_to_data)))
+			ar_dict[access_relation.name]=get_equality_value(access_relation.iter_to_data.relations[0].tuple_out.vars[0].id,access_relation.iter_to_data)
+
+		stmt_string='#define S%d %s'%(i+1,statement.statement)
+		stmts.append(Statement(stmt_string%ar_dict))
+
+	return stmts
+
+#Generates the executor main loop
+def gen_executor_loop(mapir):
+	from iegen.codegen import Statement,Comment
+	import iegen.pycloog as pycloog
+	from iegen.pycloog import codegen
+
+	stmts=[]
+	stmts.append(Comment('The executor main loop'))
+
+	#Assumes that all statements have the same iterator variables
+	stmts.extend(gen_tuple_vars_decl(mapir.statements[0].iter_space));
+
+	cloog_stmts=[]
+	for statement in mapir.statements:
+		cloog_stmts.append(pycloog.Statement(statement.iter_space))
+	cloog_stmts=codegen(cloog_stmts).split('\n')
+	for cloog_stmt in cloog_stmts:
+		stmts.append(Statement(cloog_stmt))
+
+	return stmts
+
 #Generates code for the executor
 def gen_executor(mapir):
 	from iegen.codegen import Function
@@ -437,6 +491,18 @@ def gen_executor(mapir):
 	executor.body.extend(gen_declare_index_array_wrappers(mapir))
 	executor.newline()
 	executor.body.extend(gen_create_index_array_wrappers(mapir))
+	executor.newline()
+
+	#Create a sigma_ER variable
+	executor.body.extend(gen_declare_sigma_er())
+	executor.newline()
+
+	#Generate the loop statement definitions
+	executor.body.extend(gen_executor_loop_stmts(mapir))
+	executor.newline()
+
+	#Generate the loop body using CLooG
+	executor.body.extend(gen_executor_loop(mapir))
 	executor.newline()
 
 	#Destroy the index array wrappers

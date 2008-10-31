@@ -150,7 +150,7 @@ class DFVisitor(object):
 
 	def visitNormExp(self,node):
 		self.inNormExp(node)
-		for i in range(len(node.terms)):
+		for i in xrange(len(node.terms)):
 			term=node.terms[i]
 			term.apply_visitor(self)
 			if i<len(node.terms)-1: self.betweenNormExp(node)

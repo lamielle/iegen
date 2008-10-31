@@ -33,7 +33,7 @@ class CPrintVisitor(DFVisitor):
 		decl+=('%s,'*(len(node.var_names)-len(node.values)))
 		decl=decl[:-1]+';'
 		strings=(self.indent,node.type)
-		var_vals=[(node.var_names[i],node.values[i]) for i in range(len(node.values))]
+		var_vals=[(node.var_names[i],node.values[i]) for i in xrange(len(node.values))]
 		for var_name,value in var_vals:
 			strings+=(var_name,value)
 		for var_name in node.var_names[len(node.values):]:
