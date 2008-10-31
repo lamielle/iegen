@@ -108,7 +108,7 @@ typedef struct {
                                     
     RectDomain* out_range;  //! Range for the output tuples.                                 
     
-	//----- relation representation ---------------------------------------
+    //----- relation representation ---------------------------------------
     // WARNING: Do not access these fields directly, use interface.
     
     
@@ -139,9 +139,9 @@ typedef struct {
     //bool    ordered_by_in_out;
     
     //----- memory management -----------------------------------------
-	// Need to keep track of the number of entries in each of the current
-	// array allocations.
-	// Needed because size of hypergraph is not known apriori.
+    // Need to keep track of the number of entries in each of the current
+    // array allocations.
+    // Needed because size of hypergraph is not known apriori.
     int     in_vals_size;     // number of entries in current allocation
     int     out_index_size;   // number of entries in current allocation
     int     out_vals_size;    // number of entries in current allocation

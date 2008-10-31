@@ -343,6 +343,47 @@ int main()
     ER_dtor(&sigma);
 
 
+    //======= test creation and use of ER for access relation
+    // Recreating and then fixing BUG Alan found where 
+    // ER_in_ordered_insert doesn't work when the in_domain is not
+    // specified.
+    printf("==== test creation and use of ER when in_domain not specified\n");
+
+    // Notice also that this is a 1Dto1D relation example.
+    relptr = ER_ctor(1,1);
+
+    // add only some out vals for each in val
+    count = 0;
+    for (in=0; in<NUM_IN; in++) {
+      for (out=(in)%NUM_OUT; out<NUM_OUT; out+=2) {
+            ER_in_ordered_insert( relptr, in, out );
+            count++;
+        }
+    }
+    
+    ER_dump(relptr);
+    
+    // Iterate over the integer tuple relations
+    printf("\nTraversing 1Dto1D relation in order of input tuples\n");
+    ER_order_by_in(relptr);
+    test_in=0;
+    test_count=0;
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        test_out=test_in % NUM_OUT;
+        FOREACH_out_given_in_1d1d(relptr, in, out) {
+            printf("\t[%d] -> [%d]\n", in, out);
+            assert( (in==test_in) && (out==test_out));
+            test_out+=2;
+            test_count++;
+        }
+        test_in++;
+    }
+    assert(count==test_count);
+
+    ER_dtor(&relptr);
+
+
+
     // ok now do somewhat of a stress test of the memory management
     /* MMS, this takes a long time so only do it when MEM_ALLOC_INCREMENT
      * is set low

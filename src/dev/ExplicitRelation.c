@@ -752,19 +752,50 @@ void ER_in_ordered_insert(ExplicitRelation* self,
         // tuple value in in_vals and see if this tuple
         // is lexicographically greater than or equal
         } else {
-            // previous Tuple
-            Tuple prev;
-            prev.arity = self->in_arity;
-            prev.valptr = &(self->in_vals[self->unique_in_count]);
+
+            // if there is a previous tuple then check if the current
+            // tuple is lexicographically greater and therefore
+            // means we need to insert a new input tuple.
+            bool insert_flag = false;
+            if (self->unique_in_count > 0) {
+                // previous Tuple
+                Tuple prev;
+                prev.arity = self->in_arity;
+                assert(self->in_vals != NULL);
+                prev.valptr = 
+                  &(self->in_vals[(self->unique_in_count-1)*self->in_arity]);
             
-            // make sure the in_tuple is the same or ordered after
-            // previous tuple
-            assert( Tuple_compare(prev, in_tuple) >= 0 );
+                // make sure the in_tuple is the same or ordered after
+                // previous tuple
+                assert( Tuple_compare(prev, in_tuple) <= 0 );
+        
+                // if have a new unique in_tuple then increment unique count
+                // and indicate need to store in_tuple into in_vals
+                if (Tuple_compare(prev,in_tuple) == -1) {
+                    insert_flag = true;
+                }
+                
+            // otherwise this is the first input tuple and
+            // we definitely need to do an insert
+            } else {
+                insert_flag = true;
+            }            
         
             // if have a new unique in_tuple then increment unique count
             // and store in_tuple into in_vals
-            if (Tuple_compare(prev,in_tuple) == 1) {
+            if (insert_flag) {
                 self->unique_in_count ++;
+                
+                // check that in_vals is big enough
+                // For each input tuple need space for all elements
+                // of the tuple.
+                if ( self->unique_in_count*self->in_arity 
+                     >= self->in_vals_size ) 
+                {
+                    expand_array( &(self->in_vals), &(self->in_vals_size) );
+                }
+                
+                // insert all elements in the tuple
                 for (k=0; k<self->in_arity; k++) {
                     int i = (self->unique_in_count - 1) * self->in_arity + k;
                     self->in_vals[ i ] = Tuple_val(in_tuple,k);
@@ -1024,9 +1055,10 @@ void ER_dump( ExplicitRelation* self )
 */
 
     // rest of the raw data
-    // FIXME: not keeping track of in_vals yet
-    //printf("in_vals = "); 
-    //printArray(self->in_vals, self->in_vals_size);
+    if (self->in_vals != NULL) {     
+        printf("in_vals = "); 
+        printArray(self->in_vals, self->in_vals_size);
+    }
     printf("\nout_index = "); 
     printArray(self->out_index, self->out_index_size);
     printf("\nout_vals = ");
