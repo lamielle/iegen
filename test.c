@@ -19,9 +19,14 @@ void inspector(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,Ex
   /* Declare sigma_ER */
   ExplicitRelation *sigma_ER=*sigma;
 
+  /* RectDomain for set {[k]: -1k+N+-1>=0 and k>=0 | N} */
+  RectDomain *in_domain_A_I_sub_to_x=RD_ctor(1);
+  RD_set_lb(in_domain_A_I_sub_to_x,0,0);
+  RD_set_ub(in_domain_A_I_sub_to_x,0,N+-1);
+
   /* Creation of ExplicitRelation of the ARTT */
   /* {[ii]->[k]: k+-1inter1(ii)=0} union {[ii]->[k]: k+-1inter2(ii)=0} */
-  ExplicitRelation* A_I_sub_to_x = ER_ctor(1,1);
+  ExplicitRelation* A_I_sub_to_x = ER_ctor(1,1,in_domain_A_I_sub_to_x,false);
 
   /* Define loop body statements */
   #define S1 ER_in_ordered_insert(A_I_sub_to_x,Tuple_make(ii),Tuple_make(ER_out_given_in(inter1_ER,ii)));
@@ -37,11 +42,14 @@ void inspector(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,Ex
   #undef S1
   #undef S2
 
+  /* RectDomain for set {[k]: -1k+N+-1>=0 and k>=0 | N} */
+  RectDomain *in_domain_sigma_ER=RD_ctor(1);
+  RD_set_lb(in_domain_sigma_ER,0,0);
+  RD_set_ub(in_domain_sigma_ER,0,N+-1);
+
   /* Create sigma */
-  RectDomain *in_domain=RD_ctor(1);
-  RD_set_lb(in_domain,0,0);
-  RD_set_ub(in_domain,0,N+-1);
-  sigma_ER=ER_ctor(1,1,in_domain,true);
+  *sigma=ER_ctor(1,1,in_domain_sigma_ER,true);
+  sigma_ER=*sigma;
   IAG_cpack(A_I_sub_to_x,sigma_ER);
 
   /* Reorder the data arrays */
@@ -118,6 +126,15 @@ int main()
 
   /* Call the executor */
   executor(fx,x,inter1,inter2,n_inter,N,&delta,&sigma);
+
+  /* Debug printing of the data arrays */
+  for(int i=0;i<10;i++)
+  {
+    printf("inter1[%d]=%d\n",i,inter1[1]);
+    printf("inter2[%d]=%d\n",i,inter1[1]);
+    printf("x[%d]=%d\n",i,inter1[1]);
+    printf("fx[%d]=%d\n",i,inter1[1]);
+  }
 
   /* Free the data space memory */
   free(fx);

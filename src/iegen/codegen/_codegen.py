@@ -322,6 +322,18 @@ def gen_main_driver(mapir):
 	main.body.append(Statement('executor(%s);'%(get_ie_arg_names_string(mapir))))
 	main.newline()
 
+	#Debug printing of the data spaces
+	main.body.append(Comment('Debug printing of the data arrays'))
+	main.body.append(Statement('for(int i=0;i<10;i++)'))
+	main.body.append(Statement('{'))
+	main.body.append(Statement('  printf("inter1[%d]=%d\\n",i,inter1[1]);'))
+	main.body.append(Statement('  printf("inter2[%d]=%d\\n",i,inter1[1]);'))
+	main.body.append(Statement('  printf("x[%d]=%d\\n",i,inter1[1]);'))
+	main.body.append(Statement('  printf("fx[%d]=%d\\n",i,inter1[1]);'))
+
+	main.body.append(Statement('}'))
+	main.body.append(Statement(''))
+
 	#Free the data space memory
 	main.body.append(Comment('Free the data space memory'))
 	for data_space in mapir.pure_data_spaces():
@@ -338,8 +350,21 @@ def gen_main_driver(mapir):
 
 	return main
 
+def gen_rect_domain(name,set):
+	from iegen.codegen import Statement,Comment
+
+	stmts=[]
+	stmts.append(Comment('RectDomain for set %s'%(set)))
+
+	stmts.append(Statement('RectDomain *%s=RD_ctor(%d);'%(name,set.arity())))
+
+	for var in set.sets[0].tuple_set.vars:
+		stmts.append(Statement('RD_set_lb(%s,0,%s);'%(name,get_lower_bound_string(set.lower_bound(var.id)))))
+		stmts.append(Statement('RD_set_ub(%s,0,%s);'%(name,get_upper_bound_string(set.upper_bound(var.id)))))
+
+	return stmts
+
 def gen_create_artt(mapir):
-	from cStringIO import StringIO
 	import iegen.pycloog as pycloog
 	from iegen.pycloog import codegen
 	from iegen.codegen import Statement,Comment
@@ -364,9 +389,12 @@ def gen_create_artt(mapir):
 
 	#Generate the whole set of statements
 	stmts=[]
+	in_domain_name='in_domain_%s'%(mapir.artt.name)
+	stmts.extend(gen_rect_domain(in_domain_name,mapir.artt.data_space.set))
+	stmts.append(Statement())
 	stmts.append(Comment('Creation of ExplicitRelation of the ARTT'))
 	stmts.append(Comment(str(mapir.artt.iter_to_data)))
-	stmts.append(Statement('ExplicitRelation* %s = ER_ctor(%d,%d);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out())))
+	stmts.append(Statement('ExplicitRelation* %s = ER_ctor(%d,%d,%s,false);'%(mapir.artt.name,mapir.artt.iter_to_data.arity_in(),mapir.artt.iter_to_data.arity_out(),in_domain_name)))
 	stmts.append(Statement())
 	stmts.append(Comment('Define loop body statements'))
 	stmts.extend(define_stmts)
@@ -385,14 +413,15 @@ def gen_create_sigma(mapir):
 	iag=mapir.sigma.result
 
 	stmts=[]
+
+	#Create a rect domain for sigma
+	in_domain_name='in_domain_%s'%(iag.data_space.name)
+	stmts.extend(gen_rect_domain(in_domain_name,iag.input_bounds))
+	stmts.append(Statement())
+
 	stmts.append(Comment('Create sigma'))
-	stmts.append(Statement('RectDomain *in_domain=RD_ctor(%d);'%(iag.input_bounds.arity())))
-
-	for var in iag.input_bounds.sets[0].tuple_set.vars:
-		stmts.append(Statement('RD_set_lb(in_domain,0,%s);'%get_lower_bound_string(iag.input_bounds.lower_bound(var.id))))
-		stmts.append(Statement('RD_set_ub(in_domain,0,%s);'%get_upper_bound_string(iag.input_bounds.upper_bound(var.id))))
-
-	stmts.append(Statement('%s=ER_ctor(%d,%d,in_domain,%s);'%(iag.data_space.name,iag.input_bounds.arity(),iag.output_bounds.arity(),str(iag.is_permutation).lower())))
+	stmts.append(Statement('*sigma=ER_ctor(%d,%d,%s,%s);'%(iag.input_bounds.arity(),iag.output_bounds.arity(),in_domain_name,str(iag.is_permutation).lower())))
+	stmts.append(Statement('%s=*sigma;'%(iag.data_space.name)))
 
 	stmts.append(Statement('%s(%s,%s);'%(mapir.sigma.name,mapir.sigma.input.name,iag.data_space.name)))
 
