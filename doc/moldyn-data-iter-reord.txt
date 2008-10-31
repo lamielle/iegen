@@ -91,7 +91,7 @@ Composition and choice of RTRTs
             data_spaces = [ X_0, FX_0 ]
             iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
             target_data_space = X_0
-            iag_func_name = IAG_cpack
+            iag_func_name = "IAG_cpack"
             // Assumptions:
             //  - Assuming that reordering algorithm (e.g. IAG_cpack)
             //    is using access relation from restricted iteration space
@@ -103,12 +103,17 @@ Composition and choice of RTRTs
     iteration reordering
         IterPermuteRTRT
             iter_reordering = { [ i,x ] -> [ k,x ] : k = delta( i ) }
-            iteration_space = I_0
-            access_relation = A_I_0_to_X_1
             iter_sub_space_relation = { [ ii, j ] -> [ ii ] }
-            iag_func_name = IAG_lexmin
-            iag_type = IAG_Permute
+            target_data_space = X_0
+            iag_func_name = "IAG_lexmin"
 
+            // Assumptions:
+            //  - What if we assume that we are applying this to the whole
+            //  iteration space?
+            // - Assuming that reordering algorithm (e.g. IAG_lexmin)
+            //    is using access relation from restricted iteration space
+            //    to target data space as input.
+            
 -------------------------------------------------------------
 Automatically Generating Straight-Forward Inspector/Executor:
 -This is done in two phases:
