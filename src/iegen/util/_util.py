@@ -108,6 +108,27 @@ def raise_objs_not_like_types(objs,types,message=''):
 class DimensionalityError(Exception):
 	pass
 
+#Given a Set or Relation, renames all tuple variables in the
+#PresSets/PresRelations in the union to have the same names
+#The first PresSet/PresRelation in the union is what the other
+#tuple variables are renamed to
+def normalize_names(obj):
+	from iegen.ast.visitor import RenameVisitor
+	from iegen import Formula
+
+	#Do the normalization only if we are given a Set or Relation
+	if like_type(obj,Formula):
+		formula=obj
+		for i in xrange(len(formula.formulas)):
+			form=formula.formulas[i]
+			if 0==i:
+				base_form=form
+			else:
+				#Rename vars to something 'unique'
+				RenameVisitor(formula._get_prefix_rename_dict(form,'f%d'%i)).visit(form)
+				#Rename to target names
+				RenameVisitor(formula._get_formula_rename_dict(form,base_form)).visit(form)
+
 #---------- Decorators ----------
 from iegen.lib.decorator import decorator
 
@@ -127,20 +148,22 @@ def run_simplify(obj):
 	simplify(obj)
 
 #Decorator that normalizes the first implicit 'self' argument of the decorated function
-#Normalization is sorting -> simplification -> sorting
+#Normalization is renaming -> sorting -> simplification -> sorting
 @decorator
 def normalize_self(func,*args,**kw):
 	result=func(*args,**kw)
+	normalize_names(args[0])
 	sort_visit(args[0])
 	run_simplify(args[0])
 	sort_visit(args[0])
 	return result
 
 #Decorator that normalizes the result of the decorated function
-#Normalization is sorting -> simplification -> sorting
+#Normalization is renaming -> sorting -> simplification -> sorting
 @decorator
 def normalize_result(func,*args,**kw):
 	result=func(*args,**kw)
+	normalize_names(result)
 	sort_visit(result)
 	run_simplify(result)
 	sort_visit(result)

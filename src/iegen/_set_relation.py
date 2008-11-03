@@ -9,6 +9,7 @@ from iegen.util import normalize_self,normalize_result,check,like_type,raise_obj
 #---------- Formula class ----------
 #Parent class for Sets and Relations
 class Formula(Node):
+	__slots__=('formulas',)
 
 	def __str__(self,formulas):
 		s=StringIO()
@@ -33,10 +34,10 @@ class Formula(Node):
 		form2=deepcopy(form2)
 
 		#Create dictionaries for renaming the tuple variables
-		form1_rename=self._get_rename_dict(form1,'form1')
-		form1_unrename=self._get_unrename_dict(form1,'form1')
-		form2_rename=self._get_rename_dict(form2,'form2')
-		form2_unrename=self._get_unrename_dict(form2,'form2')
+		form1_rename=self._get_prefix_rename_dict(form1,'form1')
+		form1_unrename=self._get_prefix_unrename_dict(form1,'form1')
+		form2_rename=self._get_prefix_rename_dict(form2,'form2')
+		form2_unrename=self._get_prefix_unrename_dict(form2,'form2')
 
 		#Rename the tuple varibles in form1 and form2
 		RenameVisitor(form1_rename).visit(form1)
@@ -60,10 +61,10 @@ class Formula(Node):
 			#Create a constraint where these variables are equal
 			constraint=Equality(NormExp([var1,var2],0))
 
-			#Add the new constraint to the new relation
+			#Add the new constraint to the new formula
 			new_form.conjunct.constraint_list.append(constraint)
 
-		#Add the constraints of both relations to the new relation
+		#Add the constraints of both formulas to the new formula
 		for constraint in form1.conjunct.constraint_list+form2.conjunct.constraint_list:
 			new_form.conjunct.constraint_list.append(deepcopy(constraint))
 
@@ -73,8 +74,9 @@ class Formula(Node):
 
 		return new_form
 
-	#Creates a dictionary for renaming variables in a relation
-	def _get_rename_dict(self,formula,prefix):
+	#Creates a dictionary for renaming variables in a formula
+	#The new names are prefixed with the given prefix
+	def _get_prefix_rename_dict(self,formula,prefix):
 		from iegen.ast import PresSet,PresRelation
 
 		rename={}
@@ -93,10 +95,42 @@ class Formula(Node):
 
 		return rename
 
-	#Returns a dictionary that is the inverse of that returned by _get_rename_dict
-	def _get_unrename_dict(self,relation,prefix):
+	#Returns a dictionary that is the inverse of that returned by _get_prefix_rename_dict
+	def _get_prefix_unrename_dict(self,formula,prefix):
 		from iegen.util import invert_dict
-		return invert_dict(self._get_rename_dict(relation,prefix))
+		return invert_dict(self._get_prefix_rename_dict(formula,prefix))
+
+	#Creates a dictionary for renaming variables in a formula
+	#The formula's names are renamed to the corresponding variables
+	#in other_formula
+	def _get_formula_rename_dict(self,formula,other_formula):
+		from iegen.ast import PresSet,PresRelation
+
+		rename={}
+
+		#Make sure we are given a PresSet or a PresRelation
+		raise_objs_not_like_types(formula,[PresSet,PresRelation])
+
+		#Make sure the two sets have the same arity
+		if formula.arity()!=other_formula.arity():
+			raise ValueError('The given formulas differ in arity')
+
+		if like_type(formula,PresSet):
+			from_vars=formula.tuple_set.vars
+			to_vars=other_formula.tuple_set.vars
+			for i in xrange(len(from_vars)):
+				rename[from_vars[i].id]=to_vars[i].id
+		else:
+			from_vars=formula.tuple_in.vars
+			to_vars=other_formula.tuple_in.vars
+			for i in xrange(len(from_vars)):
+				rename[from_vars[i].id]=to_vars[i].id
+			from_vars=formula.tuple_out.vars
+			to_vars=other_formula.tuple_out.vars
+			for i in xrange(len(from_vars)):
+				rename[from_vars[i].id]=to_vars[i].id
+
+		return rename
 #-----------------------------------
 
 
@@ -132,6 +166,11 @@ class Set(Formula):
 
 	def __str__(self):
 		return Formula.__str__(self,self.sets)
+
+	#Sets property wrapper for the formulas collection
+	def get_sets(self): return self.formulas
+	def set_sets(self,sets): self.formulas=sets
+	sets=property(get_sets,set_sets)
 
 	#Comparison operator
 	def __cmp__(self,other):
@@ -312,6 +351,11 @@ class Relation(Formula):
 
 	def __str__(self):
 		return Formula.__str__(self,self.relations)
+
+	#Relations property wrapper for the formulas collection
+	def get_relations(self): return self.formulas
+	def set_relations(self,relations): self.formulas=relations
+	relations=property(get_relations,set_relations)
 
 	#Comparison operator
 	def __cmp__(self,other):

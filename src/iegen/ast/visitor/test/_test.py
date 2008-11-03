@@ -2107,7 +2107,7 @@ class RemoveDuplicateFormulasVisitorTestCase(TestCase):
 		from iegen.parser import PresParser
 
 		set=Set('{[a]:a=5}')
-		set.sets.append(PresParser.parse_set('{[b]:b=6}'))
+		set.sets.append(PresParser.parse_set('{[a]:a=6}'))
 		removed_formula=RemoveDuplicateFormulasVisitor().visit(set).removed_formula
 
 		set_res=Set('{[a]:a=5}').union(Set('{[b]:b=6}'))
@@ -2123,8 +2123,8 @@ class RemoveDuplicateFormulasVisitorTestCase(TestCase):
 
 		set=Set('{[a]:a=5}')
 		set.sets.append(PresParser.parse_set('{[a]:a=5}'))
-		set.sets.append(PresParser.parse_set('{[b]:b=6}'))
-		set.sets.append(PresParser.parse_set('{[b]:b=6}'))
+		set.sets.append(PresParser.parse_set('{[a]:a=6}'))
+		set.sets.append(PresParser.parse_set('{[a]:a=6}'))
 		removed_formula=RemoveDuplicateFormulasVisitor().visit(set).removed_formula
 
 		set_res=Set('{[a]:a=5}').union(Set('{[b]:b=6}'))
@@ -2139,7 +2139,7 @@ class RemoveDuplicateFormulasVisitorTestCase(TestCase):
 		from iegen.parser import PresParser
 
 		relation=Relation('{[a]->[ap]:a=5}')
-		relation.relations.append(PresParser.parse_relation('{[b]->[bp]:b=6}'))
+		relation.relations.append(PresParser.parse_relation('{[a]->[ap]:a=6}'))
 		removed_formula=RemoveDuplicateFormulasVisitor().visit(relation).removed_formula
 
 		relation_res=Relation('{[a]->[ap]:a=5}').union(Relation('{[b]->[bp]:b=6}'))
@@ -2155,8 +2155,8 @@ class RemoveDuplicateFormulasVisitorTestCase(TestCase):
 
 		relation=Relation('{[a]->[ap]:a=5}')
 		relation.relations.append(PresParser.parse_relation('{[a]->[ap]:a=5}'))
-		relation.relations.append(PresParser.parse_relation('{[b]->[bp]:b=6}'))
-		relation.relations.append(PresParser.parse_relation('{[b]->[bp]:b=6}'))
+		relation.relations.append(PresParser.parse_relation('{[a]->[ap]:a=6}'))
+		relation.relations.append(PresParser.parse_relation('{[a]->[ap]:a=6}'))
 		removed_formula=RemoveDuplicateFormulasVisitor().visit(relation).removed_formula
 
 		relation_res=Relation('{[a]->[ap]:a=5}').union(Relation('{[b]->[bp]:b=6}'))

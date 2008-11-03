@@ -176,10 +176,10 @@ class SetTestCase(TestCase):
 		set_str1='{[a]: -1a+5=0}'
 		pset1=PresParser.parse_set(set_str1)
 
-		set_str2='{[b]: -1b+5=0}'
+		set_str2='{[b]: -1b+6=0}'
 		pset2=PresParser.parse_set(set_str2)
 
-		set_str3='{[c]: -1c+5=0}'
+		set_str3='{[c]: -1c+7=0}'
 		pset3=PresParser.parse_set(set_str3)
 
 		set=Set(sets=[pset1])
@@ -187,11 +187,11 @@ class SetTestCase(TestCase):
 		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
 
 		set=Set(sets=[pset1,pset2])
-		set_str='%s union %s'%(set_str1,set_str2)
+		set_str='{[a]: -1a+5=0} union {[a]: -1a+6=0}'
 		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
 
 		set=Set(sets=[pset1,pset2,pset3])
-		set_str='%s union %s union %s'%(set_str1,set_str2,set_str3)
+		set_str='{[a]: -1a+5=0} union {[a]: -1a+6=0} union {[a]: -1a+7=0}'
 		self.failUnless(str(set)==set_str,'%s!=%s'%(str(set),set_str))
 
 	#Tests the __cmp__ method
@@ -263,8 +263,40 @@ class SetTestCase(TestCase):
 
 		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
 
+		pset1=PresParser.parse_set('{[a]:a>10}')
+		pset2=PresParser.parse_set('{[b]:b>10}')
+		pset3=PresParser.parse_set('{[b]:b>10}')
+		set1=Set('{[a]:a>10}')
+		set2=Set('{[b]:b>10}')
 		unioned=unioned.union(set1)
-		unioned_res=Set(sets=[pset1,pset2,pset1])
+		unioned_res=Set(sets=[pset1,pset2,pset3])
+
+		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
+
+	#Tests that the union operation standardizes names across all sets in the union
+	def testUnionRename(self):
+		from iegen import Set
+		from iegen.parser import PresParser
+
+		pset1=PresParser.parse_set('{[a]:a>10}')
+		pset2=PresParser.parse_set('{[a]:a<5}')
+		pset3=PresParser.parse_set('{[a]:a=7}')
+		set1=Set('{[a]:a>10}')
+		set2=Set('{[b]:b<5}')
+		set3=Set('{[c]:c=7}')
+		unioned=set1.union(set2).union(set3)
+		unioned_res=Set(sets=[pset1,pset2,pset3])
+
+		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
+
+		pset1=PresParser.parse_set('{[a]:a>10}')
+		pset2=PresParser.parse_set('{[a]:a<5}')
+		pset3=PresParser.parse_set('{[a]:a=7}')
+		set1=Set('{[a]:a>10}')
+		set2=Set('{[b]:b<5}')
+		set3=Set('{[c]:c=7}')
+		unioned=unioned.union(set1)
+		unioned_res=Set(sets=[pset1,pset2,pset3])
 
 		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
 
@@ -374,27 +406,38 @@ class SetTestCase(TestCase):
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
-	#Tests the _get_rename_dict method
-	def testGetRenameDict(self):
+	#Tests the _get_prefix_rename_dict method
+	def testGetPrefixRenameDict(self):
 		from iegen import Set
 
 		set=Set('{[a,b,c]:1<=a and a<=10}')
 
-		rename=set._get_rename_dict(set.sets[0],'pre')
+		rename=set._get_prefix_rename_dict(set.sets[0],'pre')
 		rename_res={'a':'pre_a','b':'pre_b','c':'pre_c'}
 
 		self.failUnless(rename==rename_res,'%s!=%s'%(rename,rename_res))
 
-	#Tests the _get_unrename_dict method
-	def testGetUnrenameDict(self):
+	#Tests the _get_prefix_unrename_dict method
+	def testGetPrefixUnrenameDict(self):
 		from iegen import Set
 
 		set=Set('{[a,b]:1<=a and a<=10}')
 
-		unrename=set._get_unrename_dict(set.sets[0],'pre')
+		unrename=set._get_prefix_unrename_dict(set.sets[0],'pre')
 		unrename_res={'pre_a':'a','pre_b':'b'}
 
 		self.failUnless(unrename==unrename_res,'%s!=%s'%(unrename,unrename_res))
+
+	#Tests the _get_formula_rename_dict method
+	def testGetFormulaRenameDict(self):
+		from iegen import Set
+
+		set1=Set('{[a_1,b_1]:1<=a_1 and a_1<=10}')
+		set2=Set('{[b,c]}')
+		rename=set1._get_formula_rename_dict(set1.sets[0],set2.sets[0])
+		rename_res={'a_1':'b','b_1':'c'}
+
+		self.failUnless(rename==rename_res,'%s!=%s'%(rename,rename_res))
 
 	#Tests that the lower bound method fails when given variable names that aren't part of the tuple
 	@raises(ValueError)
@@ -640,10 +683,10 @@ class RelationTestCase(TestCase):
 		relation_str1='{[a]->[ap]: -1a+5=0}'
 		prelation1=PresParser.parse_relation(relation_str1)
 
-		relation_str2='{[b]->[bp]: -1b+5=0}'
+		relation_str2='{[b]->[bp]: -1b+6=0}'
 		prelation2=PresParser.parse_relation(relation_str2)
 
-		relation_str3='{[c]->[cp]: -1c+5=0}'
+		relation_str3='{[c]->[cp]: -1c+7=0}'
 		prelation3=PresParser.parse_relation(relation_str3)
 
 		relation=Relation(relations=[prelation1])
@@ -651,11 +694,11 @@ class RelationTestCase(TestCase):
 		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
 
 		relation=Relation(relations=[prelation1,prelation2])
-		relation_str='%s union %s'%(relation_str1,relation_str2)
+		relation_str='{[a]->[ap]: -1a+5=0} union {[a]->[ap]: -1a+6=0}'
 		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
 
 		relation=Relation(relations=[prelation1,prelation2,prelation3])
-		relation_str='%s union %s union %s'%(relation_str1,relation_str2,relation_str3)
+		relation_str='{[a]->[ap]: -1a+5=0} union {[a]->[ap]: -1a+6=0} union {[a]->[ap]: -1a+7=0}'
 		self.failUnless(str(relation)==relation_str,'%s!=%s'%(str(relation),relation_str))
 
 	#Tests the __cmp__ method
@@ -732,8 +775,40 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
 
+		prelation1=PresParser.parse_relation('{[a]->[a]:a>10}')
+		prelation2=PresParser.parse_relation('{[b]->[b]:b>10}')
+		prelation3=PresParser.parse_relation('{[b]->[b]:b>10}')
+		relation1=Relation('{[a]->[a]:a>10}')
+		relation2=Relation('{[b]->[b]:b>10}')
 		unioned=unioned.union(relation1)
-		unioned_res=Relation(relations=[prelation1,prelation2,prelation1])
+		unioned_res=Relation(relations=[prelation1,prelation2,prelation3])
+
+		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
+
+	#Tests that the union operation standardizes names across all relations in the union
+	def testUnionRename(self):
+		from iegen import Relation
+		from iegen.parser import PresParser
+
+		prelation1=PresParser.parse_relation('{[a]->[ap]:a>10 and ap>20}')
+		prelation2=PresParser.parse_relation('{[a]->[ap]:a<5 and ap<10}')
+		prelation3=PresParser.parse_relation('{[a]->[ap]:a=7 and ap=14}')
+		relation1=Relation('{[a]->[ap]:a>10 and ap>20}')
+		relation2=Relation('{[b]->[bp]:b<5 and bp<10}')
+		relation3=Relation('{[c]->[cp]:c=7 and cp=14}')
+		unioned=relation1.union(relation2).union(relation3)
+		unioned_res=Relation(relations=[prelation1,prelation2,prelation3])
+
+		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
+
+		prelation1=PresParser.parse_relation('{[a]->[ap]:a>10 and ap>20}')
+		prelation2=PresParser.parse_relation('{[a]->[ap]:a<5 and ap<10}')
+		prelation3=PresParser.parse_relation('{[a]->[ap]:a=7 and ap=14}')
+		relation1=Relation('{[a]->[ap]:a>10 and ap>20}')
+		relation2=Relation('{[b]->[bp]:b<5 and bp<10}')
+		relation3=Relation('{[c]->[cp]:c=7 and cp=14}')
+		unioned=unioned.union(relation1)
+		unioned_res=Relation(relations=[prelation1,prelation2,prelation3])
 
 		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
 
@@ -856,25 +931,36 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(ar_composed==ar_res,'%s!=%s'%(ar_composed,ar_res))
 
-	#Tests the _get_rename_dict method of Relation
-	def testGetRenameDict(self):
+	#Tests the _get_prefix_rename_dict method of Relation
+	def testGetPrefixRenameDict(self):
 		from iegen import Relation
 
 		relation=Relation('{[a,b]->[c,d,e]:1<=a and a<=10}')
 
-		rename=relation._get_rename_dict(relation.relations[0],'pre')
+		rename=relation._get_prefix_rename_dict(relation.relations[0],'pre')
 		rename_res={'a':'pre_in_a','b':'pre_in_b','c':'pre_out_c','d':'pre_out_d','e':'pre_out_e'}
 
 		self.failUnless(rename==rename_res,'%s!=%s'%(rename,rename_res))
 
-	#Tests the _get_unrename_dict method of Relation
-	def testGetUnrenameDict(self):
+	#Tests the _get_prefix_unrename_dict method of Relation
+	def testGetPrefixUnrenameDict(self):
 		from iegen import Relation
 
 		relation=Relation('{[a,b]->[c,d,e]:1<=a and a<=10}')
 
-		unrename=relation._get_unrename_dict(relation.relations[0],'pre')
+		unrename=relation._get_prefix_unrename_dict(relation.relations[0],'pre')
 		unrename_res={'pre_in_a':'a','pre_in_b':'b','pre_out_c':'c','pre_out_d':'d','pre_out_e':'e'}
 
 		self.failUnless(unrename==unrename_res,'%s!=%s'%(unrename,unrename_res))
+
+	#Tests the _get_formula_rename_dict method
+	def testGetFormulaRenameDict(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a_1,b_1]->[ap_1,bp_1]:1<=a_1 and a_1<=10}')
+		relation2=Relation('{[b,c]->[bp,cp]}')
+		rename=relation1._get_formula_rename_dict(relation1.relations[0],relation2.relations[0])
+		rename_res={'a_1':'b','b_1':'c','ap_1':'bp','bp_1':'cp'}
+
+		self.failUnless(rename==rename_res,'%s!=%s'%(rename,rename_res))
 #------------------------------------
