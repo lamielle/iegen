@@ -221,18 +221,13 @@ class PresParser(object):
 			t[0]=t[1]
 
 	def p_constraint(self,t):
-		'''constraint :  constraint_paren
-		               | constraint_eq
+		'''constraint :  constraint_eq
 		               | constraint_neq
 		               | constraint_gt
 		               | constraint_gte
 		               | constraint_lt
 		               | constraint_lte'''
 		t[0]=t[1]
-
-	def p_constraint_paren(self,t):
-		'''constraint_paren : LPAREN constraint RPAREN'''
-		t[0]=t[2]
 
 	def p_constraint_eq(self,t):
 		'''constraint_eq : expression EQ expression'''
