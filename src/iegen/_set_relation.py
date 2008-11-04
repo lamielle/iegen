@@ -62,11 +62,11 @@ class Formula(Node):
 			constraint=Equality(NormExp([var1,var2],0))
 
 			#Add the new constraint to the new formula
-			new_form.conjunct.constraint_list.append(constraint)
+			new_form.conjunct.constraints.append(constraint)
 
 		#Add the constraints of both formulas to the new formula
-		for constraint in form1.conjunct.constraint_list+form2.conjunct.constraint_list:
-			new_form.conjunct.constraint_list.append(deepcopy(constraint))
+		for constraint in form1.conjunct.constraints+form2.conjunct.constraints:
+			new_form.conjunct.constraints.append(deepcopy(constraint))
 
 		#Rename the variables back to what the were before
 		RenameVisitor(form1_unrename).visit(new_form)
@@ -308,14 +308,14 @@ class Set(Formula):
 		first_lb=True
 		for lb_coeff,lb_exp,lb_ineq in lower_bounds:
 			#Remove the lower bound from the constraints
-			self.sets[0].conjunct.constraint_list.remove(lb_ineq)
+			self.sets[0].conjunct.constraints.remove(lb_ineq)
 			for ub_coeff,ub_exp,ub_ineq in upper_bounds:
 				#Remove the upper bound from the constraints (first time only)
-				if first_lb: self.sets[0].conjunct.constraint_list.remove(ub_ineq)
+				if first_lb: self.sets[0].conjunct.constraints.remove(ub_ineq)
 
 				#Add a new constraint with the variable being projected out removed
 				new_ineq=Inequality(NormExp([],ub_coeff)*lb_exp-(NormExp([],lb_coeff)*ub_exp))
-				self.sets[0].conjunct.constraint_list.append(new_ineq)
+				self.sets[0].conjunct.constraints.append(new_ineq)
 			first_lb=False
 #-------------------------------
 

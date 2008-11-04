@@ -10,7 +10,7 @@ class SortVisitor(DFVisitor):
 		node.relations.sort()
 
 	def outConjunction(self,node):
-		node.constraint_list.sort()
+		node.constraints.sort()
 
 	def outEquality(self,node):
 		node._set_largest_exp()

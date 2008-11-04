@@ -49,7 +49,7 @@ class CheckVisitor(DFVisitor):
 
 	def inConjunction(self,node):
 		from iegen.ast import Equality,Inequality
-		raise_objs_not_like_types(node.constraint_list,[Equality,Inequality])
+		raise_objs_not_like_types(node.constraints,[Equality,Inequality])
 
 	def inEquality(self,node):
 		from iegen.ast import VarExp,FuncExp,NormExp

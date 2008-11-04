@@ -75,7 +75,7 @@ class TransVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a]:a=1}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
 		TransVisitor().visit(set)
 
 	#Make sure the result of the visiting is placed in the proper attribute
@@ -295,12 +295,12 @@ class IsVarVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		relation=Relation('{[]->[]}')
-		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		self.failUnless(IsVarVisitor('a').visit(set).is_var,"'a' is not a var in %s"%set)
 		self.failUnless(IsVarVisitor('b').visit(set).is_var,"'b' is not a var in %s"%set)
@@ -340,12 +340,12 @@ class IsVarVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		relation=Relation('{[]->[]}')
-		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		self.failIf(IsVarVisitor('a').visit(set).is_symbolic_var,"'a' is a symbolic var in %s"%set)
 		self.failIf(IsVarVisitor('b').visit(set).is_symbolic_var,"'b' is a symbolic var in %s"%set)
@@ -385,12 +385,12 @@ class IsVarVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		relation=Relation('{[]->[]}')
-		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		self.failUnless(IsVarVisitor('a').visit(set).is_constraint_var,"'a' is not a constraint var in %s"%set)
 		self.failUnless(IsVarVisitor('b').visit(set).is_constraint_var,"'b' is not a constraint var in %s"%set)
@@ -430,12 +430,12 @@ class IsVarVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		relation=Relation('{[]->[]}')
-		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
-		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a')],10)))
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],1)))
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a')],10)))
 
 		self.failIf(IsVarVisitor('a').visit(set).is_tuple_var,"'a' is a tuple var in %s"%set)
 		self.failIf(IsVarVisitor('b').visit(set).is_tuple_var,"'b' is a tuple var in %s"%set)
@@ -497,7 +497,7 @@ class FindConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
 
 		equalities=FindConstraintVisitor(Equality,'a').visit(set).var_constraints
 
@@ -529,7 +529,7 @@ class FindConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		set=Set('{[]}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
 
 		inequalities=FindConstraintVisitor(Inequality,'a').visit(set).var_constraints
 
@@ -561,7 +561,7 @@ class FindConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		relation=Relation('{[]->[]}')
-		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
 
 		equalities=FindConstraintVisitor(Equality,'a').visit(relation).var_constraints
 
@@ -593,7 +593,7 @@ class FindConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		relation=Relation('{[]->[]}')
-		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
 
 		inequalities=FindConstraintVisitor(Inequality,'a').visit(relation).var_constraints
 
@@ -855,7 +855,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -872,7 +872,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		set=Set('{[]}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -889,7 +889,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		relation=Relation('{[]->[]}')
-		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(relation).var_constraint_tuple
 
@@ -906,7 +906,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		relation=Relation('{[]->[]}')
-		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(relation).var_constraint_tuple
 
@@ -923,7 +923,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a,b,c]:a=5 and b=5 and c=5}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d')],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -940,7 +940,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		set=Set('{[a,b,c]:a>=5 and b>=5 and c>=5}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'d')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'d')],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -957,8 +957,8 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[a]:a=5}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -975,8 +975,8 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[a]:a>=5}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -993,8 +993,8 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[a]:a=5}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -1011,8 +1011,8 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[a]:a>=5}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b')],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -1029,7 +1029,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a]:a=5 and a=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -1046,7 +1046,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		set=Set('{[a]:a>=5 and a>=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -1063,7 +1063,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a]:a=5 and a=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -1080,7 +1080,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		set=Set('{[a]:a>=5 and a>=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -1097,7 +1097,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp,FuncExp
 
 		set=Set('{[a]:a=5 and a=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),FuncExp(1,'f',[NormExp([VarExp(1,'c')],0)])],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(1,'f',[NormExp([VarExp(1,'c')],0)])],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -1114,7 +1114,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp,FuncExp
 
 		set=Set('{[a]:a>=5 and a>=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),FuncExp(1,'f',[NormExp([VarExp(1,'c')],0)])],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),FuncExp(1,'f',[NormExp([VarExp(1,'c')],0)])],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -1131,7 +1131,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a]:a=5 and a=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(-1,'b')],5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(-1,'b')],5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -1148,7 +1148,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		set=Set('{[a]:a>=5 and a>=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'b')],5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'b')],5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -1165,8 +1165,8 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a]: a=5}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(-6,'b')],5)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(5,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(-6,'b')],5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(5,'b')],-5)))
 
 		equality_tuple=FindFreeVarConstraintVisitor(Equality).visit(set).var_constraint_tuple
 
@@ -1179,8 +1179,8 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		set=Set('{[a]: a>=5}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-6,'b')],5)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(5,'b')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-6,'b')],5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(5,'b')],-5)))
 
 		inequality_tuple=FindFreeVarConstraintVisitor(Inequality).visit(set).var_constraint_tuple
 
@@ -1443,7 +1443,7 @@ class RemoveEmptyConstraintsVisitorTestCase(TestCase):
 		set=Set('{[a]:a=a}')
 		i=Equality(NormExp([],0))
 		i.exp=NormExp([],0)
-		set.sets[0].conjunct.constraint_list=[i]
+		set.sets[0].conjunct.constraints=[i]
 		removed_constraint=RemoveEmptyConstraintsVisitor().visit(set).removed_constraint
 
 		set_res=Set('{[a]}')
@@ -1473,7 +1473,7 @@ class RemoveEmptyConstraintsVisitorTestCase(TestCase):
 		set=Set('{[a]}')
 		i=Inequality(NormExp([],0))
 		i.exp=NormExp([],0)
-		set.sets[0].conjunct.constraint_list=[i]
+		set.sets[0].conjunct.constraints=[i]
 		removed_constraint=RemoveEmptyConstraintsVisitor().visit(set).removed_constraint
 
 		set_res=Set('{[a]}')
@@ -1503,7 +1503,7 @@ class RemoveZeroCoeffVisitorTestCase(TestCase):
 		set=Set('{[a]:a=6}')
 		eq=Equality(NormExp([],1))
 		eq.exp.terms.append(VarExp(-1,'a'))
-		set.sets[0].conjunct.constraint_list.append(eq)
+		set.sets[0].conjunct.constraints.append(eq)
 		removed_term=RemoveZeroCoeffVisitor().visit(set).removed_term
 		SortVisitor().visit(set)
 
@@ -1521,7 +1521,7 @@ class RemoveZeroCoeffVisitorTestCase(TestCase):
 		set=Set('{[a]:a=6}')
 		eq=Equality(NormExp([],0))
 		eq.exp.terms.append(VarExp(0,'a'))
-		set.sets[0].conjunct.constraint_list.append(eq)
+		set.sets[0].conjunct.constraints.append(eq)
 		removed_term=RemoveZeroCoeffVisitor().visit(set).removed_term
 		SortVisitor().visit(set)
 		RemoveEmptyConstraintsVisitor().visit(set)
@@ -1540,7 +1540,7 @@ class RemoveZeroCoeffVisitorTestCase(TestCase):
 		set=Set('{[a]:a=6}')
 		eq=Equality(NormExp([],1))
 		eq.exp.terms.append(FuncExp(-1,'a',[NormExp([VarExp(1,'x')],0)]))
-		set.sets[0].conjunct.constraint_list.append(eq)
+		set.sets[0].conjunct.constraints.append(eq)
 		removed_term=RemoveZeroCoeffVisitor().visit(set).removed_term
 		SortVisitor().visit(set)
 
@@ -1558,7 +1558,7 @@ class RemoveZeroCoeffVisitorTestCase(TestCase):
 		set=Set('{[a]:a=6}')
 		eq=Equality(NormExp([],0))
 		eq.exp.terms.append(FuncExp(0,'a',[]))
-		set.sets[0].conjunct.constraint_list.append(eq)
+		set.sets[0].conjunct.constraints.append(eq)
 		removed_term=RemoveZeroCoeffVisitor().visit(set).removed_term
 		SortVisitor().visit(set)
 		RemoveEmptyConstraintsVisitor().visit(set)
@@ -1610,8 +1610,8 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor,SortVisitor
 
 		set=Set('{[a]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-6)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],-6)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		SortVisitor().visit(set)
@@ -1629,8 +1629,8 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
 		set=Set('{[a]}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-6)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b')],-6)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 
@@ -1646,10 +1646,10 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor,SortVisitor
 
 		rel=Relation('{[a]->[ap]}')
-		rel.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		rel.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'ap'),VarExp(-1,'c')],0)))
-		rel.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],-6)))
-		rel.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c')],-7)))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'ap'),VarExp(-1,'c')],0)))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],-6)))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c')],-7)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(rel).changed
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(rel).changed and changed
@@ -1667,10 +1667,10 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
 		rel=Relation('{[a]->[ap]}')
-		rel.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c')],-7)))
-		rel.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		rel.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'ap'),VarExp(-1,'c')],0)))
-		rel.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b')],-6)))
+		rel.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c')],-7)))
+		rel.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		rel.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'ap'),VarExp(-1,'c')],0)))
+		rel.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b')],-6)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(rel).changed
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(rel).changed and changed
@@ -1687,10 +1687,10 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor,SortVisitor
 
 		set=Set('{[a]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d')],-6)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d')],-6)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed and changed
@@ -1709,10 +1709,10 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
 		set=Set('{[a]}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'d')],-6)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'d')],-6)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed and changed
@@ -1731,10 +1731,10 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed and changed
@@ -1753,10 +1753,10 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed and changed
@@ -1775,11 +1775,11 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(-1,'a'),VarExp(1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(-1,'a'),VarExp(1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed and changed
@@ -1799,11 +1799,11 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed and changed
@@ -1811,9 +1811,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set_res=Set('{[a]}')
 		set_res.sets[0].symbolics=[Symbolic('n')]
-		set_res.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set_res.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
-		set_res.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'n')],0)))
+		set_res.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set_res.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
+		set_res.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'n')],0)))
 		SortVisitor().visit(set_res)
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
@@ -1827,12 +1827,12 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a,b]}')
 		set.sets[0].symbolics=[Symbolic('n'),Symbolic('m')]
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'e')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'e'),VarExp(-1,'f')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'f'),VarExp(-1,'m')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'e')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'e'),VarExp(-1,'f')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'f'),VarExp(-1,'m')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed and changed
@@ -1853,12 +1853,12 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a,b]}')
 		set.sets[0].symbolics=[Symbolic('n'),Symbolic('m')]
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'e')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'e'),VarExp(-1,'f')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'f'),VarExp(-1,'m')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'d'),VarExp(-1,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'e')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'e'),VarExp(-1,'f')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'f'),VarExp(-1,'m')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed and changed
@@ -1878,9 +1878,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
 		set=Set('{[a,b]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'d')],0)])],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'d')],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed and changed
@@ -1897,9 +1897,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor,SortVisitor
 
 		set=Set('{[a,b]}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'d')],0)])],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'d')],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed and changed
@@ -1917,9 +1917,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
 		set=Set('{[a,b]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([FuncExp(1,'h',[NormExp([VarExp(1,'b')],0)])],0)])],0)])],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([FuncExp(1,'h',[NormExp([VarExp(1,'b')],0)])],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed and changed
@@ -1937,9 +1937,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 
 		set=Set('{[a,b]}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([FuncExp(1,'h',[NormExp([VarExp(1,'b')],0)])],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'d')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([FuncExp(1,'h',[NormExp([VarExp(1,'b')],0)])],0)])],0)])],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 
@@ -1956,9 +1956,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b'),VarExp(-2,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'c'),VarExp(-4,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),VarExp(-2,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),VarExp(-4,'n')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed and changed
@@ -1976,9 +1976,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-2,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-4,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'b'),VarExp(-2,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-4,'n')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed and changed
@@ -1996,9 +1996,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(4,'b'),VarExp(-2,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(5,'c'),VarExp(-4,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(4,'b'),VarExp(-2,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(5,'c'),VarExp(-4,'n')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 		SortVisitor().visit(set)
@@ -2016,9 +2016,9 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(5,'c'),VarExp(-4,'n')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(4,'b'),VarExp(-2,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-6,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(5,'c'),VarExp(-4,'n')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(4,'b'),VarExp(-2,'c')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 
@@ -2035,8 +2035,8 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(2,'a'),VarExp(3,'b'),VarExp(4,'n'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(4,'c'),],-6)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(2,'a'),VarExp(3,'b'),VarExp(4,'n'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(4,'c'),],-6)))
 
 		changed=RemoveFreeVarConstraintVisitor(Equality).visit(set).changed
 
@@ -2053,8 +2053,8 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(2,'a'),VarExp(3,'b'),VarExp(4,'n'),VarExp(-1,'c')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(4,'c'),],-6)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(2,'a'),VarExp(3,'b'),VarExp(4,'n'),VarExp(-1,'c')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(4,'c'),],-6)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 
@@ -2072,17 +2072,17 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'b')],0)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'n'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'b')],0)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'n'),VarExp(-1,'b')],0)))
 
 		changed=RemoveFreeVarConstraintVisitor(Inequality).visit(set).changed
 
 		set_res=Set('{[a]}')
 		set.sets[0].symbolics=[Symbolic('n')]
-		set_res.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
-		set_res.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'b')],0)))
-		set_res.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'n'),VarExp(-1,'b')],0)))
+		set_res.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],0)))
+		set_res.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'c'),VarExp(-1,'b')],0)))
+		set_res.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'n'),VarExp(-1,'b')],0)))
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(False==changed,'changed!=False')
@@ -2184,8 +2184,8 @@ class RemoveDuplicateConstraintsVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		set=Set('{[a]}')
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
 		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(set).removed_constraint
 
 		set_res=Set('{[a]:a=5}')
@@ -2200,8 +2200,8 @@ class RemoveDuplicateConstraintsVisitorTestCase(TestCase):
 		from iegen.ast import Equality,NormExp,VarExp
 
 		relation=Relation('{[a]->[ap]}')
-		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
-		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
 		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(relation).removed_constraint
 
 		relation_res=Relation('{[a]->[ap]:a=5}')
@@ -2216,8 +2216,8 @@ class RemoveDuplicateConstraintsVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		set=Set('{[a]}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
 		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(set).removed_constraint
 
 		set_res=Set('{[a]:a>=5}')
@@ -2232,8 +2232,8 @@ class RemoveDuplicateConstraintsVisitorTestCase(TestCase):
 		from iegen.ast import Inequality,NormExp,VarExp
 
 		relation=Relation('{[a]->[ap]}')
-		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
-		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
 		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(relation).removed_constraint
 
 		relation_res=Relation('{[a]->[ap]:a>=5}')
@@ -2248,10 +2248,10 @@ class RemoveDuplicateConstraintsVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[a]: a>=10}')
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
 		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(set).removed_constraint
 
 		set_res=Set('{[a]:a>=5 and a=5 and a>=10}')
@@ -2266,10 +2266,10 @@ class RemoveDuplicateConstraintsVisitorTestCase(TestCase):
 		from iegen.ast import Equality,Inequality,NormExp,VarExp
 
 		set=Set('{[a]: a>=10 and a<=n}',[Symbolic('n')])
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
-		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a')],-5)))
 		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(set).removed_constraint
 		SortVisitor().visit(set)
 

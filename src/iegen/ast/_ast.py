@@ -11,7 +11,7 @@
 #
 #    VarTuple -> vars:ID*
 #
-#    Conjunction -> constraint_list:Constraint*
+#    Conjunction -> constraints:Constraint*
 #
 #    Constraint -> NormExp>=0 // Inequality
 #               -> NormExp=0  // Equality
@@ -213,30 +213,30 @@ class VarTuple(Node):
 #---------- Conjunction Node ----------
 #A set of constraints that are all part of a conjunction (IOW ANDed together).
 class Conjunction(Node):
-	__slots__=('constraint_list',)
+	__slots__=('constraints',)
 
 	@normalize_self
 	@check
-	def __init__(self,constraint_list):
-		self.constraint_list=constraint_list
+	def __init__(self,constraints):
+		self.constraints=constraints
 
 	def __repr__(self):
-		return 'Conjunction(%s)'%repr(self.constraint_list)
+		return 'Conjunction(%s)'%repr(self.constraints)
 
 	def __str__(self):
 		s=StringIO()
-		for constraint in self.constraint_list:
+		for constraint in self.constraints:
 			s.write('%s%s'%(str(constraint),' and '))
 		return s.getvalue()[:-5]
 
 	def __len__(self):
-		return len(self.constraint_list)
+		return len(self.constraints)
 
 	#Comparison operator
 	def __cmp__(self,other):
-		#Compare Conjunctions by their constraint_lists
+		#Compare Conjunctions by their constraintss
 		if like_type(other,Conjunction):
-			return cmp(self.constraint_list,other.constraint_list)
+			return cmp(self.constraints,other.constraints)
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 

@@ -85,7 +85,7 @@ class RemoveFreeVarConstraintVisitor(DFVisitor):
 	def inConjunction(self,node):
 		#Remove the free var constraint if one was found
 		if None is not self.constraint:
-			node.constraint_list.remove(self.constraint)
+			node.constraints.remove(self.constraint)
 			self.changed=True
 
 	def outConjunction(self,node):
@@ -94,7 +94,7 @@ class RemoveFreeVarConstraintVisitor(DFVisitor):
 			#Add the constraint back if no replacement was done
 			#(We don't want to loose any information)
 			if not self.replaced and None is not self.constraint:
-				node.constraint_list.append(self.constraint)
+				node.constraints.append(self.constraint)
 				self.changed=False
 
 	def inInequality(self,node):

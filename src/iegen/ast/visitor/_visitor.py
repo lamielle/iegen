@@ -124,7 +124,7 @@ class DFVisitor(object):
 
 	def visitConjunction(self,node):
 		self.inConjunction(node)
-		for conjunction in node.constraint_list:
+		for conjunction in node.constraints:
 			conjunction.apply_visitor(self)
 		self.outConjunction(node)
 

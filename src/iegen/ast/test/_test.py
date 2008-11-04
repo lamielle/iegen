@@ -501,8 +501,8 @@ class ConjunctionTestCase(TestCase):
 		from iegen.ast import Conjunction,Equality,NormExp,VarExp,Node
 
 		class DummyConjunction(Node):
-			def __init__(self,constraint_list):
-				self.constraint_list=constraint_list
+			def __init__(self,constraints):
+				self.constraints=constraints
 
 		cs="Conjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
 		dcs="DummyConjunction([Equality(NormExp([VarExp(-5,'a')],-5))])"
@@ -510,7 +510,7 @@ class ConjunctionTestCase(TestCase):
 		exec('dc='+dcs)
 
 		self.failUnless(c==dc,'%s!=%s'%(c,dc))
-		c.constraint_list.append(VarExp(1,'b'))
+		c.constraints.append(VarExp(1,'b'))
 		self.failIf(c==dc,'%s==%s'%(c,dc))
 
 	#Validate Conjunction's __len__ method
