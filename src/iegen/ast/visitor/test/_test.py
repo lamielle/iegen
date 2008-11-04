@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -78,7 +78,7 @@ class TransVisitorTestCase(TestCase):
 		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'b')],1)))
 		TransVisitor().visit(set)
 
-	#Make sure the result of the visiting is placed in the mat attribute
+	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import TransVisitor
 		from iegen import Set
@@ -1286,7 +1286,7 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 #---------- Merge Expression Terms Visitor ----------
 class MergeExpTermsVisitorTestCase(TestCase):
 
-	#Make sure the result of the visiting is placed in the merged_terms attribute
+	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import MergeExpTermsVisitor
 		from iegen import Set
@@ -1412,7 +1412,7 @@ class MergeExpTermsVisitorTestCase(TestCase):
 #---------- Remove Empty Constraint Visitor ----------
 class RemoveEmptyConstraintsVisitorTestCase(TestCase):
 
-	#Make sure the result of the visiting is placed in the removed_constraint
+	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
 		from iegen import Set
@@ -1485,7 +1485,7 @@ class RemoveEmptyConstraintsVisitorTestCase(TestCase):
 #---------- Remove Zero Coeff Visitor ----------
 class RemoveZeroCoeffVisitorTestCase(TestCase):
 
-	#Make sure the result of the visiting is placed in the removed_term attribute
+	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import RemoveZeroCoeffVisitor
 		from iegen import Set
@@ -1572,7 +1572,7 @@ class RemoveZeroCoeffVisitorTestCase(TestCase):
 #---------- Remove Free Var Constraint Visitor ----------
 class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 
-	#Make sure the result of the visiting is placed in the changed attribute
+	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 		from iegen import Set
@@ -2091,7 +2091,7 @@ class RemoveFreeVarConstraintVisitorTestCase(TestCase):
 #---------- Remove Duplicate Formulas Visitor ----------
 class RemoveDuplicateFormulasVisitorTestCase(TestCase):
 
-	#Make sure the result of the visiting is placed in the changed attribute
+	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
 		from iegen import Set
@@ -2165,10 +2165,124 @@ class RemoveDuplicateFormulasVisitorTestCase(TestCase):
 		self.failUnless(True==removed_formula,'removed_formula!=True')
 #------------------------------------------------------
 
+#---------- Remove Duplicate Constraints Visitor ----------
+class RemoveDuplicateConstraintsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=RemoveDuplicateConstraintsVisitor().visit(set)
+		self.failUnless(hasattr(v,'removed_constraint'),"RemoveDuplicateConstraintsVisitor doesn't place result in the 'removed_constraint' property.")
+
+	#Tests that duplicated equality constraints are removed from sets
+	def testRemoveEqualitySet(self):
+		from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp,VarExp
+
+		set=Set('{[a]}')
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(set).removed_constraint
+
+		set_res=Set('{[a]:a=5}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_constraint,'removed_constraint!=True')
+
+	#Tests that duplicated equality constraints are removed from relations
+	def testRemoveEqualityRelation(self):
+		from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor
+		from iegen import Relation
+		from iegen.ast import Equality,NormExp,VarExp
+
+		relation=Relation('{[a]->[ap]}')
+		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(relation).removed_constraint
+
+		relation_res=Relation('{[a]->[ap]:a=5}')
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_constraint,'removed_constraint!=True')
+
+	#Tests that duplicated equality constraints are removed from sets
+	def testRemoveInequalitySet(self):
+		from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor
+		from iegen import Set
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		set=Set('{[a]}')
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(set).removed_constraint
+
+		set_res=Set('{[a]:a>=5}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_constraint,'removed_constraint!=True')
+
+	#Tests that duplicated equality constraints are removed from relations
+	def testRemoveInequalityRelation(self):
+		from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor
+		from iegen import Relation
+		from iegen.ast import Inequality,NormExp,VarExp
+
+		relation=Relation('{[a]->[ap]}')
+		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		relation.relations[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(relation).removed_constraint
+
+		relation_res=Relation('{[a]->[ap]:a>=5}')
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_constraint,'removed_constraint!=True')
+
+	#Tests that duplicated equality constraints are removed without removing other constraints
+	def testRemoveConstraintOthers(self):
+		from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor
+		from iegen import Set
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
+
+		set=Set('{[a]: a>=10}')
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(set).removed_constraint
+
+		set_res=Set('{[a]:a>=5 and a=5 and a>=10}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_constraint,'removed_constraint!=True')
+
+	#Tests that duplicated equality constraints are removed without removing other constraints
+	def testRemoveConstraintSymbolics(self):
+		from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor,SortVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Equality,Inequality,NormExp,VarExp
+
+		set=Set('{[a]: a>=10 and a<=n}',[Symbolic('n')])
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Inequality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		set.sets[0].conjunct.constraint_list.append(Equality(NormExp([VarExp(1,'a')],-5)))
+		removed_constraint=RemoveDuplicateConstraintsVisitor().visit(set).removed_constraint
+		SortVisitor().visit(set)
+
+		set_res=Set('{[a]:a>=5 and a=5 and a>=10 and a<=n}',[Symbolic('n')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_constraint,'removed_constraint!=True')
+#----------------------------------------------------------
+
 #---------- Remove Symbolics Visitor ----------
 class RemoveSymbolicsVisitorTestCase(TestCase):
 
-	#Make sure the result of the visiting is placed in the removed_symbolic attribute
+	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import RemoveSymbolicsVisitor
 		from iegen import Set
@@ -2291,7 +2405,7 @@ class RemoveSymbolicsVisitorTestCase(TestCase):
 #---------- Collect Bounds Visitor ----------
 class CollectBoundsVisitorTestCase(TestCase):
 
-	#Make sure the result of the visiting is placed in the bounds attribute
+	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
 		from iegen.ast.visitor import CollectBoundsVisitor
 		from iegen import Set

@@ -519,8 +519,8 @@ class ConjunctionTestCase(TestCase):
 
 		c0=Conjunction([])
 		c1=Conjunction([Equality(NormExp([VarExp(1,'a')],0))])
-		c2=Conjunction([Equality(NormExp([VarExp(1,'a')],0)),Equality(NormExp([VarExp(1,'a')],0))])
-		c3=Conjunction([Equality(NormExp([VarExp(1,'a')],0)),Equality(NormExp([VarExp(1,'a')],0)),Equality(NormExp([VarExp(1,'a')],0))])
+		c2=Conjunction([Equality(NormExp([VarExp(1,'a')],0)),Equality(NormExp([VarExp(1,'b')],0))])
+		c3=Conjunction([Equality(NormExp([VarExp(1,'a')],0)),Equality(NormExp([VarExp(1,'b')],0)),Equality(NormExp([VarExp(1,'c')],0))])
 
 		self.failUnless(0==len(c0),'len(%s)!=0'%c0)
 		self.failUnless(1==len(c1),'len(%s)!=1'%c1)

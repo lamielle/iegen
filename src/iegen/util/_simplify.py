@@ -42,6 +42,7 @@ def _remove_zero_coefficients(obj):
 def _remove_empty_constraints(obj):
 	from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
 	return RemoveEmptyConstraintsVisitor().visit(obj).removed_constraint
+
 #Uses the RemoveDuplicateFormulasVisitor to remove any duplicated formulas in a Set or Relation
 def _remove_duplicate_formulas(obj):
 	from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
@@ -51,6 +52,11 @@ def _remove_duplicate_formulas(obj):
 def _remove_symbolics(obj):
 	from iegen.ast.visitor import RemoveSymbolicsVisitor
 	return RemoveSymbolicsVisitor().visit(obj).removed_symbolic
+
+#Uses the RemoveDuplicateConstraintsVisitor to remove and duplicate constraints in formulas
+def _remove_duplicate_constrants(obj):
+	from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor
+	return RemoveDuplicateConstraintsVisitor().visit(obj).removed_constraint
 
 #Given an object of the following types:
 #Set,Relation,PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
@@ -87,6 +93,9 @@ def simplify(obj):
 
 		#Remove duplicate equivalent formulas
 		changed=_remove_duplicate_formulas(obj) or changed
+
+		#Remove duplicate constrants in formulas
+		changed=_remove_duplicate_constrants(obj) or changed
 
 		#Apply a sort just to make sure things are ordered properly
 		SortVisitor().visit(obj)
