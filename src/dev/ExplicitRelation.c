@@ -327,6 +327,39 @@ ExplicitRelation* ER_ctor(int * index_array, int size)
     return self;
 }
 
+/*----------------------------------------------------------------*//*! 
+  \short Create the inverse of the input ER.
+  
+  Allocates a new ER data structure and populates it with inverse
+  of given relation.
+  Assumes that given relation is a function.
+  For now also assumes that we are dealing with a 1D-to-1D arity.
+
+  \author Michelle Strout 11/4/08
+*//*----------------------------------------------------------------*/
+ExplicitRelation* ER_genInverse(ExplicitRelation * input)
+{
+    // check assumptions
+    assert( input->isFunction );
+    assert( (input->in_arity == 1) && (input->out_arity == 1) );
+    
+    // Set up in domain for retval from input's output domain
+    RectDomain* in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, RD_lb(input->out_range, 0));
+    RD_set_ub(in_domain, 0, RD_ub(input->out_range, 0));
+    
+    // have constructor create new ER
+    ExplicitRelation* retval = ER_ctor(1,1, in_domain, true);
+    
+    // Fill the inverted ER by iterating over input ER.
+    ER_order_by_in(input); // FIXME: want to remove these
+    int in;
+    FOREACH_in_tuple_1d1d(input, in) {
+        ER_insert( retval, ER_out_given_in(input, in), in);
+    }
+
+    return retval;
+}
 
 
 /*----------------------------------------------------------------*//*! 

@@ -383,6 +383,64 @@ int main()
     ER_dtor(&relptr);
 
 
+    //======= test ER_genInverse
+    // Recreating and then fixing BUG Alan found where 
+    // ER_in_ordered_insert doesn't work when the in_domain is not
+    // specified.
+    printf("==== test creation and use of ER when in_domain not specified\n");
+    
+    // create an input relation
+    in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 0);
+    RD_set_ub(in_domain, 0, (NUM_IN - 1));
+    // We know in_domain for permutations and a permutation is a function.
+    relptr = ER_ctor(1,1, in_domain, true);
+
+    // create a permutation that is just a modular shift
+    count = 0;
+    for (in=0; in<NUM_IN; in++) {
+        ER_in_ordered_insert( relptr, in, (in+1) % NUM_IN);
+        count++;
+    }
+
+    ER_dump(relptr);
+
+    // Iterate over the integer tuple relations
+    printf("\nTraversing relation we plan to invert\n");
+    ER_order_by_in(relptr);
+    test_count=0;
+    test_in = 0;
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        test_out = (in+1) % NUM_IN;
+        printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
+        assert((in==test_in) && test_out==ER_out_given_in(relptr,in));
+        test_count++;
+        test_in++;
+    }
+    assert(count==test_count);
+    
+    // call routine that should generate the inverse
+    ExplicitRelation* new_relptr = ER_genInverse(relptr);
+    printf("Dumping inverse relation\n");
+    ER_dump(new_relptr);
+
+
+    // Iterate over the integer tuple relations
+    printf("\nTraversing inverted relation\n");
+    ER_order_by_in(relptr); // FIXME: want to remove these
+    test_count=0;
+    test_in = 0;
+    FOREACH_in_tuple_1d1d(new_relptr, in) {
+        test_out = (in-1);
+        if (test_out == -1) { test_out = NUM_IN-1; }
+        printf("\t[%d] -> [%d]\n", in, ER_out_given_in(new_relptr,in));
+        assert((in==test_in) && (test_out==ER_out_given_in(new_relptr,in)));
+        assert(in==ER_out_given_in(relptr,ER_out_given_in(new_relptr,in)));
+        test_count++;
+        test_in++;
+    }
+    assert(count==test_count);
+    
 
     // ok now do somewhat of a stress test of the memory management
     /* MMS, this takes a long time so only do it when MEM_ALLOC_INCREMENT

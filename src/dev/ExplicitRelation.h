@@ -174,6 +174,10 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
 //! Assumes isFunction and has 1D-to-1D arity for now.
 ExplicitRelation* ER_ctor(int * index_array, int size);
 
+//! Construct a new ExplicitRelation that is the inverse of
+//! the given relation.  Given relation must be a function.
+ExplicitRelation* ER_genInverse(ExplicitRelation * input);
+
 
 //! Deallocate all of the memory for the ExplicitRelation.
 void ER_dtor(ExplicitRelation**);
