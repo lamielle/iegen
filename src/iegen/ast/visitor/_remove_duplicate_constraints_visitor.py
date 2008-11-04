@@ -18,5 +18,5 @@ class RemoveDuplicateConstraintsVisitor(DFVisitor):
 		if len(new_constraints)!=len(node.constraints):
 			self.removed_constraint=True
 
-		#Use this new list as the list of constraints
-		node.constraints=new_constraints
+			#Use this new list as the list of constraints
+			node.constraints=new_constraints

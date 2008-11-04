@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -2702,3 +2702,178 @@ class FindFreeVarConstraintVisitorTestCase(TestCase):
 		value_res='9c+ER_out_given_in(f_ER,3a+2)+ER_out_given_in(g_ER,4b+3)+5'
 		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
 #------------------------------------------
+
+#---------- Remove Tautologies Visitor ----------
+class RemoveTautologiesVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveTautologiesVisitor
+		from iegen import Set
+
+		set=Set('{[a]}')
+		v=RemoveTautologiesVisitor().visit(set)
+		self.failUnless(hasattr(v,'removed_tautology'),"RemoveTautologiesVisitor doesn't place result in the 'removed_tautology' property.")
+
+	#Tests that equality tautologies are removed from a set
+	def testRemoveEqualitySet(self):
+		from iegen.ast.visitor import RemoveTautologiesVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp
+
+		set=Set('{[a]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([],0)))
+
+		removed_tautology=RemoveTautologiesVisitor().visit(set).removed_tautology
+
+		set_res=Set('{[a]}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_tautology,'removed_tautology!=True')
+
+	#Tests that equality tautologies are removed from a relation
+	def testRemoveEqualityRelation(self):
+		from iegen.ast.visitor import RemoveTautologiesVisitor
+		from iegen import Relation
+		from iegen.ast import Equality,NormExp
+
+		relation=Relation('{[a]->[ap]}')
+		relation.relations[0].conjunct.constraints.append(Equality(NormExp([],0)))
+
+		removed_tautology=RemoveTautologiesVisitor().visit(relation).removed_tautology
+
+		relation_res=Relation('{[a]->[ap]}')
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_tautology,'removed_tautology!=True')
+
+	#Tests that inequality tautologies are removed from a set
+	def testRemoveInequalitySet(self):
+		from iegen.ast.visitor import RemoveTautologiesVisitor
+		from iegen import Set
+		from iegen.ast import Inequality,NormExp
+
+		set=Set('{[a]}')
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([],1)))
+
+		removed_tautology=RemoveTautologiesVisitor().visit(set).removed_tautology
+
+		set_res=Set('{[a]}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_tautology,'removed_tautology!=True')
+
+	#Tests that equality tautologies are removed from a relation
+	def testRemoveInequalityRelation(self):
+		from iegen.ast.visitor import RemoveTautologiesVisitor
+		from iegen import Relation
+		from iegen.ast import Inequality,NormExp
+
+		relation=Relation('{[a]->[ap]}')
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([],1)))
+
+		removed_tautology=RemoveTautologiesVisitor().visit(relation).removed_tautology
+
+		relation_res=Relation('{[a]->[ap]}')
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_tautology,'removed_tautology!=True')
+
+	#Tests that inequality tautologies are removed from a set
+	def testRemoveOthers(self):
+		from iegen.ast.visitor import RemoveTautologiesVisitor
+		from iegen import Set,Symbolic
+		from iegen.ast import Inequality,NormExp
+
+		set=Set('{[a]: a=10 and a<=n}',[Symbolic('n')])
+		set.sets[0].conjunct.constraints.append(Inequality(NormExp([],1)))
+
+		removed_tautology=RemoveTautologiesVisitor().visit(set).removed_tautology
+
+		set_res=Set('{[a]: a=10 and a<=n}',[Symbolic('n')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_tautology,'removed_tautology!=True')
+#------------------------------------------------
+
+#---------- Remove Contradictions Visitor ----------
+class RemoveContradictionsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveContradictionsVisitor
+		from iegen import Set
+
+		set=Set('{[a]}')
+		v=RemoveContradictionsVisitor().visit(set)
+		self.failUnless(hasattr(v,'removed_contradiction'),"RemoveContradictionsVisitor doesn't place result in the 'removed_contradiction' property.")
+
+	#Tests that contradictions are removed from sets def testRemoveSet(self):
+	def testRemoveSet(self):
+		from iegen.ast.visitor import RemoveContradictionsVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp
+
+		set=Set('{[a]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([],2)))
+
+		removed_contradiction=RemoveContradictionsVisitor().visit(set).removed_contradiction
+
+		set_res=Set('{[a]: 1=0}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_contradiction,'removed_contradiction!=True')
+
+	#Tests that contradictions are removed from sets
+	def testRemoveRelation(self):
+		from iegen.ast.visitor import RemoveContradictionsVisitor
+		from iegen import Relation
+		from iegen.ast import Inequality,NormExp
+
+		relation=Relation('{[a]->[ap]}')
+		relation.relations[0].conjunct.constraints.append(Inequality(NormExp([],-1)))
+
+		removed_contradiction=RemoveContradictionsVisitor().visit(relation).removed_contradiction
+
+		relation_res=Relation('{[a]->[ap]: 1=0}')
+
+		self.failUnless(relation_res==relation,'%s!=%s'%(relation_res,relation))
+		self.failUnless(True==removed_contradiction,'removed_contradiction!=True')
+
+	#Tests that whole contradictions in a union are removed
+	def testRemoveOthers(self):
+		from iegen.ast.visitor import RemoveContradictionsVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp
+
+		set=Set('{[a]:a=10}')
+		set2=Set('{[a]}')
+		set2.sets[0].conjunct.constraints.append(Equality(NormExp([],1)))
+		set.sets.append(set2)
+
+		removed_contradiction=RemoveContradictionsVisitor().visit(set).removed_contradiction
+
+		set_res=Set('{[a]: a=10}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_contradiction,'removed_contradiction!=True')
+
+	#Tests that all contradictions are removed and just a single remains with a variable tuple and contradictory constraint
+	def testRemoveAll(self):
+		from iegen.ast.visitor import RemoveContradictionsVisitor
+		from iegen import Set
+		from iegen.ast import Equality,NormExp
+
+		set=Set('{[a,b]:b=0}').union(Set('{[a,b]:b=1}')).union(Set('{[a,b]:b=2}'))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([],1)))
+		set.sets[1].conjunct.constraints.append(Equality(NormExp([],1)))
+		set.sets[2].conjunct.constraints.append(Equality(NormExp([],1)))
+
+		removed_contradiction=RemoveContradictionsVisitor().visit(set).removed_contradiction
+
+		set_res=Set('{[a,b]:1=0}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==removed_contradiction,'removed_contradiction!=True')
+
+#---------------------------------------------------

@@ -20,8 +20,8 @@ class RemoveDuplicateFormulasVisitor(DFVisitor):
 		if len(new_formulas)!=len(node.formulas):
 			self.removed_formula=True
 
-		#Use this new list as the list of formulas
-		node.formulas=new_formulas
+			#Use this new list as the list of formulas
+			node.formulas=new_formulas
 
 	def inSet(self,node):
 		self._inFormula(node)

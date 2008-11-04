@@ -172,6 +172,74 @@ class SetTestCase(TestCase):
 		self.failIf(set.is_free_var('b'),"'b' is a free var in %s"%set)
 		self.failUnless(set.is_free_var('c'),"'c' is not a free var in %s"%set)
 		self.failIf(set.is_free_var('d'),"'d' is a free var in %s"%set)
+
+	#Tests the is_tautology method
+	def testIsTautology(self):
+		from iegen.parser import PresParser
+
+		set=PresParser.parse_set('{[a]}')
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: 5=5}')
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: 5=5 and 6=6}')
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: 5=5 and 6=6 and 3=3}')
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: 5=0}')
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: 5=0 and 6=0}')
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: 5=0 and 6=0 and 7=0}')
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: 5=0 and 5=5}')
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: a=5}')
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+		set=PresParser.parse_set('{[a]: a=5 and f(a)=5}')
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+	#Test the is_contradiction method
+	def testIsContradiction(self):
+		from iegen.parser import PresParser
+
+		set=PresParser.parse_set('{[a]}')
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: 5=5}')
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: 5=5 and 6=6}')
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: 5=5 and 6=6 and 3=3}')
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: 5=0}')
+		self.failUnless(set.is_contradiction(),'%s is not a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: 5=0 and 6=0}')
+		self.failUnless(set.is_contradiction(),'%s is not a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: 5=0 and 6=0 and 7=0}')
+		self.failUnless(set.is_contradiction(),'%s is not a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: 5=0 and 5=5}')
+		self.failUnless(set.is_contradiction(),'%s is not a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: a=5}')
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=PresParser.parse_set('{[a]: a=5 and f(a)=5}')
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
 #-----------------------------------
 
 #---------- PresRelation Tests ----------
@@ -653,15 +721,53 @@ class EqualityTestCase(TestCase):
 
 		self.failUnless(l1==l2,'%s!=%s'%(l1,l2))
 
-	#Tests that the Equality.empty() method works
+	#Tests that the Equality.empty method works
 	def testEmpty(self):
 		from iegen.ast import Equality,NormExp,VarExp
 
-		i=Equality(NormExp([],0))
-		self.failUnless(i.empty(),'%s is not empty.'%i)
+		e=Equality(NormExp([],0))
+		self.failUnless(e.empty(),'%s is not empty'%e)
 
-		i=Equality(NormExp([VarExp(1,'a')],0))
-		self.failIf(i.empty(),'%s is empty'%i)
+		e=Equality(NormExp([VarExp(1,'a')],0))
+		self.failIf(e.empty(),'%s is empty'%e)
+
+	#Tests that the Equality.is_tautology() method works
+	def testIsTautology(self):
+		from iegen.ast import Equality,NormExp,VarExp,FuncExp
+
+		e=Equality(NormExp([],0))
+		self.failUnless(e.is_tautology(),'%s is not a tautology'%e)
+
+		e=Equality(NormExp([],1))
+		self.failIf(e.is_tautology(),'%s is a tautology'%e)
+
+		e=Equality(NormExp([],-1))
+		self.failIf(e.is_tautology(),'%s is a tautology'%e)
+
+		e=Equality(NormExp([VarExp(1,'a')],0))
+		self.failIf(e.is_tautology(),'%s is a tautology'%e)
+
+		e=Equality(NormExp([FuncExp(1,'f',[])],0))
+		self.failIf(e.is_tautology(),'%s is a tautology'%e)
+
+	#Tests that the Equality.is_contradiction() method works
+	def testIsContradiction(self):
+		from iegen.ast import Equality,NormExp,VarExp,FuncExp
+
+		e=Equality(NormExp([],0))
+		self.failIf(e.is_contradiction(),'%s is a contradiction'%e)
+
+		e=Equality(NormExp([],1))
+		self.failUnless(e.is_contradiction(),'%s is not a contradiction'%e)
+
+		e=Equality(NormExp([],-1))
+		self.failUnless(e.is_contradiction(),'%s is not a contradiction'%e)
+
+		e=Equality(NormExp([VarExp(1,'a')],0))
+		self.failIf(e.is_contradiction(),'%s is a contradiction'%e)
+
+		e=Equality(NormExp([FuncExp(1,'f',[])],0))
+		self.failIf(e.is_contradiction(),'%s is a contradiction'%e)
 #------------------------------------
 
 #---------- Inequality Tests ----------
@@ -763,6 +869,44 @@ class InequalityTestCase(TestCase):
 
 		i=Inequality(NormExp([VarExp(1,'a')],0))
 		self.failIf(i.empty(),'%s is empty'%i)
+
+	#Tests that the Inequality.is_tautology() method works
+	def testIsTautology(self):
+		from iegen.ast import Inequality,NormExp,VarExp,FuncExp
+
+		i=Inequality(NormExp([],0))
+		self.failUnless(i.is_tautology(),'%s is not a tautology'%i)
+
+		i=Inequality(NormExp([],1))
+		self.failUnless(i.is_tautology(),'%s is not a tautology'%i)
+
+		i=Inequality(NormExp([],-1))
+		self.failIf(i.is_tautology(),'%s is a tautology'%i)
+
+		i=Inequality(NormExp([VarExp(1,'a')],0))
+		self.failIf(i.is_tautology(),'%s is a tautology'%i)
+
+		i=Inequality(NormExp([FuncExp(1,'f',[])],0))
+		self.failIf(i.is_tautology(),'%s is a tautology'%i)
+
+	#Tests that the Inequality.is_contradiction() method works
+	def testIsContradiction(self):
+		from iegen.ast import Inequality,NormExp,VarExp,FuncExp
+
+		i=Inequality(NormExp([],0))
+		self.failIf(i.is_contradiction(),'%s is a contradiction'%i)
+
+		i=Inequality(NormExp([],1))
+		self.failIf(i.is_contradiction(),'%s is a contradiction'%i)
+
+		i=Inequality(NormExp([],-1))
+		self.failUnless(i.is_contradiction(),'%s is not a contradiction'%i)
+
+		i=Inequality(NormExp([VarExp(1,'a')],0))
+		self.failIf(i.is_contradiction(),'%s is not a contradiction'%i)
+
+		i=Inequality(NormExp([FuncExp(1,'f',[])],0))
+		self.failIf(i.is_contradiction(),'%s is not a contradiction'%i)
 #--------------------------------------
 
 #---------- VarExp Tests ----------

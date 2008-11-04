@@ -17,6 +17,24 @@ class Formula(Node):
 			s.write('%s%s'%(str(formula),' union '))
 		return s.getvalue()[:-7]
 
+	#Returns True if this Formula is a true statement (any terms in its union are tautologies)
+	#Returns False otherwise
+	#Determines the 'truthiness' of the formula
+	def is_tautology(self):
+		res=False
+		for formula in self.formulas:
+			res=res or formula.is_tautology()
+		return res
+
+	#Returns True if this Formula is a false statement (all terms in its union are contradictions)
+	#Returns False otherwise
+	#Determines the 'truthiness' of the formula
+	def is_contradiction(self):
+		res=True
+		for formula in self.formulas:
+			res=res and formula.is_contradiction()
+		return res
+
 	#Private utility method that combines the given formulas
 	#
 	#form{1,2} are either PresSets or PresRelations
@@ -24,7 +42,7 @@ class Formula(Node):
 	#Equality constraints will be added between these tuples
 	#These tuples MUST have the same arity
 	#new_form is the new formula object that will be manipulated
-	def _combine_pres_formulas(self,form1,form1_tuple,form2,form2_tuple,new_form):
+	def _combine_pres_formulas(self,form1,form1_tuple,form2,form2_tuple,new_form,filter_rename):
 		from copy import deepcopy
 		from iegen.ast import Equality,NormExp
 		from iegen.ast.visitor import RenameVisitor
@@ -35,9 +53,13 @@ class Formula(Node):
 
 		#Create dictionaries for renaming the tuple variables
 		form1_rename=self._get_prefix_rename_dict(form1,'form1')
-		form1_unrename=self._get_prefix_unrename_dict(form1,'form1')
 		form2_rename=self._get_prefix_rename_dict(form2,'form2')
-		form2_unrename=self._get_prefix_unrename_dict(form2,'form2')
+		if filter_rename:
+			form1_unrename=self._get_prefix_unrename_dict(form1,'form1','_out_')
+			form2_unrename=self._get_prefix_unrename_dict(form2,'form2','_in_')
+		else:
+			form1_unrename=self._get_prefix_unrename_dict(form1,'form1')
+			form2_unrename=self._get_prefix_unrename_dict(form2,'form2')
 
 		#Rename the tuple varibles in form1 and form2
 		RenameVisitor(form1_rename).visit(form1)
@@ -96,9 +118,18 @@ class Formula(Node):
 		return rename
 
 	#Returns a dictionary that is the inverse of that returned by _get_prefix_rename_dict
-	def _get_prefix_unrename_dict(self,formula,prefix):
+	def _get_prefix_unrename_dict(self,formula,prefix,filter=''):
 		from iegen.util import invert_dict
-		return invert_dict(self._get_prefix_rename_dict(formula,prefix))
+
+		#Build a new dictionary containing only those (k,v) pairs whose key contains the given filter string
+		dict=invert_dict(self._get_prefix_rename_dict(formula,prefix))
+		new_dict={}
+		for k in dict:
+			try:
+				k.index(filter)
+				new_dict[k]=dict[k]
+			except: pass
+		return new_dict
 
 	#Creates a dictionary for renaming variables in a formula
 	#The formula's names are renamed to the corresponding variables
@@ -259,7 +290,7 @@ class Set(Formula):
 		if rel.arity_in()!=set.arity():
 			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(rel.arity_out(),set.arity()))
 
-		return self._combine_pres_formulas(set,'tuple_set',rel,'tuple_in',PresSet(deepcopy(rel.tuple_out),Conjunction([]),deepcopy(set.symbolics)+deepcopy(rel.symbolics)))
+		return self._combine_pres_formulas(set,'tuple_set',rel,'tuple_in',PresSet(deepcopy(rel.tuple_out),Conjunction([]),deepcopy(set.symbolics)+deepcopy(rel.symbolics)),False)
 
 	#Returns the lower bound of the given tuple variable
 	def lower_bound(self,var_name):
@@ -287,7 +318,6 @@ class Set(Formula):
 		for var in mod_set.sets[0].tuple_set.vars:
 			if var_name!=var.id:
 				mod_set._project_out(var.id)
-				mod_set.sets[0].tuple_set.vars.remove(var)
 
 		#Collect the bounds on the variable in question
 		lower_bounds,upper_bounds=CollectBoundsVisitor(var_name).visit(mod_set).bounds
@@ -299,10 +329,11 @@ class Set(Formula):
 	#Destructive call: 'self' is modified rather than creating a new set
 	@normalize_self
 	def _project_out(self,var_name):
-		from iegen.ast import Inequality,NormExp
+		from iegen.ast import Inequality,NormExp,VarExp
 		from iegen.ast.visitor import CollectBoundsVisitor
 
 		lower_bounds,upper_bounds=CollectBoundsVisitor(var_name).visit(self).bounds
+
 		#Fourier-Motzkin Main Loop
 		#Look at all pairs of upper and lower bounds
 		first_lb=True
@@ -313,12 +344,17 @@ class Set(Formula):
 				#Remove the upper bound from the constraints (first time only)
 				if first_lb: self.sets[0].conjunct.constraints.remove(ub_ineq)
 
-				#Add a new constraint with the variable being projected out removed
+				#Create a new constraint with the variable being projected out removed
 				new_ineq=Inequality(NormExp([],ub_coeff)*lb_exp-(NormExp([],lb_coeff)*ub_exp))
-				self.sets[0].conjunct.constraints.append(new_ineq)
-			first_lb=False
-#-------------------------------
 
+				#Add the new constraint if it is not a tautology or contradiction
+				if not new_ineq.is_tautology() and not new_ineq.is_contradiction():
+					self.sets[0].conjunct.constraints.append(new_ineq)
+			first_lb=False
+
+		#Remove the variable from the tuple variables
+		self.sets[0].tuple_set.vars.remove(VarExp(1,var_name))
+#-------------------------------
 
 #---------- Relation class ----------
 class Relation(Formula):
@@ -470,5 +506,5 @@ class Relation(Formula):
 		if r2.arity_out()!=r1.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(r2.arity_out(),r1.arity_in()))
 
-		return self._combine_pres_formulas(r1,'tuple_in',r2,'tuple_out',PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([]),deepcopy(r1.symbolics)+deepcopy(r2.symbolics)))
+		return self._combine_pres_formulas(r1,'tuple_in',r2,'tuple_out',PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([]),deepcopy(r1.symbolics)+deepcopy(r2.symbolics)),True)
 #------------------------------------

@@ -382,7 +382,7 @@ class SetTestCase(TestCase):
 		iter_reordering=Relation('{ [ in ] -> [ i ] : in=i and i=delta(in) }')
 		I_0_applied=I_0_applied.apply(iter_reordering)
 
-		I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }')
+		I_0_res=Set('{ [i] : i=delta(i) and 0 <= i and i <= (n_atom-1) }')
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
@@ -390,19 +390,19 @@ class SetTestCase(TestCase):
 	def testApplyRealUnion(self):
 		from iegen import Set,Relation
 
-		I_0=Set('{ [s1,i,s2] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1)  }').union(Set('{ [s1,i,s2] : s1=2 and s2=2 and 0 <= i and i <= (n_atom-1)  }')).union(Set('{ [s1,i,s2] : s1=3 and s2=3 and 0 <= i and i <= (n_atom-1)  }'))
-		iter_ssr=Relation('{ [ k, ii, j ] -> [ ii ] : k=2 }')
+		I_0=Set('{ [s1,i,s2] : s1=1 and s2=1 and 0 <= i and i <= (n_atom-1)  }').union(Set('{ [s1,i,s2] : s1=2 and s2=2 and 0 <= i and i <= (n_atom-2)  }')).union(Set('{ [s1,i,s2] : s1=3 and s2=3 and 0 <= i and i <= (n_atom-3)  }'))
+		iter_ssr=Relation('{ [ k, ii, j ] -> [ ii ] : k=1 }').union(Relation('{ [ k, ii, j ] -> [ ii ] : k=2 }')).union(Relation('{ [ k, ii, j ] -> [ ii ] : k=3 }'))
 
 		I_0_applied=I_0.apply(iter_ssr)
 
-		I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }').union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }')).union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }'))
+		I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }').union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-2) }')).union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-3) }'))
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
 		iter_reordering=Relation('{ [ in ] -> [ i ] : i=delta(in) }')
 		I_0_applied=I_0_applied.apply(iter_reordering)
 
-		I_0_res=Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }').union(Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }')).union(Set('{ [i] : 0 <= delta(i) and delta(i) <= (n_atom-1) }'))
+		I_0_res=Set('{ [i] : i=delta(in) and 0 <= (n_atom-1) }').union(Set('{ [i] : i=delta(in) and 0 <= (n_atom-2) }')).union(Set('{ [i] : i=delta(in) and 0 <= (n_atom-3) }'))
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
@@ -476,7 +476,7 @@ class SetTestCase(TestCase):
 		from iegen.ast import NormExp
 
 		set=Set('{[a,b]: 5<=a and a<=20 and -10<=b and b<=0}')
-		self.failUnless([NormExp([],5)]==set.lower_bound('a'),"The lower bound of 'a' is not 5")
+		self.failUnless([NormExp([],5)]==set.lower_bound('a'),"The lower bound of 'a' is not 5 in set %s"%set)
 		self.failUnless([NormExp([],20)]==set.upper_bound('a'),"The upper bound of 'a' is not 20")
 		self.failUnless(([NormExp([],5)],[NormExp([],20)])==set.bounds('a'),"The bounds of 'a' are not (5,20)")
 		self.failUnless([NormExp([],-10)]==set.lower_bound('b'),"The lower bound of 'b' is not -10")
@@ -508,6 +508,62 @@ class SetTestCase(TestCase):
 		self.failUnless([NormExp([VarExp(1,'m')],-6)]==set.lower_bound('b'),"The lower bound of 'b' is not m-6")
 		self.failUnless([NormExp([],0)]==set.upper_bound('b'),"The upper bound of 'b' is not 0")
 		self.failUnless(([NormExp([VarExp(1,'m')],-6)],[NormExp([],0)])==set.bounds('b'),"The bounds of 'b' are not (m-6,0)")
+
+	#Tests the is_tautology method
+	def testIsTautology(self):
+		from iegen import Set
+
+		set=Set('{[a]}')
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+		set=Set('{[a]: 5=5}')
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+		set=Set('{[a]: 5=5}').union(Set('{[a]: 6=6}'))
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+		set=Set('{[a]: 5=5}').union(Set('{[a]: 6=6}')).union(Set('{[a]: 3=3}'))
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+		set=Set('{[a]: 5=0}')
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+		set=Set('{[a]: 5=0}').union(Set('{[a]: 6=0}'))
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+		set=Set('{[a]: 5=0}').union(Set('{[a]: 6=0}')).union(Set('{[a]: 7=0}'))
+		self.failIf(set.is_tautology(),'%s is a tautology'%set)
+
+		set=Set('{[a]: 5=0}').union(Set('{[a]: 5=5}'))
+		self.failUnless(set.is_tautology(),'%s is not a tautology'%set)
+
+	#Test the is_contradiction method
+	def testIsContradiction(self):
+		from iegen import Set
+
+		set=Set('{[a]}')
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=Set('{[a]: 5=5}')
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=Set('{[a]: 5=5}').union(Set('{[a]: 6=6}'))
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=Set('{[a]: 5=5}').union(Set('{[a]: 6=6}')).union(Set('{[a]: 3=3}'))
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+		set=Set('{[a]: 5=0}')
+		self.failUnless(set.is_contradiction(),'%s is not a contradiction'%set)
+
+		set=Set('{[a]: 5=0}').union(Set('{[a]: 6=0}'))
+		self.failUnless(set.is_contradiction(),'%s is not a contradiction'%set)
+
+		set=Set('{[a]: 5=0}').union(Set('{[a]: 6=0}')).union(Set('{[a]: 7=0}'))
+		self.failUnless(set.is_contradiction(),'%s is not a contradiction'%set)
+
+		set=Set('{[a]: 5=0}').union(Set('{[a]: 5=5}'))
+		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
 #-------------------------------
 
 #---------- Relation Tests ----------
@@ -905,6 +961,10 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
+{[a]->[c]: a+-1>=0 and c+-1>=0 and -1a>=0 and -1a+10>=0 and -1c+10>=0 and a+10>=0 and -1c+a=0}
+
+{[a]->[c]: -1a>=0 and a+10>=0}
+
 	#Tests the compose operation on a real-world use case from moldyn-FST.in
 	def testComposeReal(self):
 		from iegen import Relation
@@ -963,4 +1023,61 @@ class RelationTestCase(TestCase):
 		rename_res={'a_1':'b','b_1':'c','ap_1':'bp','bp_1':'cp'}
 
 		self.failUnless(rename==rename_res,'%s!=%s'%(rename,rename_res))
+
+	#Tests the is_tautology method
+	def testIsTautology(self):
+		from iegen import Relation
+
+		relation=Relation('{[a]->[ap]}')
+		self.failUnless(relation.is_tautology(),'%s is not a tautology'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=5}')
+		self.failUnless(relation.is_tautology(),'%s is not a tautology'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=5}').union(Relation('{[a]->[ap]: 6=6}'))
+		self.failUnless(relation.is_tautology(),'%s is not a tautology'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=5}').union(Relation('{[a]->[ap]: 6=6}')).union(Relation('{[a]->[ap]: 3=3}'))
+		self.failUnless(relation.is_tautology(),'%s is not a tautology'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=0}')
+		self.failIf(relation.is_tautology(),'%s is a tautology'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=0}').union(Relation('{[a]->[ap]: 6=0}'))
+		self.failIf(relation.is_tautology(),'%s is a tautology'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=0}').union(Relation('{[a]->[ap]: 6=0}')).union(Relation('{[a]->[ap]: 7=0}'))
+		self.failIf(relation.is_tautology(),'%s is a tautology'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=0}').union(Relation('{[a]->[ap]: 5=5}'))
+		self.failUnless(relation.is_tautology(),'%s is not a tautology'%relation)
+
+	#Test the is_contradiction method
+	def testIsContradiction(self):
+		from iegen import Relation
+
+		relation=Relation('{[a]->[ap]}')
+		self.failIf(relation.is_contradiction(),'%s is a contradiction'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=5}')
+		self.failIf(relation.is_contradiction(),'%s is a contradiction'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=5}').union(Relation('{[a]->[ap]: 6=6}'))
+		self.failIf(relation.is_contradiction(),'%s is a contradiction'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=5}').union(Relation('{[a]->[ap]: 6=6}')).union(Relation('{[a]->[ap]: 3=3}'))
+		self.failIf(relation.is_contradiction(),'%s is a contradiction'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=0}')
+		self.failUnless(relation.is_contradiction(),'%s is not a contradiction'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=0}').union(Relation('{[a]->[ap]: 6=0}'))
+		self.failUnless(relation.is_contradiction(),'%s is not a contradiction'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=0}').union(Relation('{[a]->[ap]: 6=0}')).union(Relation('{[a]->[ap]: 7=0}'))
+		self.failUnless(relation.is_contradiction(),'%s is not a contradiction'%relation)
+
+		relation=Relation('{[a]->[ap]: 5=0}').union(Relation('{[a]->[ap]: 5=5}'))
+		self.failIf(relation.is_contradiction(),'%s is a contradiction'%relation)
+
 #------------------------------------

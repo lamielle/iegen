@@ -43,6 +43,7 @@ class Node(object):
 #---------- Presburger Formula ----------
 #A presburger formula: either a set or a relation
 class PresForm(Node):
+	__slots__=('conjunct',)
 
 	def __str__(self,vars,constraints=''):
 		if len(self.symbolics)>0:
@@ -94,6 +95,25 @@ class PresForm(Node):
 		from iegen.ast.visitor import IsVarVisitor
 		v=IsVarVisitor(var_name).visit(self)
 		return v.is_var and not v.is_symbolic_var and not v.is_tuple_var
+
+	#Returns True if this PresFormula is a true statement (all terms in its conjunction are tautologies)
+	#Returns False otherwise
+	#Determines the 'truthiness' of the formula
+	def is_tautology(self):
+		res=True
+		for term in self.conjunct.constraints:
+			res=res and term.is_tautology()
+		return res
+
+	#Returns True if this PresFormula is a false statement (any term in its conjunction is a contradiction)
+	#Returns False otherwise
+	#Determines the 'truthiness' of the formula
+	def is_contradiction(self):
+		res=False
+		for term in self.conjunct.constraints:
+			res=res or term.is_contradiction()
+		return res
+
 #----------------------------------------
 
 #---------- Presburger Set ----------
@@ -261,7 +281,6 @@ class Constraint(Node):
 	def empty(self):
 		return self.exp.empty()
 
-
 class Equality(Constraint):
 	@normalize_self
 	@check
@@ -282,6 +301,26 @@ class Equality(Constraint):
 	def __str__(self):
 		return '%s=0'%str(self.exp)
 
+	#Returns True if this Equality is a true statement (0=0)
+	#Returns False otherwise
+	#Determines the 'truthiness' of the constraint
+	def is_tautology(self):
+		res=False
+		if self.exp.is_const():
+			if 0==self.exp.const:
+				res=True
+		return res
+
+	#Returns True if this Equality is a true statement (c=0)
+	#Returns False otherwise
+	#Determines the 'truthiness' of the constraint
+	def is_contradiction(self):
+		res=False
+		if self.exp.is_const():
+			if 0!=self.exp.const:
+				res=True
+		return res
+
 	def apply_visitor(self,visitor):
 		visitor.visitEquality(self)
 
@@ -299,6 +338,26 @@ class Inequality(Constraint):
 
 	def __str__(self):
 		return '%s>=0'%str(self.exp)
+
+	#Returns True if this Inequality is a true statement (non-neg_c>=0)
+	#Returns False otherwise
+	#Determines the 'truthiness' of the constraint
+	def is_tautology(self):
+		res=False
+		if self.exp.is_const():
+			if self.exp.const>=0:
+				res=True
+		return res
+
+	#Returns True if this Inequality is a true statement (neg_c>=0)
+	#Returns False otherwise
+	#Determines the 'truthiness' of the constraint
+	def is_contradiction(self):
+		res=False
+		if self.exp.is_const():
+			if self.exp.const<0:
+				res=True
+		return res
 
 	def apply_visitor(self,visitor):
 		visitor.visitInequality(self)
@@ -457,7 +516,7 @@ class NormExp(Expression):
 	def empty(self):
 		return not self._has_terms() and 0==self.const
 
-	#Given a collect of Symbolic constants...
+	#Given a collection of Symbolic constants...
 	#Returns True if this NormExp has only symbolic constants in its terms
 	#Returns False otherwise
 	#

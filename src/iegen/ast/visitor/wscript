@@ -30,5 +30,7 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_remove_symbolics_visitor.py')
 	install_files('PREFIX',inst_dir,'_collect_bounds_visitor.py')
 	install_files('PREFIX',inst_dir,'_value_string_visitor.py')
+	install_files('PREFIX',inst_dir,'_remove_tautologies_visitor.py')
+	install_files('PREFIX',inst_dir,'_remove_contradictions_visitor.py')
 
 	bld.add_subdirs('test')
