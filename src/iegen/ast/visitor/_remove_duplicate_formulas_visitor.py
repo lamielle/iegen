@@ -2,35 +2,29 @@ from iegen.ast.visitor import DFVisitor
 
 #Removes any duplicated formulas in either the Set.sets
 #or the Relation.relations collections
+#These two collections are really just the Formula.formulas list
+#so we can combine common code using this list instead
 class RemoveDuplicateFormulasVisitor(DFVisitor):
 	def __init__(self):
 		#By default we have not removed any formulas
 		self.removed_formula=False
 
-	def inSet(self,node):
-		#Create a new list of unique sets
-		new_sets=[]
-		for set in node.sets:
-			if set not in new_sets:
-				new_sets.append(set)
+	def _inFormula(self,node):
+		#Create a new list of unique formulas
+		new_formulas=[]
+		for formula in node.formulas:
+			if formula not in new_formulas:
+				new_formulas.append(formula)
 
-		#See if any sets were removed
-		if len(new_sets)!=len(node.sets):
+		#See if any formulas were removed
+		if len(new_formulas)!=len(node.formulas):
 			self.removed_formula=True
 
-		#Use this new list as the list of sets
-		node.sets=new_sets
+		#Use this new list as the list of formulas
+		node.formulas=new_formulas
+
+	def inSet(self,node):
+		self._inFormula(node)
 
 	def inRelation(self,node):
-		#Create a new list of unique relations
-		new_relations=[]
-		for relation in node.relations:
-			if relation not in new_relations:
-				new_relations.append(relation)
-
-		#See if any relations were removed
-		if len(new_relations)!=len(node.relations):
-			self.removed_formula=True
-
-		#Use this new list as the list of relations
-		node.relations=new_relations
+		self._inFormula(node)
