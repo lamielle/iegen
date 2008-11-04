@@ -961,10 +961,6 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
-{[a]->[c]: a+-1>=0 and c+-1>=0 and -1a>=0 and -1a+10>=0 and -1c+10>=0 and a+10>=0 and -1c+a=0}
-
-{[a]->[c]: -1a>=0 and a+10>=0}
-
 	#Tests the compose operation on a real-world use case from moldyn-FST.in
 	def testComposeReal(self):
 		from iegen import Relation
