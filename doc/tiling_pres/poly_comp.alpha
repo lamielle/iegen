@@ -1,0 +1,12 @@
+affine example {N|1<N}
+given (double X  {i|0<=i<=N-1}; )
+returns (double FX {i|0<=i<=N-1}; )
+through
+   FX[i] =
+     case
+        {|i=0}:     X[i]-X[i+1];
+        {|0<i<N-1}: X[i]-X[i-1]+
+                    X[i]-X[i+1];
+        {|i=N-1}:   X[i]-X[i-1];
+     esac;
+.

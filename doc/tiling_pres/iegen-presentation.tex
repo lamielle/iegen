@@ -1,0 +1,322 @@
+\documentclass[t,handout]{beamer}
+%\documentclass[t,handout]{beamer} %use this header to print slides
+\setbeamertemplate{navigation symbols}{}
+\usepackage{beamerthemeshadow}
+
+\usepackage{listings}
+\lstset{
+language=C,                % choose the language of the code
+basicstyle=\LARGE,    % the size of the fonts that are used for the code
+showstringspaces=false,    % underline spaces within strings
+numbers=right,             % where to put the line-numbers
+numberstyle=\normalsize,   % the size of the fonts that are used for the
+                           % line-numbers
+stepnumber=1,              % the step between two line-numbers. If it's 1 each
+                           % line will be numbered
+numbersep=-8pt,            % how far the line-numbers are from the code
+%backgroundcolor=\color{white},  % choose the background color
+showspaces=false,          % show spaces within strings adding particular
+                           % underscores
+showtabs=false,            % show tabs within strings adding particular
+tabsize=3,                 % tab width
+                           % underscores
+%escapeinside={\%*}{*)}    % if you want to add a comment within your code
+captionpos=b               %caption's placed at the bottom of the listing ('b')
+}
+
+
+\title[IEGen: Automatically Generating Inspectors and Executors]{IEGen}
+\subtitle{Automatically Generating Inspectors and Executors}
+\author{Alan LaMielle}
+\institute{Colorado State University \\
+Tiling Meeting}
+\date{November 5, 2008}
+
+%Show the table of contents after each section
+%\AtBeginSubsection[]
+%{
+%	\begin{frame}<beamer>
+%		\frametitle{Outline}
+%		\tableofcontents[currentsection,currentsubsection]
+%	\end{frame}
+%}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{Overview}
+\tableofcontents
+\end{frame}
+
+\section{The Polyhedral Framework}
+
+\subsection{Representation}
+\begin{frame}
+\frametitle{An example polyhedral computation}
+\includegraphics<1->[scale=.6]{poly_comp}
+\end{frame}
+\begin{frame}[fragile]
+\begin{exampleblock}{An example polyhedral computation}
+\texttt{\lstinputlisting{poly_comp.c}}
+\end{exampleblock}
+\end{frame}
+\begin{frame}[fragile]
+\begin{exampleblock}{An example polyhedral computation}
+\texttt{\lstinputlisting[basicstyle=\large]{poly_comp.alpha}}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}
+Iteration space:
+\bigskip{}
+\begin{itemize}
+\item Constraint Representation:
+$\left[\begin{array}{c}
+1\\
+-1\end{array}\right]\left[\begin{array}{c}
+i\end{array}\right]\ge\left[\begin{array}{c}
+1\\
+n-1\end{array}\right]$
+\bigskip{}
+\item Vertex/Ray Representation: $(1),(n-1)$
+\bigskip{}
+\item Set/Relation Syntax: $\left\{ \left[i\right]:1\le i\le n-1\right\} $
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Data spaces of \texttt{x} and \texttt{fx}:
+\bigskip{}
+\begin{itemize}
+\item Constraint Representation:
+$\left[\begin{array}{c}
+1\\
+-1\end{array}\right]\left[\begin{array}{c}
+i\end{array}\right]\ge\left[\begin{array}{c}
+0\\
+n-1\end{array}\right]$
+\bigskip{}
+\item Vertex/Ray Representation: $(0),(n-1)$
+\bigskip{}
+\item Set/Relation Syntax: $\left\{ \left[i\right]:0\le i\le n-1\right\} $
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+Accesses: \\
+\bigskip{}
+\texttt{S1}'s first access of \texttt{x}:
+\bigskip{}
+$\left[\begin{array}{cc}
+1 & 0\\
+1 & 0\\
+0 & 1\\
+0 & 1\\
+1 & -1\\
+-1 & 1\end{array}\right]\left[\begin{array}{c}
+i\\
+i'\end{array}\right]\ge\left[\begin{array}{c}
+1\\
+n-1\\
+1\\
+n-1\\
+-1\\
+1\end{array}\right]$ \\
+\bigskip{}
+Other accesses are similar...
+\end{frame}
+
+\subsection{Transformation}
+\begin{frame}
+\begin{itemize}
+\item Unimodular Transformation Framework: \\
+\bigskip{}
+$\left[-1\right]\left[i\right]=\left[-i\right]$
+\bigskip{}
+\item Kelly-Pugh Transformation Framework: \\
+\bigskip{}
+$\left\{ \left[i\right]\rightarrow\left[i'\right]:i'=n-1-i\right\}$
+\end{itemize}
+
+\end{frame}
+
+\subsection{Generation}
+\begin{frame}
+\LARGE
+Code Generators:
+\begin{itemize}
+\item CLooG
+\item Omega
+\item TLOG
+\item HiTLoG
+\end{itemize}
+\bigskip{}
+Common libraries:
+\begin{itemize}
+\item Polylib
+\item PIP
+\end{itemize}
+\end{frame}
+
+\subsection{Scope}
+\begin{frame}
+\begin{center}\begin{tabular}{|c|c|}
+\hline
+Dwarf & Support\tabularnewline
+\hline
+\hline
+Dense Linear Algebra & \checkmark \tabularnewline
+\hline
+Sparse Linear Algebra & \ding{55} \tabularnewline
+\hline
+Spectral Methods & \checkmark \tabularnewline
+\hline
+N-Body Methods & \ding{55} \tabularnewline
+\hline
+Structured Grids & \checkmark \tabularnewline
+\hline
+Unstructured Grids & \ding{55} \tabularnewline
+\hline
+Monte Carlo & \checkmark \tabularnewline
+\hline
+Combinational Logic & \ding{55} \tabularnewline
+\hline
+Graph Traversal & \ding{55} \tabularnewline
+\hline
+Dynamic Programming & \checkmark \tabularnewline
+\hline
+Backtrack and Branch \& Bound& \ding{55} \tabularnewline
+\hline
+Construct Graphical Methods & \ding{55} \tabularnewline
+\hline
+Finite State Machines & \ding{55} \tabularnewline
+\hline
+\end{tabular}
+\end{center}
+\end{frame}
+
+\section{The Sparse Polyhedral Framework}
+
+\subsection{Representation}
+\begin{frame}
+\frametitle{An example sparse computation}
+\center{\includegraphics<1->[scale=.5]{sparse_comp}}
+\end{frame}
+\begin{frame}[fragile]
+\begin{exampleblock}{An example sparse computation}
+\texttt{\lstinputlisting{sparse_comp.c}}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}
+\LARGE
+The following needs to be specified:
+\begin{itemize}
+\item Symbolic Constants
+\item Data Spaces
+\item Computation inputs/outputs
+\item Statements with iteration spaces and scattering functions
+\item Access Relations
+\item Data dependences
+\item \emph{Index Arrays (Uninterpreted Functions)}
+\end{itemize}
+\end{frame}
+
+\subsection{Transformation}
+\begin{frame}
+Three types acting on data spaces and iteration spaces:
+\bigskip{}
+\begin{tabular}{|c||c|c|}
+\hline 
+ & Data Space & Iteration Space\tabularnewline
+\hline 
+Permutation & CPack & LexMin\tabularnewline
+\hline 
+Projection & ? & ?\tabularnewline
+\hline 
+Embedding & Smashing & Tiling\tabularnewline
+\hline
+\end{tabular}\\
+\bigskip{}
+Specify the relation from the original data/iteration space to the new data/iteration space.
+\end{frame}
+
+\subsection{Generation}
+\begin{frame}
+Omega?
+
+Other reordering specific Inspector/Executor generators.
+\end{frame}
+
+\subsection{Scope}
+\begin{frame}
+\begin{center}\begin{tabular}{|c|c|}
+\hline
+Dwarf & Support\tabularnewline
+\hline
+\hline
+Dense Linear Algebra & \checkmark \tabularnewline
+\hline
+Sparse Linear Algebra & \checkmark \tabularnewline
+\hline
+Spectral Methods & \checkmark \tabularnewline
+\hline
+N-Body Methods & \checkmark \tabularnewline
+\hline
+Structured Grids & \checkmark \tabularnewline
+\hline
+Unstructured Grids & \checkmark \tabularnewline
+\hline
+Monte Carlo & \checkmark \tabularnewline
+\hline
+Combinational Logic & \ding{55} \tabularnewline
+\hline
+Graph Traversal & \ding{55} \tabularnewline
+\hline
+Dynamic Programming & \checkmark \tabularnewline
+\hline
+Backtrack and Branch \& Bound& \ding{55} \tabularnewline
+\hline
+Construct Graphical Methods & \ding{55} \tabularnewline
+\hline
+Finite State Machines & \ding{55} \tabularnewline
+\hline
+\end{tabular}
+\end{center}
+\end{frame}
+
+\subsection{Why SPF?}
+\begin{frame}
+Supports far more application domains
+
+Still relies on similar theory
+
+Can utilize existing tools for code generation
+\end{frame}
+
+\section{IEGen}
+\begin{frame}
+Demo time!
+\end{frame}
+
+\begin{frame}
+How do fuzzy dependences in Alphabets compare with UFSs in the SPF?
+\end{frame}
+
+%\subsection{Representation}
+%\begin{frame}
+%\end{frame}
+
+%\subsection{Transformation}
+%\begin{frame}
+%\end{frame}
+
+%\subsection{Generation}
+%\begin{frame}
+%\end{frame}
+
+\end{document}
