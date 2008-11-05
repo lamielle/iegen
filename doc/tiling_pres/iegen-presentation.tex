@@ -57,7 +57,12 @@ Tiling Meeting}
 \subsection{Representation}
 \begin{frame}
 \frametitle{An example polyhedral computation}
-\includegraphics<1->[scale=.6]{poly_comp}
+Physical Model:
+\includegraphics<1->[scale=.6]{poly_comp_model} \\
+\bigskip{}
+\bigskip{}
+Iteration Space:
+\includegraphics<1->[scale=.6]{poly_comp_iter} \\
 \end{frame}
 \begin{frame}[fragile]
 \begin{exampleblock}{An example polyhedral computation}
@@ -109,7 +114,7 @@ n-1\end{array}\right]$
 \begin{frame}
 Accesses: \\
 \bigskip{}
-\texttt{S1}'s first access of \texttt{x}:
+\texttt{S1}'s first access of \texttt{x} (\texttt{x[i-1]}): \\
 \bigskip{}
 $\left[\begin{array}{cc}
 1 & 0\\
@@ -127,11 +132,18 @@ n-1\\
 -1\\
 1\end{array}\right]$ \\
 \bigskip{}
+Set Relation Syntax: \\
+\bigskip{}
+$\left\{ \left[i\right]\rightarrow \left[i'\right]:0\le i\le n-1 \wedge 0\le i'\le n-1 \wedge i'=i-1\right\} $ \\
+\bigskip{}
 Other accesses are similar...
 \end{frame}
 
 \subsection{Transformation}
 \begin{frame}
+\LARGE
+Loop reversal:\\
+\bigskip{}
 \begin{itemize}
 \item Unimodular Transformation Framework: \\
 \bigskip{}
@@ -139,7 +151,7 @@ $\left[-1\right]\left[i\right]=\left[-i\right]$
 \bigskip{}
 \item Kelly-Pugh Transformation Framework: \\
 \bigskip{}
-$\left\{ \left[i\right]\rightarrow\left[i'\right]:i'=n-1-i\right\}$
+$\left\{ \left[i\right]\rightarrow\left[i'\right]:i'=-i\right\}$
 \end{itemize}
 
 \end{frame}
@@ -169,31 +181,31 @@ Common libraries:
 Dwarf & Support\tabularnewline
 \hline
 \hline
-Dense Linear Algebra & \checkmark \tabularnewline
+Dense Linear Algebra & \color{green}{\checkmark} \tabularnewline
 \hline
-Sparse Linear Algebra & \ding{55} \tabularnewline
+Sparse Linear Algebra & \color{red}{\ding{55}} \tabularnewline
 \hline
-Spectral Methods & \checkmark \tabularnewline
+Spectral Methods & \color{green}{\checkmark} \tabularnewline
 \hline
-N-Body Methods & \ding{55} \tabularnewline
+N-Body Methods & \color{red}{\ding{55}} \tabularnewline
 \hline
-Structured Grids & \checkmark \tabularnewline
+Structured Grids & \color{green}{\checkmark} \tabularnewline
 \hline
-Unstructured Grids & \ding{55} \tabularnewline
+Unstructured Grids & \color{red}{\ding{55}} \tabularnewline
 \hline
-Monte Carlo & \checkmark \tabularnewline
+Monte Carlo & \color{green}{\checkmark} \tabularnewline
 \hline
-Combinational Logic & \ding{55} \tabularnewline
+Combinational Logic & \color{red}{\ding{55}} \tabularnewline
 \hline
-Graph Traversal & \ding{55} \tabularnewline
+Graph Traversal & \color{red}{\ding{55}} \tabularnewline
 \hline
-Dynamic Programming & \checkmark \tabularnewline
+Dynamic Programming & \color{green}{\checkmark} \tabularnewline
 \hline
-Backtrack and Branch \& Bound& \ding{55} \tabularnewline
+Backtrack and Branch \& Bound& \color{red}{\ding{55}} \tabularnewline
 \hline
-Construct Graphical Methods & \ding{55} \tabularnewline
+Construct Graphical Methods & \color{red}{\ding{55}} \tabularnewline
 \hline
-Finite State Machines & \ding{55} \tabularnewline
+Finite State Machines & \color{red}{\ding{55}} \tabularnewline
 \hline
 \end{tabular}
 \end{center}
@@ -259,31 +271,31 @@ Other reordering specific Inspector/Executor generators.
 Dwarf & Support\tabularnewline
 \hline
 \hline
-Dense Linear Algebra & \checkmark \tabularnewline
+Dense Linear Algebra & \color{green}{\checkmark} \tabularnewline
 \hline
-Sparse Linear Algebra & \checkmark \tabularnewline
+Sparse Linear Algebra & \color{green}{\checkmark} \tabularnewline
 \hline
-Spectral Methods & \checkmark \tabularnewline
+Spectral Methods & \color{green}{\checkmark} \tabularnewline
 \hline
-N-Body Methods & \checkmark \tabularnewline
+N-Body Methods & \color{green}{\checkmark} \tabularnewline
 \hline
-Structured Grids & \checkmark \tabularnewline
+Structured Grids & \color{green}{\checkmark} \tabularnewline
 \hline
-Unstructured Grids & \checkmark \tabularnewline
+Unstructured Grids & \color{green}{\checkmark} \tabularnewline
 \hline
-Monte Carlo & \checkmark \tabularnewline
+Monte Carlo & \color{green}{\checkmark} \tabularnewline
 \hline
-Combinational Logic & \ding{55} \tabularnewline
+Combinational Logic & \color{red}{\ding{55}} \tabularnewline
 \hline
-Graph Traversal & \ding{55} \tabularnewline
+Graph Traversal & \color{red}{\ding{55}} \tabularnewline
 \hline
-Dynamic Programming & \checkmark \tabularnewline
+Dynamic Programming & \color{green}{\checkmark} \tabularnewline
 \hline
-Backtrack and Branch \& Bound& \ding{55} \tabularnewline
+Backtrack and Branch \& Bound& \color{red}{\ding{55}} \tabularnewline
 \hline
-Construct Graphical Methods & \ding{55} \tabularnewline
+Construct Graphical Methods & \color{red}{\ding{55}} \tabularnewline
 \hline
-Finite State Machines & \ding{55} \tabularnewline
+Finite State Machines & \color{red}{\ding{55}} \tabularnewline
 \hline
 \end{tabular}
 \end{center}
@@ -291,14 +303,30 @@ Finite State Machines & \ding{55} \tabularnewline
 
 \subsection{Why SPF?}
 \begin{frame}
-Supports far more application domains
-
-Still relies on similar theory
-
-Can utilize existing tools for code generation
+\LARGE
+What is good about the SPF: \\
+\begin{itemize}
+\item Supports far more application domains
+\item Still relies on similar theory
+\item Can utilize existing tools for code generation (CLooG)
+\end{itemize}
 \end{frame}
 
 \section{IEGen}
+\begin{frame}
+Assumptions we make about UFSs:\\
+\begin{itemize}
+\item $i=j \rightarrow f(i)=f(j)$
+\item Rectangular bounds
+\end{itemize}
+\bigskip{}
+Issues when working with SPF:\\
+\begin{itemize}
+\item Free variable as parameter, must take inverse
+\item Computing bounds of input or output tuples
+\end{itemize}
+\end{frame}
+
 \begin{frame}
 Demo time!
 \end{frame}
@@ -306,17 +334,5 @@ Demo time!
 \begin{frame}
 How do fuzzy dependences in Alphabets compare with UFSs in the SPF?
 \end{frame}
-
-%\subsection{Representation}
-%\begin{frame}
-%\end{frame}
-
-%\subsection{Transformation}
-%\begin{frame}
-%\end{frame}
-
-%\subsection{Generation}
-%\begin{frame}
-%\end{frame}
 
 \end{document}
