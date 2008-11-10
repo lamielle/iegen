@@ -10,19 +10,34 @@ TODO: Format so it looks a bit nicer
 
 INSTALLING:
 
+**************************************************
+-QUICK START:  Execute the following commands from the root of the project
+               directory to build/install IEGen. These commands assume that
+               Polylib and CLooG are installed in $HOME/software. Read farther
+               below for the details of these commands.
+
+setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH:.:$HOME/software/lib
+setenv PYTHONPATH $PYTHONPATH:$PWD
+./waf configure --prefix=$PWD --polylib-loc=$HOME/software --cloog-loc=$HOME/software
+./waf build
+./waf install
+./run_tests
+python examples/moldyn.spec
+**************************************************
+
 -Dependencies: Python version >= 2.4.0, CLooG version >= 0.14.0, and Polylib
-
- -As IEGen is mostly written in Python, Python is a necessary requirement.
-
- -IEGen depends on a loop generation tool called CLooG: http://www.cloog.org/
-  This tool will need to be installed before you can use IEGen.
-
- -Indirectly IEGen depends on the Polylib library as CLooG uses it; this will
+|
+|-As IEGen is mostly written in Python, Python is a necessary requirement.
+|
+|-IEGen depends on a polyhedral loop generation tool called CLooG: http://www.cloog.org/
+| This tool will need to be installed before you can use IEGen.
+|
+|-Indirectly IEGen depends on the Polylib library as CLooG uses it; this will
   need to be installed as well.
 
--IEGen has currently only been built and tested on 64-bit machines.
- If you have success building this software on a 32-bit machine, please let
- us know.
+-IEGen has currently only been built and tested on 32 and 64 bit x86 Linux machines
+ running Fedora 9 and Gentoo. If you have success building and running this software
+ on other operating systems or architectures, please let us know.
 
 -IEGen uses a really slick Python based build system called waf.
 
