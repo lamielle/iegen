@@ -1,7 +1,7 @@
 moldyn-data-iter-reord.txt
 --------------------------
 Started 7/16/08
-Refers to uninter-operations.txt.
+Refers to uninter-operations.txt and codegen-overview.txt.
 
 Showing all the details of how to automatically generate the inspector and executor for a data reordering followed by an iteration reordering on the following code:
 
@@ -12,6 +12,8 @@ S2        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]];
     }
 
 Notes
+    - After the user specification, the more general description (follows along with codegen-overview.txt) of what happens has pushed the previous description of the two phases to the bottom of this file.
+
     - moldyn-FST.txt is an earlier version of this.  Main difference is that now we have the transformations clearly separated from optimization such as pointer update and array alignment.
 
     - detail for operations (compose, inverse, simplifications S1, etc.) referenced in here can be found in uninterp-operations.txt
@@ -113,7 +115,174 @@ Composition and choice of RTRTs
             // - Assuming that reordering algorithm (e.g. IAG_lexmin)
             //    is using access relation from restricted iteration space
             //    to target data space as input.
-            
+   
+--------------------------------------------
+Code Generation for inspectors and executors
+see codegen-overview.txt for the algorithm and some of the details.
+
+    RTRT list as specified by the user (part of MapIR)
+        (A) DataPermuteRTRT({ [ k ] -> [ r ] : r=sigma( k ) }, [ X_0, FX_0 ],
+                            { [ ii, j ] -> [ ii ] }, X_0, "IAG_cpack")
+
+        (B) IterPermuteRTRT({ [ i,x ] -> [ k,x ] : k = delta( i ) },
+                            { [ ii, j ] -> [ ii ] }, X_0, "IAG_lexmin")
+
+            |
+            |
+    Perform calculation traversal of RTRT list.
+    First pass calculates input and output relations.
+        1A) Call calc_input on (A) and it will return the static description of any relations that need to be explicitly generated and passed to IAG_cpack.  Currently called calc_artt.
+
+        2A) Call calc_output on (A) and it will return the static description of its output, which for a permutation is a relation that describes the uninterpreted function with the uninterpreted function.  The point is simply to have a static relation description for the uninterpreted function symbol.  The uninterpreted function symbol will have an ER at runtime that explicitly holds its values.  Currently called calc_sigma.
+
+        3A) Call calc_apply_reord on (A).  (A) in turn calls calc_appy_data_reord((A), dataspaces, mapIR) so that the access relations that update the reordered data spaces are updated.
+
+        1B) Call calc_input on (B) and it will return the static description of any relations that need to be explicitly generated and passed to IAG_lexmin.
+
+        2B) Call calc_output on (B) and it will return the static description of its output, which for a permutation is a relation that describes the uninterpreted function with the uninterpreted function.  The point is simply to have a static relation description for the uninterpreted function symbol and a static description of the ER that will contain the uninterpreted function symbol at runtime.
+
+        3B) Call calc_apply_reord on (B).  (B) in turn calls calc_appy_iter_reord((A), iter_sub_space_relation, mapIR) for all the iteration sub spaces being reordered so that the affected scattering functions and access relations are updated.  For this example generates delta_inv specification.
+
+            |
+            |
+            v
+
+
+    RTRT list after input and output relations have been computed
+
+        (A) DataPermuteRTRT({ [ k ] -> [ r ] : r=sigma( k ) }, [ X_0, FX_0 ],
+                            { [ ii, j ] -> [ ii ] }, X_0, "IAG_cpack")
+
+            Input ERs: {[ii] -> [k] : k=inter1(ii)}
+                     union {[ii] -> [k] : k=inter2(ii) }
+
+            Output ERs: sigma_ER = {[i] -> [j] : j=sigma(i)}
+
+            Simplification ERs: (none, but if removing all existentially quantified variables require the run-time creation of ERs, then a static description of those ERs would be put in this list.)
+
+            ITO ERs: none yet
+
+
+        MapIR, scatter and access relations after calc_apply_reord:
+            example, { [ii] -> [ r ] : r=sigma( inter1(ii) ) }
+
+
+        (B) IterPermuteRTRT({ [ i,x ] -> [ k,x ] : k = delta( i ) },
+                            { [ ii, j ] -> [ ii ] }, X_0, "IAG_lexmin")
+
+            Input ERs: { [ii] -> [ sigma(inter1(ii)) ] }
+                       union { [ii] -> [ sigma(inter2(ii)) ] }
+
+            Output ERs: delta_ER = {[i] -> [j] : j=delta(i)}
+
+            Simplification ERs:
+                delta_inv_ER = { [i] -> [j] : i = delta(j) && j bounds }
+                // need way to iterate over range of output tuples if do
+                // Initially going to specialize this with ER_genInverse.
+
+            ITO ERs: none yet
+
+        MapIR, scatter and access relations after calc_apply_reord:
+            example, { [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2}
+
+
+            |
+            |
+
+    Second set of passes: inter-transformation optimizations
+    (OPTIONAL but probably important for performance)
+    Perform collapsing of nested uninterpreted functions optimization.
+        Pass 1) finds sigma(inter1(x)) and sigma(inter2(x)) nests adds associated relations to ITO ERs for (A), and does static substitution on all following relations (anything later in the RTRT list including later relations within the same RTRT and the scatter and access relations in the MapIR).
+
+        Pass 2) finds inter1_prime(delta_inv(x)) and inter2_prime(delta_inv(x)) nests adds associated relations to ITO ERs for (B).
+
+            |
+            |
+            v
+
+
+    RTRT list after collapsing optimization.
+
+        (A) DataPermuteRTRT({ [ k ] -> [ r ] : r=sigma( k ) }, [ X_0, FX_0 ],
+                            { [ ii, j ] -> [ ii ] }, X_0, "IAG_cpack")
+
+            Input ERs: {[ii] -> [k] : k=inter1(ii)}
+                     union {[ii] -> [k] : k=inter2(ii) }
+
+            Output ERs: sigma_ER = {[i] -> [j] : j=sigma(i)}
+
+            Simplification ERs: (none, but if removing all existentially quantified variables require the run-time creation of ERs, then a static description of those ERs would be put in this list.)
+
+            ITO ERs:
+                sigma_inter1 = { [i] -> [j] : j = sigma(inter1(i)) && i bounds }
+                sigma_inter2 = { [i] -> [j] : j = sigma(inter2(i)) && i bounds }
+
+
+        MapIR, scatter and access relations after calc_apply_reord:
+            example, { [ii] -> [ r ] : r=sigma(inter1(ii)) }
+
+        MapIR, scatter and access relations after collapsing ITO:
+            example, { [ii] -> [ r ] : r=sigma_inter1(ii)  }
+
+
+        (B) IterPermuteRTRT({ [ i,x ] -> [ k,x ] : k = delta( i ) },
+                            { [ ii, j ] -> [ ii ] }, X_0, "IAG_lexmin")
+
+            Input ERs:  { [ii] -> [ sigma(inter1(ii)) ] }
+                        union { [ii] -> [ sigma(inter2(ii)) ] }
+
+            Input ERs after collapsing:
+                        { [ii] -> [ sigma_inter1(ii) ] }
+                        union { [ii] -> [ sigma_inter2(ii) ] }
+
+            Output ERs: delta_ER = {[i] -> [j] : j=delta(i)}
+
+            Simplification ERs:
+                delta_inv_ER = { [i] -> [j] : i = delta(j) && j bounds }
+                // need way to iterate over range of output tuples if do
+                //     When doing simplification of i=delta(j) to j=delta_inv(i) 
+                // have a field in the Relation class that indicates delta_inv 
+                // is an inverse and that it is an inverse of delta.  Then when 
+                // we need to generate code to create an explicit relation for 
+                // delta_inv, we will check that flag and use ER_genInverse.
+
+
+            ITO ERs:
+                sigma_inter1_delta_inv
+                    = { [i] -> [j] : j = sigma_inter1(delta_inv(x)) && i bounds}
+                sigma_inter2_delta_inv
+                    = { [i] -> [j] : j = sigma_inter2(delta_inv(x)) && i bounds}
+
+
+        MapIR, scatter and access relations after calc_apply_reord:
+            example, { [a,b] -> [r] : r=sigma(inter1(delta_inv(a))) && 1 <=b<=2}
+
+        MapIR, scatter and access relations after first pass of collapsing:
+            example, { [a,b] -> [r] : r=sigma_inter1(delta_inv(a)) && 1 <=b<=2}
+
+        MapIR, scatter and access relations after second pass of collapsing:
+            example, { [a,b] -> [r] : r=sigma_inter1_delta_inv(a) && 1 <=b<=2}
+
+
+            |
+            |
+
+    Code Generation Pass
+
+            |
+            |
+            v
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+11/10/08, MMS, below is the previous description of how
+the inspector and executor were to be generated.  This is
+before the codegen-overview generalization.  There are
+still some useful details below and examples of using
+simplification rules.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 -------------------------------------------------------------
 Automatically Generating Straight-Forward Inspector/Executor:
 -This is done in two phases:
