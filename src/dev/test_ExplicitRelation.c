@@ -112,7 +112,6 @@ int main()
     
     // Iterate over the integer tuple relations
     printf("\nTraversing 1Dto1D relation in order of input tuples\n");
-    ER_order_by_in(relptr);
     test_in=0;
     test_count=0;
     FOREACH_in_tuple_1d1d(relptr, in) {
@@ -127,7 +126,47 @@ int main()
     }
     assert(count==test_count);
 
+    //ER_dtor(&relptr);
+
+    //----- testing IAG_cpack itself takes 1D-to-1D relation as input
+    // constructing sigma
+    in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 0);
+    RD_set_ub(in_domain, 0, (NUM_OUT - 1));
+    ExplicitRelation * sigma = ER_ctor(1,1,in_domain,true);
+    
+    // relptr is input to IAG_cpack and sigma is output
+    IAG_cpack( relptr, sigma );    
+    
+    printf("==== dumping sigma after IAG_cpack call\n");
+    ER_dump(sigma);
+    assert(ER_verify_permutation(sigma));
+    
+    //ER_dtor(&relptr);
+    ER_dtor(&sigma);
+
+    //----- testing IAG_lexmin itself
+    // Assume that passing same relptr into IAG_lexmin that we passed 
+    // into IAG_cpack.
+    // constructing delta, which will map old iteration points to new
+    in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 0);
+    RD_set_ub(in_domain, 0, NUM_IN-1);
+    ExplicitRelation * delta = ER_ctor(1,1,in_domain,true);
+    
+    // relptr is input to IAG_cpack and sigma is output
+    IAG_lexmin( relptr, delta );    
+    
+    printf("==== dumping delta after IAG_lexmin call\n");
+    ER_dump(delta);
+    assert(ER_verify_permutation(delta));
+    
     ER_dtor(&relptr);
+    ER_dtor(&delta);
+
+
+
+
 
     //======= test creation and use of ER for sigma and delta, 
     //======= which are permutations and 1D to 1D
@@ -150,7 +189,6 @@ int main()
 
     // Iterate over the integer tuple relations
     printf("\nTraversing sigma example\n");
-    ER_order_by_in(relptr);
     test_count=0;
     test_in = 0;
     FOREACH_in_tuple_1d1d(relptr, in) {
@@ -208,7 +246,6 @@ int main()
     
     // Iterate over the integer tuple relations
     printf("\nTraversing 2D-to-3D example\n");
-    ER_order_by_in(relptr);
     Tuple in_tuple, out_tuple;
     test_count = 0;
     FOREACH_in_tuple(relptr, in_tuple) {
@@ -293,7 +330,6 @@ int main()
     
     // Iterate over the integer tuple relations
     printf("\nTraversing access relation example\n");
-    ER_order_by_in(relptr);
     Tuple in_tuple, out_tuple;
     test_count = 0;
     FOREACH_in_tuple(relptr, in_tuple) {
@@ -322,25 +358,8 @@ int main()
     assert(test_count==count);
 
     // keeping this relptr as input to testing IAG_cpack
-    //ER_dtor(&relptr);
-
-
-    //----- testing IAG_cpack itself
-    // constructing sigma
-    in_domain = RD_ctor(1);
-    RD_set_lb(in_domain, 0, 0);
-    RD_set_ub(in_domain, 0, 10);
-    ExplicitRelation * sigma = ER_ctor(1,1,in_domain,true);
-    
-    // relptr is input to IAG_cpack and sigma is output
-    IAG_cpack( relptr, sigma );    
-    
-    printf("==== dumping sigma after IAG_cpack call\n");
-    ER_dump(sigma);
-    assert(ER_verify_permutation(sigma));
-    
     ER_dtor(&relptr);
-    ER_dtor(&sigma);
+
 
 
     //======= test creation and use of ER for access relation
@@ -365,7 +384,6 @@ int main()
     
     // Iterate over the integer tuple relations
     printf("\nTraversing 1Dto1D relation in order of input tuples\n");
-    ER_order_by_in(relptr);
     test_in=0;
     test_count=0;
     FOREACH_in_tuple_1d1d(relptr, in) {
@@ -407,7 +425,6 @@ int main()
 
     // Iterate over the integer tuple relations
     printf("\nTraversing relation we plan to invert\n");
-    ER_order_by_in(relptr);
     test_count=0;
     test_in = 0;
     FOREACH_in_tuple_1d1d(relptr, in) {
@@ -427,7 +444,6 @@ int main()
 
     // Iterate over the integer tuple relations
     printf("\nTraversing inverted relation\n");
-    ER_order_by_in(relptr); // FIXME: want to remove these
     test_count=0;
     test_in = 0;
     FOREACH_in_tuple_1d1d(new_relptr, in) {

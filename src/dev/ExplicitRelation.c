@@ -1014,6 +1014,18 @@ void ER_order_by_in( ExplicitRelation* self )
     assert(self->ordered_by_in);
 }
 
+void ER_order_by_out(ExplicitRelation* relptr)
+/*----------------------------------------------------------------*//*! 
+  \short Ensure that the given explicit relation is ordered by out tuples.
+
+  \author Michelle Strout 11/11/08
+*//*----------------------------------------------------------------*/
+{
+
+
+    relptr->ordered_by_out = true;
+}
+
 bool ER_verify_permutation(ExplicitRelation* relptr)
 /*------------------------------------------------------------*//*!
   \short Verifies that the given ER is a permutation.

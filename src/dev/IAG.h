@@ -11,5 +11,5 @@
 
 void IAG_cpack(ExplicitRelation* relptr, ExplicitRelation* old2new);
 
-//void IAG_lexmin(Hypergraph* hg, int* old2new);
+void IAG_lexmin(ExplicitRelation* relptr, ExplicitRelation*  old2new);
 

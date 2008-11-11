@@ -142,12 +142,13 @@ typedef struct {
     // Need to keep track of the number of entries in each of the current
     // array allocations.
     // Needed because size of hypergraph is not known apriori.
-    int     in_vals_size;     // number of entries in current allocation
-    int     out_index_size;   // number of entries in current allocation
-    int     out_vals_size;    // number of entries in current allocation
-    int     raw_data_size;    // number of entries in current allocation
+    int     in_vals_size;     // num entries in current in_vals allocation
+    int     out_index_size;   // num entries in current out_index allocation
+    int     out_vals_size;    // num entries in current out_vals allocation
+    int     raw_data_size;    // num entries in current raw_data allocation
 
-    bool    external_out_vals; //is the 'out_vals' field allocated locally or passed in to the constructor?
+    bool    external_out_vals; // is the 'out_vals' field allocated locally 
+                               // or passed in to the constructor?
     
 } ExplicitRelation;
 
@@ -260,8 +261,11 @@ void ER_dump( ExplicitRelation* self );
 
 //----------------------- Setting up ExplicitRelation for iteration
 
-//! Insure that the integer tuple relations are sorted by the input tuples.
+//! Ensure that the integer tuple relations are sorted by the input tuples.
 void ER_order_by_in(ExplicitRelation* relptr);
+
+//! Ensure that the integer tuple relations are sorted by the output tuples.
+void ER_order_by_out(ExplicitRelation* relptr);
 
 //----------------------- Macros for iterating over relations
 
@@ -271,6 +275,7 @@ void ER_order_by_in(ExplicitRelation* relptr);
 //! For now assuming that the ER is constructed with the in_domain or
 //! the in_domain is calculated when things are ordered by in tuples.
 #define FOREACH_in_tuple(relptr, in_tuple)                  \
+    ER_order_by_in(relptr);                                 \
     int _FE_i;                                              \
     for ((_FE_i)=0, in_tuple=ER_calcTuple(relptr, _FE_i);   \
          (_FE_i)<RD_size((relptr)->in_domain);              \
@@ -298,6 +303,8 @@ void ER_order_by_in(ExplicitRelation* relptr);
 //! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   Variable in which to store the input tuple single entry.
 #define FOREACH_in_tuple_1d1d(relptr, in_int)               \
+    assert(relptr->in_arity==1);  assert(relptr->out_arity==1); \
+    ER_order_by_in(relptr);                                 \
     for ((in_int)=RD_lb((relptr)->in_domain,0);             \
          (in_int)<=RD_ub((relptr)->in_domain,0); (in_int)++) 
 

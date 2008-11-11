@@ -7,7 +7,7 @@ all: test_RectDomain test_ExplicitRelation  #driver_moldyn_FST_hand
 #########
 SRCS_RELATION = ExplicitRelation.c test_ExplicitRelation.c \
                 RectDomain.c  \
-                util.c IAG_cpack.c
+                util.c IAG_cpack.c IAG_lexmin.c
 
 test_ExplicitRelation: ExplicitRelation.h util.h RectDomain.h $(SRCS_RELATION)
 	g++ -Wall -g  $(SRCS_RELATION) -o test_ExplicitRelation

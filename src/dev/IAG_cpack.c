@@ -31,6 +31,8 @@ void IAG_cpack(ExplicitRelation* relptr, ExplicitRelation* old2new)
     assert(relptr!=NULL);
     assert(old2new!=NULL);
     // FIXME? don't have anyway to check that old2new is empty
+    assert(relptr->in_arity==1 && relptr->out_arity==1);
+
 
     int  in, count, out;
     bool *taken;
