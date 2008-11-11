@@ -115,7 +115,7 @@ Composition and choice of RTRTs
             // - Assuming that reordering algorithm (e.g. IAG_lexmin)
             //    is using access relation from restricted iteration space
             //    to target data space as input.
-   
+
 --------------------------------------------
 Code Generation for inspectors and executors
 see codegen-overview.txt for the algorithm and some of the details.
@@ -240,10 +240,10 @@ see codegen-overview.txt for the algorithm and some of the details.
             Simplification ERs:
                 delta_inv_ER = { [i] -> [j] : i = delta(j) && j bounds }
                 // need way to iterate over range of output tuples if do
-                //     When doing simplification of i=delta(j) to j=delta_inv(i) 
-                // have a field in the Relation class that indicates delta_inv 
-                // is an inverse and that it is an inverse of delta.  Then when 
-                // we need to generate code to create an explicit relation for 
+                //     When doing simplification of i=delta(j) to j=delta_inv(i)
+                // have a field in the Relation class that indicates delta_inv
+                // is an inverse and that it is an inverse of delta.  Then when
+                // we need to generate code to create an explicit relation for
                 // delta_inv, we will check that flag and use ER_genInverse.
 
 

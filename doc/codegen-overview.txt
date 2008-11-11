@@ -54,27 +54,27 @@ Code generation algorithms
 
             //// CODE GENERATION pass for composed inspector
             for each rtrt in RTRTs:
-                
+
                 for each relation in rtrt.input_ERs:
                     generate code to construct ER for relation
-                    
+
                 generate call to ERG (reordering algorithm)
                     // like old (1b)
                     pass in all input_ERs
                     later: might be passing in other inputs
-                    
+
                 for each relation in rtrt.simplification_ERS:
                     generate code to construct ER for relation
-               
+
                 for each relation in rtrt.ito_ERS:
                     generate code to construct ER for relation
-               
+
                 // option: remapping data after each data reordering
                 // 11/10, MMS, for now assume this is the case
                 if option.remap_data = as_we go:
                     // Assumption: Right now this works for permutations, but we
                     // don't have projections or embeddings figured out yet.
-                    
+
                     for each remap in rtrt.calc_data_remap()
                         gen_data_remap( remap.data_space, remap.relation_name )
 
@@ -110,20 +110,20 @@ RTRT interface
     Input ERs: relations
         List of relations that need to be constructed at runtime before calling
         reordering algorithm.
-        
+
     Output ERs: relations
         List of relations that will be available after reordering algorithm is
         called.
-   
+
     Simplification ERs: relations
         List of relations that need to be constructed after reordering algorithm
         is called so as to enable hybrid simplifications (simplifications with
         compile-time and run-time components).
-        
+
     ITO ERs: relations
-        List of relations that need to be constructed for various 
+        List of relations that need to be constructed for various
         inter-transformation optimizations.
-        
+
   Methods
     calc_input: (RTRTspec, mapIR) -> (relations, symbolics)
         Returns set of relations that the reordering algorithm will need as input.  Also returns a list of symbolic variables that may be needed by the reordering algorithm (e.g. number of partitions).  Does not need to return the symbolics, data spaces, and other ERs needed to generate code for the input ER, because calc_params can do that when generating code to create the input ER.
@@ -133,7 +133,7 @@ RTRT interface
 
     calc_apply_reord: (RTRTspec, mapIR) -> relations
         Uses calc_apply_data_reord, calc_apply_iter_reord, or nothing as necessary to indicate the effect of the RTRT on the access relations and scattering functions.  mapIR is modified as a side effect because it contains the scatter functions and access relations.  This method might generate simplification relations that must have ERs created for them at runtime.
-        
+
     calc_data_remaps: (RTRTspec) -> (data space, relation name) pairs
         Will return a list of (data space, relation name) pairs that indicate what data reorderings should be done for the current RTRT.  Need relation name because will be passing a pointer to that relation to a various routines at runtime so gen_data_remap needs a name instead of just a relation description.
 
