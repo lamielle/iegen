@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo 'CLOC With Tests'
+find src/ -wholename "src/iegen/lib" -prune -o \( -name "*.py" -a -print \) | xargs ./misc/cloc
+
+echo 'CLOC Without Tests'
+find src/ -wholename "src/iegen/lib" -prune -o -name "_test.py" -prune -o \( -name "*.py" -a -print \) | xargs ./misc/cloc
