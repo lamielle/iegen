@@ -67,51 +67,46 @@ def get_equality_value(var_name,formula):
 #---------- Calculation Phase Functions ----------
 #Given a collection of Statement objects, calculates the combined iteration space of all statements
 def calc_full_iter_space(statements):
-	#Get the iteration space of the first statement
-	statement=statements[0]
-	full_iter=statement.iter_space.apply(statement.scatter)
-
-	#Now union this with the rest of the statement's iteration spaces
-	for statement in statements[1:]:
-		full_iter=full_iter.union(statement.iter_space.apply(statement.scatter))
+	full_iter=None
+	for statement in statements:
+		if None is full_iter:
+			full_iter=statement.iter_space.apply(statement.scatter)
+		else:
+			full_iter=full_iter.union(statement.iter_space.apply(statement.scatter))
 
 	return full_iter
 
 def calc_artt(mapir,data_reordering):
 	from iegen import AccessRelation
+
 	#Iteration Sub Space Relation
 	issr=data_reordering.iter_sub_space_relation
 
 	#Calculate the iteration space to data space relation
 	iter_to_data=None
-	for stmt in mapir.statements:
+	for stmt in mapir.statements.values():
 		if not iter_to_data:
-			iter_to_data=issr.compose(stmt.scatter.compose(stmt.access_relations[0].iter_to_data.inverse())).inverse()
+			iter_to_data=issr.compose(stmt.scatter.compose(stmt.access_relations.values()[0].iter_to_data.inverse())).inverse()
 		else:
-			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(stmt.access_relations[0].iter_to_data.inverse())).inverse())
+			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(stmt.access_relations.values()[0].iter_to_data.inverse())).inverse())
 
-		for ar in stmt.access_relations[1:]:
+		for ar in stmt.access_relations.values()[1:]:
 			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse())
 
 	artt=AccessRelation(
-              name='A_I_sub_to_%s'%(data_reordering.target_data_space.name),
-              iter_space=mapir.full_iter_space.apply(data_reordering.iter_sub_space_relation),
-              data_space=data_reordering.target_data_space,
-              iter_to_data=iter_to_data)
+	           name='A_I_sub_to_%s'%(data_reordering.target_data_array.name),
+	           iter_space=mapir.full_iter_space.apply(data_reordering.iter_sub_space_relation),
+	           data_array=data_reordering.target_data_array,
+	           iter_to_data=iter_to_data)
 	return artt
 
 def calc_sigma(mapir,data_reordering):
 	from copy import deepcopy
-	from iegen import DataSpace,IndexArray,Set,IAGPermute
+	from iegen import DataArray,IndexArray,Set,IAGPermute
 
 	#Hard coded to return an IAG_Permute, however, other IAGs will be possible later (IAG_Group,IAG_Part,IAG_Wavefront)
-	syms=mapir.symbolics()
-	data_space=DataSpace(name='sigma_ER',
-	                     #TODO: FIX this so 'x' is not hardcoded
-	                     set=deepcopy(mapir.data_spaces['x'].set),
-	                     is_index_array=True)
-	result=IndexArray(data_space=data_space,
-	                  is_permutation=True,
+	syms=mapir.symbolics.values()
+	result=IndexArray(name='sigma_ER',
 	                  input_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms),
 	                  output_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms))
 	return IAGPermute(name='IAG_cpack',
@@ -123,20 +118,20 @@ def calc_ie_args(mapir):
 	args=[]
 
 	#Data spaces
-	data_space_vars=VarDecl('double *')
-	for data_space in mapir.pure_data_spaces():
-		data_space_vars.var_names.append(data_space.name)
-	args.append(data_space_vars)
+	data_array_vars=VarDecl('double *')
+	for data_array in mapir.data_arrays.values():
+		data_array_vars.var_names.append(data_array.name)
+	args.append(data_array_vars)
 
 	#Index arrays
 	index_array_vars=VarDecl('int *')
-	for index_array in mapir.index_arrays:
-		index_array_vars.var_names.append(index_array.data_space.name)
+	for index_array in mapir.index_arrays.values():
+		index_array_vars.var_names.append(index_array.name)
 	args.append(index_array_vars)
 
 	#Symbolics
 	symbolic_vars=VarDecl('int ')
-	for symbolic in mapir.symbolics():
+	for symbolic in mapir.symbolics.values():
 		symbolic_vars.var_names.append(symbolic.name)
 	args.append(symbolic_vars)
 
@@ -145,7 +140,7 @@ def calc_ie_args(mapir):
 
 	return args
 
-def calc_update_data_spaces(mapir,data_reordering):
+def calc_update_data_arrays(mapir,data_reordering):
 	#Update each data space to reflect any changes
 	#TODO: Add support for examples other than moldyn where the data spaces need to be udpated
 	pass
@@ -156,8 +151,8 @@ def calc_update_scattering_functions(mapir,data_reordering):
 	pass
 
 def calc_update_access_relations(mapir,data_reordering):
-	for statement in mapir.statements:
-		for access_relation in statement.access_relations:
+	for statement in mapir.statements.values():
+		for access_relation in statement.access_relations.values():
 			access_relation.iter_to_data=data_reordering.data_reordering.compose(access_relation.iter_to_data)
 #-------------------------------------------------
 
@@ -166,7 +161,7 @@ def gen_symbolics_decl(mapir):
 	from iegen.codegen import VarDecl
 
 	var_decl=VarDecl('int')
-	for sym in mapir.symbolics():
+	for sym in mapir.symbolics.values():
 		var_decl.var_names.append(sym)
 		var_decl.values.append('10')
 	return [var_decl]
@@ -201,8 +196,8 @@ def gen_declare_index_array_wrappers(mapir):
 	decls=[]
 	decls.append(Comment('Declare the index array wrappers'))
 	er_vars=VarDecl('ExplicitRelation')
-	for index_array in mapir.index_arrays:
-		er_vars.var_names.append('*%s_ER'%(index_array.data_space.name))
+	for index_array in mapir.index_arrays.values():
+		er_vars.var_names.append('*%s_ER'%(index_array.name))
 	decls.append(er_vars)
 
 	return decls
@@ -213,23 +208,24 @@ def gen_create_index_array_wrappers(mapir):
 	#Create the index array wrappers
 	stmts=[]
 	stmts.append(Comment('Create the index array wrappers'))
-	for index_array in mapir.index_arrays:
-		data_space_set=index_array.data_space.set
+	for index_array in mapir.index_arrays.values():
+		data_array_set=index_array.input_bounds
 		#Calculate the size of this index array
 		#Assumes only one set in the union...
-		if 1!=len(data_space_set.sets): raise ValueError("IndexArray's dataspace has multiple terms in the disjunction")
+		if 1!=len(data_array_set.sets): raise ValueError("IndexArray's dataspace has multiple terms in the disjunction")
 		#Assumes the index array dataspace is 1D...
-		if 1!=data_space_set.sets[0].arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
+		if 1!=data_array_set.sets[0].arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
 
 		#Get the single tuple variable
-		var=data_space_set.sets[0].tuple_set.vars[0]
+		var=data_array_set.sets[0].tuple_set.vars[0]
 
 		#Get the string that calculates the size of the ER at runtime
-		size_string=get_size_string(data_space_set,var.id)
+		size_string=get_size_string(data_array_set,var.id)
 
 		#Append the construction of the wrapper the the collection of statements
-		stmts.append(Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.data_space.name,index_array.data_space.name,size_string)))
+		stmts.append(Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.name,index_array.name,size_string)))
 
+		#TODO: What was this for?
 		#get_lower_bound_string
 
 	return stmts
@@ -240,8 +236,8 @@ def gen_destroy_index_array_wrappers(mapir):
 	#Destroy the index array wrappers
 	stmts=[]
 	stmts.append(Comment('Destroy the index array wrappers'))
-	for index_array in mapir.index_arrays:
-		stmts.append(Statement('ER_dtor(&%s_ER);'%(index_array.data_space.name)))
+	for index_array in mapir.index_arrays.values():
+		stmts.append(Statement('ER_dtor(&%s_ER);'%(index_array.name)))
 
 	return stmts
 
@@ -268,18 +264,18 @@ def gen_main_driver(mapir):
 
 	#Add declarations for the non-index array data spaces
 	main.body.append(Comment('Declare the data spaces'))
-	data_space_vars=VarDecl('double');
-	for data_space in mapir.pure_data_spaces():
-		data_space_vars.var_names.append('*'+data_space.name)
-		data_space_vars.values.append('NULL');
-	main.body.append(data_space_vars);
+	data_array_vars=VarDecl('double');
+	for data_array in mapir.data_arrays.values():
+		data_array_vars.var_names.append('*'+data_array.name)
+		data_array_vars.values.append('NULL');
+	main.body.append(data_array_vars);
 	main.newline()
 
 	#Add declarations of the index arrays
 	main.body.append(Comment('Declare the index arrays'))
 	index_array_vars=VarDecl('int')
-	for index_array in mapir.index_arrays:
-		index_array_vars.var_names.append('*'+index_array.data_space.name)
+	for index_array in mapir.index_arrays.values():
+		index_array_vars.var_names.append('*'+index_array.name)
 		index_array_vars.values.append('NULL')
 	main.body.append(index_array_vars)
 	main.newline()
@@ -296,20 +292,20 @@ def gen_main_driver(mapir):
 
 	#Allocate memory for the data spaces
 	main.body.append(Comment('Allocate memory for the data spaces'))
-	for data_space in mapir.pure_data_spaces():
-		main.body.append(Statement('%s=(double*)malloc(sizeof(double)*10);'%data_space.name))
+	for data_array in mapir.data_arrays.values():
+		main.body.append(Statement('%s=(double*)malloc(sizeof(double)*10);'%data_array.name))
 	main.newline()
 
 	#Allocate memory for the index arrays
 	main.body.append(Comment('Allocate memory for the index arrays'))
-	for index_array in mapir.index_arrays:
-		main.body.append(Statement('%s=(int*)malloc(sizeof(int)*10);'%(index_array.data_space.name)))
+	for index_array in mapir.index_arrays.values():
+		main.body.append(Statement('%s=(int*)malloc(sizeof(int)*10);'%(index_array.name)))
 	main.newline()
 
 	#Set index arrays to be 'identity' index arrays
 	main.body.append(Comment("Set index arrays to be 'identity' index arrays"))
-	for index_array in mapir.index_arrays:
-		main.body.append(Statement('for(int i=0;i<10;i++) %s[i]=i;'%(index_array.data_space.name)))
+	for index_array in mapir.index_arrays.values():
+		main.body.append(Statement('for(int i=0;i<10;i++) %s[i]=i;'%(index_array.name)))
 	main.newline()
 
 	#Call the inspector
@@ -336,14 +332,14 @@ def gen_main_driver(mapir):
 
 	#Free the data space memory
 	main.body.append(Comment('Free the data space memory'))
-	for data_space in mapir.pure_data_spaces():
-		main.body.append(Statement('free(%s);'%data_space.name))
+	for data_array in mapir.data_arrays.values():
+		main.body.append(Statement('free(%s);'%data_array.name))
 	main.newline()
 
 	#Free the data space memory
 	main.body.append(Comment('Free the index array memory'))
-	for index_array in mapir.index_arrays:
-		main.body.append(Statement('free(%s);'%index_array.data_space.name))
+	for index_array in mapir.index_arrays.values():
+		main.body.append(Statement('free(%s);'%index_array.name))
 	main.newline()
 
 	main.body.append(Statement('return 0;'))
@@ -390,7 +386,7 @@ def gen_create_artt(mapir):
 	#Generate the whole set of statements
 	stmts=[]
 	in_domain_name='in_domain_%s'%(mapir.artt.name)
-	stmts.extend(gen_rect_domain(in_domain_name,mapir.artt.data_space.set))
+	stmts.extend(gen_rect_domain(in_domain_name,mapir.artt.data_array.bounds))
 	stmts.append(Statement())
 	stmts.append(Comment('Creation of ExplicitRelation of the ARTT'))
 	stmts.append(Comment(str(mapir.artt.iter_to_data)))
@@ -415,15 +411,15 @@ def gen_create_sigma(mapir):
 	stmts=[]
 
 	#Create a rect domain for sigma
-	in_domain_name='in_domain_%s'%(iag.data_space.name)
+	in_domain_name='in_domain_%s'%(iag.name)
 	stmts.extend(gen_rect_domain(in_domain_name,iag.input_bounds))
 	stmts.append(Statement())
 
 	stmts.append(Comment('Create sigma'))
-	stmts.append(Statement('*sigma=ER_ctor(%d,%d,%s,%s);'%(iag.input_bounds.arity(),iag.output_bounds.arity(),in_domain_name,str(iag.is_permutation).lower())))
-	stmts.append(Statement('%s=*sigma;'%(iag.data_space.name)))
+	stmts.append(Statement('*sigma=ER_ctor(%d,%d,%s,%s);'%(iag.input_bounds.arity(),iag.output_bounds.arity(),in_domain_name,str(iag.permutation).lower())))
+	stmts.append(Statement('%s=*sigma;'%(iag.name)))
 
-	stmts.append(Statement('%s(%s,%s);'%(mapir.sigma.name,mapir.sigma.input.name,iag.data_space.name)))
+	stmts.append(Statement('%s(%s,%s);'%(mapir.sigma.name,mapir.sigma.input.name,iag.name)))
 
 	return stmts
 
@@ -434,8 +430,8 @@ def gen_reorder_data(mapir,data_reordering):
 	stmts=[]
 	stmts.append(Comment('Reorder the data arrays'))
 
-	for data_space in data_reordering.data_spaces:
-		stmts.append(Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,%s);'%(data_space.name,get_size_string(data_space.set,data_space.set.sets[0].tuple_set.vars[0].id),mapir.sigma.result.data_space.name)))
+	for data_array in data_reordering.data_arrays:
+		stmts.append(Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,%s);'%(data_array.name,get_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),mapir.sigma.result.name)))
 
 	return stmts
 
@@ -478,15 +474,15 @@ def gen_executor_loop_stmts(mapir):
 
 	stmts=[]
 	stmts.append(Comment('Define the executor main loop body statments'))
-	for i in xrange(len(mapir.statements)):
-		statement=mapir.statements[i]
-		stmts.append(Comment('%s'%(statement.statement)))
+	for i in xrange(len(mapir.statements.values())):
+		statement=mapir.statements.values()[i]
+		stmts.append(Comment('%s'%(statement.text)))
 		ar_dict={}
-		for access_relation in statement.access_relations:
+		for access_relation in statement.access_relations.values():
 			stmts.append(Comment('%s: %s'%(access_relation.name,access_relation.iter_to_data)))
 			ar_dict[access_relation.name]=get_equality_value(access_relation.iter_to_data.relations[0].tuple_out.vars[0].id,access_relation.iter_to_data)
 
-		stmt_string='#define S%d %s'%(i+1,statement.statement)
+		stmt_string='#define S%d %s'%(i+1,statement.text)
 		stmts.append(Statement(stmt_string%ar_dict))
 
 	return stmts
@@ -501,10 +497,10 @@ def gen_executor_loop(mapir):
 	stmts.append(Comment('The executor main loop'))
 
 	#Assumes that all statements have the same iterator variables
-	stmts.extend(gen_tuple_vars_decl(mapir.statements[0].iter_space));
+	stmts.extend(gen_tuple_vars_decl(mapir.statements.values()[0].iter_space));
 
 	cloog_stmts=[]
-	for statement in mapir.statements:
+	for statement in mapir.statements.values():
 		cloog_stmts.append(pycloog.Statement(statement.iter_space))
 	cloog_stmts=codegen(cloog_stmts).split('\n')
 	for cloog_stmt in cloog_stmts:
@@ -543,24 +539,24 @@ def gen_executor(mapir):
 #-----------------------------------------------------
 
 #---------- Public Interface Function ----------
-def codegen(mapir,data_reordering,iter_permute,code):
+def codegen(mapir,code):
 	from iegen.codegen import Program
 	from iegen.codegen.visitor import CPrintVisitor
 
 	#---------- Calculation Phase ----------
 	#Step 1) Calculate the full iteration space based on the iteration spaces of the statements
-	mapir.full_iter_space=calc_full_iter_space(mapir.statements)
+	mapir.full_iter_space=calc_full_iter_space(mapir.statements.values())
 
 	#Step 2) generate an AccessRelation specification that will be the input for data reordering
-	mapir.artt=calc_artt(mapir,data_reordering)
+	mapir.artt=calc_artt(mapir,mapir.transformations[0])
 
 	#Step 3) Generate the IAG and Index Array for sigma
-	mapir.sigma=calc_sigma(mapir,data_reordering)
+	mapir.sigma=calc_sigma(mapir,mapir.transformations[0])
 
 	#Step 4) Modify data dependences, scattering functions, and access functions based on previous transformation.
-	calc_update_data_spaces(mapir,data_reordering)
-	calc_update_scattering_functions(mapir,data_reordering)
-	calc_update_access_relations(mapir,data_reordering)
+	calc_update_data_arrays(mapir,mapir.transformations[0])
+	calc_update_scattering_functions(mapir,mapir.transformations[0])
+	calc_update_access_relations(mapir,mapir.transformations[0])
 
 	#Step 5) Determine the parameters for the inspector and executor functions
 	mapir.ie_args=calc_ie_args(mapir)
@@ -575,7 +571,7 @@ def codegen(mapir,data_reordering,iter_permute,code):
 	program.preamble.extend(gen_preamble())
 
 	#Generate the inspector
-	program.functions.append(gen_inspector(mapir,data_reordering))
+	program.functions.append(gen_inspector(mapir,mapir.transformations[0]))
 
 	#Generate the executor
 	program.functions.append(gen_executor(mapir))

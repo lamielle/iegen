@@ -2,111 +2,97 @@
 
 import iegen,iegen.util
 from iegen import MapIR
-from iegen import Symbolic,DataSpace,IndexArray
+from iegen import Symbolic,DataArray,IndexArray
 from iegen import Set,Relation
 from iegen import Statement,AccessRelation
 from iegen import DataPermuteRTRT,IterPermuteRTRT
 
 #Original Code:
-#    for (ii=0; ii<n_inter; ii++) {
+#    for (i=0; i<n_inter; i++) {
 #        // simplified computations
-#        fx[inter1[ii]] += x[inter1[ii]] - x[inter2[ii]];
-#        fx[inter2[ii]] += x[inter1[ii]] - x[inter2[ii]];
+#        fx[inter1[i]] += x[inter1[i]] - x[inter2[i]];
+#        fx[inter2[i]] += x[inter1[i]] - x[inter2[i]];
 #    }
 
 #Create a new empty MapIR specification for simple moldyn
 moldyn_spec=MapIR()
 
 #Define the symbolic constants for the computation
-moldyn_spec.add_symbolic('N') #Number of atoms
-moldyn_spec.add_symbolic('n_inter') #Number of interactions
-syms=moldyn_spec.symbolics()
+moldyn_spec.add_symbolic(Symbolic('N')) #Number of atoms
+moldyn_spec.add_symbolic(Symbolic('n_inter')) #Number of interactions
+syms=moldyn_spec.symbolics.values()
 
-#Define the data spaces for the computation
-X_0=DataSpace(name='x',
-              set=Set('{ [k] : 0 <= k && k <= (N-1) }',syms),
-              is_index_array=False)
-moldyn_spec.data_spaces['x']=X_0
+#Define the data arrays for the computation
+moldyn_spec.add_data_array(DataArray(
+    name='x',
+    bounds=Set('{[k]: 0<=k && k<=N-1}',syms)))
 
-FX_0=DataSpace(name='fx',
-               set=Set('{ [k] : 0 <= k && k <= (N-1) }',syms),
-               is_index_array=False)
-moldyn_spec.data_spaces['fx']=FX_0
-
-INTER1_0=DataSpace(
-	name='inter1',
-	set=Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms),
-	is_index_array=True)
-moldyn_spec.data_spaces['inter1']=INTER1_0
-
-INTER2_0=DataSpace(
-	name='inter2',
-	set=Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms),
-	is_index_array=True)
-moldyn_spec.data_spaces['inter2']=INTER2_0
+moldyn_spec.add_data_array(DataArray(
+    name='fx',
+    bounds=Set('{[k]: 0<=k && k<=N-1}',syms)))
 
 #Define the index arrays for the computation
-inter1=IndexArray(data_space=INTER1_0,
-                  is_permutation=False,
-                  input_bounds=Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms),
-                  output_bounds=Set('{ [k] : 0 <= k && k <= (N-1) }',syms))
-moldyn_spec.add_index_array(inter1)
+moldyn_spec.add_index_array(IndexArray(
+    name='inter1',
+    input_bounds=Set('{[k]: 0<=k && k<=n_inter-1}',syms),
+    output_bounds=Set('{[k]: 0<=k && k<=N-1}',syms)))
 
-inter2=IndexArray(data_space=INTER2_0,
-                  is_permutation=False,
-                  input_bounds=Set('{ [k] : 0 <= k && k <= (n_inter-1) }',syms),
-                  output_bounds=Set('{ [k] : 0 <= k && k <= (N-1) }',syms))
-moldyn_spec.add_index_array(inter2)
+moldyn_spec.add_index_array(IndexArray(
+    name='inter2',
+    input_bounds=Set('{[k]: 0<=k && k<=n_inter-1}',syms),
+    output_bounds=Set('{[k]: 0<=k && k<=N-1}',syms)))
 
 #Define the statements for the computation
-S1=Statement(statement='fx[%(a1)s] += x[%(a2)s] - x[%(a3)s];',
-             iter_space=Set('{[ii] : 0 <= ii && ii <= (n_inter-1) }',syms),
-             scatter=Relation('{[ii] -> [ii,j] : j=1}',syms))
-moldyn_spec.add_statement(S1)
+moldyn_spec.add_statement(Statement(
+    name='S1',
+    text='fx[%(a1)s] += x[%(a2)s] - x[%(a3)s];',
+    iter_space=Set('{[i]: 0<=i && i<=n_inter-1}',syms),
+    scatter=Relation('{[i]->[c0,i,c1]: c0=1 and c1=1}',syms)))
 
-S2=Statement(statement='fx[%(a4)s] += x[%(a5)s] - x[%(a6)s];',
-             iter_space=Set('{[ii] : 0 <= ii && ii <= (n_inter-1) }',syms),
-             scatter=Relation('{[ii] -> [ii,j] : j=2}',syms))
-moldyn_spec.add_statement(S2)
+moldyn_spec.add_statement(Statement(
+    name='S2',
+    text='fx[%(a4)s] += x[%(a5)s] - x[%(a6)s];',
+    iter_space=Set('{[i]: 0<=i && i<=n_inter-1}',syms),
+    scatter=Relation('{[i]->[c0,i,c1]: c0=1 and c1=2}',syms)))
 
 #Define the access relations for the statements
-a1=AccessRelation(name='a1',
-                  data_space=FX_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }',syms))
-S1.add_access_relation(a1)
+moldyn_spec.statements['S1'].add_access_relation(AccessRelation(
+    name='a1',
+    data_array=moldyn_spec.data_arrays['fx'],
+    iter_to_data=Relation('{[i]->[k]: k=inter1(i)}',syms)))
 
-a2=AccessRelation(name='a2',
-                  data_space=X_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }',syms))
-S1.add_access_relation(a2)
+moldyn_spec.statements['S1'].add_access_relation(AccessRelation(
+    name='a2',
+    data_array=moldyn_spec.data_arrays['x'],
+    iter_to_data=Relation('{[i]->[k]: k=inter1(i)}',syms)))
 
-a3=AccessRelation(name='a3',
-                  data_space=X_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }',syms))
-S1.add_access_relation(a3)
+moldyn_spec.statements['S1'].add_access_relation(AccessRelation(
+    name='a3',
+    data_array=moldyn_spec.data_arrays['x'],
+    iter_to_data=Relation('{[i]->[k]: k=inter2(i)}',syms)))
 
-a4=AccessRelation(name='a4',
-                  data_space=FX_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }',syms))
-S2.add_access_relation(a4)
+moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
+    name='a4',
+    data_array=moldyn_spec.data_arrays['x'],
+    iter_to_data=Relation('{[i]->[k]: k=inter2(i)}',syms)))
 
-a5=AccessRelation(name='a5',
-                  data_space=X_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }',syms))
-S2.add_access_relation(a5)
+moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
+    name='a5',
+    data_array=moldyn_spec.data_arrays['x'],
+    iter_to_data=Relation('{[i]->[k]: k=inter1(i)}',syms)))
 
-a6=AccessRelation(name='a6',
-                  data_space=X_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }',syms))
-S2.add_access_relation(a6)
+moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
+    name='a6',
+    data_array=moldyn_spec.data_arrays['x'],
+    iter_to_data=Relation('{[i]->[k]: k=inter2(i)}',syms)))
 
-
-data_reordering=DataPermuteRTRT(
-                data_reordering=Relation('{ [ k ] -> [ r ] : r=sigma( k ) }',syms),
-                data_spaces=[X_0,FX_0],
-                iter_sub_space_relation=Relation('{[ ii, j ] -> [ ii ] }',syms),
-                target_data_space=X_0,
-                iag_func_name='IAG_cpack')
+#Define the desired transformations
+moldyn_spec.add_transformation(DataPermuteRTRT(
+    data_reordering=Relation('{[k]->[r]: r=sigma(k)}',syms),
+    data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
+    iter_sub_space_relation=Relation('{[c0,i,c1]->[i]}',syms),
+    target_data_array=moldyn_spec.data_arrays['x'],
+    iag_func_name='IAG_cpack'))
 
 iter_reordering=None
 #iter_reordering=IterPermuteRTRT(
@@ -117,7 +103,7 @@ iter_reordering=None
 ##User doesn's specify?
 ##This is calculated in step 1a
 ##               access_relation=A_I_0_to_X_1,
-#                iter_sub_space_relation=Relation('{ [ ii, j ] -> [ ii ] }',syms),
+#                iter_sub_space_relation=Relation('{ [ i, j ] -> [ i ] }',syms),
 #                iag_func_name='IAG_lexmin',
 #                iag_type='IAG_Permute')
 
@@ -126,4 +112,4 @@ iter_reordering=None
 
 #XXX: What is the best way that this should be specified using the MapIR specification?
 
-print moldyn_spec.codegen(data_reordering,iter_reordering,'test.c')
+print moldyn_spec.codegen('test.c')

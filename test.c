@@ -7,7 +7,7 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 #define min(a,b) (((a)<(b))?(a):(b))
 
-void inspector(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,ExplicitRelation **delta,ExplicitRelation **sigma)
+void inspector(double *fx,double *x,int *inter1,int *inter2,int N,int n_inter,ExplicitRelation **delta,ExplicitRelation **sigma)
 {
   /* Declare the index array wrappers */
   ExplicitRelation *inter1_ER,*inter2_ER;
@@ -25,15 +25,15 @@ void inspector(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,Ex
   RD_set_ub(in_domain_A_I_sub_to_x,0,N+-1);
 
   /* Creation of ExplicitRelation of the ARTT */
-  /* {[ii]->[k]: k+-1inter1(ii)=0} union {[ii]->[k]: k+-1inter2(ii)=0} */
+  /* {[i]->[k]: k+-1inter1(i)=0} union {[i]->[k]: k+-1inter2(i)=0} */
   ExplicitRelation* A_I_sub_to_x = ER_ctor(1,1,in_domain_A_I_sub_to_x,false);
 
   /* Define loop body statements */
-  #define S1 ER_in_ordered_insert(A_I_sub_to_x,Tuple_make(ii),Tuple_make(ER_out_given_in(inter1_ER,ii)));
-  #define S2 ER_in_ordered_insert(A_I_sub_to_x,Tuple_make(ii),Tuple_make(ER_out_given_in(inter2_ER,ii)));
+  #define S1 ER_in_ordered_insert(A_I_sub_to_x,Tuple_make(i),Tuple_make(ER_out_given_in(inter1_ER,i)));
+  #define S2 ER_in_ordered_insert(A_I_sub_to_x,Tuple_make(i),Tuple_make(ER_out_given_in(inter2_ER,i)));
 
-  int ii;
-  for (ii=0;ii<=n_inter-1;ii++) {
+  int i;
+  for (i=0;i<=n_inter-1;i++) {
     S1 ;
     S2 ;
   }
@@ -60,7 +60,7 @@ void inspector(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,Ex
   ER_dtor(&inter1_ER);
   ER_dtor(&inter2_ER);
 }
-void executor(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,ExplicitRelation **delta,ExplicitRelation **sigma)
+void executor(double *fx,double *x,int *inter1,int *inter2,int N,int n_inter,ExplicitRelation **delta,ExplicitRelation **sigma)
 {
   /* Declare the index array wrappers */
   ExplicitRelation *inter1_ER,*inter2_ER;
@@ -73,20 +73,20 @@ void executor(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,Exp
   ExplicitRelation *sigma_ER=*sigma;
 
   /* Define the executor main loop body statments */
-  /* fx[%(a1)s] += x[%(a2)s] - x[%(a3)s]; */
-  /* a1: {[ii]->[r]: r+-1sigma(inter1(ii))=0} */
-  /* a2: {[ii]->[r]: r+-1sigma(inter1(ii))=0} */
-  /* a3: {[ii]->[r]: r+-1sigma(inter2(ii))=0} */
-  #define S1 fx[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,ii))] += x[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,ii))] - x[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,ii))];
   /* fx[%(a4)s] += x[%(a5)s] - x[%(a6)s]; */
-  /* a4: {[ii]->[r]: r+-1sigma(inter2(ii))=0} */
-  /* a5: {[ii]->[r]: r+-1sigma(inter1(ii))=0} */
-  /* a6: {[ii]->[r]: r+-1sigma(inter2(ii))=0} */
-  #define S2 fx[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,ii))] += x[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,ii))] - x[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,ii))];
+  /* a5: {[i]->[r]: r+-1sigma(inter1(i))=0} */
+  /* a4: {[i]->[r]: r+-1sigma(inter2(i))=0} */
+  /* a6: {[i]->[r]: r+-1sigma(inter2(i))=0} */
+  #define S1 fx[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,i))] += x[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,i))] - x[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,i))];
+  /* fx[%(a1)s] += x[%(a2)s] - x[%(a3)s]; */
+  /* a1: {[i]->[r]: r+-1sigma(inter1(i))=0} */
+  /* a3: {[i]->[r]: r+-1sigma(inter2(i))=0} */
+  /* a2: {[i]->[r]: r+-1sigma(inter1(i))=0} */
+  #define S2 fx[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,i))] += x[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,i))] - x[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,i))];
 
   /* The executor main loop */
-  int ii;
-  for (ii=0;ii<=n_inter-1;ii++) {
+  int i;
+  for (i=0;i<=n_inter-1;i++) {
     S1 ;
     S2 ;
   }
@@ -98,7 +98,7 @@ void executor(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,Exp
 int main()
 {
   /* Declare the symbolics */
-  int n_inter=10,N=10;
+  int N=10,n_inter=10;
 
   /* Declare the data spaces */
   double *fx=NULL,*x=NULL;
@@ -122,10 +122,10 @@ int main()
   for(int i=0;i<10;i++) inter2[i]=i;
 
   /* Call the inspector */
-  inspector(fx,x,inter1,inter2,n_inter,N,&delta,&sigma);
+  inspector(fx,x,inter1,inter2,N,n_inter,&delta,&sigma);
 
   /* Call the executor */
-  executor(fx,x,inter1,inter2,n_inter,N,&delta,&sigma);
+  executor(fx,x,inter1,inter2,N,n_inter,&delta,&sigma);
 
   /* Debug printing of the data arrays */
   for(int i=0;i<10;i++)
