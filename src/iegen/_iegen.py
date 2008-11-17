@@ -225,7 +225,17 @@ class AccessRelation(object):
 
 #---------- RTRT base class ----------
 class RTRT(object):
-	pass
+	def __init__(self):
+		raise NotImplementedException('RTRT is not an instantiable class.  One must create an instance of a sub class of RTRT')
+
+	def calc_input(self):
+		raise NotImplementedException('Subclasses of RTRT must implement calc_input')
+	def calc_output(self):
+		raise NotImplementedException('Subclasses of RTRT must implement calc_output')
+	def calc_apply_reord(self):
+		raise NotImplementedException('Subclasses of RTRT must implement calc_apply_reord')
+	def calc_data_remaps(self):
+		raise NotImplementedException('Subclasses of RTRT must implement calc_data_remaps')
 #-------------------------------------
 
 #---------- DataPermuteRTRT class ----------

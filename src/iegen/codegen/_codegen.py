@@ -157,8 +157,8 @@ def calc_update_scattering_functions(mapir,data_reordering):
 
 def calc_update_access_relations(mapir,data_reordering):
 	for statement in mapir.statements:
-		for i in xrange(len(statement.access_relations)):
-			statement.access_relations[i].iter_to_data=data_reordering.data_reordering.compose(statement.access_relations[i].iter_to_data)
+		for access_relation in statement.access_relations:
+			access_relation.iter_to_data=data_reordering.data_reordering.compose(access_relation.iter_to_data)
 #-------------------------------------------------
 
 #---------- Code Generation Phase Functions ----------

@@ -79,10 +79,10 @@ void executor(double *fx,double *x,int *inter1,int *inter2,int n_inter,int N,Exp
   /* a3: {[ii]->[r]: r+-1sigma(inter2(ii))=0} */
   #define S1 fx[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,ii))] += x[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,ii))] - x[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,ii))];
   /* fx[%(a4)s] += x[%(a5)s] - x[%(a6)s]; */
-  /* a4: {[ii]->[r]: r+-1sigma(inter1(ii))=0} */
+  /* a4: {[ii]->[r]: r+-1sigma(inter2(ii))=0} */
   /* a5: {[ii]->[r]: r+-1sigma(inter1(ii))=0} */
   /* a6: {[ii]->[r]: r+-1sigma(inter2(ii))=0} */
-  #define S2 fx[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,ii))] += x[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,ii))] - x[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,ii))];
+  #define S2 fx[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,ii))] += x[ER_out_given_in(sigma_ER,ER_out_given_in(inter1_ER,ii))] - x[ER_out_given_in(sigma_ER,ER_out_given_in(inter2_ER,ii))];
 
   /* The executor main loop */
   int ii;

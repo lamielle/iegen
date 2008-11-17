@@ -87,7 +87,7 @@ S1.add_access_relation(a3)
 
 a4=AccessRelation(name='a4',
                   data_space=FX_0,
-                  iter_to_data=Relation('{ [ii] -> [k] : k=inter1(ii) }',syms))
+                  iter_to_data=Relation('{ [ii] -> [k] : k=inter2(ii) }',syms))
 S2.add_access_relation(a4)
 
 a5=AccessRelation(name='a5',
