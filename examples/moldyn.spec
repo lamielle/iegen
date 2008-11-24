@@ -5,7 +5,7 @@ from iegen import MapIR
 from iegen import Symbolic,DataArray,IndexArray
 from iegen import Set,Relation
 from iegen import Statement,AccessRelation
-from iegen import DataPermuteRTRT,IterPermuteRTRT
+from iegen.rtrt import DataPermuteRTRT,IterPermuteRTRT
 
 #Original Code:
 #    for (i=0; i<n_inter; i++) {
@@ -88,6 +88,7 @@ moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
 
 #Define the desired transformations
 moldyn_spec.add_transformation(DataPermuteRTRT(
+    name='cpack',
     data_reordering=Relation('{[k]->[r]: r=sigma(k)}',syms),
     data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
     iter_sub_space_relation=Relation('{[c0,i,c1]->[i]}',syms),

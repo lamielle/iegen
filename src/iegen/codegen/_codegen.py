@@ -76,62 +76,25 @@ def calc_full_iter_space(statements):
 
 	return full_iter
 
-def calc_artt(mapir,data_reordering):
-	from iegen import AccessRelation
-
-	#Iteration Sub Space Relation
-	issr=data_reordering.iter_sub_space_relation
-
-	#Calculate the iteration space to data space relation
-	iter_to_data=None
-	for stmt in mapir.statements.values():
-		if not iter_to_data:
-			iter_to_data=issr.compose(stmt.scatter.compose(stmt.access_relations.values()[0].iter_to_data.inverse())).inverse()
-		else:
-			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(stmt.access_relations.values()[0].iter_to_data.inverse())).inverse())
-
-		for ar in stmt.access_relations.values()[1:]:
-			iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse())
-
-	artt=AccessRelation(
-	           name='A_I_sub_to_%s'%(data_reordering.target_data_array.name),
-	           iter_space=mapir.full_iter_space.apply(data_reordering.iter_sub_space_relation),
-	           data_array=data_reordering.target_data_array,
-	           iter_to_data=iter_to_data)
-	return artt
-
-def calc_sigma(mapir,data_reordering):
-	from copy import deepcopy
-	from iegen import DataArray,IndexArray,Set,IAGPermute
-
-	#Hard coded to return an IAG_Permute, however, other IAGs will be possible later (IAG_Group,IAG_Part,IAG_Wavefront)
-	syms=mapir.symbolics.values()
-	result=IndexArray(name='sigma_ER',
-	                  input_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms),
-	                  output_bounds=Set('{[k]:0<=k and k<=(N-1)}',syms))
-	return IAGPermute(name='IAG_cpack',
-	                   input=mapir.artt,
-	                   result=result)
-
 def calc_ie_args(mapir):
 	from iegen.codegen import VarDecl
 	args=[]
 
 	#Data spaces
 	data_array_vars=VarDecl('double *')
-	for data_array in mapir.data_arrays.values():
+	for data_array in mapir.get_data_arrays():
 		data_array_vars.var_names.append(data_array.name)
 	args.append(data_array_vars)
 
 	#Index arrays
 	index_array_vars=VarDecl('int *')
-	for index_array in mapir.index_arrays.values():
+	for index_array in mapir.get_index_arrays():
 		index_array_vars.var_names.append(index_array.name)
 	args.append(index_array_vars)
 
 	#Symbolics
 	symbolic_vars=VarDecl('int ')
-	for symbolic in mapir.symbolics.values():
+	for symbolic in mapir.get_symbolics():
 		symbolic_vars.var_names.append(symbolic.name)
 	args.append(symbolic_vars)
 
@@ -139,21 +102,6 @@ def calc_ie_args(mapir):
 	args.append(VarDecl('ExplicitRelation **',['delta','sigma']))
 
 	return args
-
-def calc_update_data_arrays(mapir,data_reordering):
-	#Update each data space to reflect any changes
-	#TODO: Add support for examples other than moldyn where the data spaces need to be udpated
-	pass
-
-def calc_update_scattering_functions(mapir,data_reordering):
-	#Update the scattering functions of each statement
-	#TODO: Add support for examples other than moldyn where the scattering functions need to be udpated
-	pass
-
-def calc_update_access_relations(mapir,data_reordering):
-	for statement in mapir.statements.values():
-		for access_relation in statement.access_relations.values():
-			access_relation.iter_to_data=data_reordering.data_reordering.compose(access_relation.iter_to_data)
 #-------------------------------------------------
 
 #---------- Code Generation Phase Functions ----------
@@ -161,7 +109,7 @@ def gen_symbolics_decl(mapir):
 	from iegen.codegen import VarDecl
 
 	var_decl=VarDecl('int')
-	for sym in mapir.symbolics.values():
+	for sym in mapir.get_symbolics():
 		var_decl.var_names.append(sym)
 		var_decl.values.append('10')
 	return [var_decl]
@@ -196,7 +144,7 @@ def gen_declare_index_array_wrappers(mapir):
 	decls=[]
 	decls.append(Comment('Declare the index array wrappers'))
 	er_vars=VarDecl('ExplicitRelation')
-	for index_array in mapir.index_arrays.values():
+	for index_array in mapir.get_index_arrays():
 		er_vars.var_names.append('*%s_ER'%(index_array.name))
 	decls.append(er_vars)
 
@@ -208,7 +156,7 @@ def gen_create_index_array_wrappers(mapir):
 	#Create the index array wrappers
 	stmts=[]
 	stmts.append(Comment('Create the index array wrappers'))
-	for index_array in mapir.index_arrays.values():
+	for index_array in mapir.get_index_arrays():
 		data_array_set=index_array.input_bounds
 		#Calculate the size of this index array
 		#Assumes only one set in the union...
@@ -236,7 +184,7 @@ def gen_destroy_index_array_wrappers(mapir):
 	#Destroy the index array wrappers
 	stmts=[]
 	stmts.append(Comment('Destroy the index array wrappers'))
-	for index_array in mapir.index_arrays.values():
+	for index_array in mapir.get_index_arrays():
 		stmts.append(Statement('ER_dtor(&%s_ER);'%(index_array.name)))
 
 	return stmts
@@ -265,7 +213,7 @@ def gen_main_driver(mapir):
 	#Add declarations for the non-index array data spaces
 	main.body.append(Comment('Declare the data spaces'))
 	data_array_vars=VarDecl('double');
-	for data_array in mapir.data_arrays.values():
+	for data_array in mapir.get_data_arrays():
 		data_array_vars.var_names.append('*'+data_array.name)
 		data_array_vars.values.append('NULL');
 	main.body.append(data_array_vars);
@@ -274,7 +222,7 @@ def gen_main_driver(mapir):
 	#Add declarations of the index arrays
 	main.body.append(Comment('Declare the index arrays'))
 	index_array_vars=VarDecl('int')
-	for index_array in mapir.index_arrays.values():
+	for index_array in mapir.get_index_arrays():
 		index_array_vars.var_names.append('*'+index_array.name)
 		index_array_vars.values.append('NULL')
 	main.body.append(index_array_vars)
@@ -292,19 +240,19 @@ def gen_main_driver(mapir):
 
 	#Allocate memory for the data spaces
 	main.body.append(Comment('Allocate memory for the data spaces'))
-	for data_array in mapir.data_arrays.values():
+	for data_array in mapir.get_data_arrays():
 		main.body.append(Statement('%s=(double*)malloc(sizeof(double)*10);'%data_array.name))
 	main.newline()
 
 	#Allocate memory for the index arrays
 	main.body.append(Comment('Allocate memory for the index arrays'))
-	for index_array in mapir.index_arrays.values():
+	for index_array in mapir.get_index_arrays():
 		main.body.append(Statement('%s=(int*)malloc(sizeof(int)*10);'%(index_array.name)))
 	main.newline()
 
 	#Set index arrays to be 'identity' index arrays
 	main.body.append(Comment("Set index arrays to be 'identity' index arrays"))
-	for index_array in mapir.index_arrays.values():
+	for index_array in mapir.get_index_arrays():
 		main.body.append(Statement('for(int i=0;i<10;i++) %s[i]=i;'%(index_array.name)))
 	main.newline()
 
@@ -332,13 +280,13 @@ def gen_main_driver(mapir):
 
 	#Free the data space memory
 	main.body.append(Comment('Free the data space memory'))
-	for data_array in mapir.data_arrays.values():
+	for data_array in mapir.get_data_arrays():
 		main.body.append(Statement('free(%s);'%data_array.name))
 	main.newline()
 
 	#Free the data space memory
 	main.body.append(Comment('Free the index array memory'))
-	for index_array in mapir.index_arrays.values():
+	for index_array in mapir.get_index_arrays():
 		main.body.append(Statement('free(%s);'%index_array.name))
 	main.newline()
 
@@ -416,7 +364,7 @@ def gen_create_sigma(mapir):
 	stmts.append(Statement())
 
 	stmts.append(Comment('Create sigma'))
-	stmts.append(Statement('*sigma=ER_ctor(%d,%d,%s,%s);'%(iag.input_bounds.arity(),iag.output_bounds.arity(),in_domain_name,str(iag.permutation).lower())))
+	stmts.append(Statement('*sigma=ER_ctor(%d,%d,%s,%s);'%(iag.input_bounds.arity(),iag.output_bounds.arity(),in_domain_name,str(iag.is_permutation).lower())))
 	stmts.append(Statement('%s=*sigma;'%(iag.name)))
 
 	stmts.append(Statement('%s(%s,%s);'%(mapir.sigma.name,mapir.sigma.input.name,iag.name)))
@@ -474,11 +422,11 @@ def gen_executor_loop_stmts(mapir):
 
 	stmts=[]
 	stmts.append(Comment('Define the executor main loop body statments'))
-	for i in xrange(len(mapir.statements.values())):
-		statement=mapir.statements.values()[i]
+	for i in xrange(len(mapir.get_statements())):
+		statement=mapir.get_statements()[i]
 		stmts.append(Comment('%s'%(statement.text)))
 		ar_dict={}
-		for access_relation in statement.access_relations.values():
+		for access_relation in statement.get_access_relations():
 			stmts.append(Comment('%s: %s'%(access_relation.name,access_relation.iter_to_data)))
 			ar_dict[access_relation.name]=get_equality_value(access_relation.iter_to_data.relations[0].tuple_out.vars[0].id,access_relation.iter_to_data)
 
@@ -497,10 +445,10 @@ def gen_executor_loop(mapir):
 	stmts.append(Comment('The executor main loop'))
 
 	#Assumes that all statements have the same iterator variables
-	stmts.extend(gen_tuple_vars_decl(mapir.statements.values()[0].iter_space));
+	stmts.extend(gen_tuple_vars_decl(mapir.get_statements()[0].iter_space));
 
 	cloog_stmts=[]
-	for statement in mapir.statements.values():
+	for statement in mapir.get_statements():
 		cloog_stmts.append(pycloog.Statement(statement.iter_space))
 	cloog_stmts=codegen(cloog_stmts).split('\n')
 	for cloog_stmt in cloog_stmts:
@@ -544,42 +492,52 @@ def codegen(mapir,code):
 	from iegen.codegen.visitor import CPrintVisitor
 
 	#---------- Calculation Phase ----------
-	#Step 1) Calculate the full iteration space based on the iteration spaces of the statements
-	mapir.full_iter_space=calc_full_iter_space(mapir.statements.values())
+	for rtrt in mapir.rtrts:
+		#Calculate the full iteration space based on the current iteration spaces of the statements
+		mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
 
-	#Step 2) generate an AccessRelation specification that will be the input for data reordering
-	mapir.artt=calc_artt(mapir,mapir.transformations[0])
+		print '----- Current full iteration space: -----'
+		print mapir.full_iter_space
+		print '-----------------------------------------'
+		print
 
-	#Step 3) Generate the IAG and Index Array for sigma
-	mapir.sigma=calc_sigma(mapir,mapir.transformations[0])
+		#Tell the RTRT to calculate the inputs that it will need at runtime
+		rtrt.calc_input(mapir)
 
-	#Step 4) Modify data dependences, scattering functions, and access functions based on previous transformation.
-	calc_update_data_arrays(mapir,mapir.transformations[0])
-	calc_update_scattering_functions(mapir,mapir.transformations[0])
-	calc_update_access_relations(mapir,mapir.transformations[0])
+		#Tell the RTRT to calculate the outputs it will produce at runtime
+		rtrt.calc_output(mapir)
 
+		print '----- Applying transformation: -----'
+		print rtrt
+		print '------------------------------------'
+		print
+
+		#Tell the RTRT to update the access relations and scattering functions
+		rtrt.calc_apply(mapir)
+
+		#rtrt.calc_data_remaps()
+	#---------------------------------------
+
+	#---------- Calculation Phase ----------
 	#Step 5) Determine the parameters for the inspector and executor functions
-	mapir.ie_args=calc_ie_args(mapir)
-
-	#Put the full iteration space in the iter permute rtrt
-#	iter_permute.iter_space=mapir.full_iter_space
+#	mapir.ie_args=calc_ie_args(mapir)
 	#---------------------------------------
 
 	#---------- Code Generation Phase ----------
 	#Create the program
-	program=Program()
-	program.preamble.extend(gen_preamble())
+#	program=Program()
+#	program.preamble.extend(gen_preamble())
 
 	#Generate the inspector
-	program.functions.append(gen_inspector(mapir,mapir.transformations[0]))
+#	program.functions.append(gen_inspector(mapir,mapir.rtrts[0]))
 
 	#Generate the executor
-	program.functions.append(gen_executor(mapir))
+#	program.functions.append(gen_executor(mapir))
 
 	#Generate the main driver code
-	program.functions.append(gen_main_driver(mapir))
+#	program.functions.append(gen_main_driver(mapir))
 
 	#Pretty print the generated program structure
-	CPrintVisitor(code,'  ').visit(program)
+#	CPrintVisitor(code,'  ').visit(program)
 	#-------------------------------------------
 #-----------------------------------------------

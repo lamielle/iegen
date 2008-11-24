@@ -9,34 +9,56 @@ iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('symbolics','data_arrays','index_arrays','statements','transformations','full_iter_space','artt','sigma','ie_args')
+	__slots__=('symbolics','data_arrays','index_arrays','statements','rtrts','full_iter_space')
 
 	def __init__(self):
 		self.symbolics={}
 		self.data_arrays={}
 		self.index_arrays={}
 		self.statements={}
-		self.transformations=[]
+		self.rtrts=[]
+
+	#---------- Symbolics ----------
+	#Returns the symbolics that are present in the MapIR
+	def get_symbolics(self): return self.symbolics.values()
 
 	#Adds the given symbolic to the dictionary of symbolic variables
 	def add_symbolic(self,symbolic):
 		self.symbolics[symbolic]=symbolic
+	#-------------------------------
+
+	#---------- Data Arrays ----------
+	#Returns the data arrays that are present in the MapIR
+	def get_data_arrays(self): return self.data_arrays.values()
 
 	#Adds the given data array to the dictionary of data arrays
 	def add_data_array(self,data_array):
 		self.data_arrays[data_array.name]=data_array
+	#---------------------------------
+
+	#---------- Index Arrays ----------
+	#Returns the index arrays that are present in the MapIR
+	def get_index_arrays(self): return self.index_arrays.values()
 
 	#Adds the given index array to the collection of index arrays
 	def add_index_array(self,index_array):
 		self.index_arrays[index_array.name]=index_array
+	#----------------------------------
+
+	#---------- Statements ----------
+	#Returns the statements that are present in the MapIR
+	def get_statements(self): return self.statements.values()
 
 	#Adds the given statement to the collection of statements
 	def add_statement(self,statement):
 		self.statements[statement.name]=statement
+	#--------------------------------
 
-	#Adds the given transformation to the sequence of transformations
+	#---------- Transformations ----------
+	#Adds the given transformation to the sequence of rtrts
 	def add_transformation(self,transformation):
-		self.transformations.append(transformation)
+		self.rtrts.append(transformation)
+	#-------------------------------------
 
 	#---------- Main 'action' method ---------
 	#This is the main interface that starts the whole code generation process
@@ -111,28 +133,60 @@ class DataArray(object):
 
 #---------- ERSpec class ----------
 class ERSpec(object):
-	__slots__=('name','input_bounds','output_bounds','function','permutation')
+	__slots__=('name','input_bounds','output_bounds','relation','_is_function','_is_permutation','is_inverse','created')
 
-	def __init__(self,name,input_bounds,output_bounds,function,permutation):
+	def __init__(self,name,input_bounds,output_bounds,relation,is_function=False,is_permutation=False,is_inverse=False):
 		self.name=name
 		self.input_bounds=input_bounds
 		self.output_bounds=output_bounds
-		self.function=function
-		self.permutation=permutation
+		self.relation=relation
+		self.is_function=is_function
+		self.is_permutation=is_permutation
+		self.is_inverse=is_inverse
+		self.created=False
+
+	def _get_is_function(self): return self._is_function
+	def _set_is_function(self,is_function):
+		if not is_function: self.is_permutation=False
+		self._is_function=is_function
+	is_function=property(_get_is_function,_set_is_function)
+
+	def _get_is_permutation(self): return self._is_permutation
+	def _set_is_permutation(self,is_permutation):
+		if is_permutation: self.is_function=True
+		self._is_permutation=is_permutation
+	is_permutation=property(_get_is_permutation,_set_is_permutation)
+
+	def __repr__(self):
+		return 'ERSpec(%s,%s,%s,%s,%s,%s,%s,%s)'%(self.name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation),self.is_function,self.is_permutation,self.is_inverse,self.created)
+
+	def __str__(self):
+		return self._get_string(0)
+
+	def _get_string(self,indent):
+		if indent>0: indent+=1
+		spaces=' '*indent
+		return '''%sERSpec:
+%s|-name: %s
+%s|-input_bounds: %s
+%s|-output_bounds: %s
+%s|-relation: %s
+%s|-is_function: %s
+%s|-permuatation: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation,spaces,self.is_function,spaces,self.is_permutation)
 #----------------------------------
 
 #---------- IndexArray class ----------
 class IndexArray(ERSpec):
 
 	def __init__(self,name,input_bounds,output_bounds):
-		ERSpec.__init__(self,name,input_bounds,output_bounds,True,True)
+		ERSpec.__init__(self,name,input_bounds,output_bounds,True,False)
 
 		#Checking
 		if 1!=self.output_bounds.arity():
 			raise iegen.util.DimensionalityError('The dimensionality of the output bounds of the index array (%d) should be 1.'%self.output_bounds.arity_out())
 
 	def __repr__(self):
-		return 'IndexArray(%s,%s,%s)'%(self,name,repr(self.input_bounds),repr(self.output_bounds))
+		return 'IndexArray(%s,%s,%s,%s)'%(self,name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation))
 
 	def __str__(self):
 		return self._get_string(0)
@@ -143,7 +197,8 @@ class IndexArray(ERSpec):
 		return '''%sIndexArray:
 %s|-name: %s
 %s|-input_bounds: %s
-%s|-output_bounds: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds)
+%s|-output_bounds: %s
+%s|-relation: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation)
 #--------------------------------------
 
 #---------- Statement class ----------
@@ -158,7 +213,7 @@ class Statement(object):
 		self.access_relations={} if None is access_relations else access_relations
 
 	def __repr__(self):
-		return 'Statement(%s,%s,%s,%s,%s)'%(self.name,self.statement,self.iter_space,self.scatter,self.access_relations)
+		return 'Statement(%s,%s,%s,%s,%s)'%(self.name,self.text,self.iter_space,self.scatter,self.access_relations)
 
 	def __str__(self):
 		return self._get_string(0)
@@ -170,16 +225,19 @@ class Statement(object):
 		spaces=' '*indent
 		dashes='-'*indent
 		ar_string=StringIO()
-		for access_relation in self.access_relations:
+		for access_relation in self.get_access_relations():
 			print >>ar_string,access_relation._get_string(indent+5)
 		ar_string=ar_string.getvalue()
 		return '''Statement:
 %s|-name: %s
-%s|-statement: %s
+%s|-text: %s
 %s|-iter_space: %s
 %s|-scatter: %s
 %s|-access_relations:
-%s'''%(spaces,self.name,spaces,self.statement,spaces,self.iter_space,spaces,self.scatter,spaces,ar_string)
+%s'''%(spaces,self.name,spaces,self.text,spaces,self.iter_space,spaces,self.scatter,spaces,ar_string)
+
+	#---------- Access Relations ----------
+	def get_access_relations(self): return self.access_relations.values()
 
 	def add_access_relation(self,access_relation):
 		#Checking
@@ -187,6 +245,7 @@ class Statement(object):
 			raise iegen.util.DimensionalityError('The input arity of the access relation (%d) should be the arity of the iteration space (%d).'%(access_relation.iter_to_data.arity_in(),self.iter_space.arity()))
 
 		self.access_relations[access_relation.name]=access_relation
+	#--------------------------------------
 #-------------------------------------
 
 #---------- AccessRelation class ----------
@@ -219,59 +278,6 @@ class AccessRelation(object):
 %s|-iter_space: %s'''%(spaces,spaces,self.name,spaces,self.data_array._get_string(indent+13),spaces,self.iter_to_data,spaces,self.iter_space)
 #------------------------------------------
 
-#---------- RTRT base class ----------
-class RTRT(object):
-	def __init__(self):
-		raise NotImplementedException('RTRT is not an instantiable class.  One must create an instance of a sub class of RTRT')
-
-	def calc_input(self):
-		raise NotImplementedException('Subclasses of RTRT must implement calc_input')
-	def calc_output(self):
-		raise NotImplementedException('Subclasses of RTRT must implement calc_output')
-	def calc_apply_reord(self):
-		raise NotImplementedException('Subclasses of RTRT must implement calc_apply_reord')
-	def calc_data_remaps(self):
-		raise NotImplementedException('Subclasses of RTRT must implement calc_data_remaps')
-#-------------------------------------
-
-#---------- DataPermuteRTRT class ----------
-class DataPermuteRTRT(RTRT):
-	__slots__=('data_reordering','data_arrays','iter_sub_space_relation','target_data_array','iag_func_name')
-
-	def __init__(self,data_reordering,data_arrays,iter_sub_space_relation,target_data_array,iag_func_name):
-		self.data_reordering=data_reordering
-		self.data_arrays=data_arrays
-		self.iter_sub_space_relation=iter_sub_space_relation
-		self.target_data_array=target_data_array
-		self.iag_func_name=iag_func_name
-#-------------------------------------------
-
-#---------- IterPermuteRTRT class ----------
-class IterPermuteRTRT(RTRT):
-	__slots__=('iter_reordering','iter_space','access_relation','iter_sub_space_relation','iag_func_name','iag_type')
-
-	def __init__(self,iter_reordering,iter_space,access_relation,iter_sub_space_relation,iag_func_name,iag_type):
-		self.iter_reordering=iter_reordering
-		self.iter_space=iter_space
-		self.access_relation=access_relation
-		self.iter_sub_space_relation=iter_sub_space_relation
-		self.iag_func_name=iag_func_name
-		self.iag_type=iag_type
-#-------------------------------------------
-
-#---------- Index Array Generator classes ----------
-class IAGSpec(object):
-	pass
-
-class IAGPermute(IAGSpec):
-	__slots__=('name','input','result')
-
-	def __init__(self,name,input,result):
-		self.name=name
-		self.input=input
-		self.result=result
-#---------------------------------------------------
-
 #---------- DataDependence class ----------
 class DataDependence(object):
 	__slots__=('_iterspace','_dataspace','_data_dependence')
@@ -286,78 +292,3 @@ class DataDependence(object):
 
 iegen.util.define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
 #------------------------------------------
-
-#
-#    // Base class
-#    // Index array generator specifications.
-#    class IAGspec {
-#    }
-#
-#
-#    //      IAG_Permute - specification for an IAG that
-#    //          takes a hypergraph (and possibly use its dual) and
-#    //          creates an index array containing a
-#    //          permutation of either the nodes or hyperedges in
-#    //          the hypergraph.
-#
-#    class IAG_Permute extends IAGspec {
-#        AccessRelation input;
-#        String name;
-#        IndexArray result;
-#    }
-#
-#FIXME: MMS, 5/23/08, only need IAG_Permute to work on the first part of the moldyn-FST composed transformation, so the rest of this still needs thought out
-#
-#    //      IAG_Group - creates an index array that groups the space
-#    //          used to access the index array.
-#    //          Assuming for now that we are only applying these to iteration
-#    //          spaces.
-#    //      Don't want to make this abstract.  Instead, it can be used by
-#    //      any grouping that does not inspect access relations or data
-#    //      dependences.
-#    class IAG_Group {
-#        // return the space being grouped
-#        IterSpace getInputIterSpace();
-#
-#        // return heuristic being used to perform the grouping
-#        Heuristic getHeuristic();
-#
-#        // Return specification for the index array that will be the
-#        // result of the grouping.  Won't know name but will know
-#        // input and output constraints for the uninterpreted function.
-#        // Is this something that the IAG should be able to compute from
-#        // its various pieces of info, the input space being grouped,
-#        // and the Heuristic info?  What do we really want here?
-#        OmegaRelation getIndexArraySpec();
-#
-#        // might have these members in the base class,
-#        // but might just have this be an interface
-#        IterSpace input;
-#        Heuristic heuristic;
-#        IndexArray result;
-#    }
-#
-#    // uses data dependences in iteration space
-#    class IAG_Wavefront : public IAG_Group {
-#        // Wavefront needs the set of data dependences between the
-#        // points in the input iteration space.
-#        DataDeps input_dd;
-#
-#    }
-#
-#    // uses data dependences in iter space and a seed partitioning
-#    // on a subspace of the iter space
-#    class IAG_SparseTiling : public IAG_Group {
-#        // take dependences, a mapping from iter to seed space
-#        // and a partitioning of the seed space
-#        DataDeps input_dd;
-#        OmegaRelation iter_space_to_seed_space;
-#        IndexArray seed_partition;
-#    }
-#
-#
-#Initial assumptions:
-#    -single iteration space, but different heuristics can operate on subspaces within that iteration space
-#    -range of uninterpreted function symbol is single dimensional
-#    -data and index arrays are only one dimensional when first specified?  what about later?
-#    -a data space is either an index array or a data array but not both, not sure what being both would mean
