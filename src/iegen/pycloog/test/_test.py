@@ -26,7 +26,20 @@ class PYCLooGTestCase(TestCase):
 		from iegen.pycloog import Statement,codegen
 		from iegen import Set,Symbolic
 
-		code='''if (m >= 1) {
+		code='''if ((m >= 1) && (n >= 1)) {
+  for (i=1;i<=n;i++) {
+    for (j=1;j<=m;j++) {
+      S1 ;
+    }
+  }
+  for (i=1;i<=n;i++) {
+    for (j=1;j<=m;j++) {
+      S0 ;
+    }
+  }
+}'''
+
+		old_code='''if (m >= 1) {
   for (i=1;i<=n;i++) {
     for (j=1;j<=m;j++) {
       S2 ;
@@ -58,7 +71,16 @@ if (m >= 1) {
 		from iegen.pycloog import Statement,codegen
 		from iegen import Set,Symbolic
 
-		code='''for (i=1;i<=n;i++) {
+		code='''if (n >= 1) {
+  for (i=1;i<=n;i++) {
+    for (j=1;j<=n;j++) {
+      S0 ;
+      S1 ;
+    }
+  }
+}'''
+
+		old_code='''for (i=1;i<=n;i++) {
   for (j=1;j<=n;j++) {
     S1 ;
     S2 ;

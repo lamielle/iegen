@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include <cloog/cloog.h>
+#include <cloog/polylib/cloog.h>
 #include <iegen/pycloog/pycloog.h>
 
 char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_statements,pycloog_names *pycloog_names,string_allocator_t string_allocator)
 {
    bool do_scatter;
-   CloogDomainList *cloog_scatter_list;
+   CloogScatteringList *cloog_scatter_list;
    CloogProgram *cloog_program;
    CloogOptions *cloog_options;
    FILE *temp;
@@ -28,20 +28,20 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
       /* Build the CLooG program structure for the given statments and names */
       cloog_program=pycloog_get_program(pycloog_statements,pycloog_num_statements,pycloog_names);
 
+      /* Get an options object */
+      cloog_options=pycloog_get_options();
+
       if(do_scatter)
       {
          /* Get a list of scattering functions */
          cloog_scatter_list=pycloog_get_scatter_list(pycloog_statements,pycloog_num_statements,pycloog_names);
 
          /* Apply the scattering functions */
-         pycloog_scatter(cloog_program,cloog_scatter_list);
+         pycloog_scatter(cloog_program,cloog_scatter_list,cloog_options);
 
          /* Free the scattering list */
-         cloog_domain_list_free(cloog_scatter_list);
+         cloog_scattering_list_free(cloog_scatter_list);
       }
-
-      /* Get an options object */
-      cloog_options=pycloog_get_options();
 
       /* Ask CLooG to generate a program from the give domain specifications */
       cloog_program=cloog_program_generate(cloog_program,cloog_options);
@@ -117,13 +117,13 @@ CloogProgram* pycloog_get_program(
    return cloog_program;
 }
 
-CloogDomainList* pycloog_get_scatter_list(
+CloogScatteringList* pycloog_get_scatter_list(
    pycloog_statement *pycloog_statements,
    int pycloog_num_statements,
    pycloog_names *pycloog_names)
 {
    int pycloog_statement_num;
-   CloogDomainList *cloog_scatter_head,*cloog_scatter_curr;
+   CloogScatteringList *cloog_scatter_head,*cloog_scatter_curr;
 
    /* Get the first scattering function */
    cloog_scatter_head=pycloog_get_domain_list(&pycloog_statements[0]);
@@ -322,7 +322,6 @@ CloogLoop* pycloog_get_loop_from_statement(
    /* Define the statement block */
    cloog_block=cloog_block_malloc();
    cloog_block->statement=cloog_statement;
-   cloog_block->scattering=NULL;
    cloog_block->depth=0;
 
    /* Define this statement's loop structure */
@@ -391,16 +390,16 @@ CloogDomain* pycloog_get_domain(pycloog_domain *domain)
    return cloog_domain;
 }
 
-CloogDomainList* pycloog_get_domain_list(pycloog_statement *pycloog_statement)
+CloogScatteringList* pycloog_get_domain_list(pycloog_statement *pycloog_statement)
 {
-   CloogDomainList *cloog_domain_list;
+   CloogScatteringList *cloog_domain_list;
 
    /*
-    * There is no function to allocate a CloogDomainList.
+    * There is no function to allocate a CloogScatteringList.
     * This method (malloc) is used in cloog_domain_list_read,
     * so it must be good enough to use here!
     */
-   cloog_domain_list=(CloogDomainList*)malloc(sizeof(CloogDomainList));
+   cloog_domain_list=(CloogScatteringList*)malloc(sizeof(CloogScatteringList));
 
    cloog_domain_list->domain=pycloog_get_domain(pycloog_statement->scatter);
    cloog_domain_list->next=NULL;
@@ -408,19 +407,19 @@ CloogDomainList* pycloog_get_domain_list(pycloog_statement *pycloog_statement)
    return cloog_domain_list;
 }
 
-void pycloog_scatter(CloogProgram *cloog_program,CloogDomainList *cloog_scatter_list)
+void pycloog_scatter(CloogProgram *cloog_program,CloogScatteringList *cloog_scatter_list,CloogOptions *cloog_options)
 {
    int i;
    char **scattering;
 
    if (cloog_scatter_list != NULL)
    {
-      if(cloog_domain_list_lazy_same(cloog_scatter_list))
+      if(cloog_scattering_list_lazy_same(cloog_scatter_list))
       {
          fprintf(stderr, "[CLooG]WARNING: some scattering functions are similar.\n");
       }
 
-      cloog_program->nb_scattdims=cloog_domain_dimension(cloog_scatter_list->domain)-cloog_domain_dimension(cloog_program->loop->domain);
+      cloog_program->nb_scattdims=cloog_scattering_dimension(cloog_scatter_list->domain,cloog_program->loop->domain);
 
       scattering=cloog_names_generate_items(cloog_program->nb_scattdims,"c",'1');
 
@@ -437,9 +436,9 @@ void pycloog_scatter(CloogProgram *cloog_program,CloogDomainList *cloog_scatter_
          cloog_program->scaldims[i]=0;
 
       /* We try to find blocks in the input problem to reduce complexity. */
-      cloog_program_block(cloog_program,cloog_scatter_list);
-      cloog_program_extract_scalars(cloog_program,cloog_scatter_list);
-      cloog_program_scatter(cloog_program,cloog_scatter_list);
+      cloog_program_block(cloog_program,cloog_scatter_list,cloog_options);
+      cloog_program_extract_scalars(cloog_program,cloog_scatter_list,cloog_options);
+      cloog_program_scatter(cloog_program,cloog_scatter_list,cloog_options);
    }
    else
    {

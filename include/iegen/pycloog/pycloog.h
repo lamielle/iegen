@@ -75,11 +75,11 @@ CloogProgram* pycloog_get_program(
    pycloog_names *pycloog_names);
 
 /*
- * Gets a linked list of CloogDomainList structures,
+ * Gets a linked list of CloogScatteringList structures,
  * one per statement, where the domain of each is the
  * scattering function for the statement.
  */
-CloogDomainList* pycloog_get_scatter_list(
+CloogScatteringList* pycloog_get_scatter_list(
    pycloog_statement *pycloog_statements,
    int pycloog_num_statements,
    pycloog_names *pycloog_names);
@@ -156,10 +156,10 @@ CloogDomain* pycloog_get_unioned_domains(pycloog_domain *domains,int num_domains
 CloogDomain* pycloog_get_domain(pycloog_domain *domain);
 
 /*
- * Gets a CloogDomainList with the domain
+ * Gets a CloogScatteringList with the domain
  * set to the scattering function of the given statement.
  */
-CloogDomainList* pycloog_get_domain_list(pycloog_statement *pycloog_statement);
+CloogScatteringList* pycloog_get_domain_list(pycloog_statement *pycloog_statement);
 
 /*
  * Applies the given scattering functions to the given program.
@@ -167,6 +167,6 @@ CloogDomainList* pycloog_get_domain_list(pycloog_statement *pycloog_statement);
  * NOTE: This code was originally taken from the CLooG code base: source/cloog.c
  * Many useful things are done here that are not exposed through the C API.
  */
-void pycloog_scatter(CloogProgram *cloog_program,CloogDomainList *cloog_scatter_list);
+void pycloog_scatter(CloogProgram *cloog_program,CloogScatteringList *cloog_scatter_list,CloogOptions *cloog_options);
 
 #endif
