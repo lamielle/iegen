@@ -16,6 +16,9 @@ def build(bld):
 
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_codegen.py')
+	install_files('PREFIX',inst_dir,'_calc.py')
+	install_files('PREFIX',inst_dir,'_ito.py')
+	install_files('PREFIX',inst_dir,'_gen.py')
 	install_files('PREFIX',inst_dir,'_program_ast.py')
 
 	bld.add_subdirs('visitor')
