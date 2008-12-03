@@ -15,6 +15,27 @@ def run_coverage():
 	mods=[module for module in sys.modules.values() if str(module).find('iegen.')>=0 and str(module).find('iegen.lib.')<0]
 	iegen.lib.coverage.report(mods)
 
+#Iterator wrapper:
+#Rather than yielding just the item, yields a tuple where
+#the first element is the item and the second is a boolean.
+#The boolean is True if the item is the last in the sequence
+#and is False for all other items
+#Code from: http://code.activestate.com/recipes/392015/
+def iter_islast(iterable):
+	""" iter_islast(iterable) -> generates (item, islast) pairs
+
+Generates pairs where the first element is an item from the iterable
+source and the second element is a boolean flag indicating if it is the
+last item in the sequence.
+"""
+
+	it = iter(iterable)
+	prev = it.next()
+	for item in it:
+		yield prev, False
+		prev = item
+	yield prev, True
+
 #Determines the sign of the given number
 #Returns -1 if the number is <0
 #Returns 1 if the number is >=0
