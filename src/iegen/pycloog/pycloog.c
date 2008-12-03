@@ -152,6 +152,9 @@ CloogOptions* pycloog_get_options()
    /* Set the name as it doesn't get done when using CLooG through its C API */
    cloog_options->name="pyCLooG";
 
+   /* Make CLooG be quiet */
+   cloog_options->quiet=true;
+
    return cloog_options;
 }
 
