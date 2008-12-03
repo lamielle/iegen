@@ -2,24 +2,31 @@ from iegen.codegen.visitor import DFVisitor
 
 class CPrintVisitor(DFVisitor):
 	def __init__(self,code,indent):
+		DFVisitor.__init__(self)
 		self.code=code
 		self.indent=indent
-		self.in_function=False
 
-	def _get_arg_string(self,args):
-		var_strings=[]
-		for arg in args:
-			for var_name in arg.var_names:
-				var_strings.append(arg.type+var_name)
-		return ('%s,'*len(var_strings))[:-1]%tuple(var_strings)
+	def _get_param_string(self,param):
+		start_end=[' ','*']
+		if param.type[-1] in start_end or param.name[0] in start_end:
+			return '%s%s'%(param.type,param.name)
+		else:
+			return '%s %s'%(param.type,param.name)
+
+	def betweenFunctions(self,node):
+		print >>self.code
 
 	def inFunction(self,node):
-		print >>self.code,'%s %s(%s)'%(node.res,node.name,self._get_arg_string(node.args))
-		print >>self.code,'{'
-		self.in_function=True
+		self.code.write('%s %s('%(node.return_type,node.name))
+	def betweenParameters(self,node):
+		self.code.write(',')
+	def betweenParamsStatements(self,node):
+		self.code.write(')\n{\n')
 	def outFunction(self,node):
-		print >>self.code,'}'
-		self.in_function=False
+		self.code.write('}\n')
+
+	def inParameter(self,node):
+		self.code.write(self._get_param_string(node))
 
 	def inStatement(self,node):
 		if self.in_function and len(node.text)>0:

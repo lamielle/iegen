@@ -2,8 +2,11 @@
 #Classes for representing the programs being generated
 #rather than simply printing to a buffer
 
+class ProgramASTNode(object):
+	pass
+
 #Represents a whole program
-class Program(object):
+class Program(ProgramASTNode):
 	__slots__=('preamble','functions')
 
 	def __init__(self):
@@ -14,13 +17,13 @@ class Program(object):
 		visitor.visitProgram(self)
 
 #Represents a function definition
-class Function(object):
-	__slots=('name','res','args','body')
+class Function(ProgramASTNode):
+	__slots__=('name','return_type','params','body')
 
-	def __init__(self,name,res,args):
+	def __init__(self,name,return_type,params):
 		self.name=name
-		self.res=res
-		self.args=args
+		self.return_type=return_type
+		self.params=params
 		self.body=[]
 
 	def newline(self):
@@ -30,8 +33,19 @@ class Function(object):
 	def apply_visitor(self,visitor):
 		visitor.visitFunction(self)
 
+#Represents a parameter to a function
+class Parameter(ProgramASTNode):
+	__slots__=('type','name')
+
+	def __init__(self,type,name):
+		self.type=type
+		self.name=name
+
+	def apply_visitor(self,visitor):
+		visitor.visitParameter(self)
+
 #Represents a statement
-class Statement(object):
+class Statement(ProgramASTNode):
 	__slots__=('text',)
 
 	def __init__(self,text=''):
@@ -41,7 +55,7 @@ class Statement(object):
 		visitor.visitStatement(self)
 
 #Represents a variable declaration
-class VarDecl(object):
+class VarDecl(ProgramASTNode):
 	__slots__=('type','var_names','values')
 
 	def __init__(self,type,var_names=None,values=None):
@@ -53,7 +67,7 @@ class VarDecl(object):
 		visitor.visitVarDecl(self)
 
 #Represents a comment
-class Comment(object):
+class Comment(ProgramASTNode):
 	__slots__=('text',)
 
 	def __init__(self,text):
