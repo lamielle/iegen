@@ -1,19 +1,21 @@
 #---------- Code Generation Phase ----------
 def do_gen(mapir):
-	from iegen.codegen import gen_preamble,gen_inspector,gen_executor,gen_main_driver
+	from iegen.codegen import Program,gen_preamble,gen_inspector,gen_executor,gen_main_driver
 
-#	#Create the program
-#	program=Program()
-#	program.preamble.extend(gen_preamble())
-#
-#	#Generate the inspector
-#	program.functions.append(gen_inspector(mapir,mapir.rtrts[0]))
-#
+	#Create the program
+	program=Program()
+	program.preamble.extend(gen_preamble())
+
+	#Generate the inspector
+	program.functions.append(gen_inspector(mapir))
+
 #	#Generate the executor
 #	program.functions.append(gen_executor(mapir))
-#
+
 #	#Generate the main driver code
 #	program.functions.append(gen_main_driver(mapir))
+
+	return program
 #-------------------------------------------
 
 #---------- Utility code generation functions ----------

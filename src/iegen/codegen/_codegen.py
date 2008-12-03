@@ -16,5 +16,5 @@ def codegen(mapir,code):
 	#-------------------------------------------
 
 	#Pretty print the generated program structure
-	#CPrintVisitor(code,'  ').visit(program)
+	CPrintVisitor(code,'  ').visit(program)
 #--------------------------------------------------------------

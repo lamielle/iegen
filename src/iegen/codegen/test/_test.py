@@ -15,7 +15,19 @@ class ImportTestCase(TestCase):
 	def testNameImport(self):
 		try:
 			#_codegen.py
-			from iegen.codegen import calc_full_iter_space,get_bound_string,get_lower_bound_string,get_upper_bound_string
+			from iegen.codegen import codegen
+			#_calc.py
+			from iegen.codegen import do_calc,calc_full_iter_space,calc_inspector_params,calc_executor_params
+			#_ito.py
+			from iegen.codegen import do_ito
+			#_gen.py
+			from iegen.codegen import do_gen,gen_preamble
+			#_gen_inspector.py
+			from iegen.codegen import gen_inspector
+			#_gen_executor.py
+			from iegen.codegen import gen_executor
+			#_gen_main.py
+			from iegen.codegen import gen_main
 			#_program_ast.py
 			from iegen.codegen import Program,Function,Statement,VarDecl
 		except ImportError,e:

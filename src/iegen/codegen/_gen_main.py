@@ -1,4 +1,4 @@
-def gen_main_driver(mapir):
+def gen_main(mapir):
 	from iegen.codegen import Function,Statement,VarDecl,Comment
 
 #	#Create the main function

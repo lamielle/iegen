@@ -1,9 +1,9 @@
 #Generates code for the inspector
-def gen_inspector(mapir,data_reordering):
+def gen_inspector(mapir):
 	from iegen.codegen import Function,VarDecl,Comment,Statement
 
-#	inspector=Function('inspector','void',mapir.ie_args)
-#
+	inspector=Function('inspector','void',mapir.inspector_params)
+
 #	#Create the declare/create the index array wrappers
 #	inspector.body.extend(gen_declare_index_array_wrappers(mapir))
 #	inspector.newline()
@@ -29,4 +29,4 @@ def gen_inspector(mapir,data_reordering):
 #	#Destroy the index array wrappers
 #	inspector.body.extend(gen_destroy_index_array_wrappers(mapir))
 #
-#	return inspector
+	return inspector

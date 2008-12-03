@@ -9,7 +9,7 @@ iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('symbolics','data_arrays','index_arrays','statements','rtrts','full_iter_space')
+	__slots__=('symbolics','data_arrays','index_arrays','statements','rtrts','full_iter_space','inspector_params','executor_params')
 
 	def __init__(self):
 		self.symbolics={}
@@ -17,6 +17,8 @@ class MapIR(object):
 		self.index_arrays={}
 		self.statements={}
 		self.rtrts=[]
+		self.inspector_params=None
+		self.executor_params=None
 
 	#---------- Symbolics ----------
 	#Returns the symbolics that are present in the MapIR
