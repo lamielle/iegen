@@ -143,7 +143,7 @@ Utilities
                  -> (data_spaces, symbolic vars, relations)
         Given a relation and an instance of the MapIR returns the  data_spaces,  symbolic vars, and relations needed to explicitly compute that relation.
 
-    calc_full_iter: mapIR -> PresSet
+    calc_full_iter_space: statements -> Set
         Generate a Set that represents the full iteration space based on all of the statement original iteration spaces and current scattering functions.  Might want to compute this based on scattering functions after each RTRT so user can more easily write iteration reordering relations and iteration space restriction relations.
 
     calc_apply_data_reord: (data_reord_relation, data_spaces, mapIR) -> mapIR
