@@ -76,13 +76,11 @@ class DataPermuteRTRT(RTRT):
 		#Calculate the iteration space to data space relation
 		iter_to_data=None
 		for stmt in mapir.get_statements():
-			if not iter_to_data:
-				iter_to_data=issr.compose(stmt.scatter.compose(stmt.get_access_relations()[0].iter_to_data.inverse())).inverse()
-			else:
-				iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(stmt.get_access_relations()[0].iter_to_data.inverse())).inverse())
-
-			for ar in stmt.get_access_relations()[1:]:
-				iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse())
+			for ar in stmt.get_access_relations():
+				if not iter_to_data:
+					iter_to_data=issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse()
+				else:
+					iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse())
 
 		#Create the ERSpec for the relation that is input to the reordering
 		self.inputs.append(ERSpec(
