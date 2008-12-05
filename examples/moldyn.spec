@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
-import iegen,iegen.util
-from iegen import MapIR
-from iegen import Symbolic,DataArray,IndexArray
-from iegen import Set,Relation
-from iegen import Statement,AccessRelation
+from iegen import MapIR,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
 from iegen.rtrt import DataPermuteRTRT,IterPermuteRTRT
 
 #Original Code:

@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 
-import iegen,iegen.util
-from iegen import MapIR
-from iegen import Symbolic,DataArray,IndexArray
-from iegen import Set,Relation
-from iegen import Statement,AccessRelation
-from iegen import DataPermuteRTRT,IterPermuteRTRT
+from iegen import MapIR,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
+from iegen.rtrt import DataPermuteRTRT,IterPermuteRTRT
 
 #Original Code:
 #for(int i=0; i<N; i++) {
@@ -120,6 +116,7 @@ tetra_spec.statements['S4'].add_access_relation(AccessRelation(
 
 #Define the desired transformations
 tetra_spec.add_transformation(DataPermuteRTRT(
+    name='cpack',
     data_reordering=Relation('{[k]->[r]: r=sigma(k)}',syms),
     data_arrays=[tetra_spec.data_arrays['data']],
     iter_sub_space_relation=Relation('{[c0,i,c1]->[i]}',syms),
