@@ -1,6 +1,6 @@
 #---------- Code Generation Phase ----------
 def do_gen(mapir):
-	from iegen.codegen import Program,gen_preamble,gen_inspector,gen_executor,gen_main_driver
+	from iegen.codegen import Program,gen_preamble,gen_inspector,gen_executor,gen_main
 
 	#Create the program
 	program=Program()
