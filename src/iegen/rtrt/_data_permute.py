@@ -75,7 +75,7 @@ class DataPermuteRTRT(RTRT):
 
 		#Calculate the iteration space to data space relation
 		iter_to_data=None
-		for stmt in mapir.get_statements()[1:]:
+		for stmt in mapir.get_statements():
 			if not iter_to_data:
 				iter_to_data=issr.compose(stmt.scatter.compose(stmt.get_access_relations()[0].iter_to_data.inverse())).inverse()
 			else:
