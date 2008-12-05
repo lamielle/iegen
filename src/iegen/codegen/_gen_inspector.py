@@ -1,6 +1,6 @@
 #Generates code for the inspector
 def gen_inspector(mapir):
-	from iegen.codegen import Function,VarDecl,Comment,Statement
+	from iegen.codegen import Function
 
 	inspector=Function('inspector','void',mapir.inspector_params)
 

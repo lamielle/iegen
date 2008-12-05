@@ -1,8 +1,8 @@
 def gen_main(mapir):
-	from iegen.codegen import Function,Statement,VarDecl,Comment
+	from iegen.codegen import Function
 
-#	#Create the main function
-#	main=Function('main','int',[])
+	#Create the main function
+	main=Function('main','int',[])
 #
 #	#Add a declaration of the symbolic variables
 #	main.body.append(Comment('Declare the symbolics'))
@@ -91,4 +91,4 @@ def gen_main(mapir):
 #
 #	main.body.append(Statement('return 0;'))
 #
-#	return main
+	return main

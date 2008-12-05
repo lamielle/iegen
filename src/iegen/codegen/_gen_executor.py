@@ -2,8 +2,8 @@
 def gen_executor(mapir):
 	from iegen.codegen import Function
 
-#	executor=Function('executor','void',mapir.ie_args)
-#
+	executor=Function('executor','void',mapir.executor_params)
+
 #	#Create the declare/create the index array wrappers
 #	executor.body.extend(gen_declare_index_array_wrappers(mapir))
 #	executor.newline()
@@ -25,7 +25,7 @@ def gen_executor(mapir):
 #	#Destroy the index array wrappers
 #	executor.body.extend(gen_destroy_index_array_wrappers(mapir))
 #
-#	return executor
+	return executor
 
 ##Generates the executor main loop statements
 #def gen_executor_loop_stmts(mapir):

@@ -9,11 +9,11 @@ def do_gen(mapir):
 	#Generate the inspector
 	program.functions.append(gen_inspector(mapir))
 
-#	#Generate the executor
-#	program.functions.append(gen_executor(mapir))
+	#Generate the executor
+	program.functions.append(gen_executor(mapir))
 
-#	#Generate the main driver code
-#	program.functions.append(gen_main_driver(mapir))
+	#Generate the main code
+	program.functions.append(gen_main(mapir))
 
 	return program
 #-------------------------------------------

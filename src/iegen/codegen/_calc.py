@@ -1,10 +1,10 @@
 #---------- Calculation Phase ----------
 def do_calc(mapir):
 
-	from iegen.codegen import calc_full_iter_space
+	from iegen.codegen import calc_full_iter_space,calc_inspector_params,calc_executor_params
 
 	#Do calculations for each reordering
-	for rtrt in mapir.rtrts:
+	for transformation in mapir.transformations:
 		#Calculate the full iteration space based on the current iteration spaces of the statements
 		mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
 
@@ -14,24 +14,24 @@ def do_calc(mapir):
 		print
 
 		#Tell the RTRT to calculate the inputs that it will need at runtime
-		rtrt.calc_input(mapir)
+		transformation.calc_input(mapir)
 
 		#Tell the RTRT to calculate the outputs it will produce at runtime
-		rtrt.calc_output(mapir)
+		transformation.calc_output(mapir)
 
 		print '----- Applying transformation: -----'
-		print rtrt
+		print transformation
 		print '------------------------------------'
 		print
 
 		#Tell the RTRT to update the access relations and scattering functions
-		rtrt.calc_apply(mapir)
+		transformation.calc_apply(mapir)
 
-		#rtrt.calc_data_remaps()
+		#transformation.calc_data_remaps()
 
 	#Calculate the parameters for the inspector and executor functions
 	mapir.inspector_params=calc_inspector_params(mapir)
-#	mapir.executor_params=calc_executor_params(mapir)
+	mapir.executor_params=calc_executor_params(mapir)
 #---------------------------------------
 
 #---------- Utility calculation functions ----------
@@ -49,14 +49,28 @@ def calc_inspector_params(mapir):
 
 	params=[]
 
+	#Data Arrays (assumed to contain double data)
+	for data_array in mapir.get_data_arrays():
+		params.append(Parameter('double *',data_array.name))
+
+	#Index arrays (assumed to contain integers)
+	for index_array in mapir.get_index_arrays():
+		params.append(Parameter('int *',index_array.name))
+
+	#Symbolic variables (assumed to be integers)
 	for symbolic in mapir.get_symbolics():
 		params.append(Parameter('int',symbolic.name))
+
+	#Transformation outputs
+	for transformation in mapir.transformations:
+		for output in transformation.outputs:
+			params.append(Parameter('ExplicitRelation *',output.name))
 
 	return params
 
 #Calculates the parameters needed for the executor function
 def calc_executor_params(mapir):
-	pass
+	return calc_inspector_params(mapir)
 
 #def calc_ie_args(mapir):
 #	from iegen.codegen import VarDecl

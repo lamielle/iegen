@@ -9,14 +9,14 @@ iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('symbolics','data_arrays','index_arrays','statements','rtrts','full_iter_space','inspector_params','executor_params')
+	__slots__=('symbolics','data_arrays','index_arrays','statements','transformations','full_iter_space','inspector_params','executor_params')
 
 	def __init__(self):
 		self.symbolics={}
 		self.data_arrays={}
 		self.index_arrays={}
 		self.statements={}
-		self.rtrts=[]
+		self.transformations=[]
 		self.inspector_params=None
 		self.executor_params=None
 
@@ -57,9 +57,11 @@ class MapIR(object):
 	#--------------------------------
 
 	#---------- Transformations ----------
-	#Adds the given transformation to the sequence of rtrts
+	#Adds the given transformation to the sequence of transformations
+	#Transformations are not stored as a dictionary as
+	#the ordering is important
 	def add_transformation(self,transformation):
-		self.rtrts.append(transformation)
+		self.transformations.append(transformation)
 	#-------------------------------------
 
 	#---------- Main 'action' method ---------
