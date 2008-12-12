@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from iegen import MapIR,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
-from iegen.rtrt import DataPermuteRTRT,IterPermuteRTRT
+from iegen.rtrt import DataPermuteTrans,IterPermuteTrans
 
 #Original Code:
 #for(int i=0; i<N; i++) {
@@ -115,7 +115,7 @@ tetra_spec.statements['S4'].add_access_relation(AccessRelation(
     iter_to_data=Relation('{[i]->[k]: k=n4(i)}',syms)))
 
 #Define the desired transformations
-tetra_spec.add_transformation(DataPermuteRTRT(
+tetra_spec.add_transformation(DataPermuteTrans(
     name='cpack',
     data_reordering=Relation('{[k]->[r]: r=sigma(k)}',syms),
     data_arrays=[tetra_spec.data_arrays['data']],
@@ -124,7 +124,7 @@ tetra_spec.add_transformation(DataPermuteRTRT(
     iag_func_name='IAG_cpack'))
 
 iter_reordering=None
-#iter_reordering=IterPermuteRTRT(
+#iter_reordering=IterPermuteTrans(
 #                iter_reordering=Relation('{ [ i,x ] -> [ k,x ] : k = delta( i ) }',syms),
 ##User doesn't specify?
 ##This is calculated in step 0

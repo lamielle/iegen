@@ -1,7 +1,7 @@
-from iegen.rtrt import RTRT
+from iegen.rtrt import Transformation
 
-#---------- IterPermuteRTRT class ----------
-class IterPermuteRTRT(RTRT):
+#---------- IterPermuteTrans class ----------
+class IterPermuteTrans(Transformation):
 	__slots__=('iter_reordering','iter_space','access_relation','iter_sub_space_relation','iag_func_name','iag_type')
 
 	def __init__(self,iter_reordering,iter_space,access_relation,iter_sub_space_relation,iag_func_name,iag_type):

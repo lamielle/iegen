@@ -1,14 +1,14 @@
 from copy import deepcopy
 from cStringIO import StringIO
-from iegen.rtrt import RTRT
+from iegen.rtrt import Transformation
 from iegen import ERSpec
 
-#---------- DataPermuteRTRT class ----------
-class DataPermuteRTRT(RTRT):
+#---------- DataPermuteTrans class ----------
+class DataPermuteTrans(Transformation):
 	__slots__=('data_reordering','data_arrays','iter_sub_space_relation','target_data_array','iag_func_name')
 
 	def __init__(self,name,data_reordering,data_arrays,iter_sub_space_relation,target_data_array,iag_func_name):
-		RTRT.__init__(self,name)
+		Transformation.__init__(self,name)
 		self.data_reordering=data_reordering
 		self.data_arrays=data_arrays
 		self.iter_sub_space_relation=iter_sub_space_relation
@@ -16,7 +16,7 @@ class DataPermuteRTRT(RTRT):
 		self.iag_func_name=iag_func_name
 
 	def __repr__(self):
-		return 'DataPermuteRTRT(%s,%s,%s,%s,%s)'%(self.data_reordering,self.data_arrays,self.iter_sub_space_relation,self.target_data_array,self.iag_func_name)
+		return 'DataPermuteTrans(%s,%s,%s,%s,%s)'%(self.data_reordering,self.data_arrays,self.iter_sub_space_relation,self.target_data_array,self.iag_func_name)
 
 	def __str__(self):
 		return self._get_string(0)
@@ -53,7 +53,7 @@ class DataPermuteRTRT(RTRT):
 				print >>itos_string,ito._get_string(indent+5)
 		itos_string=itos_string.getvalue()[:-1]
 
-		return '''%sDataPermuteRTRT:
+		return '''%sDataPermuteTrans:
 %s|-inputs: %s
 %s|-outputs: %s
 %s|-simplifications: %s
@@ -89,6 +89,13 @@ class DataPermuteRTRT(RTRT):
 		    output_bounds=deepcopy(self.target_data_array.bounds),
 		    relation=iter_to_data))
 
+	#Calculate what the inputs to this reordering depend on
+	def calc_input_deps(self,mapir):
+		for input in self.inputs:
+			print input
+#			for symbolic in input.
+#			self.input_deps.symbolics.append(symbolic.name)
+
 	#Calculate a specification for the explicit relation that is the
 	# output of this data reordering.
 	#This relation is a permutation of the original data space, permuted
@@ -110,6 +117,10 @@ class DataPermuteRTRT(RTRT):
 		    relation=deepcopy(self.data_reordering),
 		    is_permutation=True))
 
+	#Calculate what the outputs from this reordering depend on
+	def calc_output_deps(self,mapir):
+		pass
+
 	#Update the mapir based on this transformation
 	def calc_apply(self,mapir):
 		#Data spaces are not changed
@@ -120,6 +131,6 @@ class DataPermuteRTRT(RTRT):
 			for access_relation in statement.get_access_relations():
 				access_relation.iter_to_data=self.data_reordering.compose(access_relation.iter_to_data)
 
-	def calc_data_remaps(self):
+	def calc_data_remaps(self,mapir):
 		pass
 #-------------------------------------------

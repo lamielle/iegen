@@ -35,6 +35,11 @@ class Formula(Node):
 			res=res and formula.is_contradiction()
 		return res
 
+	#Returns a list of all functions that are present in this formula's constraints
+	def functions(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		return FindFunctionsVisitor().visit(self).functions
+
 	#Private utility method that combines the given formulas
 	#
 	#form{1,2} are either PresSets or PresRelations

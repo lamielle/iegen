@@ -13,21 +13,27 @@ def do_calc(mapir):
 		print '-----------------------------------------'
 		print
 
-		#Tell the RTRT to calculate the inputs that it will need at runtime
+		#Tell the transformation to calculate the inputs that it will need at runtime
 		transformation.calc_input(mapir)
 
-		#Tell the RTRT to calculate the outputs it will produce at runtime
+		#Tell the transformation to calculate its input dependences
+		transformation.calc_input_deps(mapir)
+
+		#Tell the transformation to calculate the outputs it will produce at runtime
 		transformation.calc_output(mapir)
+
+		#Tell the transformation to calculate its output dependences
+		transformation.calc_output_deps(mapipr)
 
 		print '----- Applying transformation: -----'
 		print transformation
 		print '------------------------------------'
 		print
 
-		#Tell the RTRT to update the access relations and scattering functions
+		#Tell the transformation to update the access relations and scattering functions
 		transformation.calc_apply(mapir)
 
-		#transformation.calc_data_remaps()
+		#transformation.calc_data_remaps(mapir)
 
 	#Calculate the parameters for the inspector and executor functions
 	mapir.inspector_params=calc_inspector_params(mapir)

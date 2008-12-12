@@ -564,6 +564,14 @@ class SetTestCase(TestCase):
 
 		set=Set('{[a]: 5=0}').union(Set('{[a]: 5=5}'))
 		self.failIf(set.is_contradiction(),'%s is a contradiction'%set)
+
+	def testFunctions(self):
+		from iegen import Set
+
+		set=Set('{[a,b]: a=f(b) and b=foo(a)}')
+		res=['f','foo']
+
+		self.failUnless(res==set.functions(),'%s!=%s'%(res,set.functions()))
 #-------------------------------
 
 #---------- Relation Tests ----------
@@ -1076,4 +1084,11 @@ class RelationTestCase(TestCase):
 		relation=Relation('{[a]->[ap]: 5=0}').union(Relation('{[a]->[ap]: 5=5}'))
 		self.failIf(relation.is_contradiction(),'%s is a contradiction'%relation)
 
+	def testFunctions(self):
+		from iegen import Relation
+
+		rel=Relation('{[a,b]->[ap,bp]: a=f(b) and b=foo(a)}')
+		res=['f','foo']
+
+		self.failUnless(res==rel.functions(),'%s!=%s'%(res,rel.functions()))
 #------------------------------------

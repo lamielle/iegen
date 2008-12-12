@@ -1,6 +1,6 @@
-from iegen.rtrt import RTRT
+from iegen.rtrt import Transformation
 
-#---------- DataProjectRTRT class ----------
-class DataProjectRTRT(RTRT):
+#---------- DataProjectTrans class ----------
+class DataProjectTrans(Transformation):
 	pass
 #-------------------------------------------

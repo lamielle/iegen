@@ -1,6 +1,6 @@
-from iegen.rtrt import RTRT
+from iegen.rtrt import Transformation
 
-#---------- IterEmbedRTRT class ----------
-class IterEmbedRTRT(RTRT):
+#---------- IterEmbedTrans class ----------
+class IterEmbedTrans(Transformation):
 	pass
 #-------------------------------------------

@@ -28,5 +28,5 @@ def gen_inspector(mapir):
 #
 #	#Destroy the index array wrappers
 #	inspector.body.extend(gen_destroy_index_array_wrappers(mapir))
-#
+
 	return inspector

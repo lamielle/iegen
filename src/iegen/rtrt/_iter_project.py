@@ -1,6 +1,6 @@
-from iegen.rtrt import RTRT
+from iegen.rtrt import Transformation
 
-#---------- IterProjectRTRT class ----------
-class IterProjectRTRT(RTRT):
+#---------- IterProjectTrans class ----------
+class IterProjectTrans(Transformation):
 	pass
 #-------------------------------------------

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from iegen import MapIR,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
-from iegen.rtrt import DataPermuteRTRT,IterPermuteRTRT
+from iegen.rtrt import DataPermuteTrans,IterPermuteTrans
 
 #Original Code:
 #    for (i=0; i<n_inter; i++) {
@@ -83,7 +83,7 @@ moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
     iter_to_data=Relation('{[i]->[k]: k=inter2(i)}',syms)))
 
 #Define the desired transformations
-moldyn_spec.add_transformation(DataPermuteRTRT(
+moldyn_spec.add_transformation(DataPermuteTrans(
     name='cpack',
     data_reordering=Relation('{[k]->[r]: r=sigma(k)}',syms),
     data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
@@ -92,7 +92,7 @@ moldyn_spec.add_transformation(DataPermuteRTRT(
     iag_func_name='IAG_cpack'))
 
 iter_reordering=None
-#iter_reordering=IterPermuteRTRT(
+#iter_reordering=IterPermuteTrans(
 #                iter_reordering=Relation('{ [ i,x ] -> [ k,x ] : k = delta( i ) }',syms),
 ##User doesn't specify?
 ##This is calculated in step 0
