@@ -4,9 +4,9 @@ class TransDeps(object):
 	__slots__=('data_arrays','explicit_relations','symbolics')
 
 	def __init__(self):
-		self.data_arrays=set()
-		self.explicit_relations=set()
-		self.symbolics=set()
+		self.data_arrays=[]
+		self.explicit_relations=[]
+		self.symbolics=[]
 
 	def add_data_array(self,data_array):
 		self.data_arrays=list(set(self.data_arrays).union(set(data_array)))

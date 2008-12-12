@@ -572,6 +572,14 @@ class SetTestCase(TestCase):
 		res=['f','foo']
 
 		self.failUnless(res==set.functions(),'%s!=%s'%(res,set.functions()))
+
+	def testSymbolics(self):
+		from iegen import Set,Symbolic
+
+		set=Set('{[a,b]: a=f(n) and b=foo(a)}',[Symbolic('n')])
+		res=['n']
+
+		self.failUnless(res==set.symbolics(),'%s!=%s'%(res,set.symbolics()))
 #-------------------------------
 
 #---------- Relation Tests ----------
@@ -1091,4 +1099,12 @@ class RelationTestCase(TestCase):
 		res=['f','foo']
 
 		self.failUnless(res==rel.functions(),'%s!=%s'%(res,rel.functions()))
+
+	def testSymbolics(self):
+		from iegen import Relation,Symbolic
+
+		rel=Relation('{[a,b]->[ap,bp]: a=f(n) and b=foo(a)}',[Symbolic('n')])
+		res=['n']
+
+		self.failUnless(res==rel.symbolics(),'%s!=%s'%(res,rel.symbolics()))
 #------------------------------------

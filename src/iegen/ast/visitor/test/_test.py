@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor,FindFunctionsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor,FindFunctionsVisitor,CollectSymbolicsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -2304,6 +2304,19 @@ class RemoveSymbolicsVisitorTestCase(TestCase):
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(False==removed_symbolic,'removed_symbolic!=False')
 
+	#Tests that symbolics that are only used as input to a function are not removed
+	def testNoRemoveFunctionInput(self):
+		from iegen.ast.visitor import RemoveSymbolicsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]:a<=f(n)}',[Symbolic('n')])
+		removed_symbolic=RemoveSymbolicsVisitor().visit(set).removed_symbolic
+
+		set_res=Set('{[a]:a<=f(n)}',[Symbolic('n')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==removed_symbolic,'removed_symbolic!=False')
+
 	#Tests that duplicated symbolic variables are removed from PresSets
 	def testRemoveDuplicatePresSet(self):
 		from iegen.ast.visitor import RemoveSymbolicsVisitor
@@ -2968,4 +2981,67 @@ class FindFunctionsTestCase(TestCase):
 		res=['f','g','h','test']
 
 		self.failUnless(res==v.functions,'%s!=%s'%(res,v.functions))
+#--------------------------------------------
+
+#---------- Collect Symbolics Visitor ----------
+class CollectSymbolicsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import CollectSymbolicsVisitor
+		from iegen import Set
+
+		set=Set('{[a]}')
+		v=CollectSymbolicsVisitor().visit(set)
+		self.failUnless(hasattr(v,'symbolics'),"RemoveContradictionsVisitor doesn't place result in the 'symbolics' property.")
+
+	def testNoSymbolics(self):
+		from iegen.ast.visitor import CollectSymbolicsVisitor
+		from iegen import Set
+
+		set=Set('{[a]}')
+		v=CollectSymbolicsVisitor().visit(set)
+		res=[]
+
+		self.failUnless(res==v.symbolics,'%s!=%s'%(res,v.symbolics))
+
+	def testOneSymbolic(self):
+		from iegen.ast.visitor import CollectSymbolicsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]: n=1}',[Symbolic('n')])
+		v=CollectSymbolicsVisitor().visit(set)
+		res=['n']
+
+		self.failUnless(res==v.symbolics,'%s!=%s'%(res,v.symbolics))
+
+	def testTwoSymbolicsSet(self):
+		from iegen.ast.visitor import CollectSymbolicsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]: n=1 and m=2}',[Symbolic('n'),Symbolic('m')])
+		v=CollectSymbolicsVisitor().visit(set)
+		res=['m','n']
+
+		self.failUnless(res==v.symbolics,'%s!=%s'%(res,v.symbolics))
+
+	def testTwoSymbolicsRelation(self):
+		from iegen.ast.visitor import CollectSymbolicsVisitor
+		from iegen import Relation,Symbolic
+
+		rel=Relation('{[a]->[ap]: n=1 and m=2}',[Symbolic('n'),Symbolic('m')])
+		v=CollectSymbolicsVisitor().visit(rel)
+		res=['m','n']
+
+		self.failUnless(res==v.symbolics,'%s!=%s'%(res,v.symbolics))
+
+	def testSymbolicsAcrossUnion(self):
+		from iegen.ast.visitor import CollectSymbolicsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]: n=1}',[Symbolic('n'),Symbolic('m')]).union(Set('{[c]: j=10}',[Symbolic('j')]))
+		v=CollectSymbolicsVisitor().visit(set)
+		res=['j','n']
+
+		self.failUnless(res==v.symbolics,'%s!=%s'%(res,v.symbolics))
 #--------------------------------------------

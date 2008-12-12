@@ -40,6 +40,11 @@ class Formula(Node):
 		from iegen.ast.visitor import FindFunctionsVisitor
 		return FindFunctionsVisitor().visit(self).functions
 
+	#Returns a list of the names of all symbolics that are present in this formula's constraints
+	def symbolics(self):
+		from iegen.ast.visitor import CollectSymbolicsVisitor
+		return CollectSymbolicsVisitor().visit(self).symbolics
+
 	#Private utility method that combines the given formulas
 	#
 	#form{1,2} are either PresSets or PresRelations
