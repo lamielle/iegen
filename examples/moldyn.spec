@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from iegen import MapIR,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
-from iegen.rtrt import DataPermuteTrans,IterPermuteTrans
+from iegen.trans import DataPermuteTrans,IterPermuteTrans
 
 #Original Code:
 #    for (i=0; i<n_inter; i++) {

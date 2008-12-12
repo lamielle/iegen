@@ -1,4 +1,4 @@
-from iegen.rtrt import Transformation
+from iegen.trans import Transformation
 
 #---------- IterPermuteTrans class ----------
 class IterPermuteTrans(Transformation):

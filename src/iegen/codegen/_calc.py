@@ -23,7 +23,7 @@ def do_calc(mapir):
 		transformation.calc_output(mapir)
 
 		#Tell the transformation to calculate its output dependences
-		transformation.calc_output_deps(mapipr)
+		transformation.calc_output_deps(mapir)
 
 		print '----- Applying transformation: -----'
 		print transformation

@@ -3,7 +3,7 @@ class Transformation(object):
 	__slots__=('name','inputs','input_deps','outputs','output_deps','simplifications','itos','symbolic_inputs')
 
 	def __init__(self,name):
-		from iegen.rtrt import TransDeps
+		from iegen.trans import TransDeps
 
 		self.name=name
 		self.inputs=[]

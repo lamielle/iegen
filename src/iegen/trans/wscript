@@ -10,7 +10,7 @@ def configure(conf):
 
 def build(bld):
 
-	inst_dir='iegen'+os.sep+'rtrt'
+	inst_dir='iegen'+os.sep+'trans'
 
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_rtrt.py')

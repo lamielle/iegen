@@ -1,6 +1,6 @@
 from copy import deepcopy
 from cStringIO import StringIO
-from iegen.rtrt import Transformation
+from iegen.trans import Transformation
 from iegen import ERSpec
 
 #---------- DataPermuteTrans class ----------

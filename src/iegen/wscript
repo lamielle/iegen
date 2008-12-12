@@ -6,7 +6,7 @@ def set_options(opt):
 	#Add config options for python
 	opt.tool_options('python')
 
-	opt.sub_options('rtrt')
+	opt.sub_options('trans')
 	opt.sub_options('ast')
 	opt.sub_options('parser')
 	opt.sub_options('codegen')
@@ -38,7 +38,7 @@ def configure(conf):
 	#Common include path
 	env['includes_common']=['include']
 
-	conf.sub_config('rtrt')
+	conf.sub_config('trans')
 	conf.sub_config('ast')
 	conf.sub_config('parser')
 	conf.sub_config('codegen')
@@ -59,7 +59,7 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_iegen.py')
 	install_files('PREFIX',inst_dir,'_set_relation.py')
 
-	bld.add_subdirs('rtrt')
+	bld.add_subdirs('trans')
 	bld.add_subdirs('ast')
 	bld.add_subdirs('parser')
 	bld.add_subdirs('codegen')
