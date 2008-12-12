@@ -13,7 +13,7 @@ def build(bld):
 	inst_dir='iegen'+os.sep+'trans'
 
 	install_files('PREFIX',inst_dir,'__init__.py')
-	install_files('PREFIX',inst_dir,'_rtrt.py')
+	install_files('PREFIX',inst_dir,'_transformation.py')
 	install_files('PREFIX',inst_dir,'_data_permute.py')
 	install_files('PREFIX',inst_dir,'_data_embed.py')
 	install_files('PREFIX',inst_dir,'_data_project.py')
