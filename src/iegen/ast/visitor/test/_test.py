@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor,FindFunctionsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -2877,3 +2877,95 @@ class RemoveContradictionsVisitorTestCase(TestCase):
 		self.failUnless(True==removed_contradiction,'removed_contradiction!=True')
 
 #---------------------------------------------------
+
+#---------- Find Functions Visitor ----------
+class FindFunctionsTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Set
+
+		set=Set('{[a]}')
+		v=FindFunctionsVisitor().visit(set)
+		self.failUnless(hasattr(v,'functions'),"RemoveContradictionsVisitor doesn't place result in the 'functions' property.")
+
+	def testNoFunctions(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=FindFunctionsVisitor().visit(set)
+
+		self.failUnless([]==v.functions,'Functions found in a set with no functions: %s'%(v.functions))
+
+	def testOneFunction(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Set
+
+		set=Set('{[a]: a=f(6)}')
+		v=FindFunctionsVisitor().visit(set)
+		res=['f']
+
+		self.failUnless(res==v.functions,'%s!=%s'%(res,v.functions))
+
+	def testTwoFunctionsSet(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Set
+
+		set=Set('{[a,b]: a=f(b) and b=g(a)}')
+		v=FindFunctionsVisitor().visit(set)
+		res=['f','g']
+
+		self.failUnless(res==v.functions,'%s!=%s'%(res,v.functions))
+
+	def testTwoFunctionsRelation(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: a=f(b) and b=g(a)}')
+		v=FindFunctionsVisitor().visit(rel)
+		res=['f','g']
+
+		self.failUnless(res==v.functions,'%s!=%s'%(res,v.functions))
+
+	def testDuplicateFunctions(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Set
+
+		set=Set('{[a]: a=f(6) and a=f(5)}')
+		v=FindFunctionsVisitor().visit(set)
+		res=['f']
+
+		self.failUnless(res==v.functions,'%s!=%s'%(res,v.functions))
+
+	def testThreeFunctions(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]: a=f(b) and b=g(a) and c=h(a)}')
+		v=FindFunctionsVisitor().visit(set)
+		res=['f','g','h']
+
+		self.failUnless(res==v.functions,'%s!=%s'%(res,v.functions))
+
+	def testNestedFunctions(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]: a=f(g(h(b))) and b=g(a) and c=h(a)}')
+		v=FindFunctionsVisitor().visit(set)
+		res=['f','g','h']
+
+		self.failUnless(res==v.functions,'%s!=%s'%(res,v.functions))
+
+	def testSetUnion(self):
+		from iegen.ast.visitor import FindFunctionsVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]: a=f(g(h(b))) and b=g(a) and c=h(a)}').union(Set('{[a,d,e]: a=test(b) and a=h(4)}'))
+		v=FindFunctionsVisitor().visit(set)
+		res=['f','g','h','test']
+
+		self.failUnless(res==v.functions,'%s!=%s'%(res,v.functions))
+#--------------------------------------------

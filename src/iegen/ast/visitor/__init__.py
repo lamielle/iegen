@@ -17,3 +17,4 @@ from _collect_bounds_visitor import *
 from _value_string_visitor import *
 from _remove_tautologies_visitor import *
 from _remove_contradictions_visitor import *
+from _find_functions_visitor import *
