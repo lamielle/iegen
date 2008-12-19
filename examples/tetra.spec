@@ -16,7 +16,7 @@ tetra_spec=MapIR()
 
 #Define the symbolic constants for the computation
 tetra_spec.add_symbolic(Symbolic('N')) #Number of tetrahedrons
-syms=tetra_spec.symbolics.values()
+syms=tetra_spec.get_symbolics()
 
 #Define the data arrays for the computation
 tetra_spec.add_data_array(DataArray(

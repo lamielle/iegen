@@ -16,7 +16,7 @@ moldyn_spec=MapIR()
 #Define the symbolic constants for the computation
 moldyn_spec.add_symbolic(Symbolic('N')) #Number of atoms
 moldyn_spec.add_symbolic(Symbolic('n_inter')) #Number of interactions
-syms=moldyn_spec.symbolics.values()
+syms=moldyn_spec.get_symbolics()
 
 #Define the data arrays for the computation
 moldyn_spec.add_data_array(DataArray(
