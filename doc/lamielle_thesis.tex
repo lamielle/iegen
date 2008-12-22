@@ -1,45 +1,26 @@
-\documentclass[journal,10pt]{IEEEtran}
+\documentclass{book}
 
-\bibliographystyle{IEEEtran}
+%\usepackage[hmargin=1.75cm,vmargin=2cm,columnsep=.75cm]{geometry}
 
-\usepackage[hmargin=1.75cm,vmargin=2cm,columnsep=.75cm]{geometry}
-
-\title{Summary and Descriptions of Operations on Sets and Relations in IEGen}
+\title{IEGen: Automatic Generation of Inspectors and Executors}
 \author{Alan LaMielle \\
 	Colorado State University}
-\date{October 2, 2008}
+\date{December 21, 2008}
 
 \begin{document}
 \maketitle
 
-\begin{section}{Friday October 23, 2008 Meeting Topics}
+\begin{chapter}{Outline and Ideas}
 
-\begin{itemize}
-\item J\&L progress report
-\item Pointer update/array alignment
-\item Codegen progress
-\end{itemize}
+\end{chapter}
 
-\end{section}
+\begin{chapter}{Introduction}
 
-\begin{section}{Thursday October 2, 2008 Meeting Topics}
-
-\begin{itemize}
-\item Time
-\item Operations writeup
-\item Big Picture
-\item Inequality simplification
-\end{itemize}
-
-\end{section}
-
-\begin{section}{Introduction}
-
-\IEEEPARstart{I}{EGen} is a tool for generating irregular computational kernels optimized using the Inspector/Executor strategy.
-The user provides a description of the computational kernel and the desired compiletime and runtime program transformations.
+IEGen is a tool for generating irregular computational kernels optimized using the Inspector/Executor strategy.
+The user provides a description of the computational kernel and the desired compile time and run time program transformations.
 IEGen then produces code that implements the corresponding inspector and executor for this computation.
 
-\end{section}
+\end{chapter}
 
 \begin{section}{Description of formula data structure}
 
