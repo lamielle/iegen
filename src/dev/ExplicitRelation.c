@@ -4,7 +4,7 @@
 
 #include "ExplicitRelation.h"
 
-static bool debug = true;
+static bool debug = false;
 
 int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
 /*----------------------------------------------------------------*//*! 
@@ -142,8 +142,8 @@ Tuple ER_calcTuple( ExplicitRelation* relptr, int index )
 
 
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
-                          RectDomain *in_domain, bool isFunction)
-//                          RectDomain *in_domain=NULL, bool isFunction=false)
+                          RectDomain *in_domain, 
+                          bool isFunction, bool isPermutation)
 /*----------------------------------------------------------------*//*! 
   \short Construct ExplicitRelation structure and return a ptr to it.
 
@@ -184,6 +184,7 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     self->in_arity = in_tuple_arity;
     self->out_arity = out_tuple_arity;  
     self->isFunction = isFunction;
+    self->isPermutation = isPermutation;
     self->in_domain = in_domain;
 
     self->in_vals = NULL;
@@ -249,7 +250,6 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     // By default ordered by in tuples.  Will change if generic insert is
     // used.
     self->ordered_by_in = true;
-    self->ordered_by_out = false;  
     
     return self;
 }
@@ -322,42 +322,123 @@ ExplicitRelation* ER_ctor(int * index_array, int size)
     // By default ordered by in tuples.  Will change if generic insert is
     // used.
     self->ordered_by_in = true;
-    self->ordered_by_out = false;   
     
     return self;
 }
 
+ExplicitRelation* ER_genInverse(ExplicitRelation * input)
 /*----------------------------------------------------------------*//*! 
   \short Create the inverse of the input ER.
   
   Allocates a new ER data structure and populates it with inverse
   of given relation.
-  Assumes that given relation is a function.
-  For now also assumes that we are dealing with a 1D-to-1D arity.
+  Has one version of the code for relations that are 1D-to-1D
+  and functions and then a more general version for other relations.
+  
+  The more general version is probably an algorithm that should be
+  used when converting an unordered ER to one that is ordered by
+  input tuples.
 
-  \author Michelle Strout 11/4/08
+  \author Michelle Strout 11/4/08, 11/14/08
 *//*----------------------------------------------------------------*/
-ExplicitRelation* ER_genInverse(ExplicitRelation * input)
 {
-    // check assumptions
-    assert( input->isFunction );
-    assert( (input->in_arity == 1) && (input->out_arity == 1) );
+    // As input has been constructed, we have been keeping track
+    // of its in domain and out range.  Therefore, we can us
+    // the out range as the input range for the inverse ER.
+    RectDomain* in_domain = RD_ctor(input->out_range);
+
+    ExplicitRelation* retval;
     
-    // Set up in domain for retval from input's output domain
-    RectDomain* in_domain = RD_ctor(1);
-    RD_set_lb(in_domain, 0, RD_lb(input->out_range, 0));
-    RD_set_ub(in_domain, 0, RD_ub(input->out_range, 0));
-    
-    // have constructor create new ER
-    ExplicitRelation* retval = ER_ctor(1,1, in_domain, true);
-    
-    // Fill the inverted ER by iterating over input ER.
-    ER_order_by_in(input); // FIXME: want to remove these
-    int in;
-    FOREACH_in_tuple_1d1d(input, in) {
-        ER_insert( retval, ER_out_given_in(input, in), in);
+    // If the ER is a permutation and has in and out arity of 1,
+    // then can easily invert.
+    if (input->isPermutation 
+        && (input->in_arity == 1) && (input->out_arity == 1))
+    {
+        // have constructor create new ER
+        retval = ER_ctor(input->out_arity,input->in_arity, in_domain, 
+                         true, true);
+        retval->out_range = RD_ctor(input->in_domain);
+
+        // Fill the inverted ER by iterating over input ER.
+        int in;
+        FOREACH_in_tuple_1d1d(input, in) {
+            ER_insert( retval, ER_out_given_in(input, in), in);
+        }
+
+
+    // more general inverse of relation
+    } else {
+        // have constructor create new ER, false indicates we do not know
+        // if it is a function or not
+        retval = ER_ctor(input->out_arity, input->in_arity, in_domain, false);
+        retval->out_range = RD_ctor(input->in_domain);
+
+        // Count number of input tuples associated with each 
+        // output tuple and store count in retval's out_index array.
+        Tuple in_tuple, out_tuple;
+        int count = 0;
+        FOREACH_in_tuple(input, in_tuple) {    
+            FOREACH_out_given_in(input, in_tuple, out_tuple) {
+                // Calculate index into out_index array.
+                int idx = ER_calcIndex(retval, out_tuple);
+                retval->out_index[idx] += retval->out_arity;
+                count++;
+                
+                if (debug) {
+                    printf("ER_genInverse\n");
+                    printf("\tin_tuple = "); 
+                    Tuple_print(in_tuple); printf("\n");
+                    printf("\tout_tuple = "); 
+                    Tuple_print(out_tuple); printf("\n");
+                }
+
+            }
+        }       
+                
+        // Modify out_index array so that it now points correctly
+        // into the out_vals array for inverse.
+        int i;
+        retval->out_index[RD_size(retval->in_domain)] = count*retval->out_arity;
+        for (i=RD_size(retval->in_domain); i>0; i--) {
+            retval->out_index[i-1] 
+                = retval->out_index[i] - retval->out_index[i-1];
+        }
+        retval->out_index[0] = 0;
+        
+        // Allocate the out_vals array.
+        // (count entries) * (retval->out_arity)
+        retval->out_vals = (int*)malloc(sizeof(int)*count*retval->out_arity);
+        retval->out_vals_size = count*retval->out_arity;
+        
+        // Do another pass over input ER and populate out_vals 
+        // for inverse.
+        FOREACH_in_tuple(input, in_tuple) {    
+            FOREACH_out_given_in(input, in_tuple, out_tuple) {
+                // Calculate index into out_index array.
+                int idx = ER_calcIndex(retval, out_tuple);
+                // do actual insertion of output tuple
+                for (int k=0; k<retval->out_arity; k++) {        
+                    retval->out_vals[retval->out_index[idx]+k] 
+                        = Tuple_val(in_tuple, k);
+                }      
+                retval->out_index[idx] += retval->out_arity;
+            }
+        }       
+        
+        // Readjust the out_index array for inverse.
+        for (i=RD_size(retval->in_domain); i>0; i--) {
+            retval->out_index[i] = retval->out_index[i-1];
+        }
+        retval->out_index[0] = 0;
+
     }
 
+    // FIXME:
+    // The input ER will "own" the inverse ER.  Actually do they own each
+    // other?  This might cause memory management issues.
+    input->inverse = retval;
+    retval->inverse = input;
+    
     return retval;
 }
 
@@ -1012,18 +1093,6 @@ void ER_order_by_in( ExplicitRelation* self )
     // all the data by the input tuple if the data is not already
     // ordered as such.
     assert(self->ordered_by_in);
-}
-
-void ER_order_by_out(ExplicitRelation* relptr)
-/*----------------------------------------------------------------*//*! 
-  \short Ensure that the given explicit relation is ordered by out tuples.
-
-  \author Michelle Strout 11/11/08
-*//*----------------------------------------------------------------*/
-{
-
-
-    relptr->ordered_by_out = true;
 }
 
 bool ER_verify_permutation(ExplicitRelation* relptr)

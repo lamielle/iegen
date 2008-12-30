@@ -35,6 +35,28 @@ RectDomain* RD_ctor(int dim)
     return self;
 }
 
+RectDomain* RD_ctor(RectDomain *other)
+/*----------------------------------------------------------------*//*! 
+  \short Copy constructor for RectDomain.
+
+  \return Returns a ptr to the constructed RectDomain structure.
+
+  \author Michelle Strout 11/14/08
+*//*----------------------------------------------------------------*/
+{
+    // Set up in domain for retval from input's output domain
+    RectDomain* self = RD_ctor(other->dim);
+    
+    // Iterate over each dimension and copy lower and upper bounds.
+    int i;
+    for (i=0; i<other->dim; i++) {
+        RD_set_lb(self, i, RD_lb(other, i));
+        RD_set_ub(self, i, RD_ub(other, i));
+    }
+
+    return self;
+}
+
 /*----------------------------------------------------------------*//*! 
   \short Deallocate all memory for RectDomain
 

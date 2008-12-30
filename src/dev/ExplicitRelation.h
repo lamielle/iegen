@@ -91,13 +91,17 @@
 // ExplicitRelation Definition
 // 
 //////////////////////////////////////////////////////////////////// */
-typedef struct {
+typedef struct ER {
 
     int         in_arity;   //! arity of input tuple
     int         out_arity;  //! arity of output tuple
 
     bool        isFunction; //! If true indicates that each input tuple will map 
                             //! to only one output tuple.
+                            
+    bool        isPermutation;  //! If true indicates in domain and out range
+                                //! are the same and the relation is one-to-one
+                                //! and onto.
                     
     RectDomain* in_domain;  //! Domain for the input tuples.  If known at
                             //! construction time, then it is not necessary to 
@@ -119,25 +123,25 @@ typedef struct {
                             //! for all of the output tuples stored from
                             //! out_vals[out_index[i]] through 
                             //! out_vals[out_index[i+1]] non-inclusive.
-   
+
     int         unique_in_count;    //! Number of unique input tuples that
                                     //! have been inserted.
-                        
+
     int*        out_index;  //! Indices into the out_vals array.
-    
+
     int*        out_vals;   //! Output tuple values.
-    
+
     int*        raw_data;   //! Holds raw relations as input tuple followed
                             //! by output tuple.  Used if do not know
                             //! in domain.
     int         raw_num;    //! Number of relations in raw_data array.
-    
+
     //----- order management -----------------------------------------
     // Keeps track of how the integer tuples have been inserted.
     bool    ordered_by_in;
-    bool    ordered_by_out;
-    //bool    ordered_by_in_out;
-    
+
+    struct ER * inverse; //! Result of ER_genInverse call.
+
     //----- memory management -----------------------------------------
     // Need to keep track of the number of entries in each of the current
     // array allocations.
@@ -169,14 +173,16 @@ typedef struct {
 //! Construct an empty ExplicitRelation by specifying arity 
 //! for in and out tuples.
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
-                          RectDomain *in_domain=NULL, bool isFunction=false);
+                          RectDomain *in_domain=NULL, 
+                          bool isFunction=false,
+                          bool isPermutation=false);
 
 //! Construct an empty ExplicitRelation by passing in a 1D array.
 //! Assumes isFunction and has 1D-to-1D arity for now.
 ExplicitRelation* ER_ctor(int * index_array, int size);
 
 //! Construct a new ExplicitRelation that is the inverse of
-//! the given relation.  Given relation must be a function.
+//! the given relation.
 ExplicitRelation* ER_genInverse(ExplicitRelation * input);
 
 
@@ -264,8 +270,8 @@ void ER_dump( ExplicitRelation* self );
 //! Ensure that the integer tuple relations are sorted by the input tuples.
 void ER_order_by_in(ExplicitRelation* relptr);
 
-//! Ensure that the integer tuple relations are sorted by the output tuples.
-void ER_order_by_out(ExplicitRelation* relptr);
+// Do not have an ER_order_by_out.  Instead see the comments below about
+// iterating over an inverse of the relation.
 
 //----------------------- Macros for iterating over relations
 
@@ -276,8 +282,8 @@ void ER_order_by_out(ExplicitRelation* relptr);
 //! the in_domain is calculated when things are ordered by in tuples.
 #define FOREACH_in_tuple(relptr, in_tuple)                  \
     ER_order_by_in(relptr);                                 \
-    int _FE_i;                                              \
-    for ((_FE_i)=0, in_tuple=ER_calcTuple(relptr, _FE_i);   \
+    in_tuple=ER_calcTuple(relptr, 0);                       \
+    for (int _FE_i=0;                                       \
          (_FE_i)<RD_size((relptr)->in_domain);              \
          (_FE_i)++, in_tuple=ER_calcTuple(relptr, _FE_i))
 
@@ -316,11 +322,33 @@ void ER_order_by_out(ExplicitRelation* relptr);
 #define FOREACH_out_given_in_1d1d(relptr, in_int, out_int)  \
     assert(! relptr->isFunction );                          \
     int _lb_adjust = (in_int)-RD_lb((relptr)->in_domain,0); \
-    int _FE_iter;  \
+    int _FE_iter;                                           \
     for (_FE_iter=(relptr)->out_index[_lb_adjust],          \
             out_int=(relptr)->out_vals[_FE_iter];           \
          _FE_iter<(relptr)->out_index[_lb_adjust+1];        \
          _FE_iter++,out_int=(relptr)->out_vals[_FE_iter]) 
-        
+
+
+/*
+    Iterating over an ER in order of the output tuples.
+    
+    To avoid having another set of iterators for this purpose,
+    the following code pattern will provide equivalent functionality.
+    
+    Assume that you have an ExplicitRelation* called relptr and you
+    want to iterate over that relation in order of its ouput tuples.
+    
+        // First create the inverse relation.
+        ExplicitRelation *inv_relptr = ER_genInverse(relptr);
+
+        // Then iterate over that inverse relation.
+        FOREACH_in_tuple_1d1d(inv_relptr, inv_in) {        
+            FOREACH_out_given_in_1d1d(inv_relptr, inv_in, inv_out) {
+                // input and output tuples for original relation.
+                out = inv_in;
+                in = inv_out;
+
+*/
+
 #endif
 

@@ -38,48 +38,57 @@ void IAG_lexmin(ExplicitRelation* relptr, ExplicitRelation*  old2new)
     assert(relptr!=NULL);
     assert(relptr->in_arity==1 && relptr->out_arity==1);
 
-    int  in, out, count;
     bool *taken;
 
     // number of items we will be mapping from an old location
     // to a new location
-    int out_count = RD_size(ER_in_domain(old2new));
+    int in_count = RD_size(ER_in_domain(old2new));
 
 
         
     // allocate array that keeps track of what points in the
     // have been remapped
-    MALLOC(taken, bool, out_count);
+    MALLOC(taken, bool, in_count);
     int index;
-    for (index = 0; index < count; index++) {
+    for (index = 0; index < in_count; index++) {
             taken[index] = false;
     }
 
-    // reorder input tuples on a first-touch basis
-    // based on order of output tuples
-    // FIXME: switch the FOREACH
+    // Reorder input tuples on a first-touch basis
+    // based on order of output tuples.
+    // To iterate over relation in order of output tuples
+    // creating the inverse of the relation.
+    int  in, out, inv_in, inv_out, count;
     count = 0;
-    FOREACH_in_tuple_1d1d(relptr, in) {
-        FOREACH_out_given_in_1d1d(relptr, in, out) {
-            if (!taken[out]) {
-                ER_insert(old2new, out, count);
-                taken[out]   = true;
+    
+    // First create the inverse relation.
+    ExplicitRelation *inv_relptr = ER_genInverse(relptr);
+
+    // Then iterate over that inverse relation.
+    FOREACH_in_tuple_1d1d(inv_relptr, inv_in) {        
+        FOREACH_out_given_in_1d1d(inv_relptr, inv_in, inv_out) {
+            // input and output tuples for original relation
+            out = inv_in;
+            in = inv_out;
+
+            if (!taken[in]) {
+                ER_insert(old2new, in, count);
+                taken[in]   = true;
                 count++;
             }
         }
     }
         
     // handle input tuples that are never touched, if any 
-    if (count < out_count) {
-        for (out = 0; out < out_count; out++) {
-            if (taken[out] == false) {
-                ER_insert(old2new, out, count);
+    if (count < in_count) {
+        for (in = 0; out < in_count; in++) {
+            if (taken[in] == false) {
+                ER_insert(old2new, in, count);
                 count++;
             }
         }
     }
         
-    FREE(taken,bool,out_count);
-            
+    FREE(taken,bool,in_count);       
 }
 

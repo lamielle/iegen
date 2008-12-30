@@ -68,6 +68,7 @@ typedef struct {
 // function prototypes
 
 RectDomain* RD_ctor(int dim);
+RectDomain* RD_ctor(RectDomain *other);
 void RD_dtor( RectDomain** self );
 
 void RD_set_lb( RectDomain *rd, int k, int lb );

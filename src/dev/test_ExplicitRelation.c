@@ -11,6 +11,8 @@
 #define NUM_IN 10
 #define NUM_OUT 5
 
+static int debug = false;
+
 int main() 
 {
     ExplicitRelation* relptr;
@@ -85,6 +87,64 @@ int main()
     assert(test_count==count);
     
     ER_dtor(&relptr);
+        
+    //======= test ER_genInverse
+    printf("\n==== test ER_genInverse\n");
+    
+    // create an input relation
+    in_domain = RD_ctor(1);
+    RD_set_lb(in_domain, 0, 0);
+    RD_set_ub(in_domain, 0, (NUM_IN - 1));
+    bool isFunction = true;
+    bool isPermutation = true;
+    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+
+    // create a permutation that is just a modular shift
+    count = 0;
+    for (in=0; in<NUM_IN; in++) {
+        ER_in_ordered_insert( relptr, in, (in+1) % NUM_IN);
+        count++;
+    }
+
+    ER_dump(relptr);
+
+    // Iterate over the integer tuple relations
+    printf("\nTraversing relation we plan to invert\n");
+    test_count=0;
+    test_in = 0;
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        test_out = (in+1) % NUM_IN;
+        printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
+        assert((in==test_in) && test_out==ER_out_given_in(relptr,in));
+        test_count++;
+        test_in++;
+    }
+    assert(count==test_count);
+    
+    // call routine that should generate the inverse
+    ExplicitRelation* new_relptr = ER_genInverse(relptr);
+    printf("Dumping inverse relation\n");
+    ER_dump(new_relptr);
+
+
+    // Iterate over the integer tuple relations
+    printf("\nTraversing inverted relation\n");
+    test_count=0;
+    test_in = 0;
+    FOREACH_in_tuple_1d1d(new_relptr, in) {
+        test_out = (in-1);
+        if (test_out == -1) { test_out = NUM_IN-1; }
+        printf("\t[%d] -> [%d]\n", in, ER_out_given_in(new_relptr,in));
+        assert((in==test_in) && (test_out==ER_out_given_in(new_relptr,in)));
+        assert(in==ER_out_given_in(relptr,ER_out_given_in(new_relptr,in)));
+        test_count++;
+        test_in++;
+    }
+    assert(count==test_count);
+    
+    
+    
+    
 
     //======= test creation and use of ER for access relation
     printf("==== test creation and use of ER for access relation\n");
@@ -95,9 +155,10 @@ int main()
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, (NUM_IN - 1));
-    // We know in_domain for access relations, but they are not functions.
+    // We know in_domain for access relations, 
+    // but they are not functions or permutations.
     // Notice also that this is a 1Dto1D relation example.
-    relptr = ER_ctor(1,1, in_domain, false);
+    relptr = ER_ctor(1,1, in_domain, false, false);
 
     // add only some out vals for each in val
     count = 0;
@@ -125,8 +186,23 @@ int main()
         test_in++;
     }
     assert(count==test_count);
+    
+    // Testing ER_genInverse
+    printf("\nTesting ER_genInverse on something other than permutation\n");
+    ExplicitRelation *inverse = ER_genInverse(relptr);
 
-    //ER_dtor(&relptr);
+    // assert if the number of relations are incorrect
+    test_count=0;
+    FOREACH_in_tuple_1d1d(inverse, in) {
+        FOREACH_out_given_in_1d1d(inverse, in, out) {
+            printf("\t[%d] -> [%d]\n", in, out);
+            test_count++;
+        }
+    }
+    assert(count==test_count);
+    
+
+    ER_dtor(&inverse);
 
     //----- testing IAG_cpack itself takes 1D-to-1D relation as input
     // constructing sigma
@@ -152,7 +228,7 @@ int main()
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, NUM_IN-1);
-    ExplicitRelation * delta = ER_ctor(1,1,in_domain,true);
+    ExplicitRelation * delta = ER_ctor(1,1,in_domain,true); // FIXME: indicate permutation
     
     // relptr is input to IAG_cpack and sigma is output
     IAG_lexmin( relptr, delta );    
@@ -229,14 +305,18 @@ int main()
             k=1;
             ER_in_ordered_insert( relptr, 
                 Tuple_make(i,j), Tuple_make(i,j,k));
-            printf("\tER_in_ordered_insert( (%d, %d), (%d, %d, %d) )\n", 
+            if (debug) {
+                printf("\tER_in_ordered_insert( (%d, %d), (%d, %d, %d) )\n", 
                    i, j, i, j, k);
+            }
 
             k=2;
             ER_in_ordered_insert( relptr, 
                 Tuple_make(i,j), Tuple_make(i-1,j+1,k));
-            printf("\tER_in_ordered_insert( (%d, %d), (%d, %d, %d) )\n", 
+            if (debug) {
+                printf("\tER_in_ordered_insert( (%d, %d), (%d, %d, %d) )\n", 
                    i, j, i-1, j+1, k);
+            }
                    
             count +=2;
         }
@@ -274,7 +354,26 @@ int main()
     printf("\n");
     assert(count == test_count);
 
+    // Testing ER_genInverse on something that is not 1D to 1D
+    printf("\nInverse for 2D to 3D example\n");
+    inverse = ER_genInverse(relptr);
+    test_count = 0;
+    FOREACH_in_tuple(inverse, in_tuple) {
+        FOREACH_out_given_in(inverse, in_tuple, out_tuple) {
+            printf("\t");
+            Tuple_print(in_tuple);
+            printf(" -> ");
+            Tuple_print(out_tuple);
+            printf("\n");
+            test_count++;
+        }
+    }
+    printf("\n");
+    assert(test_count==count);
+
     ER_dtor(&relptr);
+    ER_dtor(&inverse);
+
   }
     
     //======= test creation and use of ER for data dependences
@@ -329,7 +428,7 @@ int main()
     ER_dump(relptr);
     
     // Iterate over the integer tuple relations
-    printf("\nTraversing access relation example\n");
+    printf("\nTraversing data dependence example\n");
     Tuple in_tuple, out_tuple;
     test_count = 0;
     FOREACH_in_tuple(relptr, in_tuple) {
@@ -356,9 +455,27 @@ int main()
     }
     printf("\n");
     assert(test_count==count);
+    
+    
+    // Testing ER_genInverse on something that is not 1D to 1D
+    printf("\nInverse for data dependence example\n");
+    inverse = ER_genInverse(relptr);
+    test_count = 0;
+    FOREACH_in_tuple(inverse, in_tuple) {
+        FOREACH_out_given_in(inverse, in_tuple, out_tuple) {
+            printf("\t");
+            Tuple_print(in_tuple);
+            printf(" -> ");
+            Tuple_print(out_tuple);
+            printf("\n");
+            test_count++;
+        }
+    }
+    printf("\n");
+    assert(test_count==count);
 
-    // keeping this relptr as input to testing IAG_cpack
     ER_dtor(&relptr);
+    ER_dtor(&inverse);
 
 
 
@@ -401,62 +518,7 @@ int main()
     ER_dtor(&relptr);
 
 
-    //======= test ER_genInverse
-    // Recreating and then fixing BUG Alan found where 
-    // ER_in_ordered_insert doesn't work when the in_domain is not
-    // specified.
-    printf("==== test creation and use of ER when in_domain not specified\n");
-    
-    // create an input relation
-    in_domain = RD_ctor(1);
-    RD_set_lb(in_domain, 0, 0);
-    RD_set_ub(in_domain, 0, (NUM_IN - 1));
-    // We know in_domain for permutations and a permutation is a function.
-    relptr = ER_ctor(1,1, in_domain, true);
 
-    // create a permutation that is just a modular shift
-    count = 0;
-    for (in=0; in<NUM_IN; in++) {
-        ER_in_ordered_insert( relptr, in, (in+1) % NUM_IN);
-        count++;
-    }
-
-    ER_dump(relptr);
-
-    // Iterate over the integer tuple relations
-    printf("\nTraversing relation we plan to invert\n");
-    test_count=0;
-    test_in = 0;
-    FOREACH_in_tuple_1d1d(relptr, in) {
-        test_out = (in+1) % NUM_IN;
-        printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
-        assert((in==test_in) && test_out==ER_out_given_in(relptr,in));
-        test_count++;
-        test_in++;
-    }
-    assert(count==test_count);
-    
-    // call routine that should generate the inverse
-    ExplicitRelation* new_relptr = ER_genInverse(relptr);
-    printf("Dumping inverse relation\n");
-    ER_dump(new_relptr);
-
-
-    // Iterate over the integer tuple relations
-    printf("\nTraversing inverted relation\n");
-    test_count=0;
-    test_in = 0;
-    FOREACH_in_tuple_1d1d(new_relptr, in) {
-        test_out = (in-1);
-        if (test_out == -1) { test_out = NUM_IN-1; }
-        printf("\t[%d] -> [%d]\n", in, ER_out_given_in(new_relptr,in));
-        assert((in==test_in) && (test_out==ER_out_given_in(new_relptr,in)));
-        assert(in==ER_out_given_in(relptr,ER_out_given_in(new_relptr,in)));
-        test_count++;
-        test_in++;
-    }
-    assert(count==test_count);
-    
 
     // ok now do somewhat of a stress test of the memory management
     /* MMS, this takes a long time so only do it when MEM_ALLOC_INCREMENT
