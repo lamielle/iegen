@@ -1,16 +1,16 @@
 /*! \file
 
-    IAG_fst.c
+    ER_fst.c
 
     A version of the full sparse tiling inspector that uses
     the explicit relation data structure.
 
 */
 
-#include "IAG.h"
+#include "ERG.h"
 
 ExplicitRelation* 
-IAG_fst(ExplicitRelation* todeps, ExplicitRelation* fromdeps, 
+ERG_fst(ExplicitRelation* todeps, ExplicitRelation* fromdeps, 
         ExplicitRelation* seedpart)
 /*----------------------------------------------------------------*//*! 
     \brief 

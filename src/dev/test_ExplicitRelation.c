@@ -5,7 +5,7 @@
 */
 
 #include "ExplicitRelation.h"
-#include "IAG.h"
+#include "ERG.h"
 #include "util.h"
 
 #define NUM_IN 10
@@ -148,10 +148,10 @@ int main()
 
     //======= test creation and use of ER for access relation
     printf("==== test creation and use of ER for access relation\n");
-    //------- testing code that will be used in IAG_cpack
+    //------- testing code that will be used in ERG_cpack
     // first construct an explicit relation for the access
     // relation and fill it.
-    // The explicit relation will be passed to IAG_cpack.
+    // The explicit relation will be passed to ERG_cpack.
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, (NUM_IN - 1));
@@ -204,36 +204,36 @@ int main()
 
     ER_dtor(&inverse);
 
-    //----- testing IAG_cpack itself takes 1D-to-1D relation as input
+    //----- testing ERG_cpack itself takes 1D-to-1D relation as input
     // constructing sigma
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, (NUM_OUT - 1));
     ExplicitRelation * sigma = ER_ctor(1,1,in_domain,true);
     
-    // relptr is input to IAG_cpack and sigma is output
-    IAG_cpack( relptr, sigma );    
+    // relptr is input to ERG_cpack and sigma is output
+    ERG_cpack( relptr, sigma );    
     
-    printf("==== dumping sigma after IAG_cpack call\n");
+    printf("==== dumping sigma after ERG_cpack call\n");
     ER_dump(sigma);
     assert(ER_verify_permutation(sigma));
     
     //ER_dtor(&relptr);
     ER_dtor(&sigma);
 
-    //----- testing IAG_lexmin itself
-    // Assume that passing same relptr into IAG_lexmin that we passed 
-    // into IAG_cpack.
+    //----- testing ERG_lexmin itself
+    // Assume that passing same relptr into ERG_lexmin that we passed 
+    // into ERG_cpack.
     // constructing delta, which will map old iteration points to new
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, NUM_IN-1);
     ExplicitRelation * delta = ER_ctor(1,1,in_domain,true); // FIXME: indicate permutation
     
-    // relptr is input to IAG_cpack and sigma is output
-    IAG_lexmin( relptr, delta );    
+    // relptr is input to ERG_cpack and sigma is output
+    ERG_lexmin( relptr, delta );    
     
-    printf("==== dumping delta after IAG_lexmin call\n");
+    printf("==== dumping delta after ERG_lexmin call\n");
     ER_dump(delta);
     assert(ER_verify_permutation(delta));
     

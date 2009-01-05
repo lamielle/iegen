@@ -1,6 +1,6 @@
 /*! \file
 
-    IAG_lexmin.c
+    ERG_lexmin.c
 
     A version of the lexmin reordering heuristic that operates on the
     ExplicitRelation datastructure version of the access relation.
@@ -11,7 +11,7 @@
 #include "util.h"
 #include "ExplicitRelation.h"
 
-void IAG_lexmin(ExplicitRelation* relptr, ExplicitRelation*  old2new)
+void ERG_lexmin(ExplicitRelation* relptr, ExplicitRelation*  old2new)
 /*----------------------------------------------------------------*//*! 
     \short Creates permutation of input tuples based on order they 
            order they are seen with output tuples.

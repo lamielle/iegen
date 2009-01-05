@@ -1,15 +1,15 @@
 /*! \file
 
-    IAG_cpack.c
+    ERG_cpack.c
 
     A version of the cpack reordering heuristic that operates on the
     explicit relation datastructure version of the access relation.
 
 */
 
-#include "IAG.h"
+#include "ERG.h"
 
-void IAG_cpack(ExplicitRelation* relptr, ExplicitRelation* old2new)
+void ERG_cpack(ExplicitRelation* relptr, ExplicitRelation* old2new)
 /*----------------------------------------------------------------*//*! 
     \brief Creates permutation of explicit relation's range 
            (set of output tuple values) based on the order they appear

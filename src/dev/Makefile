@@ -7,14 +7,14 @@ all: test_RectDomain test_ExplicitRelation  #driver_moldyn_FST_hand
 #########
 SRCS_RELATION = ExplicitRelation.c test_ExplicitRelation.c \
                 RectDomain.c  \
-                util.c IAG_cpack.c IAG_lexmin.c
+                util.c ERG_cpack.c ERG_lexmin.c
 
 test_ExplicitRelation: ExplicitRelation.h util.h RectDomain.h $(SRCS_RELATION)
 	g++ -Wall -g  $(SRCS_RELATION) -o test_ExplicitRelation
 
 #########
-# MMS, as of 8/19/08 does not build because IAG_cpack now uses ExplicitRelation
-#SRCS_HYPER = Hypergraph.c test_Hypergraph.c IAG_cpack.c util.c
+# MMS, as of 8/19/08 does not build because ERG_cpack now uses ExplicitRelation
+#SRCS_HYPER = Hypergraph.c test_Hypergraph.c ERG_cpack.c util.c
 #
 #test_Hypergraph: Hypergraph.h util.h $(SRCS_HYPER)
 #	g++ -Wall -g  $(SRCS_HYPER) -o test_Hypergraph
@@ -27,7 +27,7 @@ test_RectDomain: RectDomain.h $(SRCS_RD)
 
 
 #########
-SRCS = driver_moldyn_FST_hand.c util.c Hypergraph.c IAG_cpack.c IAG_lexmin.c 
+SRCS = driver_moldyn_FST_hand.c util.c Hypergraph.c ERG_cpack.c ERG_lexmin.c 
 
 driver_moldyn_FST_hand: util.h Hypergraph.h $(SRCS)
 	g++ -Wall -g  $(SRCS) -o driver_moldyn_FST_hand
