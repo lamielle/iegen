@@ -1,19 +1,22 @@
 from copy import deepcopy
 from cStringIO import StringIO
 from iegen.trans import Transformation
-from iegen import ERSpec
+from iegen import ERSpec,Relation
 
 #---------- DataPermuteTrans class ----------
 class DataPermuteTrans(Transformation):
-	__slots__=('data_reordering','data_arrays','iter_sub_space_relation','target_data_array','erg_func_name')
+	__slots__=('reordering_name','_data_reordering','data_arrays','iter_sub_space_relation','target_data_array','erg_func_name')
 
-	def __init__(self,name,data_reordering,data_arrays,iter_sub_space_relation,target_data_array,erg_func_name):
+	def __init__(self,name,reordering_name,data_arrays,iter_sub_space_relation,target_data_array,erg_func_name):
 		Transformation.__init__(self,name)
-		self.data_reordering=data_reordering
+		self.reordering_name=reordering_name
 		self.data_arrays=data_arrays
 		self.iter_sub_space_relation=iter_sub_space_relation
 		self.target_data_array=target_data_array
 		self.erg_func_name=erg_func_name
+
+		#Calculate the data reordering relation
+		self._data_reordering=Relation('{[%s_in]->[%s_out]: reorder_out=%s(reorder_in)}'%(3*(self.reordering_name,)))
 
 	def __repr__(self):
 		return 'DataPermuteTrans(%s,%s,%s,%s,%s)'%(self.data_reordering,self.data_arrays,self.iter_sub_space_relation,self.target_data_array,self.erg_func_name)
@@ -59,11 +62,12 @@ class DataPermuteTrans(Transformation):
 %s|-simplifications: %s
 %s|-itos: %s
 %s|-symbolic_inputs: %s
-%s|-data_reordering: %s
+%s|-reordering_name: %s
+%s|-_data_reordering: %s
 %s|-data_arrays: %s
 %s|-iter_sub_space_relation: %s
 %s|-target_data_array: %s
-%s|-erg_func_name: %s'''%(spaces,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,spaces,itos_string,spaces,self.symbolic_inputs,spaces,self.data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.erg_func_name)
+%s|-erg_func_name: %s'''%(spaces,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,spaces,itos_string,spaces,self.symbolic_inputs,spaces,self.reordering_name,spaces,self._data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.erg_func_name)
 
 	#Calculate a specification for the explicit relation that is input to
 	# the data reordering algorithm.
@@ -111,7 +115,7 @@ class DataPermuteTrans(Transformation):
 		    name='%s_output'%(self.name),
 		    input_bounds=deepcopy(self.target_data_array.bounds),
 		    output_bounds=deepcopy(self.target_data_array.bounds),
-		    relation=deepcopy(self.data_reordering),
+		    relation=deepcopy(self._data_reordering),
 		    is_permutation=True))
 
 	#Calculate what the outputs from this reordering depend on
@@ -126,7 +130,7 @@ class DataPermuteTrans(Transformation):
 		#Update the access relations of all statements
 		for statement in mapir.get_statements():
 			for access_relation in statement.get_access_relations():
-				access_relation.iter_to_data=self.data_reordering.compose(access_relation.iter_to_data)
+				access_relation.iter_to_data=self._data_reordering.compose(access_relation.iter_to_data)
 
 	def calc_data_remaps(self,mapir):
 		pass

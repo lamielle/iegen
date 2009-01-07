@@ -117,7 +117,7 @@ tetra_spec.statements['S4'].add_access_relation(AccessRelation(
 #Define the desired transformations
 tetra_spec.add_transformation(DataPermuteTrans(
     name='cpack',
-    data_reordering=Relation('{[k]->[r]: r=sigma(k)}',syms),
+    reordering_name='sigma',
     data_arrays=[tetra_spec.data_arrays['data']],
     iter_sub_space_relation=Relation('{[c0,i,c1]->[i]}',syms),
     target_data_array=tetra_spec.data_arrays['data'],
