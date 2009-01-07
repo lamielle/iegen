@@ -15,9 +15,17 @@ static int debug = false;
 
 int main() 
 {
+  
+  // scoping so that each test case can use the same variable names
+  
+  //-----------------------------------------------------------------
+  // 2D to 2D relation that is a function, but not a permutation.
+  // input domain is specified.
+  //-----------------------------------------------------------------
+  {
     ExplicitRelation* relptr;
     RectDomain* in_domain;
-    int in, out;
+    bool isFunction, isPermutation;
 
     // Test out explicit relations that are functions and where the
     // in_domain is provided.
@@ -26,7 +34,8 @@ int main()
     RD_set_ub(in_domain, 0, 4);
     RD_set_lb(in_domain, 1, 1);
     RD_set_ub(in_domain, 1, 5);
-    relptr = ER_ctor(2,2, in_domain, true);
+    isFunction = true; isPermutation = false;
+    relptr = ER_ctor(2,2, in_domain, isFunction, isPermutation);
     
     printf("==== Before inserting any relations into 2D -> 2D relation\n");
     ER_dump(relptr);
@@ -44,12 +53,24 @@ int main()
     ER_dump(relptr);    
     
     ER_dtor(&relptr);
-  
-    printf("==== Before inserting any relations into 1D -> 1D relation\n");
+  }
+
+  //-----------------------------------------------------------------
+  // 1D to 1D relation that is neither a function, nor a permutation
+  // input domain is specified.
+  //-----------------------------------------------------------------  
+  {
+    ExplicitRelation* relptr;
+    RectDomain* in_domain;
+    int in, out;
+    bool isFunction, isPermutation;
+
+    printf("\n==== Before inserting any relations into 1D -> 1D relation\n");
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 3);
     RD_set_ub(in_domain, 0, 6);
-    relptr = ER_ctor(1,1, in_domain, false);
+    isFunction = false; isPermutation = false;
+    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
     
 
     // then add [in]->[out] relationships 
@@ -87,7 +108,18 @@ int main()
     assert(test_count==count);
     
     ER_dtor(&relptr);
-        
+  }
+
+  //-----------------------------------------------------------------
+  // Testing ER_genInverse on a 1D to 1D function, which is also a 
+  // permutation.  The input domain is provided.
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr;
+    RectDomain* in_domain;
+    int in, count, test_count, test_in, test_out;
+    bool isFunction, isPermutation;
+  
     //======= test ER_genInverse
     printf("\n==== test ER_genInverse\n");
     
@@ -95,8 +127,8 @@ int main()
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, (NUM_IN - 1));
-    bool isFunction = true;
-    bool isPermutation = true;
+    isFunction = true;
+    isPermutation = true;
     relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
 
     // create a permutation that is just a modular shift
@@ -142,9 +174,22 @@ int main()
     }
     assert(count==test_count);
     
+    ER_dtor(&relptr);
+    ER_dtor(&new_relptr);
+
+  }    
     
-    
-    
+
+  //-----------------------------------------------------------------
+  // 1D to 1D relation that is neither a function nor a permutation. 
+  // Similar to the kind of access relation that we might feed to 
+  // ERG_CPack and ERG_lexmin, which are also tested here.
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr;
+    RectDomain* in_domain;
+    int in, out, count, test_count, test_in, test_out;
+    bool isFunction, isPermutation;
 
     //======= test creation and use of ER for access relation
     printf("==== test creation and use of ER for access relation\n");
@@ -158,7 +203,9 @@ int main()
     // We know in_domain for access relations, 
     // but they are not functions or permutations.
     // Notice also that this is a 1Dto1D relation example.
-    relptr = ER_ctor(1,1, in_domain, false, false);
+    isFunction = false;
+    isPermutation = false;
+    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
 
     // add only some out vals for each in val
     count = 0;
@@ -209,7 +256,9 @@ int main()
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, (NUM_OUT - 1));
-    ExplicitRelation * sigma = ER_ctor(1,1,in_domain,true);
+    isFunction = true;
+    isPermutation = true;
+    ExplicitRelation * sigma = ER_ctor(1,1,in_domain,isFunction,isPermutation);
     
     // relptr is input to ERG_cpack and sigma is output
     ERG_cpack( relptr, sigma );    
@@ -228,7 +277,9 @@ int main()
     in_domain = RD_ctor(1);
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, NUM_IN-1);
-    ExplicitRelation * delta = ER_ctor(1,1,in_domain,true); // FIXME: indicate permutation
+    isFunction = true;
+    isPermutation = true;
+    ExplicitRelation * delta = ER_ctor(1,1,in_domain,isFunction,isPermutation); 
     
     // relptr is input to ERG_cpack and sigma is output
     ERG_lexmin( relptr, delta );    
@@ -240,8 +291,16 @@ int main()
     ER_dtor(&relptr);
     ER_dtor(&delta);
 
+  }
 
-
+  //-----------------------------------------------------------------
+  // 1D to 1D permutation.
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr;
+    RectDomain* in_domain;
+    int in, test_in, test_out, count, test_count;
+    bool isFunction, isPermutation;
 
 
     //======= test creation and use of ER for sigma and delta, 
@@ -252,7 +311,9 @@ int main()
     RD_set_lb(in_domain, 0, 0);
     RD_set_ub(in_domain, 0, (NUM_IN - 1));
     // We know in_domain for permutations and a permutation is a function.
-    relptr = ER_ctor(1,1, in_domain, true);
+    isFunction = true;
+    isPermutation = true;
+    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
 
     // create a permutation that is just a modular shift
     count = 0;
@@ -277,6 +338,17 @@ int main()
     assert(count==test_count);
 
     ER_dtor(&relptr);
+  }
+  
+  //-----------------------------------------------------------------
+  // 2D to 3D relation.
+  // Also testing the size of its inverse.
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr, *inverse;
+    RectDomain* in_domain;
+    int count, test_count;
+    bool isFunction, isPermutation;
 
     //======= test creation and use of 2D-to-3D example
     // { [i,j] -> [i,j,k] : k=1 && 1 <= i,j <= 10}
@@ -291,13 +363,13 @@ int main()
     RD_set_lb(in_domain, 1, 1); RD_set_ub(in_domain, 1, 10);
     
     // We know in_domain for data dependence, but it is not a function.
-    relptr = ER_ctor(2,3, in_domain, false);
+    isFunction = false;
+    isPermutation = false;
+    relptr = ER_ctor(2,3, in_domain, isFunction, isPermutation);
     
     // code for explicitly creating the relation
     // we should be able to automatically generate this loop from the
     // static specification of the relation
-  {
-    
     int i, j, k;
     count = 0;
     for (i=1; i<=10; i++) {
@@ -375,6 +447,17 @@ int main()
     ER_dtor(&inverse);
 
   }
+
+  //-----------------------------------------------------------------
+  // 4D to 1D relation.  Similar to data dependences we will have in 
+  // moldyn.
+  // Also testing the size of its inverse.
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr, *inverse;
+    RectDomain* in_domain;
+    int count, test_count;
+    bool isFunction, isPermutation;
     
     //======= test creation and use of ER for data dependences
     // { [s,z,i,j] -> [c] : z=1 && j=1 && i=inter1(c) && s=1 && 0 <= i <= 10}
@@ -393,7 +476,9 @@ int main()
     RD_set_lb(in_domain, 3, 1); RD_set_ub(in_domain, 3, 1);
     
     // We know in_domain for data dependence, but it is not a function.
-    relptr = ER_ctor(4,1, in_domain, false);
+    isFunction = false;
+    isPermutation = false;
+    relptr = ER_ctor(4,1, in_domain, isFunction, isPermutation);
     
     // create fake index arrays inter1 and inter2
     int * inter1 = (int*)malloc(sizeof(int)*11);
@@ -477,7 +562,14 @@ int main()
     ER_dtor(&relptr);
     ER_dtor(&inverse);
 
-
+  }
+  
+  //-----------------------------------------------------------------
+  // 1D to 1D relation with no in domain specification.
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr;
+    int in, out, count, test_count, test_in, test_out;
 
     //======= test creation and use of ER for access relation
     // Recreating and then fixing BUG Alan found where 
@@ -516,7 +608,7 @@ int main()
     assert(count==test_count);
 
     ER_dtor(&relptr);
-
+  }
 
 
 

@@ -32,6 +32,12 @@ SRCS = driver_moldyn_FST_hand.c util.c Hypergraph.c ERG_cpack.c ERG_lexmin.c
 driver_moldyn_FST_hand: util.h Hypergraph.h $(SRCS)
 	g++ -Wall -g  $(SRCS) -o driver_moldyn_FST_hand
 
+
+#########
+docs: $(SRCS_Relation) ExplicitRelation.h RectDomain.h
+	@echo "Generating doxygen docs to html/ subdirectory..."
+	doxygen doxygen.config 
+
 #########
 clean:
 	@echo "Cleaning up project directory ..."

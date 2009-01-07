@@ -33,8 +33,6 @@ int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
                       + (x_k-lb_k)) * out_arity ]
     </pre>
          
-    FIXME? Possible performance problem.
-
   \author Michelle Strout 8/30/08
 *//*----------------------------------------------------------------*/
 {
@@ -68,8 +66,6 @@ int ER_calcIndex( ExplicitRelation* relptr, int in_val )
          
     Assumes we are dealing with a function.
     
-    FIXME? Possible performance problem.
-
   \author Michelle Strout 8/30/08
 *//*----------------------------------------------------------------*/
 {
@@ -333,7 +329,7 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
   Allocates a new ER data structure and populates it with inverse
   of given relation.
   Has one version of the code for relations that are 1D-to-1D
-  and functions and then a more general version for other relations.
+  and permutations and then a more general version for other relations.
   
   The more general version is probably an algorithm that should be
   used when converting an unordered ER to one that is ordered by
@@ -686,47 +682,6 @@ void ER_insert(ExplicitRelation* self, int in_int, int out_int)
     // For now just use the more general insert.
     ER_insert(self, Tuple_make(in_int), Tuple_make(out_int));
     
-/*  Might use this code if we decide to specialize for 1Dto1D arity.
-    // assuming non-negative in and out values
-    assert(in_int>=0 && out_int>=0);
-
-    // if the relation is not a function
-    // indicate that this relation is no longer ordered
-    if (!self->isFunction) { self->ordered_by_in = false; }
-
-    // if isFunction and know in_domain then 
-    if (self->isFunction  && self->in_domain_given) {
-        // check that in int is within bounds
-        assert(in_int>=RD_lb(self->in_domain, 0) 
-               && in_int<=RD_ub(self->in_domain, 0));  
-               
-        self->out_vals[ER_calcIndex(self, in_int)] = out_int;    
-    
-    // else must put all relations in raw_data array, set ordered_by_in = false
-    } else {
-        self->raw_data[self->raw_num ++ ] = out_int;
-
-        // keep track of domain as things are being inserted
-        if (in_int < RD_lb(self->in_domain, 0) ) {
-            RD_set_lb( self->in_domain, 0, in_int );
-        }
-        if (in_int > RD_ub(self->in_domain, 0) ) {
-            RD_set_ub( self->in_domain, 0, in_int );
-        }
-        
-    }
-                          
-    // keep track of out tuple ub and lb whether the in_domain is
-    // already known or not
-    if (out_int < RD_lb(self->out_range, 0) ) {
-        RD_set_lb( self->out_range, 0, out_int );
-    }
-    if (out_int > RD_ub(self->out_range, 0) ) {
-        RD_set_ub( self->out_range, 0, out_int );
-    }
-*/    
-    
-
 }
 
 
@@ -993,53 +948,6 @@ void ER_in_ordered_insert(ExplicitRelation* self, int in_int, int out_int)
     // For now just use the more general insert.
     ER_in_ordered_insert(self, Tuple_make(in_int), Tuple_make(out_int));
 
-/*    // cannot insert an in tuple less than our current in tuple
-    // due to ordered assumption
-    assert(in_int+1 >= self->in_count);
-    
-    // we initially assume that things are inserted ordered
-    // by the in tuple, so make sure that assumption has not
-    // changed.
-    assert(self->ordered_by_in);
-    
-    // assuming non-negative in and out values
-    assert(in_int>=0 && out_int>=0);
-
-    // first check whether inserting a new in_int
-    // adding one to in_int because they are zero indexed
-    if (self->in_count < (in_int+1)) {
-        // number of unique input tuples is going to go up
-        self->in_count += 1;
-    
-        // if we are on the next unique in_tuple then check if we need to 
-        // expand the array.
-        if  (self->in_count + 1 > self->out_index_size) {
-            expand_array( &(self->out_index), &(self->out_index_size) );
-        }
-        
-        // Set the end of the indices to nodes for this new in tuple to 
-        // the same as the beginning, since currently haven't inserted any
-        // relations for this in tuple.
-        self->out_index[in_int+1] = self->out_index[in_int];
-        
-    }
-    
-    // Check that there is enough room to insert the relation's out tuple,
-    // and if not then expand allocation for out_vals array.
-    if (self->out_index[in_int+1] + 1 > self->out_vals_size) {
-        expand_array( &(self->out_vals), &(self->out_vals_size) );
-    }
-    
-    // insert [in_int] -> [out_int]
-    self->out_vals[ self->out_index[in_int+1] ] = out_int;
-    self->out_index[in_int+1]++;
-    
-    // if this output tuple numbers id is higher than any we have seen 
-    // then increase the number out
-    if (out_int > (self->out_count -1) ) {
-        self->out_count = out_int+1;
-    }
-*/
 }
 
 /*----------------------------------------------------------------*//*! 
