@@ -26,4 +26,14 @@ class Transformation(object):
 		raise NotImplementedException('Subclasses of Transformation must implement calc_input_deps')
 	def calc_output_deps(self,mapir):
 		raise NotImplementedException('Subclasses of Transformation must implement calc_output_deps')
+
+	#Default dependence calculation routine
+	def _calc_deps(self,er_specs,deps,mapir):
+		for er_spec in er_specs:
+			#Gather symbolic dependences
+			symbolics=er_spec.input_bounds.symbolics()+er_spec.output_bounds.symbolics()+er_spec.relation.symbolics()
+			for symbolic in symbolics:
+				deps.add_symbolic(symbolic)
+
+			#Gather 
 #-------------------------------------

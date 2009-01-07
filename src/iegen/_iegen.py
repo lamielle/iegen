@@ -26,7 +26,7 @@ class MapIR(object):
 
 	#Adds the given symbolic to the dictionary of symbolic variables
 	def add_symbolic(self,symbolic):
-		self.symbolics[symbolic]=symbolic
+		self.symbolics[symbolic.name]=symbolic
 	#-------------------------------
 
 	#---------- Data Arrays ----------

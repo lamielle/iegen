@@ -91,10 +91,7 @@ class DataPermuteTrans(Transformation):
 
 	#Calculate what the inputs to this reordering depend on
 	def calc_input_deps(self,mapir):
-		for input in self.inputs:
-			print input
-#			for symbolic in input.
-#			self.input_deps.symbolics.append(symbolic.name)
+		Transformation._calc_deps(self,self.inputs,self.input_deps,mapir)
 
 	#Calculate a specification for the explicit relation that is the
 	# output of this data reordering.
@@ -119,7 +116,7 @@ class DataPermuteTrans(Transformation):
 
 	#Calculate what the outputs from this reordering depend on
 	def calc_output_deps(self,mapir):
-		pass
+		Transformation._calc_deps(self,self.outputs,self.output_deps,mapir)
 
 	#Update the mapir based on this transformation
 	def calc_apply(self,mapir):
