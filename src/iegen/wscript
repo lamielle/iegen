@@ -6,9 +6,10 @@ def set_options(opt):
 	#Add config options for python
 	opt.tool_options('python')
 
-	opt.sub_options('trans')
-	opt.sub_options('ast')
 	opt.sub_options('parser')
+	opt.sub_options('ast')
+	opt.sub_options('trans')
+	opt.sub_options('idg')
 	opt.sub_options('codegen')
 	opt.sub_options('pycloog')
 	opt.sub_options('util')
@@ -38,9 +39,10 @@ def configure(conf):
 	#Common include path
 	env['includes_common']=['include']
 
-	conf.sub_config('trans')
-	conf.sub_config('ast')
 	conf.sub_config('parser')
+	conf.sub_config('ast')
+	conf.sub_config('trans')
+	conf.sub_config('idg')
 	conf.sub_config('codegen')
 	conf.sub_config('pycloog')
 	conf.sub_config('util')
@@ -59,9 +61,10 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_iegen.py')
 	install_files('PREFIX',inst_dir,'_set_relation.py')
 
-	bld.add_subdirs('trans')
-	bld.add_subdirs('ast')
 	bld.add_subdirs('parser')
+	bld.add_subdirs('ast')
+	bld.add_subdirs('trans')
+	bld.add_subdirs('idg')
 	bld.add_subdirs('codegen')
 	bld.add_subdirs('pycloog')
 	bld.add_subdirs('util')
