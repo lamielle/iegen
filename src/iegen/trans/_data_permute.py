@@ -16,7 +16,7 @@ class DataPermuteTrans(Transformation):
 		self.erg_func_name=erg_func_name
 
 		#Calculate the data reordering relation
-		self._data_reordering=Relation('{[%s_in]->[%s_out]: reorder_out=%s(reorder_in)}'%(3*(self.reordering_name,)))
+		self._data_reordering=Relation('{[%s_in]->[%s_out]: %s_out=%s(%s_in)}'%(5*(self.reordering_name,)))
 
 	def __repr__(self):
 		return 'DataPermuteTrans(%s,%s,%s,%s,%s)'%(self.data_reordering,self.data_arrays,self.iter_sub_space_relation,self.target_data_array,self.erg_func_name)
