@@ -121,7 +121,7 @@ tetra_spec.add_transformation(DataPermuteTrans(
     data_arrays=[tetra_spec.data_arrays['data']],
     iter_sub_space_relation=Relation('{[c0,i,c1]->[i]}',syms),
     target_data_array=tetra_spec.data_arrays['data'],
-    iag_func_name='IAG_cpack'))
+    erg_func_name='ERG_cpack'))
 
 iter_reordering=None
 #iter_reordering=IterPermuteTrans(
@@ -133,8 +133,8 @@ iter_reordering=None
 ##This is calculated in step 1a
 ##               access_relation=A_I_0_to_X_1,
 #                iter_sub_space_relation=Relation('{ [ i, j ] -> [ i ] }',syms),
-#                iag_func_name='IAG_lexmin',
-#                iag_type='IAG_Permute')
+#                erg_func_name='ERG_lexmin',
+#                erg_type='ERG_Permute')
 
 #Data Dependences
 #    Only reduction dependences.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically if the loop is being parallelized.

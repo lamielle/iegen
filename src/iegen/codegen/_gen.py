@@ -23,9 +23,9 @@ def gen_preamble():
 	from iegen.codegen import Statement,Comment
 	stmts=[]
 	stmts.append(Comment('To compile, run the following command from the root of the iegen source tree:'))
-	stmts.append(Comment('g++ test.c -g src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/util.c src/dev/IAG_cpack.c -o test -I./src/dev'))
+	stmts.append(Comment('g++ test.c -g src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/util.c src/dev/ERG_cpack.c -o test -I./src/dev'))
 	stmts.append(Statement('#include "ExplicitRelation.h"'))
-	stmts.append(Statement('#include "IAG.h"'))
+	stmts.append(Statement('#include "ERG.h"'))
 	stmts.append(Statement('#include "util.h"'))
 	stmts.append(Statement())
 	stmts.append(Statement("#define max(a,b) (((a)>(b))?(a):(b))"))
@@ -170,20 +170,20 @@ def gen_preamble():
 #
 #def gen_create_sigma(mapir):
 #	from iegen.codegen import Statement,Comment
-#	iag=mapir.sigma.result
+#	erg=mapir.sigma.result
 #
 #	stmts=[]
 #
 #	#Create a rect domain for sigma
-#	in_domain_name='in_domain_%s'%(iag.name)
-#	stmts.extend(gen_rect_domain(in_domain_name,iag.input_bounds))
+#	in_domain_name='in_domain_%s'%(erg.name)
+#	stmts.extend(gen_rect_domain(in_domain_name,erg.input_bounds))
 #	stmts.append(Statement())
 #
 #	stmts.append(Comment('Create sigma'))
-#	stmts.append(Statement('*sigma=ER_ctor(%d,%d,%s,%s);'%(iag.input_bounds.arity(),iag.output_bounds.arity(),in_domain_name,str(iag.is_permutation).lower())))
-#	stmts.append(Statement('%s=*sigma;'%(iag.name)))
+#	stmts.append(Statement('*sigma=ER_ctor(%d,%d,%s,%s);'%(erg.input_bounds.arity(),erg.output_bounds.arity(),in_domain_name,str(erg.is_permutation).lower())))
+#	stmts.append(Statement('%s=*sigma;'%(erg.name)))
 #
-#	stmts.append(Statement('%s(%s,%s);'%(mapir.sigma.name,mapir.sigma.input.name,iag.name)))
+#	stmts.append(Statement('%s(%s,%s);'%(mapir.sigma.name,mapir.sigma.input.name,erg.name)))
 #
 #	return stmts
 #

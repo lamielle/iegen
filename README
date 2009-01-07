@@ -23,7 +23,7 @@ setenv PYTHONPATH $PYTHONPATH:$PWD
 ./waf install
 ./run_tests
 python examples/moldyn.spec
-g++ test.c src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/IAG_cpack.c src/dev/util.c -o test -I./src/dev
+g++ test.c src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/ERG_cpack.c src/dev/util.c -o test -I./src/dev
 ./test
 **************************************************
 

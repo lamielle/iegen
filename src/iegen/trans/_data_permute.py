@@ -5,18 +5,18 @@ from iegen import ERSpec
 
 #---------- DataPermuteTrans class ----------
 class DataPermuteTrans(Transformation):
-	__slots__=('data_reordering','data_arrays','iter_sub_space_relation','target_data_array','iag_func_name')
+	__slots__=('data_reordering','data_arrays','iter_sub_space_relation','target_data_array','erg_func_name')
 
-	def __init__(self,name,data_reordering,data_arrays,iter_sub_space_relation,target_data_array,iag_func_name):
+	def __init__(self,name,data_reordering,data_arrays,iter_sub_space_relation,target_data_array,erg_func_name):
 		Transformation.__init__(self,name)
 		self.data_reordering=data_reordering
 		self.data_arrays=data_arrays
 		self.iter_sub_space_relation=iter_sub_space_relation
 		self.target_data_array=target_data_array
-		self.iag_func_name=iag_func_name
+		self.erg_func_name=erg_func_name
 
 	def __repr__(self):
-		return 'DataPermuteTrans(%s,%s,%s,%s,%s)'%(self.data_reordering,self.data_arrays,self.iter_sub_space_relation,self.target_data_array,self.iag_func_name)
+		return 'DataPermuteTrans(%s,%s,%s,%s,%s)'%(self.data_reordering,self.data_arrays,self.iter_sub_space_relation,self.target_data_array,self.erg_func_name)
 
 	def __str__(self):
 		return self._get_string(0)
@@ -63,7 +63,7 @@ class DataPermuteTrans(Transformation):
 %s|-data_arrays: %s
 %s|-iter_sub_space_relation: %s
 %s|-target_data_array: %s
-%s|-iag_func_name: %s'''%(spaces,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,spaces,itos_string,spaces,self.symbolic_inputs,spaces,self.data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.iag_func_name)
+%s|-erg_func_name: %s'''%(spaces,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,spaces,itos_string,spaces,self.symbolic_inputs,spaces,self.data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.erg_func_name)
 
 	#Calculate a specification for the explicit relation that is input to
 	# the data reordering algorithm.

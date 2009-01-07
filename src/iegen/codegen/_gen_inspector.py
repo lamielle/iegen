@@ -18,7 +18,7 @@ def gen_inspector(mapir):
 #	inspector.body.extend(gen_create_artt(mapir))
 #	inspector.newline()
 #
-#	#Step 1b) Generate code that passes explicit relation to IAG
+#	#Step 1b) Generate code that passes explicit relation to ERG
 #	inspector.body.extend(gen_create_sigma(mapir))
 #	inspector.newline()
 #
