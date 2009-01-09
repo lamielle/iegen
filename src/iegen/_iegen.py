@@ -216,6 +216,10 @@ class Statement(object):
 		self.scatter=scatter
 		self.access_relations={} if None is access_relations else access_relations
 
+		#Make sure the arity of the iteration space is the same as the input arity of the scattering funcion
+		if self.iter_space.arity()!=self.scatter.arity_in():
+			raise ValueError('Input arity of scattering function must be equal to arity of iteration space.')
+
 	def __repr__(self):
 		return 'Statement(%s,%s,%s,%s,%s)'%(self.name,self.text,self.iter_space,self.scatter,self.access_relations)
 
