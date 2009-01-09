@@ -2543,7 +2543,7 @@ class CollectBoundsVisitorTestCase(TestCase):
 #--------------------------------------------
 
 #---------- Value String Visitor ----------
-class FindFreeVarConstraintVisitorTestCase(TestCase):
+class ValueStringVisitorTestCase(TestCase):
 
 	#Make sure the result of the visiting is placed in the proper attribute
 	def testResultPresent(self):
