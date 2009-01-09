@@ -15,41 +15,41 @@ moldyn_spec=MapIR()
 
 #Define the symbolic constants for the computation
 moldyn_spec.add_symbolic(Symbolic('N')) #Number of atoms
-moldyn_spec.add_symbolic(Symbolic('n_inter')) #Number of interactions
+moldyn_spec.add_symbolic(Symbolic('n_inter')) #Number of interactions between atoms
 syms=moldyn_spec.get_symbolics()
 
 #Define the data arrays for the computation
 moldyn_spec.add_data_array(DataArray(
     name='x',
-    bounds=Set('{[k]: 0<=k && k<=N-1}',syms)))
+    bounds=Set('{[k]: 0<=k && k<N}',syms)))
 
 moldyn_spec.add_data_array(DataArray(
     name='fx',
-    bounds=Set('{[k]: 0<=k && k<=N-1}',syms)))
+    bounds=Set('{[k]: 0<=k && k<N}',syms)))
 
 #Define the index arrays for the computation
 moldyn_spec.add_index_array(IndexArray(
     name='inter1',
-    input_bounds=Set('{[k]: 0<=k && k<=n_inter-1}',syms),
-    output_bounds=Set('{[k]: 0<=k && k<=N-1}',syms)))
+    input_bounds=Set('{[k]: 0<=k && k<n_inter}',syms),
+    output_bounds=Set('{[k]: 0<=k && k<N}',syms)))
 
 moldyn_spec.add_index_array(IndexArray(
     name='inter2',
-    input_bounds=Set('{[k]: 0<=k && k<=n_inter-1}',syms),
-    output_bounds=Set('{[k]: 0<=k && k<=N-1}',syms)))
+    input_bounds=Set('{[k]: 0<=k && k<n_inter}',syms),
+    output_bounds=Set('{[k]: 0<=k && k<N}',syms)))
 
 #Define the statements for the computation
 moldyn_spec.add_statement(Statement(
     name='S1',
     text='fx[%(a1)s] += x[%(a2)s] - x[%(a3)s];',
-    iter_space=Set('{[i]: 0<=i && i<=n_inter-1}',syms),
-    scatter=Relation('{[i]->[c0,i,c1]: c0=1 and c1=1}',syms)))
+    iter_space=Set('{[i]: 0<=i && i<n_inter}',syms),
+    scatter=Relation('{[i]->[c0,i,c1]: c0=1 && c1=1}',syms)))
 
 moldyn_spec.add_statement(Statement(
     name='S2',
     text='fx[%(a4)s] += x[%(a5)s] - x[%(a6)s];',
-    iter_space=Set('{[i]: 0<=i && i<=n_inter-1}',syms),
-    scatter=Relation('{[i]->[c0,i,c1]: c0=1 and c1=2}',syms)))
+    iter_space=Set('{[i]: 0<=i && i<n_inter}',syms),
+    scatter=Relation('{[i]->[c0,i,c1]: c0=1 && c1=2}',syms)))
 
 #Define the access relations for the statements
 moldyn_spec.statements['S1'].add_access_relation(AccessRelation(
@@ -69,7 +69,7 @@ moldyn_spec.statements['S1'].add_access_relation(AccessRelation(
 
 moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
     name='a4',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array=moldyn_spec.data_arrays['fx'],
     iter_to_data=Relation('{[i]->[k]: k=inter2(i)}',syms)))
 
 moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
