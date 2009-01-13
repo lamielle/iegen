@@ -16,24 +16,19 @@ def do_calc(mapir):
 		#Tell the transformation to calculate the inputs that it will need at runtime
 		transformation.calc_input(mapir)
 
-		#Tell the transformation to calculate its input dependences
-		transformation.calc_input_deps(mapir)
-
 		#Tell the transformation to calculate the outputs it will produce at runtime
 		transformation.calc_output(mapir)
-
-		#Tell the transformation to calculate its output dependences
-		transformation.calc_output_deps(mapir)
 
 		print '----- Applying transformation: -----'
 		print transformation
 		print '------------------------------------'
 		print
 
-		#Tell the transformation to update the access relations and scattering functions
-		transformation.calc_apply(mapir)
+		#Tell the transformation to update the access relations, scattering functions and other components of the MapIR
+		transformation.update_mapir(mapir)
 
-		#transformation.calc_data_remaps(mapir)
+		#Tell the transformation to update the IDG
+		transformation.update_idg(mapir)
 
 	#Calculate the parameters for the inspector and executor functions
 	mapir.inspector_params=calc_inspector_params(mapir)

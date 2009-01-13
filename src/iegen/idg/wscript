@@ -15,6 +15,7 @@ def build(bld):
 	inst_dir='iegen'+os.sep+'idg'
 
 	install_files('PREFIX',inst_dir,'__init__.py')
+	install_files('PREFIX',inst_dir,'_idg_nodes.py')
 	install_files('PREFIX',inst_dir,'_idg.py')
 
 	bld.add_subdirs('visitor')

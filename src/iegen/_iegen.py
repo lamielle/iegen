@@ -3,22 +3,25 @@ import os.path
 from cStringIO import StringIO
 from iegen.ast import Node
 import iegen,iegen.util,iegen.codegen
+from iegen.idg import IDG
 
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('symbolics','data_arrays','index_arrays','statements','transformations','full_iter_space','inspector_params','executor_params')
+	__slots__=('symbolics','data_arrays','index_arrays','er_specs','statements','transformations','full_iter_space','inspector_params','executor_params','idg')
 
 	def __init__(self):
 		self.symbolics={}
 		self.data_arrays={}
 		self.index_arrays={}
+		self.er_specs={}
 		self.statements={}
 		self.transformations=[]
 		self.inspector_params=None
 		self.executor_params=None
+		self.idg=IDG()
 
 	#---------- Symbolics ----------
 	#Returns the symbolics that are present in the MapIR
@@ -38,6 +41,15 @@ class MapIR(object):
 		self.data_arrays[data_array.name]=data_array
 	#---------------------------------
 
+	#---------- ERSpecs ----------
+	#Returns the ERSpecs that are present in the MapIR
+	def get_er_specs(self): return self.er_specs.values()
+
+	#Adds the given ERSpec to the collection of ERSpecs
+	def add_er_spec(self,er_spec):
+		self.er_specs[er_spec.name]=er_spec
+	#-----------------------------
+
 	#---------- Index Arrays ----------
 	#Returns the index arrays that are present in the MapIR
 	def get_index_arrays(self): return self.index_arrays.values()
@@ -45,6 +57,7 @@ class MapIR(object):
 	#Adds the given index array to the collection of index arrays
 	def add_index_array(self,index_array):
 		self.index_arrays[index_array.name]=index_array
+		self.er_specs[index_array.name]=index_array
 	#----------------------------------
 
 	#---------- Statements ----------
@@ -177,6 +190,14 @@ class ERSpec(object):
 %s|-relation: %s
 %s|-is_function: %s
 %s|-permuatation: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation,spaces,self.is_function,spaces,self.is_permutation)
+
+	#Returns all symbolics in each Set/Relation that this ERSpec contains
+	def symbolics(self):
+		return list(set(self.input_bounds.symbolics()+self.output_bounds.symbolics()+self.relation.symbolics()))
+
+	#Returns the names of all functions in the constraints of each Set/Relation that this ERSpec contains
+	def functions(self):
+		return list(set(self.input_bounds.functions()+self.output_bounds.functions()+self.relation.functions()))
 #----------------------------------
 
 #---------- IndexArray class ----------
