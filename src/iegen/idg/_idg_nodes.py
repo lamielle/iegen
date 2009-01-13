@@ -3,20 +3,21 @@
 
 #---------- IDGNode ----------
 class IDGNode(object):
-	__slots__=('deps','uses','data')
+	__slots__=('deps','uses','key','data')
 
-	def __init__(self,data):
-		self.deps=[]
-		self.uses=[]
+	def __init__(self,key,data):
+		self.deps={}
+		self.uses={}
+		self.key=key
 		self.data=data
 
 	def add_dep(self,dep):
-		self.deps.append(dep)
-		dep.uses.append(self)
+		self.deps[dep.key]=dep
+		dep.uses[self.key]=self
 
 	def add_use(self,use):
-		self.uses.append(use)
-		use.deps.append(self)
+		self.uses[use.key]=use
+		use.deps[self.key]=self
 
 	def apply_visitor(self,visitor):
 		raise NotImplementedError('apply_visitor must be overridden in child classes')
@@ -24,8 +25,8 @@ class IDGNode(object):
 
 #---------- IDGSymbolic ----------
 class IDGSymbolic(IDGNode):
-	def __init__(self,symbolic):
-		IDGNode.__init__(self,symbolic)
+	def __init__(self,key,symbolic):
+		IDGNode.__init__(self,key,symbolic)
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGSymbolic(self)
@@ -33,8 +34,8 @@ class IDGSymbolic(IDGNode):
 
 #---------- IDGDataArray ----------
 class IDGDataArray(IDGNode):
-	def __init__(self,data_array):
-		IDGNode.__init__(self,data_array)
+	def __init__(self,key,data_array):
+		IDGNode.__init__(self,key,data_array)
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGDataArray(self)
@@ -42,8 +43,8 @@ class IDGDataArray(IDGNode):
 
 #---------- IDGERSpec ----------
 class IDGERSpec(IDGNode):
-	def __init__(self,er_spec):
-		IDGNode.__init__(self,er_spec)
+	def __init__(self,key,er_spec):
+		IDGNode.__init__(self,key,er_spec)
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGERSpec(self)
@@ -51,8 +52,8 @@ class IDGERSpec(IDGNode):
 
 #---------- IDGIndexArray ----------
 class IDGIndexArray(IDGERSpec):
-	def __init__(self,index_array):
-		IDGERSpec.__init__(self,index_array)
+	def __init__(self,key,index_array):
+		IDGERSpec.__init__(self,key,index_array)
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGIndexArray(self)

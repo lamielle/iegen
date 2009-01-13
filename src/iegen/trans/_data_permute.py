@@ -108,7 +108,7 @@ class DataPermuteTrans(Transformation):
 		#-name: %s_output
 		#-input_bounds: deepcopy(self.target_data_array)
 		#-output_bounds: deepcopy(self.target_data_array)
-		#-relation: data reordering relation that was specified
+		#-relation: data reordering relation that was calculated
 		#-it is a permutation
 		self.outputs.append(ERSpec(
 		    name=self.reordering_name,
@@ -156,13 +156,15 @@ class DataPermuteTrans(Transformation):
 			if function not in mapir.er_specs:
 				raise ValueError("Function '%s' referenced but no associated ERSpec exists"%function)
 
-			#Get the IDG node for the ERSpec that represents this function
-			#Check if the function is an index array
-			if function in mapir.index_arrays:
-				dep_node=mapir.idg.get_index_array_node(mapir.index_arrays[function])
-			else:
-				dep_node=mapir.idg.get_er_spec_node(mapir.er_specs[function])
+			#Ignore self references
+			if function!=er_spec.name:
+				#Get the IDG node for the ERSpec that represents this function
+				#Check if the function is an index array
+				if function in mapir.index_arrays:
+					dep_node=mapir.idg.get_index_array_node(mapir.index_arrays[function])
+				else:
+					dep_node=mapir.idg.get_er_spec_node(mapir.er_specs[function])
 
-			#Setup the dependence relationship
-			er_spec_node.add_dep(dep_node)
+				#Setup the dependence relationship
+				er_spec_node.add_dep(dep_node)
 #-------------------------------------------

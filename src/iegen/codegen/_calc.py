@@ -33,6 +33,10 @@ def do_calc(mapir):
 	#Calculate the parameters for the inspector and executor functions
 	mapir.inspector_params=calc_inspector_params(mapir)
 	mapir.executor_params=calc_executor_params(mapir)
+
+	#TODO: Remove me!  Just for testing
+	from iegen.idg.visitor import TopoVisitor
+	TopoVisitor().visit(mapir.idg)
 #---------------------------------------
 
 #---------- Utility calculation functions ----------

@@ -27,7 +27,7 @@ class IDG(object):
 		#Create a new node if it doesn't already exist
 		#Return the existing node if it exists
 		if key not in self.nodes:
-			node=node_class(node_data)
+			node=node_class(key,node_data)
 			self.nodes[key]=node
 
 		#Return the requested node
