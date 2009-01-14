@@ -796,8 +796,7 @@ void ER_in_ordered_insert(ExplicitRelation* self,
     // then just use the regular ER_insert.
     if (self->isFunction  && self->in_domain_given) {
         ER_insert(self, in_tuple, out_tuple);
-    }
-    
+
     // If we know the in_domain, then the calculated index
     // into the out_index array should match our unique input
     // tuple count, which we keep even if we don't know they
