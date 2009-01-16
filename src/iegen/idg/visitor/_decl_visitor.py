@@ -17,4 +17,7 @@ class DeclVisitor(TopoVisitor):
 	def atIDGIndexArray(self,node):
 		self.decls.append(VarDecl('ExplicitRelation *',[node.data.name+'_ER']))
 
-	def atIDGOutputERSpec(self,node): pass
+	#OutputERSpecs will be passed in with type 'ExplicitRelation **var'.
+	#For convenience, we declare another variable 'ExplicitRelation *var_ER'
+	def atIDGOutputERSpec(self,node):
+		self.decls.append(VarDecl('ExplicitRelation *',[node.data.name+'_ER'],['*'+node.data.name]))

@@ -37,3 +37,5 @@ class CodegenVisitor(TopoVisitor):
 
 		#Append the construction of the wrapper the the collection of statements
 		self.stmts.append(Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.name,index_array.name,size_string)))
+
+	def atIDGOutputERSpec(self,node): pass
