@@ -59,6 +59,15 @@ class IDGIndexArray(IDGERSpec):
 		visitor.visitIDGIndexArray(self)
 #-----------------------------------
 
+#---------- IDGOutputERSpec ----------
+class IDGOutputERSpec(IDGERSpec):
+	def __init__(self,key,er_spec):
+		IDGNode.__init__(self,key,er_spec)
+
+	def apply_visitor(self,visitor):
+		visitor.visitIDGOutputERSpec(self)
+#-------------------------------------
+
 #---------- IDGCall ----------
 class IDGCall(IDGNode):
 	pass

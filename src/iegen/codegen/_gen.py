@@ -64,31 +64,6 @@ def gen_preamble():
 #
 #	return decls
 #
-#def gen_create_index_array_wrappers(mapir):
-#	from iegen.codegen import Comment,Statement
-#
-#	#Create the index array wrappers
-#	stmts=[]
-#	stmts.append(Comment('Create the index array wrappers'))
-#	for index_array in mapir.get_index_arrays():
-#		data_array_set=index_array.input_bounds
-#		#Calculate the size of this index array
-#		#Assumes only one set in the union...
-#		if 1!=len(data_array_set.sets): raise ValueError("IndexArray's dataspace has multiple terms in the disjunction")
-#		#Assumes the index array dataspace is 1D...
-#		if 1!=data_array_set.sets[0].arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
-#
-#		#Get the single tuple variable
-#		var=data_array_set.sets[0].tuple_set.vars[0]
-#
-#		#Get the string that calculates the size of the ER at runtime
-#		size_string=calc_size_string(data_array_set,var.id)
-#
-#		#Append the construction of the wrapper the the collection of statements
-#		stmts.append(Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.name,index_array.name,size_string)))
-#
-#	return stmts
-#
 #def gen_destroy_index_array_wrappers(mapir):
 #	from iegen.codegen import Comment,Statement
 #

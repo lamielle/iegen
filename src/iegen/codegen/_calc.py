@@ -1,7 +1,7 @@
 #---------- Calculation Phase ----------
 def do_calc(mapir):
 
-	from iegen.codegen import calc_full_iter_space,calc_inspector_params,calc_executor_params
+	from iegen.codegen import calc_full_iter_space
 
 	#Do calculations for each reordering
 	for transformation in mapir.transformations:
@@ -29,14 +29,6 @@ def do_calc(mapir):
 
 		#Tell the transformation to update the IDG
 		transformation.update_idg(mapir)
-
-	#Calculate the parameters for the inspector and executor functions
-	mapir.inspector_params=calc_inspector_params(mapir)
-	mapir.executor_params=calc_executor_params(mapir)
-
-	#TODO: Remove me!  Just for testing
-	from iegen.idg.visitor import TopoVisitor
-	TopoVisitor().visit(mapir.idg)
 #---------------------------------------
 
 #---------- Utility calculation functions ----------
@@ -48,91 +40,35 @@ def calc_full_iter_space(statements):
 		full_iter=full_iter.union(statement.iter_space.apply(statement.scatter))
 	return full_iter
 
-#Calculates the parameters needed for the inspector function
-def calc_inspector_params(mapir):
-	from iegen.codegen import Parameter
+#Creates a string that is a C expression that will combine the given bounds using the given function name
+def calc_bound_string(bounds,func):
+	from cStringIO import StringIO
 
-	params=[]
+	bound_string=StringIO()
+	for i in xrange(len(bounds)):
+		if len(bounds)-1==i:
+			bound_string.write('%s'+')'*(len(bounds)-1))
+		else:
+			bound_string.write('%s(%s,',func)
+	return bound_string.getvalue()%tuple(bounds)
 
-	#Data Arrays (assumed to contain double data)
-	for data_array in mapir.get_data_arrays():
-		params.append(Parameter('double *',data_array.name))
+#Creates a string that is a C expression that will calculate the lower bound for a given collection of NormExps
+def calc_lower_bound_string(bounds):
+	return calc_bound_string(bounds,'min')
 
-	#Index arrays (assumed to contain integers)
-	for index_array in mapir.get_index_arrays():
-		params.append(Parameter('int *',index_array.name))
+#Creates a string that is a C expression that will calculate the upper bound for a given collection of NormExps
+def calc_upper_bound_string(bounds):
+	return calc_bound_string(bounds,'max')
 
-	#Symbolic variables (assumed to be integers)
-	for symbolic in mapir.get_symbolics():
-		params.append(Parameter('int',symbolic.name))
+#Calculates the difference of the upper and lower bounds of the given variable in the given set
+def calc_size_string(set,var_name):
+	#Get the upper/lower bounds for the variable
+	upper_bounds=set.upper_bound(var_name)
+	lower_bounds=set.lower_bound(var_name)
 
-	#Transformation outputs
-	for transformation in mapir.transformations:
-		for output in transformation.outputs:
-			params.append(Parameter('ExplicitRelation *',output.name))
+	#Get the string that calculates the size of the ER at runtime
+	return '%s-%s'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))
 
-	return params
-
-#Calculates the parameters needed for the executor function
-def calc_executor_params(mapir):
-	return calc_inspector_params(mapir)
-
-#def calc_ie_args(mapir):
-#	from iegen.codegen import VarDecl
-#	args=[]
-#
-#	#Data spaces
-#	data_array_vars=VarDecl('double *')
-#	for data_array in mapir.get_data_arrays():
-#		data_array_vars.var_names.append(data_array.name)
-#	args.append(data_array_vars)
-#
-#	#Index arrays
-#	index_array_vars=VarDecl('int *')
-#	for index_array in mapir.get_index_arrays():
-#		index_array_vars.var_names.append(index_array.name)
-#	args.append(index_array_vars)
-#
-#	#Symbolics
-#	symbolic_vars=VarDecl('int ')
-#	for symbolic in mapir.get_symbolics():
-#		symbolic_vars.var_names.append(symbolic.name)
-#	args.append(symbolic_vars)
-#
-#	#Sigma/delta
-#	args.append(VarDecl('ExplicitRelation **',['delta','sigma']))
-#
-#	return args
-#
-##Creates a string that is a C expression that will combine the given bounds using the given function name
-#def calc_bound_string(bounds,func):
-#	from cStringIO import StringIO
-#
-#	bound_string=StringIO()
-#	for i in xrange(len(bounds)):
-#		if len(bounds)-1==i:
-#			bound_string.write('%s'+')'*(len(bounds)-1))
-#		else:
-#			bound_string.write('%s(%s,',func)
-#	return bound_string.getvalue()%tuple(bounds)
-#
-##Creates a string that is a C expression that will calculate the lower bound for a given collection of NormExps
-#def calc_lower_bound_string(bounds):
-#	return calc_bound_string(bounds,'min')
-#
-##Creates a string that is a C expression that will calculate the upper bound for a given collection of NormExps
-#def calc_upper_bound_string(bounds):
-#	return calc_bound_string(bounds,'max')
-#
-##Calculates the difference of the upper and lower bounds of the given variable in the given set
-#def calc_size_string(set,var_name):
-#	#Get the upper/lower bounds for the variable
-#	upper_bounds=set.upper_bound(var_name)
-#	lower_bounds=set.lower_bound(var_name)
-#
-#	#Get the string that calculates the size of the ER at runtime
-#	return '%s-%s'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))
-#
 #def calc_ie_arg_names_string(mapir):
 #	from cStringIO import StringIO
 #

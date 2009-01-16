@@ -132,10 +132,18 @@ class DataPermuteTrans(Transformation):
 
 	#Update the idg based on this transformation
 	def update_idg(self,mapir):
-		#Add the input and output ERSpecs to the IDG
-		for er_spec in self.inputs+self.outputs:
+		#Add the input ERSpecs to the IDG
+		for er_spec in self.inputs:
 			#Get a node for the ERSpec
 			er_spec_node=mapir.idg.get_er_spec_node(er_spec)
+
+			#Add any dependences that this ERSpec has
+			self.add_er_spec_deps(er_spec,mapir)
+
+		#Add the output ERSpecs to the IDG
+		for er_spec in self.outputs:
+			#Get a node for the ERSpec
+			er_spec_node=mapir.idg.get_output_er_spec_node(er_spec)
 
 			#Add any dependences that this ERSpec has
 			self.add_er_spec_deps(er_spec,mapir)

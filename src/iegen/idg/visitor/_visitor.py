@@ -20,6 +20,7 @@ class TopoVisitor(object):
 	def atIDGDataArray(self,node): self.defaultAt(node)
 	def atIDGERSpec(self,node): self.defaultAt(node)
 	def atIDGIndexArray(self,node): self.defaultAt(node)
+	def atIDGOutputERSpec(self,node): self.defaultAt(node)
 	#--------------------------------
 
 	#---------- Visit methods ----------
@@ -60,5 +61,6 @@ class TopoVisitor(object):
 	def visitIDGDataArray(self,node): self.atIDGDataArray(node)
 	def visitIDGERSpec(self,node): self.atIDGERSpec(node)
 	def visitIDGIndexArray(self,node): self.atIDGIndexArray(node)
+	def visitIDGOutputERSpec(self,node): self.atIDGOutputERSpec(node)
 	#-----------------------------------
 #-----------------------------------------

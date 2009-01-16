@@ -1,8 +1,10 @@
 #Generates code for the executor
 def gen_executor(mapir):
 	from iegen.codegen import Function
+	from iegen.idg.visitor import ParamVisitor
 
-	executor=Function('executor','void',mapir.executor_params)
+	#Create the executor function with the necessary parameters
+	executor=Function('executor','void',ParamVisitor().visit(mapir.idg).params)
 
 #	#Create the declare/create the index array wrappers
 #	executor.body.extend(gen_declare_index_array_wrappers(mapir))

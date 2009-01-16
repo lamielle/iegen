@@ -1,8 +1,16 @@
 #Generates code for the inspector
 def gen_inspector(mapir):
 	from iegen.codegen import Function
+	from iegen.idg.visitor import ParamVisitor,DeclVisitor,CodegenVisitor
 
-	inspector=Function('inspector','void',mapir.inspector_params)
+	#Create the inspector function with the necessary parameters
+	inspector=Function('inspector','void',ParamVisitor().visit(mapir.idg).params)
+
+	#Add the necessary variable declarations
+	inspector.body.extend(DeclVisitor().visit(mapir.idg).decls)
+
+	#Add the code for the body of the inspector
+	inspector.body.extend(CodegenVisitor().visit(mapir.idg).stmts)
 
 #	#Create the declare/create the index array wrappers
 #	inspector.body.extend(gen_declare_index_array_wrappers(mapir))
