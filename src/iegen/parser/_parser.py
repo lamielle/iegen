@@ -151,7 +151,7 @@ class PresParser(object):
 		if None is t:
 			raise SyntaxError("Syntax when parsing '%s'" %(self._formula,))
 		else:
-			raise SyntaxError("Syntax error at '%s' [%d,%d] when parsing '%s'" %(t.value,t.lineno,t.lexpos,self._formula))
+			raise SyntaxError("Syntax error at '%s' (%d:%d) when parsing '%s'" %(t.value,t.lineno,t.lexpos,self._formula))
 
 	def p_set(self,t):
 		'''set : LBRACE variable_tuple optional_constraints RBRACE'''
