@@ -250,7 +250,7 @@ class Set(Formula):
 				other=deepcopy(other)
 				self._add_set(other)
 			else:
-				raise ValueError('Cannot union sets with differing arity (%d and %d).'%(self.arity(),other.arity()))
+				raise ValueError("Cannot union sets with differing arity: '%s' (arity %d) and '%s' (arity %d)"%(self,self.arity(),other,other.arity()))
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 

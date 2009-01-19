@@ -5,6 +5,8 @@ def do_calc(mapir):
 
 	#Do calculations for each reordering
 	for transformation in mapir.transformations:
+		print 'Calculating full iteration space'
+
 		#Calculate the full iteration space based on the current iteration spaces of the statements
 		mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
 

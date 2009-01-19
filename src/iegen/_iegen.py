@@ -27,6 +27,7 @@ class MapIR(object):
 
 	#Adds the given symbolic to the dictionary of symbolic variables
 	def add_symbolic(self,symbolic):
+		print "Adding symbolic '%s'"%symbolic.name
 		self.symbolics[symbolic.name]=symbolic
 	#-------------------------------
 
@@ -36,6 +37,7 @@ class MapIR(object):
 
 	#Adds the given data array to the dictionary of data arrays
 	def add_data_array(self,data_array):
+		print "Adding data array '%s'"%data_array.name
 		self.data_arrays[data_array.name]=data_array
 	#---------------------------------
 
@@ -45,6 +47,7 @@ class MapIR(object):
 
 	#Adds the given ERSpec to the collection of ERSpecs
 	def add_er_spec(self,er_spec):
+		print "Adding ERSpec '%s'"%er_spec
 		self.er_specs[er_spec.name]=er_spec
 	#-----------------------------
 
@@ -54,6 +57,7 @@ class MapIR(object):
 
 	#Adds the given index array to the collection of index arrays
 	def add_index_array(self,index_array):
+		print "Adding index array '%s'"%index_array.name
 		self.index_arrays[index_array.name]=index_array
 		self.er_specs[index_array.name]=index_array
 	#----------------------------------
@@ -64,6 +68,7 @@ class MapIR(object):
 
 	#Adds the given statement to the collection of statements
 	def add_statement(self,statement):
+		print "Adding statement '%s'"%statement.name
 		self.statements[statement.name]=statement
 	#--------------------------------
 
@@ -72,6 +77,7 @@ class MapIR(object):
 	#Transformations are not stored as a dictionary as
 	#the ordering is important
 	def add_transformation(self,transformation):
+		print "Adding transformation '%s'"%transformation.name
 		self.transformations.append(transformation)
 	#-------------------------------------
 
@@ -80,6 +86,9 @@ class MapIR(object):
 	#Given is a filled-in MapIR data structure
 	#Code is generated based upon this data
 	def codegen(self,file_name=None):
+
+		print "Running code generation..."
+
 		#Create a string buffer to hold the code that is generated
 		code=StringIO()
 
