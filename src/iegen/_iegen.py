@@ -47,7 +47,7 @@ class MapIR(object):
 
 	#Adds the given ERSpec to the collection of ERSpecs
 	def add_er_spec(self,er_spec):
-		print "Adding ERSpec '%s'"%er_spec
+		print "Adding ERSpec '%s'"%er_spec.name
 		self.er_specs[er_spec.name]=er_spec
 	#-----------------------------
 
