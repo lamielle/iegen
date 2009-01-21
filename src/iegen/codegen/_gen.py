@@ -32,15 +32,4 @@ def gen_preamble():
 	stmts.append(Statement("#define min(a,b) (((a)<(b))?(a):(b))"))
 	stmts.append(Statement())
 	return stmts
-
-#def gen_destroy_index_array_wrappers(mapir):
-#	from iegen.codegen import Comment,Statement
-#
-#	#Destroy the index array wrappers
-#	stmts=[]
-#	stmts.append(Comment('Destroy the index array wrappers'))
-#	for index_array in mapir.get_index_arrays():
-#		stmts.append(Statement('ER_dtor(&%s_ER);'%(index_array.name)))
-#
-#	return stmts
 #-------------------------------------------------------

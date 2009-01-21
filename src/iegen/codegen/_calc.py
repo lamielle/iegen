@@ -71,18 +71,6 @@ def calc_size_string(set,var_name):
 	#Get the string that calculates the size of the ER at runtime
 	return '%s-%s'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))
 
-#def calc_ie_arg_names_string(mapir):
-#	from cStringIO import StringIO
-#
-#	arg_names_string=StringIO()
-#	for arg in mapir.ie_args:
-#		for var_name in arg.var_names:
-#			if '**'==arg.type[-2:]:
-#				arg_names_string.write('&%s,'%(var_name))
-#			else:
-#				arg_names_string.write('%s,'%(var_name))
-#	return arg_names_string.getvalue()[:-1]
-#
 #def calc_equality_value(var_name,formula):
 #	from iegen.ast.visitor import FindConstraintVisitor,ValueStringVisitor
 #	from iegen.ast import Equality,NormExp
