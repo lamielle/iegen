@@ -71,27 +71,27 @@ def calc_size_string(set,var_name):
 	#Get the string that calculates the size of the ER at runtime
 	return '%s-%s'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))
 
-#def calc_equality_value(var_name,formula):
-#	from iegen.ast.visitor import FindConstraintVisitor,ValueStringVisitor
-#	from iegen.ast import Equality,NormExp
-#
-#	values=FindConstraintVisitor(Equality,var_name).visit(formula).var_constraints
-#
-#	if 0==len(values): raise ValueError("Tuple variable '%s' is not involved in any equality constraints"%(var_name))
-#	if len(values)>1: raise ValueError("Tuple variable '%s' is equal to multiple values"%(var_name))
-#
-#	value=values[0]
-#
-#	var=value[0]
-#	exp=value[1].exp
-#
-#	if var.coeff>0:
-#		var=NormExp([],-1)*NormExp([var],0)
-#		exp=NormExp([],-1)*exp
-#	else:
-#		var=NormExp([var],0)
-#
-#	value=exp-var
-#
-#	return ValueStringVisitor().visit(value).value
+def calc_equality_value(var_name,formula):
+	from iegen.ast.visitor import FindConstraintVisitor,ValueStringVisitor
+	from iegen.ast import Equality,NormExp
+
+	values=FindConstraintVisitor(Equality,var_name).visit(formula).var_constraints
+
+	if 0==len(values): raise ValueError("Tuple variable '%s' is not involved in any equality constraints"%(var_name))
+	if len(values)>1: raise ValueError("Tuple variable '%s' is equal to multiple values"%(var_name))
+
+	value=values[0]
+
+	var=value[0]
+	exp=value[1].exp
+
+	if var.coeff>0:
+		var=NormExp([],-1)*NormExp([var],0)
+		exp=NormExp([],-1)*exp
+	else:
+		var=NormExp([var],0)
+
+	value=exp-var
+
+	return ValueStringVisitor().visit(value).value
 #---------------------------------------------------
