@@ -175,4 +175,7 @@ class DataPermuteTrans(Transformation):
 
 				#Setup the dependence relationship
 				er_spec_node.add_dep(dep_node)
+
+				#Recursively add dependences for the dependence node
+				self.add_er_spec_deps(dep_node.data,mapir)
 #-------------------------------------------

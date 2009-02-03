@@ -211,7 +211,8 @@ class ERSpec(object):
 class IndexArray(ERSpec):
 
 	def __init__(self,name,input_bounds,output_bounds):
-		ERSpec.__init__(self,name,input_bounds,output_bounds,True,False)
+		from iegen import Relation
+		ERSpec.__init__(self,name,input_bounds,output_bounds,Relation('{[]->[]}'),True,False)
 
 		#Checking
 		if 1!=self.output_bounds.arity():
