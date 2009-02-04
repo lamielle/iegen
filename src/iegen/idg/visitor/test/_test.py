@@ -14,7 +14,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.idg.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.idg.visitor import TopoVisitor,ParamVisitor,DeclVisitor,CodegenVisitor
+			from iegen.idg.visitor import TopoVisitor,ParamVisitor,DeclVisitor,CodegenVisitor,DotVisitor
 		except ImportError,e:
 			self.fail('Importing classes from iegen.idg.visitor failed: '+str(e))
 #----------------------------------
