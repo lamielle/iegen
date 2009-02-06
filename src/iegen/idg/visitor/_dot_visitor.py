@@ -57,3 +57,9 @@ class DotVisitor(TopoVisitor):
 		for use in node.uses:
 			self.writeln('%s -> %s;'%(node.key,use))
 		self.writeln()
+
+	def atIDGCall(self,node):
+		self.write_node_def(node.key,'IDGCall\\n%s'%(node.data.name))
+		for use in node.uses:
+			self.writeln('%s -> %s;'%(node.key,use))
+		self.writeln()

@@ -80,6 +80,9 @@ class MapIR(object):
 	def add_transformation(self,transformation):
 		print "Adding transformation '%s'"%transformation.name
 		self.transformations.append(transformation)
+
+		#Add the associated ERGSpec to the MapIR
+		self.add_erg_spec(ERGSpec(transformation.erg_func_name))
 	#-------------------------------------
 
 	#---------- ERGSpecs ----------

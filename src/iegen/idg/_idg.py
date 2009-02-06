@@ -1,7 +1,7 @@
 #Inspector Dependence Graph
 #Alan LaMielle: 1/7/2009
 
-from iegen.idg import IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec
+from iegen.idg import IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGCall
 
 #---------- Inspector Dependence Graph ----------
 class IDG(object):
@@ -13,6 +13,7 @@ class IDG(object):
 	           IDGERSpec:'er_spec_',
 	           IDGIndexArray:'er_spec_',
 	           IDGOutputERSpec:'er_spec_',
+	           IDGCall:'erg_spec_',
 	          }
 
 	def __init__(self):
@@ -48,4 +49,7 @@ class IDG(object):
 
 	def get_output_er_spec_node(self,er_spec):
 		return self._get_node(er_spec,IDGOutputERSpec)
+
+	def get_call_node(self,erg_spec):
+		return self._get_node(erg_spec,IDGCall)
 #------------------------------------------------
