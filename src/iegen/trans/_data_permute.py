@@ -49,25 +49,17 @@ class DataPermuteTrans(Transformation):
 				print >>simplifications_string,simplification._get_string(indent+5)
 		simplifications_string=simplifications_string.getvalue()[:-1]
 
-		itos_string=StringIO()
-		if len(self.itos)>0:
-			print >>itos_string
-			for ito in self.itos:
-				print >>itos_string,ito._get_string(indent+5)
-		itos_string=itos_string.getvalue()[:-1]
-
 		return '''%sDataPermuteTrans:
 %s|-inputs: %s
 %s|-outputs: %s
 %s|-simplifications: %s
-%s|-itos: %s
 %s|-symbolic_inputs: %s
 %s|-reordering_name: %s
 %s|-_data_reordering: %s
 %s|-data_arrays: %s
 %s|-iter_sub_space_relation: %s
 %s|-target_data_array: %s
-%s|-erg_func_name: %s'''%(spaces,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,spaces,itos_string,spaces,self.symbolic_inputs,spaces,self.reordering_name,spaces,self._data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.erg_func_name)
+%s|-erg_func_name: %s'''%(spaces,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,,spaces,self.symbolic_inputs,spaces,self.reordering_name,spaces,self._data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.erg_func_name)
 
 	#Calculate a specification for the explicit relation that is input to
 	# the data reordering algorithm.

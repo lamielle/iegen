@@ -1,6 +1,6 @@
 #---------- Transformation base class ----------
 class Transformation(object):
-	__slots__=('name','inputs','input_deps','outputs','output_deps','simplifications','itos','symbolic_inputs')
+	__slots__=('name','inputs','input_deps','outputs','output_deps','simplifications','symbolic_inputs')
 
 	def __init__(self,name):
 		from iegen.trans import TransDeps
@@ -11,7 +11,6 @@ class Transformation(object):
 		self.outputs=[]
 		self.output_deps=TransDeps()
 		self.simplifications=[]
-		self.itos=[]
 		self.symbolic_inputs=[]
 
 	def calc_input(self,mapir):
