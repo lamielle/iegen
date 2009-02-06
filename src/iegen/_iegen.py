@@ -10,7 +10,7 @@ iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- MapIR class ----------
 class MapIR(object):
-	__slots__=('symbolics','data_arrays','index_arrays','er_specs','statements','transformations','full_iter_space','idg')
+	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','transformations','erg_specs','full_iter_space','idg')
 
 	def __init__(self):
 		self.symbolics={}
@@ -19,6 +19,7 @@ class MapIR(object):
 		self.er_specs={}
 		self.statements={}
 		self.transformations=[]
+		self.erg_specs={}
 		self.idg=IDG()
 
 	#---------- Symbolics ----------
@@ -80,6 +81,16 @@ class MapIR(object):
 		print "Adding transformation '%s'"%transformation.name
 		self.transformations.append(transformation)
 	#-------------------------------------
+
+	#---------- ERGSpecs ----------
+	#Returns the ERGSpecs that are present in the MapIR
+	def get_erg_specs(self): return self.erg_specs.values()
+
+	#Adds the given ERGSpec to the collection of ERGSpecs
+	def add_erg_spec(self,erg_spec):
+		print "Adding ERGSpec '%s'"%(erg_spec.name)
+		self.erg_specs[erg_spec.name]=erg_spec
+	#------------------------------
 
 	#---------- Main 'action' method ---------
 	#This is the main interface that starts the whole code generation process
@@ -314,6 +325,14 @@ class AccessRelation(object):
 %s|-iter_to_data: %s
 %s|-iter_space: %s'''%(spaces,spaces,self.name,spaces,self.data_array._get_string(indent+13),spaces,self.iter_to_data,spaces,self.iter_space)
 #------------------------------------------
+
+#---------- ERGSpec class ----------
+class ERGSpec(object):
+	__slots__=('name',)
+
+	def __init__(self,name):
+		self.name=name
+#-----------------------------------
 
 #---------- DataDependence class ----------
 class DataDependence(object):
