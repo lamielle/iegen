@@ -5,4 +5,3 @@ from _data_project import DataProjectTrans
 from _iter_permute import IterPermuteTrans
 from _iter_embed import IterEmbedTrans
 from _iter_project import IterProjectTrans
-from _trans_deps import TransDeps
