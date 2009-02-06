@@ -80,9 +80,6 @@ class MapIR(object):
 	def add_transformation(self,transformation):
 		print "Adding transformation '%s'"%transformation.name
 		self.transformations.append(transformation)
-
-		#Add the associated ERGSpec to the MapIR
-		self.add_erg_spec(ERGSpec(transformation.erg_func_name))
 	#-------------------------------------
 
 	#---------- ERGSpecs ----------
@@ -331,10 +328,12 @@ class AccessRelation(object):
 
 #---------- ERGSpec class ----------
 class ERGSpec(object):
-	__slots__=('name',)
+	__slots__=('name','inputs','outputs')
 
-	def __init__(self,name):
+	def __init__(self,name,inputs,outputs):
 		self.name=name
+		self.inputs=inputs
+		self.outputs=outputs
 #-----------------------------------
 
 #---------- DataDependence class ----------

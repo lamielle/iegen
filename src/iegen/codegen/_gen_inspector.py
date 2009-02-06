@@ -116,26 +116,29 @@ def gen_index_array(index_array):
 	#Append the construction of the wrapper the the collection of statements
 	return [Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.name,index_array.name,size_string))]
 
-def gen_output_er_spec(output_er_spec): return []
-#	from iegen.codegen import Statement,Comment
-#	erg=mapir.sigma.result
-#
-#	stmts=[]
-#
-#	#Create a rect domain for sigma
-#	in_domain_name='in_domain_%s'%(erg.name)
-#	stmts.extend(gen_rect_domain(in_domain_name,erg.input_bounds))
-#	stmts.append(Statement())
-#
-#	stmts.append(Comment('Create sigma'))
-#	stmts.append(Statement('*sigma=ER_ctor(%d,%d,%s,%s);'%(erg.input_bounds.arity(),erg.output_bounds.arity(),in_domain_name,str(erg.is_permutation).lower())))
-#	stmts.append(Statement('%s=*sigma;'%(erg.name)))
-#
-#	stmts.append(Statement('%s(%s,%s);'%(mapir.sigma.name,mapir.sigma.input.name,erg.name)))
-#
-#	return stmts
+def gen_output_er_spec(output_er_spec):
+	from iegen.codegen import Statement,Comment
 
-def gen_erg_call(erg_call): return []
+	stmts=[]
+
+	#Create a rect domain for the ERSpec
+	in_domain_name='in_domain_%s'%(output_er_spec.name)
+	stmts.extend(gen_rect_domain(in_domain_name,output_er_spec.input_bounds))
+	stmts.append(Statement('*%s=ER_ctor(%d,%d,%s,%s);'%(output_er_spec.name,output_er_spec.input_bounds.arity(),output_er_spec.output_bounds.arity(),in_domain_name,str(output_er_spec.is_permutation).lower())))
+	stmts.append(Statement('%s_ER=*%s;'%(output_er_spec.name,output_er_spec.name)))
+
+	return stmts
+
+def gen_erg_spec(erg_spec):
+	stmts=[]
+
+	arg_list_template=','.join(['%s']*(len(erg_spec.inputs)+len(erg_spec.outputs)))
+	call_template='%s('+arg_list_template+');'
+	call_strings=tuple([erg_spec.name]+[input.name for input in erg_spec.inputs]+[output.name+'_ER' for output in erg_spec.outputs])
+	stmts.append(Statement(call_template%call_strings))
+
+	return stmts
+
 ##Generates code that does the data reordering
 #def gen_reorder_data(mapir,data_reordering):
 #	from iegen.codegen import Statement,Comment

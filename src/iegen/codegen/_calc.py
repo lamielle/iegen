@@ -32,9 +32,9 @@ def do_calc(mapir):
 		#Tell the transformation to update the IDG
 		transformation.update_idg(mapir)
 
-#	from iegen.idg.visitor import DotVisitor
-#	v=DotVisitor().visit(mapir.idg)
-#	v.write_dot('test.dot')
+	from iegen.idg.visitor import DotVisitor
+	v=DotVisitor().visit(mapir.idg)
+	v.write_dot('test.dot')
 #---------------------------------------
 
 #---------- Utility calculation functions ----------

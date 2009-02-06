@@ -1,5 +1,5 @@
 from iegen.idg.visitor import TopoVisitor
-from iegen.codegen import gen_er_spec,gen_index_array,gen_output_er_spec,gen_erg_call
+from iegen.codegen import gen_er_spec,gen_index_array,gen_output_er_spec,gen_erg_spec
 
 class CodegenVisitor(TopoVisitor):
 
@@ -17,4 +17,4 @@ class CodegenVisitor(TopoVisitor):
 
 	def atIDGOutputERSpec(self,node): self.stmts.extend(gen_output_er_spec(node.data))
 
-	def atIDGCall(self,node): self.stmts.extend(gen_erg_call(node.data))
+	def atIDGCall(self,node): self.stmts.extend(gen_erg_spec(node.data))

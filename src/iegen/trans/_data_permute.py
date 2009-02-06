@@ -114,6 +114,7 @@ class DataPermuteTrans(Transformation):
 
 	#Update the MapIR based on this transformation
 	def update_mapir(self,mapir):
+		from iegen import ERGSpec
 		#Data spaces are not changed
 		#Scattering functions are not changed
 
@@ -122,32 +123,37 @@ class DataPermuteTrans(Transformation):
 			for access_relation in statement.get_access_relations():
 				access_relation.iter_to_data=self._data_reordering.compose(access_relation.iter_to_data)
 
+		#Add the ERGSpec for this transformation to the MapIR
+		mapir.add_erg_spec(ERGSpec(self.erg_func_name,self.inputs,self.outputs))
+
 	#Update the idg based on this transformation
 	def update_idg(self,mapir):
 		#Add the ERG call node to the IDG
 		call_node=mapir.idg.get_call_node(mapir.erg_specs[self.erg_func_name])
 
 		#Add the input ERSpecs to the IDG
-		for er_spec in self.inputs:
+		for input_er_spec in self.inputs:
 			#Get a node for the ERSpec
-			er_spec_node=mapir.idg.get_er_spec_node(er_spec)
-
-			#Add dependence of the call on the input
-			call_node.add_dep(er_spec_node)
+			input_er_spec_node=mapir.idg.get_er_spec_node(input_er_spec)
 
 			#Add any dependences that this ERSpec has
-			self.add_er_spec_deps(er_spec,mapir)
+			self.add_er_spec_deps(input_er_spec,mapir)
 
 		#Add the output ERSpecs to the IDG
-		for er_spec in self.outputs:
+		for output_er_spec in self.outputs:
 			#Get a node for the ERSpec
-			er_spec_node=mapir.idg.get_output_er_spec_node(er_spec)
+			output_er_spec_node=mapir.idg.get_output_er_spec_node(output_er_spec)
 
-			#Add dependence of the output on the call
-			er_spec_node.add_dep(call_node)
+			#Add dependence of the call on the output
+			call_node.add_dep(output_er_spec_node)
+
+			#Add dependences on each input
+			for input_er_spec in self.inputs:
+				input_er_spec_node=mapir.idg.get_er_spec_node(input_er_spec)
+				output_er_spec_node.add_dep(input_er_spec_node)
 
 			#Add any dependences that this ERSpec has
-			self.add_er_spec_deps(er_spec,mapir)
+			self.add_er_spec_deps(output_er_spec,mapir)
 
 	#Adds any dependences the given ERSpec has to the IDG
 	def add_er_spec_deps(self,er_spec,mapir):
