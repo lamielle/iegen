@@ -3,13 +3,9 @@ class Transformation(object):
 	__slots__=('name','inputs','input_deps','outputs','output_deps','simplifications','symbolic_inputs')
 
 	def __init__(self,name):
-		from iegen.trans import TransDeps
-
 		self.name=name
 		self.inputs=[]
-		self.input_deps=TransDeps()
 		self.outputs=[]
-		self.output_deps=TransDeps()
 		self.simplifications=[]
 		self.symbolic_inputs=[]
 
