@@ -15,6 +15,8 @@ Code generation algorithms
             for each rtrt in RTRTs:
 
                 (rtrt.inputERs, rtrt.inputSymbolics) = rtrt.calc_input( mapIR )
+                
+                rtrt.transdeps = rtrt.calc_dep( rtrt.inputERs )
 
                 rtrt.outputERs = rtrt.calc_output( mapIR )
 
@@ -54,14 +56,25 @@ Code generation algorithms
 
             //// CODE GENERATION pass for composed inspector
             for each rtrt in RTRTs:
+            
+                for each relation in transdeps:
+                    generate code to construct ER for relation
+                    // create them if they are needed is what we
+                    // mean any time we say "generated code to construct ER"
 
                 for each relation in rtrt.input_ERs:
                     generate code to construct ER for relation
+
+                for each relation in rtrt.output_ERs:
+                    construct empty ERs for passing into ERG (Explicit Relation Generator)
 
                 generate call to ERG (reordering algorithm)
                     // like old (1b)
                     pass in all input_ERs
                     later: might be passing in other inputs
+                    pass in empty output_ERs
+                    // PROBLEM: how do we match up parameter positions with
+                    // user library routine for ERG
 
                 for each relation in rtrt.simplification_ERS:
                     generate code to construct ER for relation
@@ -140,7 +153,7 @@ RTRT interface
 ----------------------------------
 Utilities
     calc_params: (relation or set, mapIR)
-                 -> (data_spaces, symbolic vars, relations)
+                 -> (data_spaces, symbolic vars, ERSpecs)
         Given a relation and an instance of the MapIR returns the  data_spaces,  symbolic vars, and relations needed to explicitly compute that relation.
 
     calc_full_iter_space: statements -> Set

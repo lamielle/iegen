@@ -143,7 +143,7 @@ Composition and choice of RTRTs
             // function itself
             iter_sub_space_relation = { [ s,x,i,y ] -> [ x,i ] }
             
-            seed_part_gen = seedpart
+            seed_part = "part"
             iag_func_name = FST
             
     iteration reordering: tilepack
@@ -222,7 +222,10 @@ For data and iteration reordering see moldyn-data-iter-reord.txt.  Inputs have c
 	        IterGroupRTRT
 	
 	    Algorithm:
-	        Apply restriction to the data dependences and their inverses so that only keep dependences to and from see subspace.  
+	        Apply restriction to the data dependences and their inverses so that only keep dependences to and from seed subspace.  Also want to
+	        restrict dependences so that if they are going to the subspace,
+	        they are only coming from the space of points that are being
+	        sparse tiled and vice versa.
 
                 to_deps_relation = empty
                 from_deps_relation = empty
@@ -230,12 +233,22 @@ For data and iteration reordering see moldyn-data-iter-reord.txt.  Inputs have c
                     // the initial composition should result in an empty
                     // relation if data_dep does not end in the seed space
 	                temp_dd = iter_space_to_seed_space( data_dep )
+	                // now make sure the dependences are coming from the
+	                // subspace being sparse tiled
+	                temp_dd = iter_sub_space_relation( inverse temp_dd )
+	                // the to_deps_relation is really from the seed space
+	                // to previous iterations.  This is ok because it is
+	                // what the sparse tiling algorithms want.
 	                if (temp_dd is not empty)
 	                    to_deps_relation = to_deps_relation union temp_dd
 	                        
                     // the initial composition should result in an empty
                     // relation if data_dep does not start in the seed space
 	                temp_dd = iter_space_to_seed_space( inverse data_dep )
+	                // now make sure the dependences are going to the
+	                // subspace being sparse tiled
+	                temp_dd = iter_sub_space_relation( inverse temp_dd )
+	                
 	                if (temp_dd is not empty)
 	                    from_deps_relation = from_deps_relation union temp_dd
 
@@ -244,7 +257,7 @@ For data and iteration reordering see moldyn-data-iter-reord.txt.  Inputs have c
 	        from_deps_relation
 	        
 	        
-	    For this example:
+	    For this example: (2/11/09: this needs updated?)
 	        D1 = { [s,z,i,j] -> [s,y,ii,k] : z=1 && j=1 && y=2 && k=1 
                                     && i=inter1(ii) }
                 iter_space_to_seed_space compose D1
