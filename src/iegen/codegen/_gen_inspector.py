@@ -1,4 +1,4 @@
-from iegen.codegen import Statement,calc_size_string,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string
+from iegen.codegen import Statement,calc_size_string,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string,gen_tuple_vars_decl
 
 #Generates code for the inspector
 def gen_inspector(mapir):
@@ -37,15 +37,6 @@ def gen_rect_domain(name,set):
 		stmts.append(Statement('RD_set_ub(%s,0,%s);'%(name,calc_upper_bound_string(set.upper_bound(var.id)))))
 
 	return stmts
-
-def gen_tuple_vars_decl(set):
-	from iegen.codegen import VarDecl
-
-	var_decl=VarDecl('int')
-	for set in set.sets:
-		for var in set.tuple_set.vars:
-			var_decl.var_names.append(var.id)
-	return [var_decl]
 
 #Generate code for a given ERSpec
 def gen_er_spec(er_spec):
@@ -148,16 +139,5 @@ def gen_erg_spec(erg_spec):
 #
 #	for data_array in data_reordering.data_arrays:
 #		stmts.append(Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,%s);'%(data_array.name,calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),mapir.sigma.result.name)))
-#
-#	return stmts
-
-#def gen_destroy_index_array_wrappers(mapir):
-#	from iegen.codegen import Comment,Statement
-#
-#	#Destroy the index array wrappers
-#	stmts=[]
-#	stmts.append(Comment('Destroy the index array wrappers'))
-#	for index_array in mapir.get_index_arrays():
-#		stmts.append(Statement('ER_dtor(&%s_ER);'%(index_array.name)))
 #
 #	return stmts

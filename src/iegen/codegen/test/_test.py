@@ -15,15 +15,15 @@ class ImportTestCase(TestCase):
 	def testNameImport(self):
 		try:
 			#_codegen.py
-			from iegen.codegen import codegen
+			from iegen.codegen import codegen,gen_tuple_vars_decl
 			#_calc.py
-			from iegen.codegen import do_calc,calc_full_iter_space,calc_size_string,calc_lower_bound_string,calc_upper_bound_string,calc_equality_value	
+			from iegen.codegen import do_calc,calc_full_iter_space,calc_size_string,calc_lower_bound_string,calc_upper_bound_string,calc_equality_value
 			#_ito.py
 			from iegen.codegen import do_ito
 			#_gen.py
 			from iegen.codegen import do_gen,gen_preamble
 			#_gen_inspector.py
-			from iegen.codegen import gen_inspector,gen_er_spec,gen_index_array,gen_output_er_spec,gen_erg_call
+			from iegen.codegen import gen_inspector,gen_er_spec,gen_index_array,gen_output_er_spec,gen_erg_spec
 			#_gen_executor.py
 			from iegen.codegen import gen_executor
 			#_gen_main.py
