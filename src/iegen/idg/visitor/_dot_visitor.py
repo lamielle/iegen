@@ -30,7 +30,7 @@ class DotVisitor(TopoVisitor):
 
 	def write_node_deps(self,node):
 		for dep in node.deps:
-			self.writeln('%s -> %s;'%(dep,node.key))
+			self.writeln('%s -> %s;'%(node.key,dep))
 		self.writeln()
 
 	def atIDGSymbolic(self,node):
