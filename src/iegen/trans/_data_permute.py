@@ -136,6 +136,9 @@ class DataPermuteTrans(Transformation):
 			#Get a node for the ERSpec
 			input_er_spec_node=mapir.idg.get_er_spec_node(input_er_spec)
 
+			#Add dependence of the call to the input
+			call_node.add_dep(input_er_spec_node)
+
 			#Add any dependences that this ERSpec has
 			self.add_er_spec_deps(input_er_spec,mapir)
 
@@ -144,13 +147,8 @@ class DataPermuteTrans(Transformation):
 			#Get a node for the ERSpec
 			output_er_spec_node=mapir.idg.get_output_er_spec_node(output_er_spec)
 
-			#Add dependence of the call on the output
-			call_node.add_dep(output_er_spec_node)
-
-			#Add dependences on each input
-			for input_er_spec in self.inputs:
-				input_er_spec_node=mapir.idg.get_er_spec_node(input_er_spec)
-				output_er_spec_node.add_dep(input_er_spec_node)
+			#Add dependence of the output on the call
+			output_er_spec_node.add_dep(call_node)
 
 			#Add any dependences that this ERSpec has
 			self.add_er_spec_deps(output_er_spec,mapir)
