@@ -120,9 +120,14 @@ def gen_output_er_spec(output_er_spec):
 
 	return stmts
 
-def gen_erg_spec(erg_spec):
+def gen_erg_spec(erg_spec,output_er_specs):
 	stmts=[]
 
+	#Generate the code to setup the output ERs before making the call
+	for output_er_spec in output_er_specs:
+		gen_output_er_spec(output_er_spec)
+
+	#Generate the code to make the call to the ERG
 	arg_list_template=','.join(['%s']*(len(erg_spec.inputs)+len(erg_spec.outputs)))
 	call_template='%s('+arg_list_template+');'
 	call_strings=tuple([erg_spec.name]+[input.name for input in erg_spec.inputs]+[output.name+'_ER' for output in erg_spec.outputs])

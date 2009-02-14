@@ -15,6 +15,8 @@ class CodegenVisitor(TopoVisitor):
 
 	def atIDGIndexArray(self,node): self.stmts.extend(gen_index_array(node.data))
 
-	def atIDGOutputERSpec(self,node): self.stmts.extend(gen_output_er_spec(node.data))
+	def atIDGOutputERSpec(self,node): pass
 
-	def atIDGCall(self,node): self.stmts.extend(gen_erg_spec(node.data))
+	def atIDGCall(self,node):
+		output_er_specs=[out_node.data for out_node in node.uses.values()]
+		self.stmts.extend(gen_erg_spec(node.data,output_er_specs))
