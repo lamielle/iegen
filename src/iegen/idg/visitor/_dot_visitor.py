@@ -28,31 +28,31 @@ class DotVisitor(TopoVisitor):
 		else:
 			self.writeln('%s [ label="%s" ];'%(name,text))
 
-	def write_node_deps(self,node):
-		for dep in node.deps:
-			self.writeln('%s -> %s;'%(node.key,dep))
+	def write_node_uses(self,node):
+		for use in node.uses:
+			self.writeln('%s -> %s;'%(node.key,use))
 		self.writeln()
 
 	def atIDGSymbolic(self,node):
 		self.write_node_def(node.key,'IDGSymbolic\\n%s'%(node.data.name))
-		self.write_node_deps(node)
+		self.write_node_uses(node)
 
 	def atIDGDataArray(self,node):
 		self.write_node_def(node.key,'IDGDataArray\\n%s'%(node.data.name))
-		self.write_node_deps(node)
+		self.write_node_uses(node)
 
 	def atIDGERSpec(self,node):
 		self.write_node_def(node.key,'IDGERSpec\\n%s'%(node.data.name))
-		self.write_node_deps(node)
+		self.write_node_uses(node)
 
 	def atIDGIndexArray(self,node):
 		self.write_node_def(node.key,'IDGIndexArray\\n%s'%(node.data.name))
-		self.write_node_deps(node)
+		self.write_node_uses(node)
 
 	def atIDGOutputERSpec(self,node):
 		self.write_node_def(node.key,'IDGOutputERSpec\\n%s'%(node.data.name))
-		self.write_node_deps(node)
+		self.write_node_uses(node)
 
 	def atIDGCall(self,node):
 		self.write_node_def(node.key,'IDGCall\\n%s'%(node.data.name))
-		self.write_node_deps(node)
+		self.write_node_uses(node)
