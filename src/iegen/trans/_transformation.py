@@ -1,6 +1,6 @@
 #---------- Transformation base class ----------
 class Transformation(object):
-	__slots__=('name','inputs','input_deps','outputs','output_deps','simplifications','symbolic_inputs')
+	__slots__=('name','inputs','outputs','simplifications','symbolic_inputs')
 
 	def __init__(self,name):
 		self.name=name
