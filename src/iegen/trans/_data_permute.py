@@ -50,6 +50,7 @@ class DataPermuteTrans(Transformation):
 		simplifications_string=simplifications_string.getvalue()[:-1]
 
 		return '''%sDataPermuteTrans:
+%s|-name: %s
 %s|-inputs: %s
 %s|-outputs: %s
 %s|-simplifications: %s
@@ -59,7 +60,7 @@ class DataPermuteTrans(Transformation):
 %s|-data_arrays: %s
 %s|-iter_sub_space_relation: %s
 %s|-target_data_array: %s
-%s|-erg_func_name: %s'''%(spaces,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,spaces,self.symbolic_inputs,spaces,self.reordering_name,spaces,self._data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.erg_func_name)
+%s|-erg_func_name: %s'''%(spaces,spaces,self.name,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,spaces,self.symbolic_inputs,spaces,self.reordering_name,spaces,self._data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.erg_func_name)
 
 	#Calculate a specification for the explicit relation that is input to
 	# the data reordering algorithm.
@@ -124,12 +125,12 @@ class DataPermuteTrans(Transformation):
 				access_relation.iter_to_data=self._data_reordering.compose(access_relation.iter_to_data)
 
 		#Add the ERGSpec for this transformation to the MapIR
-		mapir.add_erg_spec(ERGSpec(self.erg_func_name,self.inputs,self.outputs))
+		mapir.add_erg_spec(ERGSpec(self._get_erg_spec_name(),self.erg_func_name,self.inputs,self.outputs))
 
 	#Update the idg based on this transformation
 	def update_idg(self,mapir):
 		#Add the ERG call node to the IDG
-		call_node=mapir.idg.get_call_node(mapir.erg_specs[self.erg_func_name])
+		call_node=mapir.idg.get_call_node(mapir.erg_specs[self._get_erg_spec_name()])
 
 		#Add the input ERSpecs to the IDG
 		for input_er_spec in self.inputs:
@@ -183,4 +184,7 @@ class DataPermuteTrans(Transformation):
 
 				#Recursively add dependences for the dependence node
 				self.add_er_spec_deps(dep_node.data,mapir)
+
+	def _get_erg_spec_name(self):
+		return self.name+'_'+self.erg_func_name
 #-------------------------------------------

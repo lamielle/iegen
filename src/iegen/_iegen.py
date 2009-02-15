@@ -328,10 +328,11 @@ class AccessRelation(object):
 
 #---------- ERGSpec class ----------
 class ERGSpec(object):
-	__slots__=('name','inputs','outputs')
+	__slots__=('name','erg_func_name','inputs','outputs')
 
-	def __init__(self,name,inputs,outputs):
+	def __init__(self,name,erg_func_name,inputs,outputs):
 		self.name=name
+		self.erg_func_name=erg_func_name
 		self.inputs=inputs
 		self.outputs=outputs
 #-----------------------------------

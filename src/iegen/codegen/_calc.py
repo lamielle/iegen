@@ -5,7 +5,12 @@ def do_calc(mapir):
 
 	#Do calculations for each reordering
 	for transformation in mapir.transformations:
-		print 'Calculating full iteration space'
+		print '----- Applying transformation: -----'
+		print transformation
+		print '------------------------------------'
+		print
+
+		print 'Calculating full iteration space...'
 
 		#Calculate the full iteration space based on the current iteration spaces of the statements
 		mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
@@ -15,22 +20,27 @@ def do_calc(mapir):
 		print '-----------------------------------------'
 		print
 
+		print 'Calculating inputs to transformation...'
 		#Tell the transformation to calculate the inputs that it will need at runtime
 		transformation.calc_input(mapir)
 
+		print 'Calculating outputs from transformation...'
 		#Tell the transformation to calculate the outputs it will produce at runtime
 		transformation.calc_output(mapir)
 
-		print '----- Applying transformation: -----'
-		print transformation
-		print '------------------------------------'
-		print
-
+		print 'Updating the MapIR...'
 		#Tell the transformation to update the access relations, scattering functions and other components of the MapIR
 		transformation.update_mapir(mapir)
 
+		print 'Updating the MapIR...'
 		#Tell the transformation to update the IDG
 		transformation.update_idg(mapir)
+
+		print '----- Updated statements: -----'
+		for statement in mapir.get_statements():
+			print statement
+		print '-----------------------------------------'
+		print
 
 	from iegen.idg.visitor import DotVisitor
 	v=DotVisitor().visit(mapir.idg)

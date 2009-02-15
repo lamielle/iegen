@@ -84,8 +84,16 @@ moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
 
 #Define the desired transformations
 moldyn_spec.add_transformation(DataPermuteTrans(
-    name='cpack',
-    reordering_name='sigma',
+    name='cpack1',
+    reordering_name='sigma1',
+    data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
+    iter_sub_space_relation=Relation('{[c0,i,c1]->[i]}',syms),
+    target_data_array=moldyn_spec.data_arrays['x'],
+    erg_func_name='ERG_cpack'))
+
+moldyn_spec.add_transformation(DataPermuteTrans(
+    name='cpack2',
+    reordering_name='sigma2',
     data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
     iter_sub_space_relation=Relation('{[c0,i,c1]->[i]}',syms),
     target_data_array=moldyn_spec.data_arrays['x'],
