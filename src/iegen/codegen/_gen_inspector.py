@@ -130,7 +130,7 @@ def gen_erg_spec(erg_spec,output_er_specs):
 	#Generate the code to make the call to the ERG
 	arg_list_template=','.join(['%s']*(len(erg_spec.inputs)+len(erg_spec.outputs)))
 	call_template='%s('+arg_list_template+');'
-	call_strings=tuple([erg_spec.name]+[input.name for input in erg_spec.inputs]+[output.name+'_ER' for output in erg_spec.outputs])
+	call_strings=tuple([erg_spec.erg_func_name]+[input.name for input in erg_spec.inputs]+[output.name+'_ER' for output in erg_spec.outputs])
 	stmts.append(Statement(call_template%call_strings))
 
 	return stmts
