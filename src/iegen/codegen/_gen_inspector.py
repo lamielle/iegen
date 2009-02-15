@@ -9,7 +9,7 @@ def gen_inspector(mapir):
 	inspector=Function('inspector','void',ParamVisitor().visit(mapir.idg).params)
 
 	#Add the necessary variable declarations
-	inspector.body.extend(DeclVisitor().visit(mapir.idg).decls)
+	inspector.body.extend(DeclVisitor().visit(mapir.idg).decls.values())
 
 	#Add the code for the body of the inspector
 	inspector.body.extend(CodegenVisitor().visit(mapir.idg).stmts)
@@ -77,7 +77,6 @@ def gen_er_spec(er_spec):
 	stmts.append(Comment('Define loop body statements'))
 	stmts.extend(define_stmts)
 	stmts.append(Statement())
-	stmts.extend(gen_tuple_vars_decl(er_spec.input_bounds))
 	loop_stmts=codegen(cloog_stmts).split('\n')
 	for loop_stmt in loop_stmts:
 		stmts.append(Statement(loop_stmt))
