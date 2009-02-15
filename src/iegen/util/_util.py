@@ -15,6 +15,15 @@ def run_coverage():
 	mods=[module for module in sys.modules.values() if str(module).find('iegen.')>=0 and str(module).find('iegen.lib.')<0]
 	iegen.lib.coverage.report(mods)
 
+#Runs the given spec file under the profiler
+def run_profile(spec_file_name):
+	import pstats,commands
+
+	prof_file_name=spec_file_name+'.prof'
+	commands.getoutput("python -m cProfile -o %s '%s'"%(prof_file_name,spec_file_name))
+	p=pstats.Stats(prof_file_name)
+	p.sort_stats('cumulative').print_stats(10)
+
 #Iterator wrapper:
 #Rather than yielding just the item, yields a tuple where
 #the first element is the item and the second is a boolean.

@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import iegen.util
+import sys
+
+iegen.util.run_profile(sys.argv[1])
