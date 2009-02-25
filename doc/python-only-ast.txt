@@ -1,0 +1,129 @@
+7/21/08
+-------
+Preliminary design for a python only AST.
+
+Looking at ...
+    RTRTcode/iegen/omega_bindings/src/omega/parser/pres_parser.py
+    RTRTcode/iegen/src/omega/_omega_py.py
+        defines Python Set and Relation
+    
+Grammar (from omega.parser.ast import *)
+set : LBRACE variable_tuple_set optional_constraints RBRACE
+
+relation : LBRACE variable_tuple_in ARROW variable_tuple_out optional_constraints RBRACE
+
+epsilon :
+
+var_id_list : var_id_list COMMA tuple_variable_id
+		           | tuple_variable_id
+
+variable_tuple : LBRACKET tuple_variable_list RBRACKET
+		                  | LBRACKET RBRACKET
+		               
+tuple_variable_list : tuple_variable
+		| tuple_variable_list COMMA tuple_variable
+
+
+tuple_variable : tuple_variable_id (only have this)
+		                  | tuple_variable_unnamed
+		                  | tuple_variable_expr
+		                  | tuple_variable_range
+		                  | tuple_variable_stride
+
+optional_constraints : COLON constraints
+		                        | epsilon
+		                        
+constraints : constraint_and
+		               | constraint_or  (remove)
+		               | constraint_not (remove)
+		               | constraint_paren
+		               | constraint_exists  (remove)
+		               | constraint_forall  (remove)
+		               | statement_chain   
+		               
+statement_chain : expr_list statement_relational_operator expr_list
+		                   | expr_list statement_relational_operator statement_chain
+		                   
+statement_relational_operator : EQ
+		                                 | NEQ
+		                                 | GT
+		                                 | GTE
+		                                 | LT
+		                                 | LTE
+		               
+expression : expression_int
+		              | expression_unop
+		              | expression_binop
+		              | expression_int_mult
+		              | expression_simple
+
+
+expression_simple : expression_id
+		                     | expression_func
+		                     | expression_paren
+
+expression_func : tuple_variable_id LPAREN var_id_list RPAREN
+
+tuple_variable_id : ID  (remove and just use ID)
+
+Questions
++ What is a PresSet?
++ What is PresVarTupleSet?
++ What is a PresVarID?
+    All the above are AST nodes implemented in C++.
+
+7/22/08
+-------
+Grammar for AST
+
+    IPresSet -> VarTuple Conjunction    // PresSet
+             -> PresSet*                // PresSetUnion
+    
+    VarTuple -> ID*
+    Conjunction -> IConstraint*
+    
+    IConstraint -> IExp:lhs IExp:rhs // Inequality (LTE assummed)
+                -> IExp:lhs IExp:rhs // Equality
+    
+    IExp  -> INT                // IntExp
+          -> IExp:operand       // UMinusExp
+          -> IExp:lhs Expr:rhs  // MulExp, PlusExp, MinusExp
+          -> INT IExp           // IntMulExp
+          -> ID                 // IdExp
+          -> ID:func IExp*      // FuncExp
+    
+Class Hierarchy (Node is base class)
+    VarTuple
+    Conjunction
+
+    IPresSet
+        PresSet
+        PresSetUnion
+  
+    IConstraint
+        Inequality
+        Equality
+        
+    IExp
+        IntExp
+        UMinusExp
+        MulExp
+        PlusExp
+        SubExp
+        IntMulExp
+        IdEx
+        FuncExp
+
+class Node:
+    def __init__(self):
+        pass
+        
+class VarTuple(Node):
+    
+        
+Visitor thoughts
+    If have the base class Node keep an ordered list of children, then could easily implement a depth-first visitor?
+    
+7/22/08
+-------
+Reorg of grammar to make creation of ast easier.
