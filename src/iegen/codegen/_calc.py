@@ -85,7 +85,9 @@ def calc_size_string(set,var_name):
 	#Get the string that calculates the size of the ER at runtime
 	return '%s-%s'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))
 
-def calc_equality_value(var_name,formula):
+#Returns the value that the given variable is equal to in the given formula
+#If raw_array is True, accesses to arrays (functions) will not be treated as explicit relation lookups
+def calc_equality_value(var_name,formula,raw_array=False):
 	from iegen.ast.visitor import FindConstraintVisitor,ValueStringVisitor
 	from iegen.ast import Equality,NormExp
 
@@ -107,5 +109,5 @@ def calc_equality_value(var_name,formula):
 
 	value=exp-var
 
-	return ValueStringVisitor().visit(value).value
+	return ValueStringVisitor(raw_array).visit(value).value
 #---------------------------------------------------

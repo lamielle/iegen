@@ -2661,58 +2661,146 @@ class ValueStringVisitorTestCase(TestCase):
 		value_res='3a+5b+7c+11'
 		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
 
+	#----- Explicit Relation lookup tests -----
+
 	#Tests that the proper string is returned for single function
-	def testVisitFuncExp(self):
+	def testVisitFuncExpER(self):
 		from iegen.ast.visitor import ValueStringVisitor
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		value=ValueStringVisitor().visit(FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])).value
 		value_res='ER_out_given_in(f_ER,3a)'
+
+		value=ValueStringVisitor().visit(FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+		value=ValueStringVisitor(False).visit(FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])).value
 		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
 
 	#Tests that the proper string is returned for an expression with one function
-	def testVisitNormExpOneFunc(self):
+	def testVisitNormExpOneFuncER(self):
 		from iegen.ast.visitor import ValueStringVisitor
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],0)).value
 		value_res='ER_out_given_in(f_ER,3a)'
+
+		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],0)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+		value=ValueStringVisitor(False).visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],0)).value
 		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
 
 	#Tests that the proper string is returned for an expression with one function and a constant
-	def testVisitNormExpOneFuncConstant(self):
+	def testVisitNormExpOneFuncConstantER(self):
 		from iegen.ast.visitor import ValueStringVisitor
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],5)).value
 		value_res='ER_out_given_in(f_ER,3a)+5'
+
+		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],5)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+		value=ValueStringVisitor(False).visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],5)).value
 		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
 
 	#Tests that the proper string is returned for an expression with one function (with a constant term in its arguments) and a constant
-	def testVisitNormExpOneFuncConstArgConstant(self):
+	def testVisitNormExpOneFuncConstArgConstantER(self):
 		from iegen.ast.visitor import ValueStringVisitor
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)])],5)).value
 		value_res='ER_out_given_in(f_ER,3a+2)+5'
+
+		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)])],5)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+		value=ValueStringVisitor(False).visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)])],5)).value
 		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
 
 	#Tests that the proper string is returned for an expression with two function (with constant terms in their arguments) and a constant
-	def testVisitNormExpTwoFuncConstArgConstant(self):
+	def testVisitNormExpTwoFuncConstArgConstantER(self):
 		from iegen.ast.visitor import ValueStringVisitor
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
 		value_res='ER_out_given_in(f_ER,3a+2)+ER_out_given_in(g_ER,4b+3)+5'
+
+		value=ValueStringVisitor().visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+		value=ValueStringVisitor(False).visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
 		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
 
 	#Tests that the proper string is returned for an expression with mutiple terms
-	def testVisitNormExpTerms(self):
+	def testVisitNormExpTermsER(self):
 		from iegen.ast.visitor import ValueStringVisitor
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		value=ValueStringVisitor().visit(NormExp([VarExp(9,'c'),FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
 		value_res='9c+ER_out_given_in(f_ER,3a+2)+ER_out_given_in(g_ER,4b+3)+5'
+
+		value=ValueStringVisitor().visit(NormExp([VarExp(9,'c'),FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+		value=ValueStringVisitor(False).visit(NormExp([VarExp(9,'c'),FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#----- Raw index array tests -----
+
+	#Tests that the proper string is returned for single function
+	def testVisitFuncExpRaw(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value_res='f[3a]'
+
+		value=ValueStringVisitor(True).visit(FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with one function
+	def testVisitNormExpOneFuncRaw(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value_res='f[3a]'
+
+		value=ValueStringVisitor(True).visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],0)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with one function and a constant
+	def testVisitNormExpOneFuncConstantRaw(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value_res='f[3a]+5'
+
+		value=ValueStringVisitor(True).visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],0)])],5)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with one function (with a constant term in its arguments) and a constant
+	def testVisitNormExpOneFuncConstArgConstantRaw(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value_res='f[3a+2]+5'
+
+		value=ValueStringVisitor(True).visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)])],5)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with two function (with constant terms in their arguments) and a constant
+	def testVisitNormExpTwoFuncConstArgConstantRaw(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value_res='f[3a+2]+g[4b+3]+5'
+
+		value=ValueStringVisitor(True).visit(NormExp([FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
+		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
+
+	#Tests that the proper string is returned for an expression with mutiple terms
+	def testVisitNormExpTermsRaw(self):
+		from iegen.ast.visitor import ValueStringVisitor
+		from iegen.ast import NormExp,FuncExp,VarExp
+
+		value_res='9c+f[3a+2]+g[4b+3]+5'
+
+		value=ValueStringVisitor(True).visit(NormExp([VarExp(9,'c'),FuncExp(1,'f',[NormExp([VarExp(3,'a')],2)]),FuncExp(1,'g',[NormExp([VarExp(4,'b')],3)])],5)).value
 		self.failUnless(value_res==value,'%s!=%s'%(value_res,value))
 #------------------------------------------
 
