@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-from iegen import MapIR,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
-from iegen.trans import DataPermuteTrans,IterPermuteTrans
+import iegen,iegen.trans
 
 #Loop nest we are targeting:
 #  for (s=0; s<T; s++) {
@@ -20,110 +19,109 @@ from iegen.trans import DataPermuteTrans,IterPermuteTrans
 moldyn_spec=MapIR()
 
 #Define the symbolic constants for the computation
-moldyn_spec.add_symbolic(Symbolic('T')) #Number of time steps
-moldyn_spec.add_symbolic(Symbolic('N')) #Number of atoms
-moldyn_spec.add_symbolic(Symbolic('n_inter')) #Number of interactions between atoms
-syms=moldyn_spec.get_symbolics()
+moldyn_spec.add_symbolic(name='T') #Number of time steps
+moldyn_spec.add_symbolic(name='N') #Number of atoms
+moldyn_spec.add_symbolic(name='n_inter') #Number of interactions between atoms
 
 #Define the data arrays for the computation
-moldyn_spec.add_data_array(DataArray(
+moldyn_spec.add_data_array(
     name='x',
-    bounds=Set('{[k]: 0<=k && k<N}',syms)))
+    bounds='{[k]: 0<=k && k<N}')
 
-moldyn_spec.add_data_array(DataArray(
+moldyn_spec.add_data_array(
     name='fx',
-    bounds=Set('{[k]: 0<=k && k<N}',syms)))
+    bounds='{[k]: 0<=k && k<N}')
 
 #Define the index arrays for the computation
 moldyn_spec.add_index_array(IndexArray(
     name='inter1',
-    input_bounds=Set('{[k]: 0<=k && k<n_inter}',syms),
-    output_bounds=Set('{[k]: 0<=k && k<N}',syms)))
+    input_bounds='{[k]: 0<=k && k<n_inter}',
+    output_bounds='{[k]: 0<=k && k<N}'))
 
 moldyn_spec.add_index_array(IndexArray(
     name='inter2',
-    input_bounds=Set('{[k]: 0<=k && k<n_inter}',syms),
-    output_bounds=Set('{[k]: 0<=k && k<N}',syms)))
+    input_bounds='{[k]: 0<=k && k<n_inter}',
+    output_bounds='{[k]: 0<=k && k<N}'))
 
 #Define the statements for the computation
 moldyn_spec.add_statement(Statement(
     name='S1',
     text='x[%(a1)s] = fx[%(a2)s] * 1.25;',
-    iter_space=Set('{[s,i]: 0<=s && s<T && 0<=i && i<N}',syms),
-    scatter=Relation('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=0 && c2=0}',syms)))
+    iter_space='{[s,i]: 0<=s && s<T && 0<=i && i<N}',
+    scatter='{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=0 && c2=0}'))
 
 moldyn_spec.add_statement(Statement(
     name='S2',
     text='fx[%(a3)s] += x[%(a4)s] - x[%(a5)s];',
-    iter_space=Set('{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}',syms),
-    scatter=Relation('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=0}',syms)))
+    iter_space='{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}',
+    scatter='{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=0}'))
 
 moldyn_spec.add_statement(Statement(
     name='S3',
     text='fx[%(a6)s] += x[%(a7)s] - x[%(a8)s];',
-    iter_space=Set('{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}',syms),
-    scatter=Relation('{[s,i]->[c0,s,c1,i,c2]: c0=1 && c1=1 && c2=1}',syms)))
+    iter_space='{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}',
+    scatter='{[s,i]->[c0,s,c1,i,c2]: c0=1 && c1=1 && c2=1}'))
 
 #Define the access relations for the statements
 moldyn_spec.statements['S1'].add_access_relation(AccessRelation(
     name='a1',
     data_array=moldyn_spec.data_arrays['x'],
-    iter_to_data=Relation('{[s,i]->[i]}',syms)))
+    iter_to_data='{[s,i]->[i]}'))
 
 moldyn_spec.statements['S1'].add_access_relation(AccessRelation(
     name='a2',
     data_array=moldyn_spec.data_arrays['fx'],
-    iter_to_data=Relation('{[s,i]->[i]}',syms)))
+    iter_to_data='{[s,i]->[i]}'))
 
 moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
     name='a3',
     data_array=moldyn_spec.data_arrays['fx'],
-    iter_to_data=Relation('{[s,i]->[k]: k=inter1(i)}',syms)))
+    iter_to_data='{[s,i]->[k]: k=inter1(i)}'))
 
 moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
     name='a4',
     data_array=moldyn_spec.data_arrays['x'],
-    iter_to_data=Relation('{[s,i]->[k]: k=inter1(i)}',syms)))
+    iter_to_data='{[s,i]->[k]: k=inter1(i)}'))
 
 moldyn_spec.statements['S2'].add_access_relation(AccessRelation(
     name='a5',
     data_array=moldyn_spec.data_arrays['x'],
-    iter_to_data=Relation('{[s,i]->[k]: k=inter2(i)}',syms)))
+    iter_to_data='{[s,i]->[k]: k=inter2(i)}'))
 
 moldyn_spec.statements['S3'].add_access_relation(AccessRelation(
     name='a6',
     data_array=moldyn_spec.data_arrays['fx'],
-    iter_to_data=Relation('{[s,i]->[k]: k=inter2(i)}',syms)))
+    iter_to_data='{[s,i]->[k]: k=inter2(i)}'))
 
 moldyn_spec.statements['S3'].add_access_relation(AccessRelation(
     name='a7',
     data_array=moldyn_spec.data_arrays['x'],
-    iter_to_data=Relation('{[s,i]->[k]: k=inter1(i)}',syms)))
+    iter_to_data='{[s,i]->[k]: k=inter1(i)}'))
 
 moldyn_spec.statements['S3'].add_access_relation(AccessRelation(
     name='a8',
     data_array=moldyn_spec.data_arrays['x'],
-    iter_to_data=Relation('{[s,i]->[k]: k=inter2(i)}',syms)))
+    iter_to_data='{[s,i]->[k]: k=inter2(i)}'))
 
 #Define the desired transformations
 moldyn_spec.add_transformation(DataPermuteTrans(
     name='cpack',
     reordering_name='sigma',
     data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
-    iter_sub_space_relation=Relation('{[c0,s,c1,i,c2]->[i]}',syms),
+    iter_sub_space_relation='{[c0,s,c1,i,c2]->[i]}',
     target_data_array=moldyn_spec.data_arrays['x'],
     erg_func_name='ERG_cpack'))
 
 iter_reordering=None
 #iter_reordering=IterPermuteTrans(
-#                iter_reordering=Relation('{ [ i,x ] -> [ k,x ] : k = delta( i ) }',syms),
+#                iter_reordering='{ [ i,x ] -> [ k,x ] : k = delta( i ) }',
 ##User doesn't specify?
 ##This is calculated in step 0
 ##               iteration_space=I_0,
 ##User doesn's specify?
 ##This is calculated in step 1a
 ##               access_relation=A_I_0_to_X_1,
-#                iter_sub_space_relation=Relation('{ [ i, j ] -> [ i ] }',syms),
+#                iter_sub_space_relation='{ [ i, j ] -> [ i ] }',
 #                erg_func_name='ERG_lexmin',
 #                erg_type='ERG_Permute')
 #    iteration reordering // permuting the ii loop
