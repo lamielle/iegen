@@ -8,16 +8,6 @@ def gen_executor(mapir):
 	#Create the executor function with the necessary parameters
 	executor=Function('executor','void',ParamVisitor().visit(mapir.idg).params)
 
-#	#Create the declare/create the index array wrappers
-#	executor.body.extend(gen_declare_index_array_wrappers(mapir))
-#	executor.newline()
-#	executor.body.extend(gen_create_index_array_wrappers(mapir))
-#	executor.newline()
-#
-#	#Create a sigma_ER variable
-#	executor.body.extend(gen_declare_sigma_er())
-#	executor.newline()
-
 	#Generate the loop statement definitions
 	executor.body.extend(gen_executor_loop_stmts(mapir))
 	executor.newline()
@@ -25,9 +15,6 @@ def gen_executor(mapir):
 	#Generate the loop body using CLooG
 	executor.body.extend(gen_executor_loop(mapir))
 	executor.newline()
-
-	#Destroy the index array wrappers
-	executor.body.extend(gen_destroy_index_array_wrappers(mapir))
 
 	return executor
 
@@ -68,16 +55,5 @@ def gen_executor_loop(mapir):
 	cloog_stmts=codegen(cloog_stmts).split('\n')
 	for cloog_stmt in cloog_stmts:
 		stmts.append(Statement(cloog_stmt))
-
-	return stmts
-
-def gen_destroy_index_array_wrappers(mapir):
-	from iegen.codegen import Comment,Statement
-
-	#Destroy the index array wrappers
-	stmts=[]
-	stmts.append(Comment('Destroy the index array wrappers'))
-	for index_array in mapir.get_index_arrays():
-		stmts.append(Statement('ER_dtor(&%s_ER);'%(index_array.name)))
 
 	return stmts
