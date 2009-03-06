@@ -1,121 +1,12 @@
-from __future__ import with_statement
+#Standard library imports
 import os.path
-from cStringIO import StringIO
+
+#IEGen imports
+import iegen
 from iegen.ast import Node
-import iegen,iegen.util,iegen.codegen
-from iegen.idg import IDG
 
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
-
-#---------- MapIR class ----------
-class MapIR(object):
-	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','transformations','erg_specs','full_iter_space','idg')
-
-	def __init__(self):
-		self.symbolics={}
-		self.data_arrays={}
-		self.index_arrays={}
-		self.er_specs={}
-		self.statements={}
-		self.transformations=[]
-		self.erg_specs={}
-		self.idg=IDG()
-
-	#---------- Symbolics ----------
-	#Returns the symbolics that are present in the MapIR
-	def get_symbolics(self): return self.symbolics.values()
-
-	#Adds the given symbolic to the dictionary of symbolic variables
-	def add_symbolic(self,symbolic):
-		print "Adding symbolic '%s'"%symbolic.name
-		self.symbolics[symbolic.name]=symbolic
-	#-------------------------------
-
-	#---------- Data Arrays ----------
-	#Returns the data arrays that are present in the MapIR
-	def get_data_arrays(self): return self.data_arrays.values()
-
-	#Adds the given data array to the dictionary of data arrays
-	def add_data_array(self,data_array):
-		print "Adding data array '%s'"%data_array.name
-		self.data_arrays[data_array.name]=data_array
-	#---------------------------------
-
-	#---------- ERSpecs ----------
-	#Returns the ERSpecs that are present in the MapIR
-	def get_er_specs(self): return self.er_specs.values()
-
-	#Adds the given ERSpec to the collection of ERSpecs
-	def add_er_spec(self,er_spec):
-		print "Adding ERSpec '%s'"%er_spec.name
-		self.er_specs[er_spec.name]=er_spec
-	#-----------------------------
-
-	#---------- Index Arrays ----------
-	#Returns the index arrays that are present in the MapIR
-	def get_index_arrays(self): return self.index_arrays.values()
-
-	#Adds the given index array to the collection of index arrays
-	def add_index_array(self,index_array):
-		print "Adding index array '%s'"%index_array.name
-		self.index_arrays[index_array.name]=index_array
-		self.er_specs[index_array.name]=index_array
-	#----------------------------------
-
-	#---------- Statements ----------
-	#Returns the statements that are present in the MapIR
-	def get_statements(self): return self.statements.values()
-
-	#Adds the given statement to the collection of statements
-	def add_statement(self,statement):
-		print "Adding statement '%s'"%statement.name
-		self.statements[statement.name]=statement
-	#--------------------------------
-
-	#---------- Transformations ----------
-	#Adds the given transformation to the sequence of transformations
-	#Transformations are not stored as a dictionary as
-	#the ordering is important
-	def add_transformation(self,transformation):
-		print "Adding transformation '%s'"%transformation.name
-		self.transformations.append(transformation)
-	#-------------------------------------
-
-	#---------- ERGSpecs ----------
-	#Returns the ERGSpecs that are present in the MapIR
-	def get_erg_specs(self): return self.erg_specs.values()
-
-	#Adds the given ERGSpec to the collection of ERGSpecs
-	def add_erg_spec(self,erg_spec):
-		print "Adding ERGSpec '%s'"%(erg_spec.name)
-		self.erg_specs[erg_spec.name]=erg_spec
-	#------------------------------
-
-	#---------- Main 'action' method ---------
-	#This is the main interface that starts the whole code generation process
-	#Given is a filled-in MapIR data structure
-	#Code is generated based upon this data
-	def codegen(self,file_name=None):
-
-		print "Running code generation..."
-
-		#Create a string buffer to hold the code that is generated
-		code=StringIO()
-
-		#Run code generation
-		iegen.codegen.codegen(self,code)
-
-		#Write out the code to the given file if one was specified
-		if file_name:
-			print "Writing generated code to file '%s'..."%file_name
-			with open(file_name,'w') as f:
-				f.write(code.getvalue())
-
-		#Return the generated code
-		return code.getvalue()
-	#-----------------------------------------
-#---------------------------------
 
 #---------- Symbolic class ----------
 class Symbolic(Node):
@@ -147,6 +38,7 @@ class Symbolic(Node):
 #---------- DataArray class ----------
 class DataArray(object):
 	__slots__=('name','bounds')
+	_set_fields=('bounds',)
 
 	def __init__(self,name,bounds):
 		self.name=name
@@ -220,6 +112,7 @@ class ERSpec(object):
 
 #---------- IndexArray class ----------
 class IndexArray(ERSpec):
+	_set_fields=('input_bounds','output_bounds')
 
 	def __init__(self,name,input_bounds,output_bounds):
 		from iegen import Relation
@@ -248,6 +141,8 @@ class IndexArray(ERSpec):
 #---------- Statement class ----------
 class Statement(object):
 	__slots__=('name','text','iter_space','scatter','access_relations')
+	_set_fields=('iter_space',)
+	_relation_fields=('scatter',)
 
 	def __init__(self,name,text,iter_space,scatter,access_relations=None):
 		self.name=name
@@ -298,19 +193,19 @@ class Statement(object):
 
 #---------- AccessRelation class ----------
 class AccessRelation(object):
-	__slots__=('name','data_array','iter_to_data','iter_space')
+	__slots__=('name','data_array','iter_to_data')
+	_relation_fields=('iter_to_data',)
 
-	def __init__(self,name,data_array,iter_to_data,iter_space=None):
+	def __init__(self,name,data_array,iter_to_data):
 		self.name=name
 		self.data_array=data_array
 		self.iter_to_data=iter_to_data
-		self.iter_space=iter_space
 
 		if self.data_array.bounds.arity()!=self.iter_to_data.arity_out():
 			raise iegen.util.DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.iter_to_data.arity_out(),self.data_array.bounds.arity()))
 
 	def __repr__(self):
-		return 'AccessRelation(%s,%s,%s,%s)'%(self.name,self.data_array,self.iter_to_data,self.iter_space)
+		return 'AccessRelation(%s,%s,%s)'%(self.name,self.data_array,self.iter_to_data)
 
 	def __str__(self):
 		return self._get_string(0)
@@ -322,8 +217,7 @@ class AccessRelation(object):
 %s|-name: %s
 %s|-data_array:
 %s
-%s|-iter_to_data: %s
-%s|-iter_space: %s'''%(spaces,spaces,self.name,spaces,self.data_array._get_string(indent+13),spaces,self.iter_to_data,spaces,self.iter_space)
+%s|-iter_to_data: %s'''%(spaces,spaces,self.name,spaces,self.data_array._get_string(indent+13),spaces,self.iter_to_data)
 #------------------------------------------
 
 #---------- ERGSpec class ----------

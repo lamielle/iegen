@@ -6,6 +6,7 @@ from iegen import ERSpec,Relation
 #---------- DataPermuteTrans class ----------
 class DataPermuteTrans(Transformation):
 	__slots__=('reordering_name','_data_reordering','data_arrays','iter_sub_space_relation','target_data_array','erg_func_name')
+	_relation_fields=('iter_sub_space_relation',)
 
 	def __init__(self,name,reordering_name,data_arrays,iter_sub_space_relation,target_data_array,erg_func_name):
 		Transformation.__init__(self,name)
