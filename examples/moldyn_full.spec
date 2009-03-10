@@ -897,4 +897,13 @@ moldyn.add_access_relation(
         data_array=moldyn.data_arrays['fz'],
         iter_to_data='{ [ tstep, i ]->[ accessRelation60 ] : accessRelation60 = inter1( ii ) }')
 
+moldyn.add_transformation(
+    type=iegen.trans.DataPermuteTrans,
+    name='cpack',
+    reordering_name='sigma',
+    data_arrays=[moldyn.data_arrays['x'],moldyn.data_arrays['fx']],
+    iter_sub_space_relation='{[c0,tstep,c1,i,c2]->[i]}',
+    target_data_array=moldyn.data_arrays['x'],
+    erg_func_name='ERG_cpack')
+
 print moldyn.codegen('iegen_moldyn_ouput.c')
