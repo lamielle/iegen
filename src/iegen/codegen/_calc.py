@@ -93,8 +93,8 @@ def calc_equality_value(var_name,formula,raw_array=False):
 
 	values=FindConstraintVisitor(Equality,var_name).visit(formula).var_constraints
 
-	if 0==len(values): raise ValueError("Tuple variable '%s' is not involved in any equality constraints"%(var_name))
-	if len(values)>1: raise ValueError("Tuple variable '%s' is equal to multiple values"%(var_name))
+	if 0==len(values): raise ValueError("Tuple variable '%s' is not involved in any equality constraints in formula '%s'"%(var_name,formula))
+	if len(values)>1: raise ValueError("Tuple variable '%s' is equal to multiple values in formula '%s'"%(var_name,formula))
 
 	value=values[0]
 
