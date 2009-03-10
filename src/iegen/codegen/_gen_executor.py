@@ -1,12 +1,19 @@
-from iegen.codegen import calc_equality_value,gen_tuple_vars_decl
+from iegen.codegen import calc_equality_value
 
 #Generates code for the executor
 def gen_executor(mapir):
-	from iegen.codegen import Function
-	from iegen.idg.visitor import ParamVisitor
+	from iegen.codegen import Function,gen_index_array
+	from iegen.idg.visitor import ParamVisitor,DeclVisitor
 
 	#Create the executor function with the necessary parameters
 	executor=Function('executor','void',ParamVisitor().visit(mapir.idg).params)
+
+	#Add the necessary variable declarations
+	executor.body.extend(DeclVisitor().visit(mapir.idg).decls.values())
+
+	#Generate wrappers for the index arrays
+	for index_array in mapir.get_index_arrays():
+		executor.body.extend(gen_index_array(index_array))
 
 	#Generate the loop statement definitions
 	executor.body.extend(gen_executor_loop_stmts(mapir))
@@ -30,7 +37,7 @@ def gen_executor_loop_stmts(mapir):
 		ar_dict={}
 		for access_relation in statement.get_access_relations():
 			stmts.append(Comment('%s: %s'%(access_relation.name,access_relation.iter_to_data)))
-			ar_dict[access_relation.name]=calc_equality_value(access_relation.iter_to_data.relations[0].tuple_out.vars[0].id,access_relation.iter_to_data,True)
+			ar_dict[access_relation.name]=calc_equality_value(access_relation.iter_to_data.relations[0].tuple_out.vars[0].id,access_relation.iter_to_data)
 
 		stmt_string='#define S%d %s'%(i,statement.text)
 		stmts.append(Statement(stmt_string%ar_dict))
@@ -45,9 +52,6 @@ def gen_executor_loop(mapir):
 
 	stmts=[]
 	stmts.append(Comment('The executor main loop'))
-
-	#Assumes that all statements have the same iterator variables
-	stmts.extend(gen_tuple_vars_decl(mapir.get_statements()[0].iter_space));
 
 	cloog_stmts=[]
 	for statement in mapir.get_statements():
