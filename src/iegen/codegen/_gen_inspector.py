@@ -25,7 +25,7 @@ def gen_inspector(mapir):
 def gen_rect_domain(name,set):
 	from iegen.codegen import Statement,Comment
 
-	if 1!=len(set.sets): raise ValueError("Set's relation has multiple terms in the disjunction")
+	if 1!=len(set.sets): raise ValueError("Set's relation has multiple terms in the disjunction: '%s'"%(set))
 
 	stmts=[]
 	stmts.append(Comment('RectDomain for set %s'%(set)))
