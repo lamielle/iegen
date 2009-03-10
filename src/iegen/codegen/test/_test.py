@@ -17,7 +17,7 @@ class ImportTestCase(TestCase):
 			#_codegen.py
 			from iegen.codegen import codegen
 			#_calc.py
-			from iegen.codegen import do_calc,calc_full_iter_space,calc_size_string,calc_lower_bound_string,calc_upper_bound_string,calc_equality_value
+			from iegen.codegen import do_calc,calc_full_iter_space,calc_size_string,calc_lower_bound_string,calc_upper_bound_string,calc_equality_value,calc_initial_idg
 			#_ito.py
 			from iegen.codegen import do_ito
 			#_gen.py

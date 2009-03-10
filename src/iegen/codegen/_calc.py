@@ -1,7 +1,9 @@
 #---------- Calculation Phase ----------
 def do_calc(mapir):
 
-	from iegen.codegen import calc_full_iter_space
+	from iegen.codegen import calc_initial_idg,calc_full_iter_space
+
+	calc_initial_idg(mapir)
 
 	#Do calculations for each reordering
 	for transformation in mapir.transformations:
@@ -110,4 +112,18 @@ def calc_equality_value(var_name,formula,raw_array=False):
 	value=exp-var
 
 	return ValueStringVisitor(raw_array).visit(value).value
+
+#Creates an initial set of IDG nodes for Symbolics, Index Arrays, and Data Arrays
+def calc_initial_idg(mapir):
+	#Create the symbolic nodes
+	for symbolic in mapir.get_symbolics():
+		mapir.idg.get_symbolic_node(symbolic)
+
+	#Create the index array nodes
+	for index_array in mapir.get_index_arrays():
+		mapir.idg.get_index_array_node(index_array)
+
+	#Create the data array nodes
+	for data_array in mapir.get_data_arrays():
+		mapir.idg.get_data_array_node(data_array)
 #---------------------------------------------------
