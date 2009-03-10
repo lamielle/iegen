@@ -18,12 +18,3 @@ def codegen(mapir,code):
 	#Pretty print the generated program structure
 	CPrintVisitor(code,'  ').visit(program)
 #--------------------------------------------------------------
-
-def gen_tuple_vars_decl(set):
-	from iegen.codegen import VarDecl
-
-	var_decl=VarDecl('int')
-	for set in set.sets:
-		for var in set.tuple_set.vars:
-			var_decl.var_names.append(var.id)
-	return [var_decl]

@@ -1,4 +1,4 @@
-from iegen.codegen import Statement,calc_size_string,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string,gen_tuple_vars_decl
+from iegen.codegen import Statement,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string
 
 #Generates code for the inspector
 def gen_inspector(mapir):
@@ -84,27 +84,6 @@ def gen_er_spec(er_spec):
 	stmts.append(Comment('Undefine loop body statements'))
 	stmts.extend(undefine_stmts)
 	return stmts
-
-#The raw data of an index array will be passed in to the inspector
-#However, we need the index array to look like an Explicit Relation
-#Therefore, for all index arrays, we create a wrapper ER
-def gen_index_array(index_array):
-	input_bounds=index_array.input_bounds
-
-	#Calculate the size of this index array
-	#Assumes only one set in the union...
-	if 1!=len(input_bounds.sets): raise ValueError("IndexArray's input bounds have multiple terms in the disjunction")
-	#Assumes the index array dataspace is 1D...
-	if 1!=input_bounds.sets[0].arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
-
-	#Get the single tuple variable's name
-	var_name=input_bounds.sets[0].tuple_set.vars[0].id
-
-	#Get the string that calculates the size of the ER at runtime
-	size_string=calc_size_string(input_bounds,var_name)
-
-	#Append the construction of the wrapper the the collection of statements
-	return [Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.name,index_array.name,size_string))]
 
 def gen_output_er_spec(output_er_spec):
 	from iegen.codegen import Statement,Comment
