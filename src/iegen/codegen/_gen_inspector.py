@@ -8,17 +8,19 @@ def gen_inspector(mapir):
 	#Create the inspector function with the necessary parameters
 	inspector=Function('inspector','void',ParamVisitor().visit(mapir.idg).params)
 
-	#Add the necessary variable declarations
-	inspector.body.extend(DeclVisitor().visit(mapir.idg).decls.values())
+	#If there are no transformations, don't bother doing any codegen
+	if len(mapir.transformations)>0:
+		#Add the necessary variable declarations
+		inspector.body.extend(DeclVisitor().visit(mapir.idg).decls.values())
 
-	#Add the code for the body of the inspector
-	inspector.body.extend(CodegenVisitor().visit(mapir.idg).stmts)
+		#Add the code for the body of the inspector
+		inspector.body.extend(CodegenVisitor().visit(mapir.idg).stmts)
 
-	#Add the code to free any necessary memory
-	#TODO: Need to add a visitor that adds destructor calls for the necessary ERs
-	#      Also need to add a node to the IDG that represents deallocation of an ER
-	#      when it is no longer needed
-	#inspector.body.extend(gen_destroy_index_array_wrappers(mapir))
+		#Add the code to free any necessary memory
+		#TODO: Need to add a visitor that adds destructor calls for the necessary ERs
+		#      Also need to add a node to the IDG that represents deallocation of an ER
+		#      when it is no longer needed
+		#inspector.body.extend(gen_destroy_index_array_wrappers(mapir))
 
 	return inspector
 
@@ -49,6 +51,8 @@ def gen_er_spec(er_spec):
 
 	var_in_name=er_spec.relation.relations[0].tuple_in.vars[0].id
 	var_out_name=er_spec.relation.relations[0].tuple_out.vars[0].id
+
+	print er_spec
 
 	#Generate the define/undefine statements
 	cloog_stmts=[]
