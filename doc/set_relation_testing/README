@@ -1,0 +1,12 @@
+3/19/09
+-------
+Starting to test the set and relation functionality in the context of the M2 example.
+
+To get started:
+setenv PYTHONPATH /s/parsons/c/fac/mstrout/GITWorkDirs/iegen:/s/parsons/c/fac/mstrout/GITWorkDirs/iegen/src
+python
+import iegen
+
+A file with some example usage:
+set-relation-python.transcript
+
