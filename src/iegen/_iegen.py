@@ -99,7 +99,7 @@ class ERSpec(object):
 %s|-output_bounds: %s
 %s|-relation: %s
 %s|-is_function: %s
-%s|-permuatation: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation,spaces,self.is_function,spaces,self.is_permutation)
+%s|-permutation: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation,spaces,self.is_function,spaces,self.is_permutation)
 
 	#Returns all symbolics in each Set/Relation that this ERSpec contains
 	def symbolics(self):
