@@ -16,9 +16,18 @@ INSTALLING:
                Polylib and CLooG are installed in $HOME/software. Read farther
                below for the details of these commands.
 
-setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH:.:$HOME/software/lib
-setenv PYTHONPATH $PYTHONPATH:$PWD
-./waf configure --prefix=$PWD --polylib-loc=$HOME/software --cloog-loc=$HOME/software
+# This didn't work due to $'s or something, 3/19/09, MMS
+#setenv LD_LIBRARY_PATH $LD_LIBRARY_PATH:.:$HOME/software/lib
+
+setenv SWDIR /s/bach/e/proj/rtrt/software/
+setenv LD_LIBRARY_PATH $SWDIR/cloog/lib:$SWDIR/polylib/lib
+
+# this didn't work, 3/19/09, MMS
+#setenv PYTHONPATH $PYTHONPATH:$PWD
+
+setenv PYTHONPATH $PWD
+
+./waf configure --prefix=$PWD --polylib-loc=$SWDIR/polylib --cloog-loc=$SWDIR/cloog
 ./waf build
 ./waf install
 ./run_tests
