@@ -3,6 +3,7 @@ import os.path
 
 #IEGen imports
 import iegen
+from iegen import IEGenObject
 from iegen.ast import Node
 
 #Store the directory where the iegen module is located
@@ -36,7 +37,7 @@ class Symbolic(Node):
 #------------------------------------
 
 #---------- DataArray class ----------
-class DataArray(object):
+class DataArray(IEGenObject):
 	__slots__=('name','bounds')
 	_set_fields=('bounds',)
 
@@ -59,7 +60,7 @@ class DataArray(object):
 #-------------------------------------
 
 #---------- ERSpec class ----------
-class ERSpec(object):
+class ERSpec(IEGenObject):
 	__slots__=('name','input_bounds','output_bounds','relation','_is_function','_is_permutation','is_inverse','created')
 
 	def __init__(self,name,input_bounds,output_bounds,relation,is_function=False,is_permutation=False,is_inverse=False):
@@ -139,7 +140,7 @@ class IndexArray(ERSpec):
 #--------------------------------------
 
 #---------- Statement class ----------
-class Statement(object):
+class Statement(IEGenObject):
 	__slots__=('name','text','iter_space','scatter','access_relations')
 	_set_fields=('iter_space',)
 	_relation_fields=('scatter',)
@@ -192,7 +193,7 @@ class Statement(object):
 #-------------------------------------
 
 #---------- AccessRelation class ----------
-class AccessRelation(object):
+class AccessRelation(IEGenObject):
 	__slots__=('name','data_array','iter_to_data')
 	_relation_fields=('iter_to_data',)
 	_data_array_fields=('data_array',)
@@ -222,7 +223,7 @@ class AccessRelation(object):
 #------------------------------------------
 
 #---------- ERGSpec class ----------
-class ERGSpec(object):
+class ERGSpec(IEGenObject):
 	__slots__=('name','erg_func_name','inputs','outputs')
 
 	def __init__(self,name,erg_func_name,inputs,outputs):
@@ -233,7 +234,7 @@ class ERGSpec(object):
 #-----------------------------------
 
 #---------- DataDependence class ----------
-class DataDependence(object):
+class DataDependence(IEGenObject):
 	__slots__=('_iterspace','_dataspace','_data_dependence')
 
 	def __init__(self,iterspace,dataspace,data_dependence):

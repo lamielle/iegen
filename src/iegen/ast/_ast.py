@@ -32,10 +32,11 @@
 
 from copy import deepcopy
 from cStringIO import StringIO
+from iegen import IEGenObject
 from iegen.util import like_type,raise_objs_not_like_types,normalize_self,normalize_result,check
 
 #---------- Base AST Node class ----------
-class Node(object):
+class Node(IEGenObject):
 	def apply_visitor(self,visitor):
 		raise NotImplementedError('All node types should override the apply_visitor method.')
 #-----------------------------------------

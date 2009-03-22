@@ -4,8 +4,10 @@
 
 # Alan LaMielle 1/7/2009
 
+from iegen import IEGenObject
+
 #---------- Topological Visitor ----------
-class TopoVisitor(object):
+class TopoVisitor(IEGenObject):
 
 	def __init__(self):
 		pass

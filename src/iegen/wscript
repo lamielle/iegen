@@ -58,6 +58,7 @@ def build(bld):
 	inst_dir='iegen'
 
 	install_files('PREFIX',inst_dir,'__init__.py')
+	install_files('PREFIX',inst_dir,'_iegen_object.py')
 	install_files('PREFIX',inst_dir,'_iegen.py')
 	install_files('PREFIX',inst_dir,'_set_relation.py')
 	install_files('PREFIX',inst_dir,'_mapir.py')

@@ -5,11 +5,11 @@ from cStringIO import StringIO
 
 #IEGen imports
 import iegen.codegen
-from iegen import Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
+from iegen import IEGenObject,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
 from iegen.idg import IDG
 
 #---------- MapIR class ----------
-class MapIR(object):
+class MapIR(IEGenObject):
 	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','transformations','erg_specs','full_iter_space','idg')
 
 	def __init__(self):

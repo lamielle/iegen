@@ -4,8 +4,10 @@
 
 # Alan LaMielle 7/30/08
 
+from iegen import IEGenObject
+
 #---------- Depth First Visitor ----------
-class DFVisitor(object):
+class DFVisitor(IEGenObject):
 
 	#---------- Default In/Out Methods ----------
 	#Do nothing by default

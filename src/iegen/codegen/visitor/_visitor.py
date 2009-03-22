@@ -4,8 +4,10 @@
 
 # Alan LaMielle 10/20/2008
 
+from iegen import IEGenObject
+
 #---------- Depth First Visitor ----------
-class DFVisitor(object):
+class DFVisitor(IEGenObject):
 
 	def __init__(self):
 		#---------- State members ----------

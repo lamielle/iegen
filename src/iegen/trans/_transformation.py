@@ -1,5 +1,7 @@
 #---------- Transformation base class ----------
-class Transformation(object):
+from iegen import IEGenObject
+
+class Transformation(IEGenObject):
 	__slots__=('name','inputs','outputs','simplifications','symbolic_inputs')
 
 	def __init__(self,name):

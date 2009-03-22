@@ -1,8 +1,10 @@
 #Inspector Dependence Graph Nodes
 #Alan LaMielle: 1/13/2009
 
+from iegen import IEGenObject
+
 #---------- IDGNode ----------
-class IDGNode(object):
+class IDGNode(IEGenObject):
 	__slots__=('deps','uses','key','data')
 
 	def __init__(self,key,data):

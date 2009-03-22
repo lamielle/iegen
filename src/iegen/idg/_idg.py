@@ -1,10 +1,11 @@
 #Inspector Dependence Graph
 #Alan LaMielle: 1/7/2009
 
+from iegen import IEGenObject
 from iegen.idg import IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGCall
 
 #---------- Inspector Dependence Graph ----------
-class IDG(object):
+class IDG(IEGenObject):
 	__slots__=('nodes')
 
 	_prefixes={

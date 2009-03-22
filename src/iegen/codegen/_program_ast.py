@@ -2,7 +2,9 @@
 #Classes for representing the programs being generated
 #rather than simply printing to a buffer
 
-class ProgramASTNode(object):
+from iegen import IEGenObject
+
+class ProgramASTNode(IEGenObject):
 	pass
 
 #Represents a whole program
