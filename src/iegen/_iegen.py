@@ -195,6 +195,7 @@ class Statement(object):
 class AccessRelation(object):
 	__slots__=('name','data_array','iter_to_data')
 	_relation_fields=('iter_to_data',)
+	_data_array_fields=('data_array',)
 
 	def __init__(self,name,data_array,iter_to_data):
 		self.name=name

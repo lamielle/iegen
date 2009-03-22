@@ -165,6 +165,16 @@ class MapIR(object):
 			self._create_relations(CreateClass._relation_fields,kwargs)
 		except AttributeError,e: pass
 
+		#Convert all data_array_fields into DataArrays
+		try:
+			self._convert_data_arrays(CreateClass._data_array_fields,kwargs)
+		except AttributeError,e: pass
+
+		#Convert all data_arrays_fields into collections of DataArrays
+		try:
+			self._convert_data_arrays_collection(CreateClass._data_arrays_fields,kwargs)
+		except AttributeError,e: pass
+
 	#Add the given object to the given dicts based on the objects 'name' field
 	def _generic_add(self,obj,add_dicts):
 		for add_dict in add_dicts:
@@ -176,7 +186,7 @@ class MapIR(object):
 
 	#Converts dict entries named in set_fields into Set objects
 	def _create_sets(self,set_fields,dict):
-		#Convert any fields named in _set_fields from set strings to Set objects
+		#Convert any fields named in set_fields from set strings to Set objects
 		for field_name in set_fields:
 			dict[field_name]=self._create_set(dict[field_name])
 
@@ -186,12 +196,34 @@ class MapIR(object):
 
 	#Converts dict entries named in relation_fields into Relation objects
 	def _create_relations(self,relation_fields,dict):
-		#Convert any fields named in _relation_fields from relation strings to Relation objects
+		#Convert any fields named in relation_fields from relation strings to Relation objects
 		for field_name in relation_fields:
 			dict[field_name]=self._create_relation(dict[field_name])
 
 	#Creates a Relation from the given relation string and passing in the current symbolics
 	def _create_relation(self,rel_string):
 		return Relation(rel_string,self.get_symbolics())
+
+	#Converts dict entries named in data_array_fields into existing DataArray objects in the MapIR
+	#If a data array with the name found in the dict is not in the MapIR, a NameError is raised
+	def _convert_data_arrays(self,data_array_fields,dict):
+		#Convert any fields named in data_array_fields from strings to data arrays from the MapIR
+		for field_name in data_array_fields:
+			try:
+				dict[field_name]=self.data_arrays[dict[field_name]]
+			except KeyError,e:
+				raise NameError("Data array '%s' does not exist in the MapIR"%(dict[field_name]))
+
+	#Converts dict entries named in data_arrays_fields into collections of existing DataArray objects in the MapIR
+	#If a data array with the name found in the dict is not in the MapIR, a NameError is raised
+	def _convert_data_arrays_collection(self,data_arrays_fields,dict):
+		#Convert any fields named in data_arrays_fields from collections of strings to collections of data arrays from the MapIR
+		for field_name in data_arrays_fields:
+			#Convert each string in the collection to an existing DataArray
+			for pos in xrange(len(dict[field_name])):
+				try:
+					dict[field_name][pos]=self.data_arrays[dict[field_name][pos]]
+				except KeyError,e:
+					raise NameError("Data array '%s' does not exist in the MapIR"%(dict[field_name][pos]))
 	#-------------------------------------
 #---------------------------------
