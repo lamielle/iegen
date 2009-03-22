@@ -76,7 +76,6 @@ def absdir(path):
     if not os.path.isabs(path):
         path = os.path.normpath(os.path.abspath(os.path.join(os.getcwd(),
                                                              path)))
-
     if path is None or not os.path.isdir(path):
         return None
     return path

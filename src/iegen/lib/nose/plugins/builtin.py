@@ -5,7 +5,6 @@ plugins = []
 builtins = (
     ('nose.plugins.attrib', 'AttributeSelector'),
     ('nose.plugins.capture', 'Capture'),
-    ('nose.plugins.logcapture', 'LogCapture'),
     ('nose.plugins.cover', 'Coverage'),
     ('nose.plugins.debug', 'Pdb'),
     ('nose.plugins.deprecated', 'Deprecated'),
