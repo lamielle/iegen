@@ -53,37 +53,37 @@ moldyn_spec.add_statement(
 moldyn_spec.add_access_relation(
     statement_name='S1',
     name='a1',
-    data_array=moldyn_spec.data_arrays['fx'],
+    data_array='fx',
     iter_to_data='{[i]->[k]: k=inter1(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S1',
     name='a2',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[i]->[k]: k=inter1(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S1',
     name='a3',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[i]->[k]: k=inter2(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S2',
     name='a4',
-    data_array=moldyn_spec.data_arrays['fx'],
+    data_array='fx',
     iter_to_data='{[i]->[k]: k=inter2(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S2',
     name='a5',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[i]->[k]: k=inter1(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S2',
     name='a6',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[i]->[k]: k=inter2(i)}')
 
 #Define the desired transformations
@@ -91,18 +91,18 @@ moldyn_spec.add_transformation(
     type=iegen.trans.DataPermuteTrans,
     name='cpack1',
     reordering_name='sigma1',
-    data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
+    data_arrays=['x','fx'],
     iter_sub_space_relation='{[c0,i,c1]->[i]}',
-    target_data_array=moldyn_spec.data_arrays['x'],
+    target_data_array='x',
     erg_func_name='ERG_cpack')
 
 moldyn_spec.add_transformation(
     type=iegen.trans.DataPermuteTrans,
     name='cpack2',
     reordering_name='sigma2',
-    data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
+    data_arrays=['x','fx'],
     iter_sub_space_relation='{[c0,i,c1]->[i]}',
-    target_data_array=moldyn_spec.data_arrays['x'],
+    target_data_array='x',
     erg_func_name='ERG_cpack')
 
 iter_reordering=None

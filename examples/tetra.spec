@@ -78,49 +78,49 @@ tetra_spec.add_statement(
 tetra_spec.add_access_relation(
     statement_name='S1',
     name='a1',
-    data_array=tetra_spec.data_arrays['res'],
+    data_array='res',
     iter_to_data='{[i]->[k]: k=i}')
 
 tetra_spec.add_access_relation(
     statement_name='S1',
     name='a2',
-    data_array=tetra_spec.data_arrays['data'],
+    data_array='data',
     iter_to_data='{[i]->[k]: k=n1(i)}')
 
 tetra_spec.add_access_relation(
     statement_name='S2',
     name='a3',
-    data_array=tetra_spec.data_arrays['res'],
+    data_array='res',
     iter_to_data='{[i]->[k]: k=i}')
 
 tetra_spec.add_access_relation(
     statement_name='S2',
     name='a4',
-    data_array=tetra_spec.data_arrays['data'],
+    data_array='data',
     iter_to_data='{[i]->[k]: k=n2(i)}')
 
 tetra_spec.add_access_relation(
     statement_name='S3',
     name='a5',
-    data_array=tetra_spec.data_arrays['res'],
+    data_array='res',
     iter_to_data='{[i]->[k]: k=i}')
 
 tetra_spec.add_access_relation(
     statement_name='S3',
     name='a6',
-    data_array=tetra_spec.data_arrays['data'],
+    data_array='data',
     iter_to_data='{[i]->[k]: k=n3(i)}')
 
 tetra_spec.add_access_relation(
     statement_name='S4',
     name='a7',
-    data_array=tetra_spec.data_arrays['res'],
+    data_array='res',
     iter_to_data='{[i]->[k]: k=i}')
 
 tetra_spec.add_access_relation(
     statement_name='S4',
     name='a8',
-    data_array=tetra_spec.data_arrays['data'],
+    data_array='data',
     iter_to_data='{[i]->[k]: k=n4(i)}')
 
 #Define the desired transformations
@@ -128,9 +128,9 @@ tetra_spec.add_transformation(
     iegen.trans.DataPermuteTrans,
     name='cpack',
     reordering_name='sigma',
-    data_arrays=[tetra_spec.data_arrays['data']],
+    data_arrays=['data'],
     iter_sub_space_relation='{[c0,i,c1]->[i]}',
-    target_data_array=tetra_spec.data_arrays['data'],
+    target_data_array='data',
     erg_func_name='ERG_cpack')
 
 iter_reordering=None

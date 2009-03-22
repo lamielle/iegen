@@ -69,17 +69,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_0',
         name='a1',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, i ]->[ accessRelation1 ] : accessRelation1 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_0',
         name='a2',
-        data_array=moldyn.data_arrays['vhx'],
+        data_array='vhx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation2 ] : accessRelation2 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_0',
         name='a3',
-        data_array=moldyn.data_arrays['fx'],
+        data_array='fx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation3 ] : accessRelation3 = i }')
 
 
@@ -94,17 +94,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_1',
         name='a4',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, i ]->[ accessRelation4 ] : accessRelation4 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_1',
         name='a5',
-        data_array=moldyn.data_arrays['vhy'],
+        data_array='vhy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation5 ] : accessRelation5 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_1',
         name='a6',
-        data_array=moldyn.data_arrays['fy'],
+        data_array='fy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation6 ] : accessRelation6 = i }')
 
 
@@ -119,17 +119,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_2',
         name='a7',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, i ]->[ accessRelation7 ] : accessRelation7 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_2',
         name='a8',
-        data_array=moldyn.data_arrays['vhz'],
+        data_array='vhz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation8 ] : accessRelation8 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_2',
         name='a9',
-        data_array=moldyn.data_arrays['fz'],
+        data_array='fz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation9 ] : accessRelation9 = i }')
 
 
@@ -144,17 +144,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_3',
         name='a10',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, i ]->[ accessRelation10 ] : accessRelation10 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_3',
         name='a11',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, i ]->[ accessRelation11 ] : accessRelation11 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_3',
         name='a12',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, i ]->[ accessRelation12 ] : accessRelation12 = i }')
 
 
@@ -169,17 +169,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_4',
         name='a13',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, i ]->[ accessRelation13 ] : accessRelation13 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_4',
         name='a14',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, i ]->[ accessRelation14 ] : accessRelation14 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_4',
         name='a15',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, i ]->[ accessRelation15 ] : accessRelation15 = i }')
 
 
@@ -194,17 +194,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_5',
         name='a16',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, i ]->[ accessRelation16 ] : accessRelation16 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_5',
         name='a17',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, i ]->[ accessRelation17 ] : accessRelation17 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_5',
         name='a18',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, i ]->[ accessRelation18 ] : accessRelation18 = i }')
 
 
@@ -219,17 +219,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_6',
         name='a19',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, i ]->[ accessRelation19 ] : accessRelation19 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_6',
         name='a20',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, i ]->[ accessRelation20 ] : accessRelation20 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_6',
         name='a21',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, i ]->[ accessRelation21 ] : accessRelation21 = i }')
 
 
@@ -244,17 +244,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_7',
         name='a22',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, i ]->[ accessRelation22 ] : accessRelation22 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_7',
         name='a23',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, i ]->[ accessRelation23 ] : accessRelation23 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_7',
         name='a24',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, i ]->[ accessRelation24 ] : accessRelation24 = i }')
 
 
@@ -269,17 +269,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_8',
         name='a25',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, i ]->[ accessRelation25 ] : accessRelation25 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_8',
         name='a26',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, i ]->[ accessRelation26 ] : accessRelation26 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_8',
         name='a27',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, i ]->[ accessRelation27 ] : accessRelation27 = i }')
 
 
@@ -294,17 +294,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_9',
         name='a28',
-        data_array=moldyn.data_arrays['vhx'],
+        data_array='vhx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation28 ] : accessRelation28 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_9',
         name='a29',
-        data_array=moldyn.data_arrays['vhx'],
+        data_array='vhx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation29 ] : accessRelation29 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_9',
         name='a30',
-        data_array=moldyn.data_arrays['fx'],
+        data_array='fx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation30 ] : accessRelation30 = i }')
 
 
@@ -319,17 +319,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_10',
         name='a31',
-        data_array=moldyn.data_arrays['vhy'],
+        data_array='vhy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation31 ] : accessRelation31 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_10',
         name='a32',
-        data_array=moldyn.data_arrays['vhy'],
+        data_array='vhy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation32 ] : accessRelation32 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_10',
         name='a33',
-        data_array=moldyn.data_arrays['fy'],
+        data_array='fy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation33 ] : accessRelation33 = i }')
 
 
@@ -344,17 +344,17 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_11',
         name='a34',
-        data_array=moldyn.data_arrays['vhz'],
+        data_array='vhz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation34 ] : accessRelation34 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_11',
         name='a35',
-        data_array=moldyn.data_arrays['vhz'],
+        data_array='vhz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation35 ] : accessRelation35 = i }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_11',
         name='a36',
-        data_array=moldyn.data_arrays['fz'],
+        data_array='fz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation36 ] : accessRelation36 = i }')
 
 
@@ -369,7 +369,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_12',
         name='a37',
-        data_array=moldyn.data_arrays['fx'],
+        data_array='fx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation37 ] : accessRelation37 = i }')
 
 
@@ -384,7 +384,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_13',
         name='a38',
-        data_array=moldyn.data_arrays['fy'],
+        data_array='fy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation38 ] : accessRelation38 = i }')
 
 
@@ -399,7 +399,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_0_i_14',
         name='a39',
-        data_array=moldyn.data_arrays['fz'],
+        data_array='fz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation39 ] : accessRelation39 = i }')
 
 
@@ -454,12 +454,12 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_0',
         name='a40',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation40 ] : accessRelation40 = inter1( ii ) }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_0',
         name='a41',
-        data_array=moldyn.data_arrays['x'],
+        data_array='x',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation41 ] : accessRelation41 = inter2( ii ) }')
 
 
@@ -474,12 +474,12 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_1',
         name='a42',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation42 ] : accessRelation42 = inter1( ii ) }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_1',
         name='a43',
-        data_array=moldyn.data_arrays['y'],
+        data_array='y',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation43 ] : accessRelation43 = inter2( ii ) }')
 
 
@@ -494,12 +494,12 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_2',
         name='a44',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation44 ] : accessRelation44 = inter1( ii ) }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_2',
         name='a45',
-        data_array=moldyn.data_arrays['z'],
+        data_array='z',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation45 ] : accessRelation45 = inter2( ii ) }')
 
 
@@ -694,7 +694,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_21',
         name='a46',
-        data_array=moldyn.data_arrays['fx'],
+        data_array='fx',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation46 ] : accessRelation46 = inter1( ii ) }')
 
 
@@ -709,7 +709,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_22',
         name='a47',
-        data_array=moldyn.data_arrays['fy'],
+        data_array='fy',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation47 ] : accessRelation47 = inter1( ii ) }')
 
 
@@ -724,7 +724,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_23',
         name='a48',
-        data_array=moldyn.data_arrays['fz'],
+        data_array='fz',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation48 ] : accessRelation48 = inter1( ii ) }')
 
 
@@ -739,7 +739,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_24',
         name='a49',
-        data_array=moldyn.data_arrays['fx'],
+        data_array='fx',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation49 ] : accessRelation49 = inter2( ii ) }')
 
 
@@ -754,7 +754,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_25',
         name='a50',
-        data_array=moldyn.data_arrays['fy'],
+        data_array='fy',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation50 ] : accessRelation50 = inter2( ii ) }')
 
 
@@ -769,7 +769,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_5_ii_26',
         name='a51',
-        data_array=moldyn.data_arrays['fz'],
+        data_array='fz',
         iter_to_data='{ [ tstep, ii ]->[ accessRelation51 ] : accessRelation51 = inter2( ii ) }')
 
 
@@ -804,7 +804,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_0',
         name='a52',
-        data_array=moldyn.data_arrays['fx'],
+        data_array='fx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation52 ] : accessRelation52 = inter1( ii ) }')
 
 
@@ -819,7 +819,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_1',
         name='a53',
-        data_array=moldyn.data_arrays['fy'],
+        data_array='fy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation53 ] : accessRelation53 = inter1( ii ) }')
 
 
@@ -834,7 +834,7 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_2',
         name='a54',
-        data_array=moldyn.data_arrays['fz'],
+        data_array='fz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation54 ] : accessRelation54 = inter1( ii ) }')
 
 
@@ -849,12 +849,12 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_3',
         name='a55',
-        data_array=moldyn.data_arrays['vhx'],
+        data_array='vhx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation55 ] : accessRelation55 = inter1( ii ) }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_3',
         name='a56',
-        data_array=moldyn.data_arrays['fx'],
+        data_array='fx',
         iter_to_data='{ [ tstep, i ]->[ accessRelation56 ] : accessRelation56 = inter1( ii ) }')
 
 
@@ -869,12 +869,12 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_4',
         name='a57',
-        data_array=moldyn.data_arrays['vhy'],
+        data_array='vhy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation57 ] : accessRelation57 = inter1( ii ) }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_4',
         name='a58',
-        data_array=moldyn.data_arrays['fy'],
+        data_array='fy',
         iter_to_data='{ [ tstep, i ]->[ accessRelation58 ] : accessRelation58 = inter1( ii ) }')
 
 
@@ -889,21 +889,21 @@ moldyn.add_statement(
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_5',
         name='a59',
-        data_array=moldyn.data_arrays['vhz'],
+        data_array='vhz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation59 ] : accessRelation59 = inter1( ii ) }')
 moldyn.add_access_relation(
         statement_name='s__0_tstep_6_i_5',
         name='a60',
-        data_array=moldyn.data_arrays['fz'],
+        data_array='fz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation60 ] : accessRelation60 = inter1( ii ) }')
 
 moldyn.add_transformation(
     type=iegen.trans.DataPermuteTrans,
     name='cpack',
     reordering_name='sigma',
-    data_arrays=[moldyn.data_arrays['x'],moldyn.data_arrays['fx']],
-    iter_sub_space_relation='{[c0,tstep,c1,i,c2]->[i]}',
-    target_data_array=moldyn.data_arrays['x'],
+    data_arrays=['x','fx'],
+    iter_sub_space_relation='{[c0,tstep,c1,i,c2]->[i]: c1=1}',
+    target_data_array='x',
     erg_func_name='ERG_cpack')
 
 print moldyn.codegen('iegen_moldyn_ouput.c')

@@ -66,49 +66,49 @@ moldyn_spec.add_statement(
 moldyn_spec.add_access_relation(
     statement_name='S1',
     name='a1',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[s,i]->[i]}')
 
 moldyn_spec.add_access_relation(
     statement_name='S1',
     name='a2',
-    data_array=moldyn_spec.data_arrays['fx'],
+    data_array='fx',
     iter_to_data='{[s,i]->[i]}')
 
 moldyn_spec.add_access_relation(
     statement_name='S2',
     name='a3',
-    data_array=moldyn_spec.data_arrays['fx'],
+    data_array='fx',
     iter_to_data='{[s,i]->[k]: k=inter1(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S2',
     name='a4',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[s,i]->[k]: k=inter1(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S2',
     name='a5',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[s,i]->[k]: k=inter2(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S3',
     name='a6',
-    data_array=moldyn_spec.data_arrays['fx'],
+    data_array='fx',
     iter_to_data='{[s,i]->[k]: k=inter2(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S3',
     name='a7',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[s,i]->[k]: k=inter1(i)}')
 
 moldyn_spec.add_access_relation(
     statement_name='S3',
     name='a8',
-    data_array=moldyn_spec.data_arrays['x'],
+    data_array='x',
     iter_to_data='{[s,i]->[k]: k=inter2(i)}')
 
 #Define the desired transformations
@@ -116,9 +116,9 @@ moldyn_spec.add_transformation(
     iegen.trans.DataPermuteTrans,
     name='cpack',
     reordering_name='sigma',
-    data_arrays=[moldyn_spec.data_arrays['x'],moldyn_spec.data_arrays['fx']],
+    data_arrays=['x','fx'],
     iter_sub_space_relation='{[c0,s,c1,i,c2]->[i]}',
-    target_data_array=moldyn_spec.data_arrays['x'],
+    target_data_array='x',
     erg_func_name='ERG_cpack')
 
 iter_reordering=None
