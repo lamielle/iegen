@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+def run_iegen():
+	#Get command line options
+	options,spec_files=parse_cli_options()
+
+	print options,spec_files
+
+#Parse command line options
+#Returns the settings dictionary and positional arguments
+def parse_cli_options():
+	from optparse import OptionParser
+
+	#Create the option parser object
+	parser=OptionParser(usage='%prog [settings] spec_file')
+
+	#Debug
+	parser.add_option('-d','--debug',action='store_true',dest='debug',default=False,
+	                  help='enable debug mode')
+
+	#Parse the specified arguments and return the result
+	return parser.parse_args()
+
+if '__main__'==__name__:
+	run_iegen()

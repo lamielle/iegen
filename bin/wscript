@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+
+def set_options(opt): pass
+
+def configure(conf): pass
+
+def build(bld):
+	import os
+
+	inst_dir='iegen'+os.sep+'bin'
+
+	install_files('PREFIX',inst_dir,'iegen',chmod=0755)
