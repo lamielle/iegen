@@ -1,273 +1,551 @@
 Script started on Thu Mar 19 08:54:16 2009
-[dhcp22:~/GITWorkDirs/iegen/src] mstrout% python
+[dhcp22:~/GITWorkDirs/iegen/src] mstrout% python
+
+
 Python 2.5 (r25:51918, Sep 19 2006, 08:49:13) 
+
 [GCC 4.0.1 (Apple Computer, Inc. build 5341)] on darwin
+
 Type "help", "copyright", "credits" or "license" for more information.
+
 >>> import iegen
->>> impo[K[K[K[Kfrom iegen import Set
+
+>>> from iegen import Set
+
 >>> from iegen import Symbolic
->>> s[Ks = Set("{ [i,j] : 1<=i && i<=10 && 0<=j && j<=n}", [Symbolic("n")])
+
+>>> s = Set("{ [i,j] : 1<=i && i<=10 && 0<=j && j<=n}", [Symbolic("n")])
+
 >>> s
+
 Set(sets=[PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequality(NormExp([VarExp(1,'i')],-1)), Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'n')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'i')],10))]),[Symbolic('n')])])
+
 >>> print s
+
 {[i,j]: i+-1>=0 and -1j+n>=0 and j>=0 and -1i+10>=0 | n}
+
 >>> s2 = Set("{[i,j] : 0<=i && i<=10 && 0<=j && j<=n[Km}", [Symbolic(m)][K[K[K"m")])
+
 >>> s1.union[K[K[K[K[K[K[K.union(s2)
+
 Set(sets=[PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequality(NormExp([VarExp(1,'i')],-1)), Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'n')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'i')],10))]),[Symbolic('n')]), PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'m')],0)), Inequality(NormExp([VarExp(1,'i')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'i')],10))]),[Symbolic('m')])])
+
 >>> print s.union(s2)
+
 {[i,j]: i+-1>=0 and -1j+n>=0 and j>=0 and -1i+10>=0 | n} union {[i,j]: -1j+m>=0 and i>=0 and j>=0 and -1i+10>=0 | m}
+
 >>> r = Relation("{[i,j] -> [j] : [K[K[K}")
+
 Traceback (most recent call last):
+
   File "<stdin>", line 1, in <module>
+
 NameError: name 'Relation' is not defined
+
 >>> from iegen import Relation
->>> from iegen import Relation>>> r = Relation("{[i,j] -> [j]}")
+
+>>> from iegen import Relation
+
+>>> r = Relation("{[i,j] -> [j]}")
+
 >>> s[Kprint r
+
 {[i,j]->[j]}
+
 >>> r
+
 Relation(relations=[PresRelation(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),VarTuple([VarExp(1,'j')]),Conjunction([]))])
+
 >>> print s.apply(r)
+
 {[j]: -1j+n>=0 and j>=0 | n}
+
 >>> dir(Rl[Kelation)
+
 ['__class__', '__cmp__', '__delattr__', '__dict__', '__doc__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__', '__weakref__', '_add_relation', '_combine_pres_formulas', '_compose', '_get_formula_rename_dict', '_get_prefix_rename_dict', '_get_prefix_unrename_dict', 'apply_visitor', 'arity', 'arity_in', 'arity_out', 'compose', 'formulas', 'functions', 'get_relations', 'inverse', 'is_contradiction', 'is_tautology', 'relations', 'set_relations', 'symbolics', 'union']
+
 >>> inver[K[K[K[K[Kr.inverse()
+
 Relation(relations=[PresRelation(VarTuple([VarExp(1,'j')]),VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([]))])
+
 >>> print r.inverse(*)[K[K)
+
 {[j]->[i,j]}
+
 >>> r.air[K[Krity()
+
 (2, 1)
+
 >>> r.air[K[Kri[K[K[K[K[Kr.air[K[Krity_in()
+
 2
+
 >>> r.get_relations()
+
 [PresRelation(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),VarTuple([VarExp(1,'j')]),Conjunction([]))]
+
 >>> s.bounds("i")
+
 ([NormExp([],1)], [NormExp([],10)])
+
 >>> 
-[dhcp22:~/GITWorkDirs/iegen/src] mstrout% ls
+
+[dhcp22:~/GITWorkDirs/iegen/src] mstrout% ls
+
+
 dev				parsetab_set.py
+
 iegen				set-relation-python.transcript
+
 parsetab_relation.py		wscript
-[dhcp22:~/GITWorkDirs/iegen/src] mstrout% more set-relation-python.transcript 
+
+[dhcp22:~/GITWorkDirs/iegen/src] mstrout% more set-relation-python.transcript 
+
+
 [?1h=[43;1H[KScript started on Thu Mar 19 08:54:16 2009
+
 [dhcp22:~/GITWorkDirs/iegen/src] mstrout% python[7m^M[m
+
 Python 2.5 (r25:51918, Sep 19 2006, 08:49:13) 
+
 [GCC 4.0.1 (Apple Computer, Inc. build 5341)] on darwin
+
 Type "help", "copyright", "credits" or "license" for more information.
+
 >>> import iegen
+
 >>> imp[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[Kfrom iegen import Set
+
 >>> from iegen import Symbolic
+
 >>> [7mESC[m[Ks = Set("{ [i,j] : 1<=i && i<=10 && 0<=j && j<=n}", [Symbolic("n")])
+
 >>> s
+
 Set(sets=[PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequali
+
 ty(NormExp([VarExp(1,'i')],-1)), Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'n
+
 ')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'
+
 i')],10))]),[Symbolic('n')])])
+
 >>> print s
+
 {[i,j]: i+-1>=0 and -1j+n>=0 and j>=0 and -1i+10>=0 | n}
+
 >>> s2 = Set("{[i,j] : 0<=i && i<=10 && 0<=j && j<=[7mESC[m[Km}", [Symbolic(m)[7mESC[m[[7mESC[m
+
 [[7mESC[m[K"m")])
+
 >>> s1.unio[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[K.union(s2)
+
 Set(sets=[PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequali
+
 ty(NormExp([VarExp(1,'i')],-1)), Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'n
+
 ')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'
+
 i')],10))]),[Symbolic('n')]), PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),C
+
 onjunction([Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'m')],0)), Inequality(N
+
 ormExp([VarExp(1,'i')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(N
+
 ormExp([VarExp(-1,'i')],10))]),[Symbolic('m')])])
+
 >>> print s.union(s2)
+
 {[i,j]: i+-1>=0 and -1j+n>=0 and j>=0 and -1i+10>=0 | n} union {[i,j]: -1j+m>=0 
+
 and i>=0 and j>=0 and -1i+10>=0 | m}
+
 >>> r = Relation("{[i,j] -> [j] :[7mESC[m[[7mESC[m[[7mESC[m[K}")
+
 Traceback (most recent call last):
+
   File "<stdin>", line 1, in <module>
+
 NameError: name 'Relation' is not defined
+
 >>> from iegen import Relation
+
 >>> from iegen import Relation[7m^M^M[m>>> r = Relation("{[i,j] -> [j]}")
+
 >>> [7mESC[m[Kprint r
+
 {[i,j]->[j]}
+
 >>> r
+
 Relation(relations=[PresRelation(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),VarTup
+
 le([VarExp(1,'j')]),Conjunction([]))])
+
 >>> print s.apply(r)
+
 {[j]: -1j+n>=0 and j>=0 | n}
+
 [43;1H[K[7mset-relation-python.transcript 65%[m[43;1H[43;1H[K>>> dir(R[7mESC[m[Kelation)
+
 ['__class__', '__cmp__', '__delattr__', '__dict__', '__doc__', '__getattribute__
+
 ', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__
+
 ', '__repr__', '__setattr__', '__slots__', '__str__', '__weakref__', '_add_relat
+
 ion', '_combine_pres_formulas', '_compose', '_get_formula_rename_dict', '_get_pr
+
 efix_rename_dict', '_get_prefix_unrename_dict', 'apply_visitor', 'arity', 'arity
+
 _in', 'arity_out', 'compose', 'formulas', 'functions', 'get_relations', 'inverse
+
 ', 'is_contradiction', 'is_tautology', 'relations', 'set_relations', 'symbolics'
+
 , 'union']
+
 >>> inve[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[Kr.inverse()
+
 Relation(relations=[PresRelation(VarTuple([VarExp(1,'j')]),VarTuple([VarExp(1,'i
+
 '), VarExp(1,'j')]),Conjunction([]))])
+
 >>> print r.inverse(*[7mESC[m[[7mESC[m[K)
+
 {[j]->[i,j]}
+
 >>> r.ai[7mESC[m[[7mESC[m[Krity()
+
 (2, 1)
+
 >>> r.ai[7mESC[m[[7mESC[m[Kr[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[K[7m^G[mr.ai[7mESC[m[[7mESC[m[Krity_in()
+
 2
+
 >>> r.get_relations()
+
 [PresRelation(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),VarTuple([VarExp(1,'j')])
+
 ,Conjunction([]))]
+
 >>> s.bounds("i")
+
 ([NormExp([],1)], [NormExp([],10)])
+
 >>> 
-[43;1H[K[7m(END) [m[43;1H[43;1H[K[?1l>[dhcp22:~/GITWorkDirs/iegen/src] mstrout% ls
+
+[43;1H[K[7m(END) [m[43;1H[43;1H[K[?1l>[dhcp22:~/GITWorkDirs/iegen/src] mstrout% ls
+
+
 dev				parsetab_set.py
+
 iegen				set-relation-python.transcript
+
 parsetab_relation.py		wscript
-[dhcp22:~/GITWorkDirs/iegen/src] mstrout% lsmore set-relation-python.transcript
+
+[dhcp22:~/GITWorkDirs/iegen/src] mstrout% lsmore set-relation-python.transcript
+
+
 [?1h=[43;1H[KScript started on Thu Mar 19 08:54:16 2009
+
 [dhcp22:~/GITWorkDirs/iegen/src] mstrout% python[7m^M[m
+
 Python 2.5 (r25:51918, Sep 19 2006, 08:49:13) 
+
 [GCC 4.0.1 (Apple Computer, Inc. build 5341)] on darwin
+
 Type "help", "copyright", "credits" or "license" for more information.
+
 >>> import iegen
+
 >>> imp[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[Kfrom iegen import Set
+
 >>> from iegen import Symbolic
+
 >>> [7mESC[m[Ks = Set("{ [i,j] : 1<=i && i<=10 && 0<=j && j<=n}", [Symbolic("n")])
+
 >>> s
+
 Set(sets=[PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequali
+
 ty(NormExp([VarExp(1,'i')],-1)), Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'n
+
 ')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'
+
 i')],10))]),[Symbolic('n')])])
+
 >>> print s
+
 {[i,j]: i+-1>=0 and -1j+n>=0 and j>=0 and -1i+10>=0 | n}
+
 >>> s2 = Set("{[i,j] : 0<=i && i<=10 && 0<=j && j<=[7mESC[m[Km}", [Symbolic(m)[7mESC[m[[7mESC[m
+
 [[7mESC[m[K"m")])
+
 >>> s1.unio[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[K.union(s2)
+
 Set(sets=[PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequali
+
 ty(NormExp([VarExp(1,'i')],-1)), Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'n
+
 ')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'
+
 i')],10))]),[Symbolic('n')]), PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),C
+
 onjunction([Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'m')],0)), Inequality(N
+
 ormExp([VarExp(1,'i')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(N
+
 ormExp([VarExp(-1,'i')],10))]),[Symbolic('m')])])
+
 >>> print s.union(s2)
+
 {[i,j]: i+-1>=0 and -1j+n>=0 and j>=0 and -1i+10>=0 | n} union {[i,j]: -1j+m>=0 
+
 and i>=0 and j>=0 and -1i+10>=0 | m}
+
 >>> r = Relation("{[i,j] -> [j] :[7mESC[m[[7mESC[m[[7mESC[m[K}")
+
 Traceback (most recent call last):
+
   File "<stdin>", line 1, in <module>
+
 NameError: name 'Relation' is not defined
+
 >>> from iegen import Relation
+
 >>> from iegen import Relation[7m^M^M[m>>> r = Relation("{[i,j] -> [j]}")
+
 >>> [7mESC[m[Kprint r
+
 {[i,j]->[j]}
+
 >>> r
+
 Relation(relations=[PresRelation(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),VarTup
+
 le([VarExp(1,'j')]),Conjunction([]))])
+
 >>> print s.apply(r)
+
 {[j]: -1j+n>=0 and j>=0 | n}
+
 [43;1H[K[7mset-relation-python.transcript 29%[m[43;1H[43;1H[K>>> dir(R[7mESC[m[Kelation)
+
 ['__class__', '__cmp__', '__delattr__', '__dict__', '__doc__', '__getattribute__
+
 ', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__
+
 ', '__repr__', '__setattr__', '__slots__', '__str__', '__weakref__', '_add_relat
+
 ion', '_combine_pres_formulas', '_compose', '_get_formula_rename_dict', '_get_pr
+
 efix_rename_dict', '_get_prefix_unrename_dict', 'apply_visitor', 'arity', 'arity
+
 _in', 'arity_out', 'compose', 'formulas', 'functions', 'get_relations', 'inverse
+
 ', 'is_contradiction', 'is_tautology', 'relations', 'set_relations', 'symbolics'
+
 , 'union']
+
 >>> inve[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[Kr.inverse()
+
 Relation(relations=[PresRelation(VarTuple([VarExp(1,'j')]),VarTuple([VarExp(1,'i
+
 '), VarExp(1,'j')]),Conjunction([]))])
+
 >>> print r.inverse(*[7mESC[m[[7mESC[m[K)
+
 {[j]->[i,j]}
+
 >>> r.ai[7mESC[m[[7mESC[m[Krity()
+
 (2, 1)
+
 >>> r.ai[7mESC[m[[7mESC[m[Kr[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[[7mESC[m[K[7m^G[mr.ai[7mESC[m[[7mESC[m[Krity_in()
+
 2
+
 >>> r.get_relations()
+
 [PresRelation(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),VarTuple([VarExp(1,'j')])
+
 ,Conjunction([]))]
+
 >>> s.bounds("i")
+
 ([NormExp([],1)], [NormExp([],10)])
+
 >>> 
+
 [dhcp22:~/GITWorkDirs/iegen/src] mstrout% ls[7m^M[m
+
 dev                             parsetab_set.py
+
 iegen                           set-relation-python.transcript
+
 parsetab_relation.py            wscript
+
 [dhcp22:~/GITWorkDirs/iegen/src] mstrout% more set-relation-python.transcript [7m^M[m
+
 [7mESC[m[?1h[7mESC[m=[7mESC[m[43;1H[7mESC[m[KScript started on Thu Mar 19 08:54:16 2009
+
 [dhcp22:~/GITWorkDirs/iegen/src] mstrout% python[7mESC[m[7m^M[7mESC[m[m
+
 Python 2.5 (r25:51918, Sep 19 2006, 08:49:13) 
+
 [GCC 4.0.1 (Apple Computer, Inc. build 5341)] on darwin
+
 Type "help", "copyright", "credits" or "license" for more information.
+
 >>> import iegen
+
 >>> imp[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[Kfrom iegen i
+
 mport Set
+
 >>> from iegen import Symbolic
+
 >>> [7mESC[m[7mESC[7mESC[m[m[Ks = Set("{ [i,j] : 1<=i && i<=10 && 0<=j && j<=n}", [Symboli
+
 c("n")])
+
 >>> s
+
 Set(sets=[PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequali
+
 [43;1H[K[7m56%[m[43;1H[43;1H[Kty(NormExp([VarExp(1,'i')],-1)), Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'n
+
 ')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'
+
 i')],10))]),[Symbolic('n')])])
+
 >>> print s
+
 {[i,j]: i+-1>=0 and -1j+n>=0 and j>=0 and -1i+10>=0 | n}
+
 >>> s2 = Set("{[i,j] : 0<=i && i<=10 && 0<=j && j<=[7mESC[m[7mESC[7mESC[m[m[Km}", [Symboli
+
 c(m)[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m
+
 [[7mESC[m[7mESC[7mESC[m[m[K"m")])
+
 >>> s1.unio[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC
+
 [7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[K.union(s2)
+
 Set(sets=[PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),Conjunction([Inequali
+
 ty(NormExp([VarExp(1,'i')],-1)), Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'n
+
 ')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(NormExp([VarExp(-1,'
+
 i')],10))]),[Symbolic('n')]), PresSet(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),C
+
 onjunction([Inequality(NormExp([VarExp(-1,'j'), VarExp(1,'m')],0)), Inequality(N
+
 ormExp([VarExp(1,'i')],0)), Inequality(NormExp([VarExp(1,'j')],0)), Inequality(N
+
 ormExp([VarExp(-1,'i')],10))]),[Symbolic('m')])])
+
 >>> print s.union(s2)
+
 {[i,j]: i+-1>=0 and -1j+n>=0 and j>=0 and -1i+10>=0 | n} union {[i,j]: -1j+m>=0 
+
 and i>=0 and j>=0 and -1i+10>=0 | m}
+
 >>> r = Relation("{[i,j] -> [j] :[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[K}
+
 ")
+
 Traceback (most recent call last):
+
   File "<stdin>", line 1, in <module>
+
 NameError: name 'Relation' is not defined
+
 >>> from iegen import Relation
+
 >>> from iegen import Relation[7mESC[m[7m^M^M[7mESC[m[m>>> r = Relation("{[i,j] -> [j]}")
+
 >>> [7mESC[m[7mESC[7mESC[m[m[Kprint r
+
 {[i,j]->[j]}
+
 >>> r
+
 Relation(relations=[PresRelation(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),VarTup
+
 le([VarExp(1,'j')]),Conjunction([]))])
+
 >>> print s.apply(r)
+
 {[j]: -1j+n>=0 and j>=0 | n}
+
 [7mESC[m[43;1H[7mESC[m[K[7mESC[m[7mset-relation-python.transcript 65%[7mESC[m[m[7mESC[m[43;1H[7mESC[m[43;1H[7mESC[m
+
 [K>>> dir(R[7mESC[m[7mESC[7mESC[m[m[Kelation)
+
 ['__class__', '__cmp__', '__delattr__', '__dict__', '__doc__', '__getattribute__
+
 ', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__
+
 ', '__repr__', '__setattr__', '__slots__', '__str__', '__weakref__', '_add_relat
+
 ion', '_combine_pres_formulas', '_compose', '_get_formula_rename_dict', '_get_pr
+
 efix_rename_dict', '_get_prefix_unrename_dict', 'apply_visitor', 'arity', 'arity
+
 _in', 'arity_out', 'compose', 'formulas', 'functions', 'get_relations', 'inverse
+
 [43;1H[K[7m88%[m[43;1H[43;1H[K', 'is_contradiction', 'is_tautology', 'relations', 'set_relations', 'symbolics'
+
 , 'union']
+
 >>> inve[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m
+
 [m[Kr.inverse()
+
 Relation(relations=[PresRelation(VarTuple([VarExp(1,'j')]),VarTuple([VarExp(1,'i
+
 '), VarExp(1,'j')]),Conjunction([]))])
+
 >>> print r.inverse(*[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[K)
+
 {[j]->[i,j]}
+
 >>> r.ai[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[Krity()
+
 (2, 1)
+
 >>> r.ai[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[Kr[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC
+
 [7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC[7mESC[m[m[K[7mESC[m[7m^G[7mESC[m[mr.ai[7mESC[m[7mESC[7mESC[m[m[[7mESC[m[7mESC
+
 [7mESC[m[m[Krity_in()
+
 2
+
 >>> r.get_relations()
+
 [PresRelation(VarTuple([VarExp(1,'i'), VarExp(1,'j')]),VarTuple([VarExp(1,'j')])
+
 ,Conjunction([]))]
+
 >>> s.bounds("i")
+
 ([NormExp([],1)], [NormExp([],10)])
+
 >>> 
+
 [7mESC[m[43;1H[7mESC[m[K[7mESC[m[7m(END) [7mESC[m[m[7mESC[m[43;1H[7mESC[m[43;1H[7mESC[m[K[7mESC[m[?1l[7mESC[m>[dhcp22:~/GITWo
+
 rkDirs/iegen/src] mstrout% 
-[43;1H[K[7m(END) [m[43;1H[43;1H[K[?1l>[dhcp22:~/GITWorkDirs/iegen/src] mstrout% exit
+
+[43;1H[K[7m(END) [m[43;1H[43;1H[K[?1l>[dhcp22:~/GITWorkDirs/iegen/src] mstrout% exit
+
+
 exit
+
 
 Script done on Thu Mar 19 09:33:23 2009
