@@ -1,3 +1,4 @@
+from iegen import IEGenObject
 from iegen.codegen import Statement,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string
 
 #Generates code for the inspector
@@ -52,7 +53,7 @@ def gen_er_spec(er_spec):
 	var_in_name=er_spec.relation.relations[0].tuple_in.vars[0].id
 	var_out_name=er_spec.relation.relations[0].tuple_out.vars[0].id
 
-	print er_spec
+	IEGenObject.info_print(er_spec)
 
 	#Generate the define/undefine statements
 	cloog_stmts=[]

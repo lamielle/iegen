@@ -15,9 +15,11 @@ def run_iegen():
 	with file(spec_file) as f:
 		exec(f)
 
-	#Run IEGen given the previous spec file setup
-	#Print the resulting code
-	iegen.IEGenObject.info_print(spec.codegen())
+	#Run IEGen given the previous spec file setup and get the generated code
+	code=spec.codegen()
+
+	#Print the generated code if necessary
+	if iegen.IEGenObject.settings.print_code: print code
 
 #Parse and process command line arguments
 #Ensure that exactly one spec file was given and that it exists
@@ -39,8 +41,12 @@ def process_cli_arguments():
 	                 help='turn information printing off')
 
 	#Output file
-	parser.add_option('-o','--output-file',action='store',dest='output_file',default='test.c',metavar='FILE',
+	parser.add_option('-o','--output-file',action='store',dest='output_file',default=None,metavar='FILE',
 	                  help='output file name')
+
+	#Print code?
+	parser.add_option('-p','--print-code',action='store_true',dest='print_code',default=False,
+	                  help='print generated code')
 
 	#Parse the specified arguments and return the result
 	options,spec_file=parser.parse_args()
@@ -60,6 +66,7 @@ def process_cli_arguments():
 	iegen.IEGenObject.settings.debug=options.debug
 	iegen.IEGenObject.settings.quiet=options.quiet
 	iegen.IEGenObject.settings.output_file=options.output_file
+	iegen.IEGenObject.settings.print_code=options.print_code
 
 	return spec_file
 

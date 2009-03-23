@@ -16,6 +16,7 @@
 # AML 8/13/2008: Modified to use rewritten expressions and their operators
 # AML 8/25/2008: Removed union support from parser
 
+from iegen import IEGenObject
 from iegen.util import is_iterable
 from iegen.ast import PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
 
@@ -133,7 +134,7 @@ class PresParser(object):
 
 	#Lexer error routine
 	def t_error(self,t):
-		print "Illegal character '%s'" % t.value[0]
+		IEGenObject.info_print("Illegal character '%s'" % t.value[0])
 		t.lexer.skip(1)
 	#-------------------------------------------
 
