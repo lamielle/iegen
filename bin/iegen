@@ -1,15 +1,31 @@
 #!/usr/bin/env python
 
+from __future__ import with_statement
+
 def run_iegen():
-	#Get command line options
-	options,spec_files=parse_cli_options()
+	import iegen,iegen.trans
 
-	print options,spec_files
+	#Get the spec file to run
+	spec_file=process_cli_arguments()
 
-#Parse command line options
-#Returns the settings dictionary and positional arguments
-def parse_cli_options():
+	#Create the MapIR object
+	spec=iegen.MapIR()
+
+	#Run the specified spec file
+	with file(spec_file) as f:
+		exec(f)
+
+	#Run IEGen given the previous spec file setup
+	#Print the resulting code
+	iegen.IEGenObject.info_print(spec.codegen())
+
+#Parse and process command line arguments
+#Ensure that exactly one spec file was given and that it exists
+#Returns the spec file that was given
+def process_cli_arguments():
+	import os
 	from optparse import OptionParser
+	import iegen
 
 	#Create the option parser object
 	parser=OptionParser(usage='%prog [settings] spec_file')
@@ -18,8 +34,42 @@ def parse_cli_options():
 	parser.add_option('-d','--debug',action='store_true',dest='debug',default=False,
 	                  help='enable debug mode')
 
+	#Quiet
+	parser.add_option('-q','--quiet',action='store_true',dest='quiet',default=False,
+	                 help='turn information printing off')
+
+	#Output file
+	parser.add_option('-o','--output-file',action='store',dest='output_file',default='test.c',metavar='FILE',
+	                  help='output file name')
+
 	#Parse the specified arguments and return the result
-	return parser.parse_args()
+	options,spec_file=parser.parse_args()
+
+	#Make sure exactly one spec file was given
+	if 1!=len(spec_file):
+		error('Please specify exactly one spec file to run.',parser)
+
+	#Only one positional argument was given, so drop the list
+	spec_file=spec_file[0]
+
+	#Make sure the given spec file exists
+	if not os.path.isfile(spec_file):
+		error("The given spec file, '%s', does not exist."%(spec_file),parser)
+
+	#Setup IEGenObject.settings based on the CLI arguments
+	iegen.IEGenObject.settings.debug=options.debug
+	iegen.IEGenObject.settings.quiet=options.quiet
+	iegen.IEGenObject.settings.output_file=options.output_file
+
+	return spec_file
+
+#Prints the help text, the given error message, and exits
+def error(message,parser):
+	import sys
+	parser.print_help()
+	print
+	print 'Error: '+message
+	sys.exit(1)
 
 if '__main__'==__name__:
 	run_iegen()
