@@ -65,7 +65,7 @@ print a1_modified
 print "==== A4, access relation for S2"
 a4 = Relation("{[s,i]->[k]: k=inter1(i)}")
 print a4
-print "Modified a1"
+print "Modified a4"
 a4_modified = a4.compose(S2_sched.inverse())
 print a4_modified
 
@@ -73,7 +73,7 @@ print a4_modified
 print "==== A8, access relation for S3"
 a8 = Relation("{[s,i]->[k]: k=inter2(i)}")
 print a8
-print "Modified a1"
+print "Modified a8"
 a8_modified = a8.compose(S2_sched.inverse())
 print a8_modified
 
@@ -95,12 +95,19 @@ print "\t\tinverse (iter_sub_space_relation compose (inverse all_ar))"
 print iter_sub_space_relation.compose( all_ar.inverse() ).inverse()
 print "\toutput:"
 
-# BUG (3/23/09): output should be something like 
+# BUG (3/23/09, redmine issue #34): output should be something like 
 # {[ii] -> [k] : k=inter1(ii)} 
 # union {[ii] -> [k] : k=inter2(ii) }
 # Is the problem that I did the union first?  
 # This of course should not be an issue.  But see below that it isn't just that.
+print "iter_sub_space_relation.compose( a8_modified.inverse() )"
+print iter_sub_space_relation.compose( a8_modified.inverse() )
 
-print iter_sub_space_relation.compose( a8_modified.inverse() ).inverse()
-
-
+print
+print "Update modified access relations based on automatically derived data reordering"
+R_x0_x1 = Relation("{[k] -> [j] : j = sigma(k)}")
+print "\tdata reordering (R_x0_x1) = ", R_x0_x1
+print "\tR_x0_x1 compose a1_modified = "
+print R_x0_x1.compose(a1_modified)
+print "\tR_x0_x1 compose a8_modified = "
+print R_x0_x1.compose(a8_modified)
