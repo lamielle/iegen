@@ -12,71 +12,136 @@ def run_iegen():
 	spec=iegen.MapIR()
 
 	#Run the specified spec file
-	with file(spec_file) as f:
+	with open(spec_file) as f:
 		exec(f)
 
-	#Run IEGen given the previous spec file setup and get the generated code
-	code=spec.codegen()
-
+	#Run IEGen given the previous spec file setup
 	#Print the generated code if necessary
-	if iegen.IEGenObject.settings.print_code: print code
+	iegen.print_code(spec.codegen())
 
 #Parse and process command line arguments
 #Ensure that exactly one spec file was given and that it exists
 #Returns the spec file that was given
 def process_cli_arguments():
 	import os
-	from optparse import OptionParser
+	from optparse import OptionParser,OptionGroup
 	import iegen
 
 	#Create the option parser object
 	parser=OptionParser(usage='%prog [settings] spec_file')
 
+	#Quiet
+	parser.add_option('-q','--quiet',action='store_true',dest='quiet',default=False,
+	                  help='turn all printing except errors off')
+
+	#Quiet
+	parser.add_option('-v','--verbose',action='store_true',dest='verbose',default=False,
+	                  help='turn all printing except debug on')
+
 	#Debug
 	parser.add_option('-d','--debug',action='store_true',dest='debug',default=False,
 	                  help='enable debug mode')
 
-	#Quiet
-	parser.add_option('-q','--quiet',action='store_true',dest='quiet',default=False,
-	                 help='turn information printing off')
+	#Output options
+	output_group=OptionGroup(parser,'Output Options',
+	             'The options in this group optionally take a file name. If one is given, output of the corresponding type is printed to that file. If no file name is given the output is printed to standard out.')
 
-	#Output file
-	parser.add_option('-o','--output-file',action='store',dest='output_file',default=None,metavar='FILE',
-	                  help='output file name')
+	#Build the output options based on those specified in IEGenObject.output_types
+	for type,short,default,quiet,verbose,help in iegen.IEGenObject.output_types:
+		#Position arguments
+		args=(short,'--output-'+type)
 
-	#Print code?
-	parser.add_option('-p','--print-code',action='store_true',dest='print_code',default=False,
-	                  help='print generated code')
+		#Keyword arguments
+		kwargs={'action':'callback','dest':'output_'+type,'default':[],'callback':output_callback,'help':help}
+
+		#Add the option based on the arguments determined above
+		output_group.add_option(*args,**kwargs)
+
+	#Add the output options group to the parser
+	parser.add_option_group(output_group)
 
 	#Parse the specified arguments and return the result
 	options,spec_file=parser.parse_args()
 
+	#Make sure at most one of quiet and verbose was specified
+	if options.quiet and options.verbose:
+		parser.error('You may only specify quiet or verbose, not both')
+
 	#Make sure exactly one spec file was given
 	if 1!=len(spec_file):
-		error('Please specify exactly one spec file to run.',parser)
+		parser.error('Please specify exactly one spec file to run.')
 
 	#Only one positional argument was given, so drop the list
 	spec_file=spec_file[0]
 
 	#Make sure the given spec file exists
 	if not os.path.isfile(spec_file):
-		error("The given spec file, '%s', does not exist."%(spec_file),parser)
+		parser.error("The given spec file, '%s', does not exist."%(spec_file))
 
 	#Setup IEGenObject.settings based on the CLI arguments
+	#Load the values defined for quiet, verbose, or default
+	outputs={}
+	for type,short,default,quiet,verbose,help in iegen.IEGenObject.output_types:
+		if options.quiet:
+			outputs[type]=quiet
+		elif options.verbose:
+			outputs[type]=verbose
+		else:
+			outputs[type]=default
+
+	#Load the debug setting
 	iegen.IEGenObject.settings.debug=options.debug
-	iegen.IEGenObject.settings.quiet=options.quiet
-	iegen.IEGenObject.settings.output_file=options.output_file
-	iegen.IEGenObject.settings.print_code=options.print_code
+	if options.debug:
+		outputs['debug']=list(set(outputs['debug']+[None]))
+
+	#Load any specific output settings
+	for type,short,default,quiet,verbose,help in iegen.IEGenObject.output_types:
+		outputs[type]=list(set(outputs[type]+getattr(options,'output_'+type)))
+
+	#Assign the final outputs dictionary to the settings
+	iegen.IEGenObject.settings.outputs=outputs
 
 	return spec_file
 
-#Prints the help text, the given error message, and exits
-def error(message,parser):
-	import sys
-	parser.print_help()
-	print
-	print 'Error: '+message
-	sys.exit(1)
+#This function is used as a callback for output options
+#Its purpose is to determine, for the given output option, if the user wants
+# these types of messages to be printed to stdout or to a file
+#
+#In general, if a file name is given after the option, it is used as the output
+# file.  If no file exists after the option, then these types of messages are
+# printed to stdout.
+#
+#Various corner cases exist and most of the code of this function handles these
+# cases.
+def output_callback(option, opt, value, parser):
+	#No arguments left: no output file specified
+	if 0==len(parser.rargs): file_name=None
+	else:
+		#Determine if the first of the remaining arguments is an option
+		next_is_option=parser.has_option(parser.rargs[0])
+
+		#One argument left
+		if 1==len(parser.rargs):
+			#Next argument is an option: no output file specified
+			if next_is_option: file_name=None
+			#Next argument is not an option
+			else:
+				#There are largs, we assume one of these is the spec file: use argument for output file
+				if len(parser.largs)>0: file_name=parser.rargs.pop(0)
+				#Assume the argument is the spec file: no output file specified
+				else: file_name=None
+		#More than one argument left
+		else:
+			#Next argument is an option: no output file specified
+			if next_is_option: file_name=None
+			#Next argument is not an option: use argument for output file
+			else: file_name=parser.rargs.pop(0)
+
+	#Set the file name that was determined from the above conditions
+	#file_name will either be None or a string
+	#Get the current value of the field option.dest in parser.values
+	# and append the determined file name
+	getattr(parser.values,option.dest).append(file_name)
 
 if '__main__'==__name__:
 	run_iegen()

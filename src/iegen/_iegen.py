@@ -1,4 +1,5 @@
 #Standard library imports
+from __future__ import with_statement
 import os.path
 
 #IEGen imports
@@ -8,6 +9,22 @@ from iegen.ast import Node
 
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
+
+#---------- Printing methods -----
+def print_gen(type,output=None):
+	for dest in IEGenObject.settings.outputs[type]:
+		if dest is None:
+			if output is None: print
+			else: print output
+		else:
+			with file(dest,'a') as f:
+				if output is None: print >>f
+				else: print >>f,output
+
+#Dynamically define printing methods based on output types
+for type,short,default,quiet,verbose,help in IEGenObject.output_types:
+	exec("def print_%s(output=None): print_gen('%s',output)"%(type,type))
+#---------------------------------
 
 #---------- Symbolic class ----------
 class Symbolic(Node):

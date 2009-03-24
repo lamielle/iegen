@@ -246,6 +246,7 @@ class Set(Formula):
 
 		if like_type(other,Set):
 			if self.arity()==other.arity():
+				self.print_debug('Set Union: %s with %s'%(self,other))
 				self=deepcopy(self)
 				other=deepcopy(other)
 				self._add_set(other)
@@ -275,6 +276,8 @@ class Set(Formula):
 		#Make sure the arities are valid
 		if other.arity_in()!=self.arity():
 			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(other.arity_out(),self.arity()))
+
+		self.print_debug('Apply: %s with %s'%(self,other))
 
 		#Collection of new applied sets
 		new_sets=[]
@@ -451,6 +454,7 @@ class Relation(Formula):
 
 		if like_type(other,Relation):
 			if self.arity_in()==other.arity_in() and self.arity_out()==other.arity_out():
+				self.print_debug('Relation Union: %s with %s'%(self,other))
 				self=deepcopy(self)
 				other=deepcopy(other)
 				self._add_relation(other)
@@ -492,6 +496,8 @@ class Relation(Formula):
 		#Make sure the arities are valid
 		if other.arity_out()!=self.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
+
+		self.print_debug('Compose: %s with %s'%(self,other))
 
 		#Collection of new composed relations
 		new_relations=[]

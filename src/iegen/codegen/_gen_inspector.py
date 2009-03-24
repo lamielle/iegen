@@ -53,8 +53,6 @@ def gen_er_spec(er_spec):
 	var_in_name=er_spec.relation.relations[0].tuple_in.vars[0].id
 	var_out_name=er_spec.relation.relations[0].tuple_out.vars[0].id
 
-	IEGenObject.info_print(er_spec)
-
 	#Generate the define/undefine statements
 	cloog_stmts=[]
 	define_stmts=[]

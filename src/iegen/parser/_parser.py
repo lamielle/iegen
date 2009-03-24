@@ -134,7 +134,7 @@ class PresParser(object):
 
 	#Lexer error routine
 	def t_error(self,t):
-		IEGenObject.info_print("Illegal character '%s'" % t.value[0])
+		iegen.print_error("Illegal character '%s'" % t.value[0])
 		t.lexer.skip(1)
 	#-------------------------------------------
 

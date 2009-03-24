@@ -28,7 +28,7 @@ class MapIR(IEGenObject):
 
 	#Adds a symbolic constructed from the given arguments to the MapIR
 	def add_symbolic(self,**kwargs):
-		IEGenObject.info_print("Adding symbolic '%s'"%kwargs['name'])
+		self.print_progress("Adding symbolic '%s'"%kwargs['name'])
 		self._convert_create_add(Symbolic,[self.symbolics],**kwargs)
 	#-------------------------------
 
@@ -38,7 +38,7 @@ class MapIR(IEGenObject):
 
 	#Adds a data array constructed from the given arguments to the MapIR
 	def add_data_array(self,**kwargs):
-		IEGenObject.info_print("Adding data array '%s'"%kwargs['name'])
+		self.print_progress("Adding data array '%s'"%kwargs['name'])
 		self._convert_create_add(DataArray,[self.data_arrays],**kwargs)
 	#---------------------------------
 
@@ -48,7 +48,7 @@ class MapIR(IEGenObject):
 
 	#Adds the given ERSpec to the collection of ERSpecs
 	def add_er_spec(self,er_spec):
-		IEGenObject.info_print("Adding ERSpec '%s'"%er_spec.name)
+		self.print_progress("Adding ERSpec '%s'"%er_spec.name)
 		self.er_specs[er_spec.name]=er_spec
 	#-----------------------------
 
@@ -58,7 +58,7 @@ class MapIR(IEGenObject):
 
 	#Adds a index array constructed from the given arguments to the MapIR
 	def add_index_array(self,**kwargs):
-		IEGenObject.info_print("Adding index array '%s'"%kwargs['name'])
+		self.print_progress("Adding index array '%s'"%kwargs['name'])
 		self._convert_create_add(IndexArray,[self.index_arrays,self.er_specs],**kwargs)
 	#----------------------------------
 
@@ -68,7 +68,7 @@ class MapIR(IEGenObject):
 
 	#Adds a statement constructed from the given arguments to the MapIR
 	def add_statement(self,**kwargs):
-		IEGenObject.info_print("Adding statement '%s'"%kwargs['name'])
+		self.print_progress("Adding statement '%s'"%kwargs['name'])
 		self._convert_create_add(Statement,[self.statements],**kwargs)
 	#--------------------------------
 
@@ -77,7 +77,7 @@ class MapIR(IEGenObject):
 
 	#Adds an access relation to the named statement constructed from the given arguments to the MapIR
 	def add_access_relation(self,statement_name,**kwargs):
-		IEGenObject.info_print("Adding access relation '%s'"%kwargs['name'])
+		self.print_progress("Adding access relation '%s'"%kwargs['name'])
 
 		#Create the access relation
 		access_relation=self._convert_create_add(AccessRelation,**kwargs)
@@ -91,7 +91,7 @@ class MapIR(IEGenObject):
 	#Transformations are not stored as a dictionary as
 	#the ordering is meaningful (they will be applied in the order the are added)
 	def add_transformation(self,type,**kwargs):
-		IEGenObject.info_print("Adding transformation '%s'"%kwargs['name'])
+		self.print_progress("Adding transformation '%s'"%kwargs['name'])
 
 		#Create the transformation
 		transformation=self._convert_create_add(type,**kwargs)
@@ -106,7 +106,7 @@ class MapIR(IEGenObject):
 
 	#Adds the given ERGSpec to the collection of ERGSpecs
 	def add_erg_spec(self,erg_spec):
-		IEGenObject.info_print("Adding ERGSpec '%s'"%(erg_spec.name))
+		self.print_progress("Adding ERGSpec '%s'"%(erg_spec.name))
 		self.erg_specs[erg_spec.name]=erg_spec
 	#------------------------------
 
@@ -116,19 +116,13 @@ class MapIR(IEGenObject):
 	#Code is generated based upon this data
 	def codegen(self):
 
-		IEGenObject.info_print("Running code generation...")
+		self.print_progress("Running code generation...")
 
 		#Create a string buffer to hold the code that is generated
 		code=StringIO()
 
 		#Run code generation
 		iegen.codegen.codegen(self,code)
-
-		#Write out the code to the given file if one was specified
-		if self.settings.output_file:
-			IEGenObject.info_print("Writing generated code to file '%s'..."%(self.settings.output_file))
-			with open(self.settings.output_file,'w') as f:
-				f.write(code.getvalue())
 
 		#Return the generated code
 		return code.getvalue()

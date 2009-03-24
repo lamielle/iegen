@@ -1,48 +1,48 @@
 #---------- Calculation Phase ----------
 def do_calc(mapir):
-	from iegen import IEGenObject
+	import iegen
 	from iegen.codegen import calc_initial_idg,calc_full_iter_space
 
 	calc_initial_idg(mapir)
 
 	#Do calculations for each reordering
 	for transformation in mapir.transformations:
-		IEGenObject.info_print('----- Applying transformation: -----')
-		IEGenObject.info_print(transformation)
-		IEGenObject.info_print('------------------------------------')
-		IEGenObject.info_print()
+		iegen.print_progress('----- Applying transformation: -----')
+		iegen.print_progress(transformation)
+		iegen.print_progress('------------------------------------')
+		iegen.print_progress()
 
-		IEGenObject.info_print('Calculating full iteration space...')
+		iegen.print_progress('Calculating full iteration space...')
 
 		#Calculate the full iteration space based on the current iteration spaces of the statements
 		mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
 
-		IEGenObject.info_print('----- Current full iteration space: -----')
-		IEGenObject.info_print(mapir.full_iter_space)
-		IEGenObject.info_print('-----------------------------------------')
-		IEGenObject.info_print()
+		iegen.print_progress('----- Current full iteration space: -----')
+		iegen.print_progress(mapir.full_iter_space)
+		iegen.print_progress('-----------------------------------------')
+		iegen.print_progress()
 
-		IEGenObject.info_print('Calculating inputs to transformation...')
+		iegen.print_progress('Calculating inputs to transformation...')
 		#Tell the transformation to calculate the inputs that it will need at runtime
 		transformation.calc_input(mapir)
 
-		IEGenObject.info_print('Calculating outputs from transformation...')
+		iegen.print_progress('Calculating outputs from transformation...')
 		#Tell the transformation to calculate the outputs it will produce at runtime
 		transformation.calc_output(mapir)
 
-		IEGenObject.info_print('Updating the MapIR...')
+		iegen.print_progress('Updating the MapIR...')
 		#Tell the transformation to update the access relations, scattering functions and other components of the MapIR
 		transformation.update_mapir(mapir)
 
-		IEGenObject.info_print('Updating the MapIR...')
+		iegen.print_progress('Updating the MapIR...')
 		#Tell the transformation to update the IDG
 		transformation.update_idg(mapir)
 
-		IEGenObject.info_print('----- Updated statements: -----')
+		iegen.print_progress('----- Updated statements: -----')
 		for statement in mapir.get_statements():
-			IEGenObject.info_print(statement)
-		IEGenObject.info_print('-----------------------------------------')
-		IEGenObject.info_print()
+			iegen.print_progress(statement)
+		iegen.print_progress('-----------------------------------------')
+		iegen.print_progress()
 
 	from iegen.idg.visitor import DotVisitor
 	v=DotVisitor().visit(mapir.idg)
