@@ -7,10 +7,11 @@ class IEGenObject(object):
 	# 'quiet' value, 'verbose' value, help string)
 	output_types=(
 	   ('code','-o',[],[],[None],'generated code'),
-	   ('info','',[None],[],[None],'information messages'),
-	   ('debug','',[],[],[],'debug messages'),
 	   ('progress','',[None],[],[None],'progress messages'),
 	   ('modified','',[],[],[None],'components as they are modified'),
+	   ('detail','',[],[],[None],'more detailed messages'),
+	   ('info','',[None],[],[None],'general information messages'),
+	   ('debug','',[],[],[],'debug messages'),
 	   ('error','',[None],[None],[None],'error messages'))
 
 	class IEGenSettings(object): pass
