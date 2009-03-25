@@ -1,19 +1,28 @@
 #---------- Code Generation Phase ----------
 def do_gen(mapir):
+	import iegen
 	from iegen.codegen import Program,gen_preamble,gen_inspector,gen_executor,gen_main
 
+	iegen.print_progress('Starting the code generation phase...')
+
 	#Create the program
+	iegen.print_progress('Generating the preamble...')
 	program=Program()
 	program.preamble.extend(gen_preamble())
 
 	#Generate the inspector
+	iegen.print_progress('Generating the inspector...')
 	program.functions.append(gen_inspector(mapir))
 
 	#Generate the executor
+	iegen.print_progress('Generating the executor...')
 	program.functions.append(gen_executor(mapir))
 
 	#Generate the main code
+	iegen.print_progress('Generating main()...')
 	program.functions.append(gen_main(mapir))
+
+	iegen.print_progress('Code generation phase completed...')
 
 	return program
 #-------------------------------------------

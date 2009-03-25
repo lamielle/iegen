@@ -116,7 +116,7 @@ class MapIR(IEGenObject):
 	#Code is generated based upon this data
 	def codegen(self):
 
-		self.print_progress("Running code generation...")
+		self.print_progress('Spec file read, starting processing...')
 
 		#Create a string buffer to hold the code that is generated
 		code=StringIO()

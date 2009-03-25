@@ -5,22 +5,26 @@ def do_calc(mapir):
 
 	calc_initial_idg(mapir)
 
+	iegen.print_progress('Starting calculation phase...')
+
 	#Do calculations for each reordering
 	for transformation in mapir.transformations:
-		iegen.print_progress('----- Applying transformation: -----')
-		iegen.print_progress(transformation)
-		iegen.print_progress('------------------------------------')
-		iegen.print_progress()
+		iegen.print_progress("Applying transformation '%s'..."%(transformation.name))
+
+		iegen.print_detail('----- Transformation: -----')
+		iegen.print_detail(transformation)
+		iegen.print_detail('------------------------------------')
+		iegen.print_detail()
 
 		iegen.print_progress('Calculating full iteration space...')
 
 		#Calculate the full iteration space based on the current iteration spaces of the statements
 		mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
 
-		iegen.print_progress('----- Current full iteration space: -----')
-		iegen.print_progress(mapir.full_iter_space)
-		iegen.print_progress('-----------------------------------------')
-		iegen.print_progress()
+		iegen.print_detail('----- Current full iteration space: -----')
+		iegen.print_detail(mapir.full_iter_space)
+		iegen.print_detail('-----------------------------------------')
+		iegen.print_detail()
 
 		iegen.print_progress('Calculating inputs to transformation...')
 		#Tell the transformation to calculate the inputs that it will need at runtime
@@ -34,19 +38,21 @@ def do_calc(mapir):
 		#Tell the transformation to update the access relations, scattering functions and other components of the MapIR
 		transformation.update_mapir(mapir)
 
-		iegen.print_progress('Updating the MapIR...')
+		iegen.print_progress('Updating the IDG...')
 		#Tell the transformation to update the IDG
 		transformation.update_idg(mapir)
 
-		iegen.print_progress('----- Updated statements: -----')
+		iegen.print_modified("----- Updated statements (after transformation '%s'): -----"%(transformation.name))
 		for statement in mapir.get_statements():
-			iegen.print_progress(statement)
-		iegen.print_progress('-----------------------------------------')
-		iegen.print_progress()
+			iegen.print_modified(statement)
+		iegen.print_modified('-----------------------------------------')
+		iegen.print_modified()
 
 	from iegen.idg.visitor import DotVisitor
 	v=DotVisitor().visit(mapir.idg)
 	v.write_dot('test.dot')
+
+	iegen.print_progress('Calculation phase completed...')
 #---------------------------------------
 
 #---------- Utility calculation functions ----------
