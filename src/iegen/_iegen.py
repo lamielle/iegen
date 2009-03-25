@@ -17,7 +17,14 @@ def print_gen(type,output=None):
 			if output is None: print
 			else: print output
 		else:
-			with file(dest,'a') as f:
+			#Code is a special case as we don't want to append
+			if 'code'==type:
+				mode='w'
+				print_progress("Writing generated code to file '%s'..."%(dest))
+			else:
+				mode='a'
+
+			with file(dest,mode) as f:
 				if output is None: print >>f
 				else: print >>f,output
 
