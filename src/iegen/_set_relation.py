@@ -19,7 +19,7 @@ class Formula(Node):
 
 	#Returns True if this Formula is a true statement (any terms in its union are tautologies)
 	#Returns False otherwise
-	#Determines the 'truthiness' of the formula
+	#Determines the 'truthiness' of the formula (thanks Colbert!)
 	def is_tautology(self):
 		res=False
 		for formula in self.formulas:
@@ -28,7 +28,7 @@ class Formula(Node):
 
 	#Returns True if this Formula is a false statement (all terms in its union are contradictions)
 	#Returns False otherwise
-	#Determines the 'truthiness' of the formula
+	#Determines the 'truthiness' of the formula (thanks Colbert!)
 	def is_contradiction(self):
 		res=True
 		for formula in self.formulas:
@@ -246,16 +246,17 @@ class Set(Formula):
 
 		if like_type(other,Set):
 			if self.arity()==other.arity():
-				self.print_debug('Set Union: %s with %s'%(self,other))
-				self=deepcopy(self)
+				selfcopy=deepcopy(self)
 				other=deepcopy(other)
-				self._add_set(other)
+				selfcopy._add_set(other)
 			else:
 				raise ValueError("Cannot union sets with differing arity: '%s' (arity %d) and '%s' (arity %d)"%(self,self.arity(),other,other.arity()))
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 
-		return self
+		self.print_debug('Set Union: %s.union(%s)=%s'%(self,other,selfcopy))
+
+		return selfcopy
 
 	#Application of a relation to a set: other(self)
 	#Application of unions of relations to unions of sets is defined as:
@@ -277,8 +278,6 @@ class Set(Formula):
 		if other.arity_in()!=self.arity():
 			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(other.arity_out(),self.arity()))
 
-		self.print_debug('Apply: %s with %s'%(self,other))
-
 		#Collection of new applied sets
 		new_sets=[]
 
@@ -286,7 +285,11 @@ class Set(Formula):
 			for rel in other.relations:
 				new_sets.append(self._apply(set,rel))
 
-		return Set(sets=new_sets)
+		new_set=Set(sets=new_sets)
+
+		self.print_debug('Apply: %s.apply(%s)=%s'%(self,other,new_set))
+
+		return new_set
 
 	#Private utility method to perform the apply operation between a PresSet and a PresRelation
 	#Returns the PresSet resulting from the apply operation rel(set)
@@ -454,28 +457,31 @@ class Relation(Formula):
 
 		if like_type(other,Relation):
 			if self.arity_in()==other.arity_in() and self.arity_out()==other.arity_out():
-				self.print_debug('Relation Union: %s with %s'%(self,other))
-				self=deepcopy(self)
+				selfcopy=deepcopy(self)
 				other=deepcopy(other)
-				self._add_relation(other)
+				selfcopy._add_relation(other)
 			else:
 				raise ValueError('Cannot union relations with differing arity ((%d->%d) and (%d->%d)).'%(self.arity_in(),self.arity_out(),other.arity_in(),other.arity_out()))
 		else:
 			raise ValueError("Unsupported argument of type '%s' for operation union."%type(other))
 
-		return self
+		self.print_debug('Relation Union: %s.union(%s)=%s'%(self,other,selfcopy))
+
+		return selfcopy
 
 	#Takes the inverse of all of the PresRelations in this Relation
 	@normalize_result
 	def inverse(self):
 		from copy import deepcopy
 
-		self=deepcopy(self)
-		for relation in self.relations:
+		selfcopy=deepcopy(self)
+		for relation in selfcopy.relations:
 			#Swap input and output tuples
 			relation.tuple_in,relation.tuple_out=relation.tuple_out,relation.tuple_in
 
-		return self
+		self.print_debug('Relation Inverse: %s.inverse()=%s'%(self,selfcopy))
+
+		return selfcopy
 
 	#Relation composition: self(other)
 	#Composition of unions of relations is defined as:
@@ -497,8 +503,6 @@ class Relation(Formula):
 		if other.arity_out()!=self.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
 
-		self.print_debug('Compose: %s with %s'%(self,other))
-
 		#Collection of new composed relations
 		new_relations=[]
 
@@ -506,7 +510,11 @@ class Relation(Formula):
 			for rel2 in other.relations:
 				new_relations.append(self._compose(rel1,rel2))
 
-		return Relation(relations=new_relations)
+		new_relation=Relation(relations=new_relations)
+
+		self.print_debug('Compose: %s.compose(%s)=%s'%(self,other,new_relation))
+
+		return new_relation
 
 	#Private utility method to perform the compose operation between two PresRelation objects
 	#Returns the PresRelation resulting from the composition operation r1(r2)
