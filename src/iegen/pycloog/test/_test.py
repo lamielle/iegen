@@ -29,6 +29,19 @@ class PYCLooGTestCase(TestCase):
 		code='''if ((m >= 1) && (n >= 1)) {
   for (i=1;i<=n;i++) {
     for (j=1;j<=m;j++) {
+      S1(i,j);
+    }
+  }
+  for (i=1;i<=n;i++) {
+    for (j=1;j<=m;j++) {
+      S0(i,j);
+    }
+  }
+}'''
+
+		old_code='''if ((m >= 1) && (n >= 1)) {
+  for (i=1;i<=n;i++) {
+    for (j=1;j<=m;j++) {
       S1 ;
     }
   }
@@ -39,7 +52,7 @@ class PYCLooGTestCase(TestCase):
   }
 }'''
 
-		old_code='''if (m >= 1) {
+		old_old_code='''if (m >= 1) {
   for (i=1;i<=n;i++) {
     for (j=1;j<=m;j++) {
       S2 ;
@@ -74,13 +87,22 @@ if (m >= 1) {
 		code='''if (n >= 1) {
   for (i=1;i<=n;i++) {
     for (j=1;j<=n;j++) {
+      S0(i,j);
+      S1(i,j);
+    }
+  }
+}'''
+
+		old_code='''if (n >= 1) {
+  for (i=1;i<=n;i++) {
+    for (j=1;j<=n;j++) {
       S0 ;
       S1 ;
     }
   }
 }'''
 
-		old_code='''for (i=1;i<=n;i++) {
+		old_old_code='''for (i=1;i<=n;i++) {
   for (j=1;j<=n;j++) {
     S1 ;
     S2 ;
