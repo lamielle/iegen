@@ -19,6 +19,12 @@ class IEGenObject(object):
 
 	def __init__(self): pass
 
+	#Setup default outputs
+	outputs={}
+	for type,short,default,quiet,verbose,help in output_types:
+		outputs[type]=default
+	settings.outputs=outputs
+
 	#Dynamically define printing methods based on output types
 	for type,short,default,quiet,verbose,help in output_types:
 		exec("def print_%s(self,output=None): from iegen import print_gen; print_gen('%s',output)"%(type,type))
