@@ -135,11 +135,6 @@ class DataPermuteTrans(Transformation):
 		#Add the ERG call node to the IDG
 		call_node=mapir.idg.get_call_node(mapir.erg_specs[self._get_erg_spec_name()])
 
-		#Add data array nodes to the IDG
-		for data_array in self.data_arrays:
-			data_array_node=mapir.idg.get_data_array_node(data_array)
-			call_node.add_dep(data_array_node)
-
 		#Add the input ERSpecs to the IDG
 		for input_er_spec in self.inputs:
 			#Get a node for the ERSpec
