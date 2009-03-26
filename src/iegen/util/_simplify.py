@@ -1,3 +1,4 @@
+import iegen
 from iegen.util import raise_objs_not_like_types,like_type
 
 #---------- Formula Simplification ----------
@@ -13,7 +14,10 @@ from iegen.util import raise_objs_not_like_types,like_type
 def _remove_free_var_equality(formula):
 	from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 	from iegen.ast import Equality
-	return RemoveFreeVarConstraintVisitor(Equality).visit(formula).changed
+	if iegen.debug: before=str(formula)
+	changed=RemoveFreeVarConstraintVisitor(Equality).visit(formula).changed
+	if changed and iegen.debug: iegen.print_debug('Simplify: removed free variable equality: %s -> %s'%(before,formula))
+	return changed
 
 #Simplification rule 2:
 #Remove an inequality constraint of the form:
@@ -28,47 +32,74 @@ def _remove_free_var_equality(formula):
 def _remove_free_var_inequality(formula):
 	from iegen.ast.visitor import RemoveFreeVarConstraintVisitor
 	from iegen.ast import Inequality
-	return RemoveFreeVarConstraintVisitor(Inequality).visit(formula).changed
+	if iegen.debug: before=str(formula)
+	changed=RemoveFreeVarConstraintVisitor(Inequality).visit(formula).changed
+	if changed and iegen.debug: iegen.print_debug('Simplify: removed free variable inequality: %s -> %s'%(before,formula))
+	return changed
 
 #Uses the MergeExpTermsVisitor to combine common terms in NormExps
 def _merge_terms(obj):
 	from iegen.ast.visitor import MergeExpTermsVisitor
-	return MergeExpTermsVisitor().visit(obj).merged_terms
+	if iegen.debug: before=str(obj)
+	merged_terms=MergeExpTermsVisitor().visit(obj).merged_terms
+	if merged_terms and iegen.debug: iegen.print_debug('Simplify: merged terms: %s -> %s'%(before,obj))
+	return merged_terms
 
 #Uses the RemoveZeroCoeffVisitor to remove any terms in NormExps with a coefficient of 0
 def _remove_zero_coefficients(obj):
 	from iegen.ast.visitor import RemoveZeroCoeffVisitor
-	return RemoveZeroCoeffVisitor().visit(obj).removed_term
+	if iegen.debug: before=str(obj)
+	removed_term=RemoveZeroCoeffVisitor().visit(obj).removed_term
+	if removed_term and iegen.debug: iegen.print_debug('Simplify: removed zero coefficients: %s -> %s'%(before,obj))
+	return removed_term
 
 #Uses the RemoveEmptyConstraintsVisitor to remove any empty constraints from a conjunction
 def _remove_empty_constraints(obj):
 	from iegen.ast.visitor import RemoveEmptyConstraintsVisitor
-	return RemoveEmptyConstraintsVisitor().visit(obj).removed_constraint
+	if iegen.debug: before=str(obj)
+	removed_constraint=RemoveEmptyConstraintsVisitor().visit(obj).removed_constraint
+	if removed_constraint and iegen.debug: iegen.print_debug('Simplify: removed empty constraint: %s -> %s'%(before,obj))
+	return removed_constraint
 
 #Uses the RemoveDuplicateFormulasVisitor to remove any duplicated formulas in a Set or Relation
 def _remove_duplicate_formulas(obj):
 	from iegen.ast.visitor import RemoveDuplicateFormulasVisitor
-	return RemoveDuplicateFormulasVisitor().visit(obj).removed_formula
+	if iegen.debug: before=str(obj)
+	removed_formula=RemoveDuplicateFormulasVisitor().visit(obj).removed_formula
+	if removed_formula and iegen.debug: iegen.print_debug('Simplify: removed duplicate forumla: %s -> %s'%(before,obj))
+	return removed_formula
 
 #Uses the RemoveSymbolicsVisitor to remove any duplicated or unused symbolic variables
 def _remove_symbolics(obj):
 	from iegen.ast.visitor import RemoveSymbolicsVisitor
-	return RemoveSymbolicsVisitor().visit(obj).removed_symbolic
+	if iegen.debug: before=str(obj)
+	removed_symbolic=RemoveSymbolicsVisitor().visit(obj).removed_symbolic
+	if removed_symbolic and iegen.debug: iegen.print_debug('Simplify: removed symbolic: %s -> %s'%(before,obj))
+	return removed_symbolic
 
 #Uses the RemoveDuplicateConstraintsVisitor to remove and duplicate constraints in formulas
 def _remove_duplicate_constraints(obj):
 	from iegen.ast.visitor import RemoveDuplicateConstraintsVisitor
-	return RemoveDuplicateConstraintsVisitor().visit(obj).removed_constraint
+	if iegen.debug: before=str(obj)
+	removed_constraint=RemoveDuplicateConstraintsVisitor().visit(obj).removed_constraint
+	if removed_constraint and iegen.debug: iegen.print_debug('Simplify: removed duplicate constraint: %s -> %s'%(before,obj))
+	return removed_constraint
 
 #Uses the RemoveTautologiesVisitor to remove any tautologies
 def _remove_tautologies(obj):
 	from iegen.ast.visitor import RemoveTautologiesVisitor
-	return RemoveTautologiesVisitor().visit(obj).removed_tautology
+	if iegen.debug: before=str(obj)
+	removed_tautology=RemoveTautologiesVisitor().visit(obj).removed_tautology
+	if removed_tautology and iegen.debug: iegen.print_debug('Simplify: removed tautology: %s -> %s'%(before,obj))
+	return removed_tautology
 
 #Uses the RemoveContradictionsVisitor to remove any contradictions
 def _remove_contradictions(obj):
 	from iegen.ast.visitor import RemoveContradictionsVisitor
-	return RemoveContradictionsVisitor().visit(obj).removed_contradiction
+	if iegen.debug: before=str(obj)
+	removed_contradiction=RemoveContradictionsVisitor().visit(obj).removed_contradiction
+	if removed_contradiction and iegen.debug: iegen.print_debug('Simplify: removed contradiction: %s -> %s'%(before,obj))
+	return removed_contradiction
 
 #Given an object of the following types:
 #Set,Relation,PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
