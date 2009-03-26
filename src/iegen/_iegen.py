@@ -10,6 +10,12 @@ from iegen.ast import Node
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
+#---------- Are we debugging? ----------
+#Setup a property, iegen.debug, that determines if we are debugging
+def _debug(): return iegen.IEGenObject.settings.debug
+debug=property(_debug())
+#---------------------------------------
+
 #---------- Printing methods -----
 def print_gen(type,output=None):
 	for dest in IEGenObject.settings.outputs[type]:
