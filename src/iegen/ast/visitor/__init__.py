@@ -19,3 +19,4 @@ from _remove_tautologies_visitor import *
 from _remove_contradictions_visitor import *
 from _find_functions_visitor import *
 from _collect_symbolics_visitor import *
+from _collect_vars_visitor import *

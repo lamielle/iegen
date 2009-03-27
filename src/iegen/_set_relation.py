@@ -35,6 +35,11 @@ class Formula(Node):
 			res=res and formula.is_contradiction()
 		return res
 
+	#Returns a sorted list of all tuple variables present in this formula
+	def variables(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		return CollectVarsVisitor().visit(self).vars
+
 	#Returns a list of all functions that are present in this formula's constraints
 	def functions(self):
 		from iegen.ast.visitor import FindFunctionsVisitor

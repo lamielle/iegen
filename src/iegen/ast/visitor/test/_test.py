@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor,FindFunctionsVisitor,CollectSymbolicsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor,FindFunctionsVisitor,CollectSymbolicsVisitor,CollectVarsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -2989,7 +2989,7 @@ class FindFunctionsTestCase(TestCase):
 
 		set=Set('{[a]}')
 		v=FindFunctionsVisitor().visit(set)
-		self.failUnless(hasattr(v,'functions'),"RemoveContradictionsVisitor doesn't place result in the 'functions' property.")
+		self.failUnless(hasattr(v,'functions'),"FindFunctionsVisitor doesn't place result in the 'functions' property.")
 
 	def testNoFunctions(self):
 		from iegen.ast.visitor import FindFunctionsVisitor
@@ -3081,7 +3081,7 @@ class CollectSymbolicsVisitorTestCase(TestCase):
 
 		set=Set('{[a]}')
 		v=CollectSymbolicsVisitor().visit(set)
-		self.failUnless(hasattr(v,'symbolics'),"RemoveContradictionsVisitor doesn't place result in the 'symbolics' property.")
+		self.failUnless(hasattr(v,'symbolics'),"CollectSymbolicsVisitor doesn't place result in the 'symbolics' property.")
 
 	def testNoSymbolics(self):
 		from iegen.ast.visitor import CollectSymbolicsVisitor
@@ -3132,4 +3132,141 @@ class CollectSymbolicsVisitorTestCase(TestCase):
 		res=['j','n']
 
 		self.failUnless(res==v.symbolics,'%s!=%s'%(res,v.symbolics))
+#--------------------------------------------
+
+#---------- Collect Vars Visitor ----------
+class CollectVarsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Set
+
+		set=Set('{[a]}')
+		v=CollectVarsVisitor().visit(set)
+		self.failUnless(hasattr(v,'vars'),"CollectVarsVisitor doesn't place result in the 'vars' property.")
+
+	def testNoVarsSet(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=CollectVarsVisitor().visit(set)
+		res=[]
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testNoVarsRelation(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Relation
+
+		rel=Relation('{[]->[]}')
+		v=CollectVarsVisitor().visit(rel)
+		res=[]
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testOneVarSet(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]: a=n}',[Symbolic('n')])
+		v=CollectVarsVisitor().visit(set)
+		res=['a']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testOneVarRelation(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Relation,Symbolic
+
+		rel=Relation('{[a]->[]: a=n}',[Symbolic('n')])
+		v=CollectVarsVisitor().visit(rel)
+		res=['a']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testTwoVarsSet(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a,b]: a=1 and b=m}',[Symbolic('n')])
+		v=CollectVarsVisitor().visit(set)
+		res=['a','b']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+		set=Set('{[b,a]: a=1 and b=m}',[Symbolic('n')])
+		v=CollectVarsVisitor().visit(set)
+		res=['a','b']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testTwoVarsRelation(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Relation,Symbolic
+
+		rel=Relation('{[a]->[b]: a=1 and b=n}',[Symbolic('n')])
+		v=CollectVarsVisitor().visit(rel)
+		res=['a','b']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+		rel=Relation('{[b]->[a]: a=1 and b=n}',[Symbolic('n')])
+		v=CollectVarsVisitor().visit(rel)
+		res=['a','b']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testTwoVarsSet(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]: a=1 and b=c}')
+		v=CollectVarsVisitor().visit(set)
+		res=['a','b','c']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+		set=Set('{[a,c,b]: a=1 and b=c}')
+		v=CollectVarsVisitor().visit(set)
+		res=['a','b','c']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testThreeVarsRelation(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Relation,Symbolic
+
+		rel=Relation('{[a]->[b,c]: a=1 and b=c}')
+		v=CollectVarsVisitor().visit(rel)
+		res=['a','b','c']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+		rel=Relation('{[a,b]->[c]: a=1 and b=n}',[Symbolic('n')])
+		v=CollectVarsVisitor().visit(rel)
+		res=['a','b','c']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testVarsAcrossUnionSet(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a,b]: a=1}').union(Set('{[a,b]: c=10}'))
+		v=CollectVarsVisitor().visit(set)
+		res=['a','b']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testVarsAcrossUnionRelation(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen import Relation
+
+		rel=Relation('{[a]->[d]: a=1}').union(Relation('{[a]->[d]: c=10}'))
+		v=CollectVarsVisitor().visit(rel)
+		res=['a','d']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
 #--------------------------------------------
