@@ -33,24 +33,31 @@ class DataPermuteTrans(Transformation):
 
 		inputs_string=StringIO()
 		if len(self.inputs)>0:
-			print >>inputs_string
 			for input in self.inputs:
 				print >>inputs_string,input._get_string(indent+5)
 		inputs_string=inputs_string.getvalue()[:-1]
+		if len(inputs_string)>0: inputs_string='\n'+inputs_string
 
 		outputs_string=StringIO()
 		if len(self.outputs)>0:
-			print >>outputs_string
 			for output in self.outputs:
 				print >>outputs_string,output._get_string(indent+5)
 		outputs_string=outputs_string.getvalue()[:-1]
+		if len(outputs_string)>0: outputs_string='\n'+outputs_string
 
 		simplifications_string=StringIO()
 		if len(self.simplifications)>0:
-			print >>simplifications_string
 			for simplification in self.simplifications:
 				print >>simplifications_string,simplification._get_string(indent+5)
 		simplifications_string=simplifications_string.getvalue()[:-1]
+		if len(simplifications_string)>0: simplifications_string='\n'+simplifications_string
+
+		data_arrays_string=StringIO()
+		if len(self.data_arrays)>0:
+			for data_array in self.data_arrays:
+				print >>data_arrays_string,data_array._get_string(indent+13)
+		data_arrays_string=data_arrays_string.getvalue()[:-1]
+		if len(data_arrays_string)>0: data_arrays_string='\n'+data_arrays_string
 
 		return '''%sDataPermuteTrans:
 %s|-name: %s
@@ -62,8 +69,19 @@ class DataPermuteTrans(Transformation):
 %s|-_data_reordering: %s
 %s|-data_arrays: %s
 %s|-iter_sub_space_relation: %s
-%s|-target_data_array: %s
-%s|-erg_func_name: %s'''%(spaces,spaces,self.name,spaces,inputs_string,spaces,outputs_string,spaces,simplifications_string,spaces,self.symbolic_inputs,spaces,self.reordering_name,spaces,self._data_reordering,spaces,self.data_arrays,spaces,self.iter_sub_space_relation,spaces,self.target_data_array,spaces,self.erg_func_name)
+%s|-target_data_array:
+%s
+%s|-erg_func_name: %s'''%(spaces,spaces,self.name,
+    spaces,inputs_string,
+    spaces,outputs_string,
+    spaces,simplifications_string,
+    spaces,','.join(self.symbolic_inputs),
+    spaces,self.reordering_name,
+    spaces,self._data_reordering,
+    spaces,data_arrays_string,
+    spaces,self.iter_sub_space_relation,
+    spaces,self.target_data_array._get_string(indent+19),
+    spaces,self.erg_func_name)
 
 	#Calculate a specification for the explicit relation that is input to
 	# the data reordering algorithm.
@@ -92,6 +110,10 @@ class DataPermuteTrans(Transformation):
 		#Add the ERSpec to the MapIR
 		mapir.add_er_spec(self.inputs[0])
 
+		self.print_progress("Calculated input ERSpec '%s' for transformation '%s'..."%(self.inputs[0].name,self.name))
+
+		self.print_detail(self.inputs[0])
+
 	#Calculate a specification for the explicit relation that is the
 	# output of this data reordering.
 	#This relation is a permutation of the original data space, permuted
@@ -116,6 +138,10 @@ class DataPermuteTrans(Transformation):
 		#Add the ERSpec to the MapIR
 		mapir.add_er_spec(self.outputs[0])
 
+		self.print_progress("Calculated output ERSpec '%s' for transformation '%s'..."%(self.outputs[0].name,self.name))
+
+		self.print_detail(self.outputs[0])
+
 	#Update the MapIR based on this transformation
 	def update_mapir(self,mapir):
 		from iegen import ERGSpec
@@ -123,12 +149,17 @@ class DataPermuteTrans(Transformation):
 		#Scattering functions are not changed
 
 		#Update the access relations of all statements
+		self.print_progress('Updating access relations...')
 		for statement in mapir.get_statements():
 			for access_relation in statement.get_access_relations():
 				access_relation.iter_to_data=self._data_reordering.compose(access_relation.iter_to_data)
 
 		#Add the ERGSpec for this transformation to the MapIR
 		mapir.add_erg_spec(ERGSpec(self._get_erg_spec_name(),self.erg_func_name,self.inputs,self.outputs))
+
+		self.print_progress("Calculated ERGSpec '%s' for transformation '%s'..."%(self._get_erg_spec_name(),self.name))
+
+		self.print_detail(mapir.erg_specs[self._get_erg_spec_name()])
 
 	#Update the idg based on this transformation
 	def update_idg(self,mapir):

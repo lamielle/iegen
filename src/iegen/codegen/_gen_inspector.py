@@ -1,3 +1,4 @@
+import iegen
 from iegen import IEGenObject
 from iegen.codegen import Statement,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string
 
@@ -30,6 +31,8 @@ def gen_rect_domain(name,set):
 
 	if 1!=len(set.sets): raise ValueError("Set's relation has multiple terms in the disjunction: '%s'"%(set))
 
+	iegen.print_detail("Generating RectDomain for set %s"%set)
+
 	stmts=[]
 	stmts.append(Comment('RectDomain for set %s'%(set)))
 
@@ -49,6 +52,9 @@ def gen_er_spec(er_spec):
 
 	if 0==len(er_spec.relation.relations): raise ValueError("ESpec's relation has no terms in the disjunction")
 	if (1,1)!=er_spec.relation.arity(): raise ValueError("ESpec's relation must have arity (1,1)")
+
+	iegen.print_progress("Generating code for ERSpec '%s'..."%(er_spec.name))
+	iegen.print_detail(er_spec)
 
 	var_in_name=er_spec.relation.relations[0].tuple_in.vars[0].id
 	var_out_name=er_spec.relation.relations[0].tuple_out.vars[0].id
@@ -91,6 +97,8 @@ def gen_er_spec(er_spec):
 def gen_output_er_spec(output_er_spec):
 	from iegen.codegen import Statement,Comment
 
+	iegen.print_progress("Generating code for output ERSpec '%s'..."%(output_er_spec.name))
+
 	stmts=[]
 
 	#Create a rect domain for the ERSpec
@@ -102,6 +110,9 @@ def gen_output_er_spec(output_er_spec):
 	return stmts
 
 def gen_erg_spec(erg_spec,output_er_specs):
+	iegen.print_progress("Generating code for ERGSpec '%s'..."%(erg_spec.name))
+	iegen.print_detail(erg_spec)
+
 	stmts=[]
 
 	#Generate the code to setup the output ERs before making the call

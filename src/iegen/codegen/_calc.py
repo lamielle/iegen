@@ -14,7 +14,6 @@ def do_calc(mapir):
 		iegen.print_detail('----- Transformation: -----')
 		iegen.print_detail(transformation)
 		iegen.print_detail('------------------------------------')
-		iegen.print_detail()
 
 		iegen.print_progress('Calculating full iteration space...')
 
@@ -24,7 +23,6 @@ def do_calc(mapir):
 		iegen.print_detail('----- Current full iteration space: -----')
 		iegen.print_detail(mapir.full_iter_space)
 		iegen.print_detail('-----------------------------------------')
-		iegen.print_detail()
 
 		iegen.print_progress('Calculating inputs to transformation...')
 		#Tell the transformation to calculate the inputs that it will need at runtime
@@ -46,7 +44,6 @@ def do_calc(mapir):
 		for statement in mapir.get_statements():
 			iegen.print_modified(statement)
 		iegen.print_modified('-----------------------------------------')
-		iegen.print_modified()
 
 	from iegen.idg.visitor import DotVisitor
 	v=DotVisitor().visit(mapir.idg)
@@ -96,8 +93,11 @@ def calc_size_string(set,var_name):
 #Returns the value that the given variable is equal to in the given formula
 #If raw_array is True, accesses to arrays (functions) will not be treated as explicit relation lookups
 def calc_equality_value(var_name,formula,raw_array=False):
+	import iegen
 	from iegen.ast.visitor import FindConstraintVisitor,ValueStringVisitor
 	from iegen.ast import Equality,NormExp
+
+	iegen.print_detail("Calculating equality value for tuple variable '%s' in relation %s"%(var_name,formula))
 
 	values=FindConstraintVisitor(Equality,var_name).visit(formula).var_constraints
 

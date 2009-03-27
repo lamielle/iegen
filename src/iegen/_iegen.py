@@ -6,6 +6,7 @@ import os.path
 import iegen
 from iegen import IEGenObject
 from iegen.ast import Node
+from iegen.util import like_type,DimensionalityError,define_properties
 
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
@@ -57,7 +58,7 @@ class Symbolic(Node):
 		return self.name
 
 	def __cmp__(self,other):
-		if iegen.util.like_type(other,Symbolic):
+		if like_type(other,Symbolic):
 			return cmp(self.name,other.name)
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
@@ -151,7 +152,7 @@ class IndexArray(ERSpec):
 
 		#Checking
 		if 1!=self.output_bounds.arity():
-			raise iegen.util.DimensionalityError('The dimensionality of the output bounds of the index array (%d) should be 1.'%self.output_bounds.arity_out())
+			raise DimensionalityError('The dimensionality of the output bounds of the index array (%d) should be 1.'%self.output_bounds.arity_out())
 
 	def __repr__(self):
 		return 'IndexArray(%s,%s,%s,%s)'%(self,name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation))
@@ -197,11 +198,10 @@ class Statement(IEGenObject):
 
 		if indent>0: indent+=1
 		spaces=' '*indent
-		dashes='-'*indent
 		ar_string=StringIO()
 		for access_relation in self.get_access_relations():
 			print >>ar_string,access_relation._get_string(indent+5)
-		ar_string=ar_string.getvalue()
+		ar_string=ar_string.getvalue()[:-1]
 		return '''Statement:
 %s|-name: %s
 %s|-text: %s
@@ -216,7 +216,7 @@ class Statement(IEGenObject):
 	def add_access_relation(self,access_relation):
 		#Checking
 		if self.iter_space.arity()!=access_relation.iter_to_data.arity_in():
-			raise iegen.util.DimensionalityError('The input arity of the access relation (%d) should be the arity of the iteration space (%d).'%(access_relation.iter_to_data.arity_in(),self.iter_space.arity()))
+			raise DimensionalityError('The input arity of the access relation (%d) should be the arity of the iteration space (%d).'%(access_relation.iter_to_data.arity_in(),self.iter_space.arity()))
 
 		self.access_relations[access_relation.name]=access_relation
 	#--------------------------------------
@@ -234,7 +234,7 @@ class AccessRelation(IEGenObject):
 		self.iter_to_data=iter_to_data
 
 		if self.data_array.bounds.arity()!=self.iter_to_data.arity_out():
-			raise iegen.util.DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.iter_to_data.arity_out(),self.data_array.bounds.arity()))
+			raise DimensionalityError('The output arity of the access relation (%d) should be the arity of the data space (%d).'%(self.iter_to_data.arity_out(),self.data_array.bounds.arity()))
 
 	def __repr__(self):
 		return 'AccessRelation(%s,%s,%s)'%(self.name,self.data_array,self.iter_to_data)
@@ -261,6 +261,38 @@ class ERGSpec(IEGenObject):
 		self.erg_func_name=erg_func_name
 		self.inputs=inputs
 		self.outputs=outputs
+
+	def __repr__(self):
+		return 'ERGSpec(%s,%s,%s,%s)'%(self.name,self.erg_func_name,self.inputs,self.outputs)
+
+	def __str__(self):
+		return self._get_string(0)
+
+	def _get_string(self,indent):
+		from cStringIO import StringIO
+
+		if indent>0: indent+=1
+		spaces=' '*indent
+
+		#Calculate the string for the inputs
+		inputs_string=StringIO()
+		for input in self.inputs:
+			print >>inputs_string,input._get_string(indent+8)
+		inputs_string=inputs_string.getvalue()[:-1]
+
+		#Calculate the string for the ouputs
+		outputs_string=StringIO()
+		for output in self.outputs:
+			print >>outputs_string,output._get_string(indent+8)
+		outputs_string=outputs_string.getvalue()[:-1]
+
+		return '''%sERGSpec:
+%s|-name: %s
+%s|-erg_func_name: %s:
+%s|-inputs:
+%s
+%s|-outputs:
+%s'''%(spaces,spaces,self.name,spaces,self.erg_func_name,spaces,inputs_string,spaces,outputs_string)
 #-----------------------------------
 
 #---------- DataDependence class ----------
@@ -275,5 +307,5 @@ class DataDependence(IEGenObject):
 		#Checking
 		#Can we check that given the iteration space, data spaces, and access functions, the given data dependence is valid?  Is it overly conservative?  optimistic?
 
-iegen.util.define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
+define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
 #------------------------------------------
