@@ -149,25 +149,27 @@ class MapIR(IEGenObject):
 
 	#Convert all elements in kwargs named in CreateClass._{set,relation}_fields to a Set or Relation
 	def _generic_convert(self,CreateClass,kwargs):
-		#Convert all set_fields into Sets
 		try:
-			self._create_sets(CreateClass._set_fields,kwargs)
-		except AttributeError,e: pass
+			#Convert all set_fields into Sets
+			try:
+				self._create_sets(CreateClass._set_fields,kwargs)
+			except AttributeError,e: pass
 
-		#Convert all relation_fields into Relations
-		try:
-			self._create_relations(CreateClass._relation_fields,kwargs)
-		except AttributeError,e: pass
+			#Convert all relation_fields into Relations
+			try:
+				self._create_relations(CreateClass._relation_fields,kwargs)
+			except AttributeError,e: pass
 
-		#Convert all data_array_fields into DataArrays
-		try:
-			self._convert_data_arrays(CreateClass._data_array_fields,kwargs)
-		except AttributeError,e: pass
+			#Convert all data_array_fields into DataArrays
+			try:
+				self._convert_data_arrays(CreateClass._data_array_fields,kwargs)
+			except AttributeError,e: pass
 
-		#Convert all data_arrays_fields into collections of DataArrays
-		try:
-			self._convert_data_arrays_collection(CreateClass._data_arrays_fields,kwargs)
-		except AttributeError,e: pass
+			#Convert all data_arrays_fields into collections of DataArrays
+			try:
+				self._convert_data_arrays_collection(CreateClass._data_arrays_fields,kwargs)
+			except AttributeError,e: pass
+		except KeyError,e: raise AttributeError("Field %s was not specified when adding object of type '%s'."%(e,CreateClass))
 
 	#Add the given object to the given dicts based on the objects 'name' field
 	def _generic_add(self,obj,add_dicts):
