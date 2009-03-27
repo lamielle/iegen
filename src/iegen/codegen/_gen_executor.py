@@ -9,7 +9,7 @@ def gen_executor(mapir):
 	executor=Function('executor','void',ParamVisitor().visit(mapir.idg).params)
 
 	#Add the necessary variable declarations
-	executor.body.extend(DeclVisitor().visit(mapir.idg).decls.values())
+	executor.body.extend(DeclVisitor(mapir).visit(mapir.idg).get_decls())
 
 	#Generate wrappers for the index arrays
 	for index_array in mapir.get_index_arrays():

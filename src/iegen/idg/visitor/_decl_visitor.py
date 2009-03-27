@@ -3,9 +3,22 @@ from iegen.codegen import VarDecl,gen_tuple_vars_decl
 
 class DeclVisitor(TopoVisitor):
 
-	def __init__(self):
+	def __init__(self,mapir):
 		TopoVisitor.__init__(self)
+		self.mapir=mapir
 		self.decls={}
+		self.int_vars=set()
+
+	def get_decls(self):
+		self.collect_iter_space_vars()
+		decls=self.decls.values()
+		if len(self.int_vars)>0: decls.append(VarDecl('int',list(self.int_vars)))
+		return decls
+
+	def collect_iter_space_vars(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		for statement in self.mapir.get_statements():
+			self.int_vars=self.int_vars.union(statement.iter_space.variables())
 
 	def atIDGSymbolic(self,node): pass
 

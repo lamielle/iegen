@@ -13,7 +13,7 @@ def gen_inspector(mapir):
 	#If there are no transformations, don't bother doing any codegen
 	if len(mapir.transformations)>0:
 		#Add the necessary variable declarations
-		inspector.body.extend(DeclVisitor().visit(mapir.idg).decls.values())
+		inspector.body.extend(DeclVisitor(mapir).visit(mapir.idg).get_decls())
 
 		#Add the code for the body of the inspector
 		inspector.body.extend(CodegenVisitor().visit(mapir.idg).stmts)
