@@ -17,7 +17,7 @@ print "==== S1"
 S1_I = Set("{[s,i]: 0<=s && s<T && 0<=i && i<N}", syms)
 print S1_I
 
-S1_sched = Relation("{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=0 && c2=0}")
+S1_sched = Relation("{[s,i]->[c0,s,c1,j,c2]: c0=0 && c1=0 && c2=0 && i=j}")
 print S1_sched
 
 S1_full_I = S1_I.apply(S1_sched)
@@ -28,7 +28,7 @@ print "==== S2"
 S2_I = Set("{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}", syms)
 print S2_I
 
-S2_sched = Relation("{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=0}")
+S2_sched = Relation("{[s,i]->[c0,s,c1,j,c2]: c0=0 && c1=1 && c2=0 && i=j}")
 print S2_sched
 
 S2_full_I = S2_I.apply(S2_sched)
@@ -39,7 +39,7 @@ print "==== S3"
 S3_I = Set("{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}", syms)
 print S3_I
 
-S3_sched = Relation("{[s,i]->[c0,s,c1,i,c2]: c0=1 && c1=1 && c2=1}")
+S3_sched = Relation("{[s,i]->[c0,s,c1,j,c2]: c0=1 && c1=1 && c2=1 && i=j}")
 print S3_sched
 
 S3_full_I = S3_I.apply(S3_sched)
@@ -55,7 +55,7 @@ print full_I
 
 # A1, access relation for S1, targets data array x
 print "==== A1, access relation for S1"
-a1 = Relation("{[s,i]->[i]}")
+a1 = Relation("{[s,i]->[j] : i=j}")
 print a1
 print "Modified a1"
 a1_modified = a1.compose(S1_sched.inverse())
