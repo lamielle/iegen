@@ -1,7 +1,9 @@
 # Definitions of the Set and Relation classes that represent Presburger Sets and Relations.
 
 from cStringIO import StringIO
-from iegen.ast import Node
+from copy import deepcopy
+from iegen.ast import Node,PresSet,PresRelation,Conjunction,Equality,Inequality,NormExp,VarExp
+from iegen.ast.visitor import RenameVisitor,CollectVarsVisitor,FindFunctionsVisitor,CollectSymbolicsVisitor,CollectBoundsVisitor
 from iegen.parser import PresParser
 from iegen.lib.decorator import decorator
 from iegen.util import normalize_self,normalize_result,check,like_type,raise_objs_not_like_types
@@ -37,83 +39,62 @@ class Formula(Node):
 
 	#Returns a sorted list of all tuple variables present in this formula
 	def variables(self):
-		from iegen.ast.visitor import CollectVarsVisitor
 		return CollectVarsVisitor().visit(self).vars
 
 	#Returns a list of all functions that are present in this formula's constraints
 	def functions(self):
-		from iegen.ast.visitor import FindFunctionsVisitor
 		return FindFunctionsVisitor().visit(self).functions
 
 	#Returns a list of the names of all symbolics that are present in this formula's constraints
 	def symbolics(self):
-		from iegen.ast.visitor import CollectSymbolicsVisitor
 		return CollectSymbolicsVisitor().visit(self).symbolics
 
-	#Private utility method that combines the given formulas
-	#
-	#form{1,2} are either PresSets or PresRelations
-	#form{1,2}_tuple are strings that name the attribute of that formulas tuple
-	#Equality constraints will be added between these tuples
-	#These tuples MUST have the same arity
-	#new_form is the new formula object that will be manipulated
-	def _combine_pres_formulas(self,form1,form1_tuple,form2,form2_tuple,new_form,filter_rename):
-		from copy import deepcopy
-		from iegen.ast import Equality,NormExp
-		from iegen.ast.visitor import RenameVisitor
+	#Copies the constraints from the two given formulas (from{1,2})
+	# and appends them to the given formula (form)
+	def _copy_constraints(self,form,from1,from2):
+		for constraint in from1.conjunct.constraints+from2.conjunct.constraints:
+			form.conjunct.constraints.append(deepcopy(constraint))
 
-		#Copy the formulas so this operation is using fresh copies of the objects
-		form1=deepcopy(form1)
-		form2=deepcopy(form2)
-
-		#Create dictionaries for renaming the tuple variables
-		form1_rename=self._get_prefix_rename_dict(form1,'form1')
-		form2_rename=self._get_prefix_rename_dict(form2,'form2')
-		form1_unrename=self._get_prefix_unrename_dict(form1,'form1')
-		form2_unrename=self._get_prefix_unrename_dict(form2,'form2')
-
-		#Rename the tuple varibles in form1 and form2
-		RenameVisitor(form1_rename).visit(form1)
-		RenameVisitor(form2_rename).visit(form2)
-		RenameVisitor(form2_rename).visit(new_form)
-		RenameVisitor(form1_rename).visit(new_form)
-
-		#Get the formula variable tuples
-		form1_tuple=getattr(form1,form1_tuple)
-		form2_tuple=getattr(form2,form2_tuple)
-
-		#Add equality constraints for form1_tuple = form2_tuple
-		for i in xrange(len(form1_tuple.vars)):
+	#Appends equality constraints for each pair of variables in vars1 and vars2
+	#This implies that var1 and var2 must have the same length
+	def _create_equality_constraints(self,form,vars1,vars2):
+		#Create an equality constraint for each pair of variables
+		for i in xrange(len(vars1)):
 			#Get the variables from the formulas
-			var1=deepcopy(form1_tuple.vars[i])
-			var2=deepcopy(form2_tuple.vars[i])
+			var1=deepcopy(vars1[i])
+			var2=deepcopy(vars2[i])
 
-			#Set the coefficients on the variables:
-			#var1=var2 -> var1-var2=0
+			#Set the coefficients on the variables: var1=var2 -> var1-var2=0
 			var1.coeff=1
 			var2.coeff=-1
 
 			#Create a constraint where these variables are equal
 			constraint=Equality(NormExp([var1,var2],0))
 
-			#Add the new constraint to the new formula
-			new_form.conjunct.constraints.append(constraint)
+			#Add the new constraint to the formula
+			form.conjunct.constraints.append(constraint)
 
-		#Add the constraints of both formulas to the new formula
-		for constraint in form1.conjunct.constraints+form2.conjunct.constraints:
-			new_form.conjunct.constraints.append(deepcopy(constraint))
+	#Creates a dictionary of var.id -> var.id+suffix
+	# for each given variable.
+	#Runs RenameVisitor using this dictionary on the given formula
+	def _rename_vars(self,form,vars,suffix):
+		rename={}
+		for var in vars:
+			rename[var.id]=var.id+suffix
+		RenameVisitor(rename).visit(form)
 
-		#Rename the variables back to what the were before
-		RenameVisitor(form1_unrename).visit(new_form)
-		RenameVisitor(form2_unrename).visit(new_form)
-
-		return new_form
+	#Creates a dictionary of var.id+suffix -> var.id
+	# for each given variable.
+	#Runs RenameVisitor using this dictionary on the given formula
+	def _unrename_vars(self,form,vars,suffix):
+		rename={}
+		for var in vars:
+			rename[var.id+suffix]=var.id
+		RenameVisitor(rename).visit(form)
 
 	#Creates a dictionary for renaming variables in a formula
 	#The new names are prefixed with the given prefix
 	def _get_prefix_rename_dict(self,formula,prefix):
-		from iegen.ast import PresSet,PresRelation
-
 		rename={}
 
 		#Make sure we are given a PresSet or a PresRelation
@@ -148,8 +129,6 @@ class Formula(Node):
 	#The formula's names are renamed to the corresponding variables
 	#in other_formula
 	def _get_formula_rename_dict(self,formula,other_formula):
-		from iegen.ast import PresSet,PresRelation
-
 		rename={}
 
 		#Make sure we are given a PresSet or a PresRelation
@@ -245,8 +224,6 @@ class Set(Formula):
 	#Takes the union of this Set and the given Set
 	@normalize_result
 	def union(self,other):
-		from copy import deepcopy
-
 		if like_type(other,Set):
 			if self.arity()==other.arity():
 				selfcopy=deepcopy(self)
@@ -272,8 +249,6 @@ class Set(Formula):
 	#          RM(S1) union RM(S2) union ... union RM(SN)
 	@normalize_result
 	def apply(self,other):
-		from copy import deepcopy
-
 		#Make sure we are given a Relation
 		raise_objs_not_like_types(other,Relation,'Apply failure: Can only apply objects that look like a Relation object to a Set')
 
@@ -297,10 +272,6 @@ class Set(Formula):
 	#Private utility method to perform the apply operation between a PresSet and a PresRelation
 	#Returns the PresSet resulting from the apply operation rel(set)
 	def _apply(self,set,rel):
-		from copy import deepcopy
-		from iegen.ast import PresSet,PresRelation,Conjunction
-		from iegen.ast.visitor import RenameVisitor
-
 		#Make sure we are given a PresSet and a PresRelation
 		raise_objs_not_like_types(set,PresSet)
 		raise_objs_not_like_types(rel,PresRelation)
@@ -309,7 +280,29 @@ class Set(Formula):
 		if rel.arity_in()!=set.arity():
 			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(rel.arity_out(),set.arity()))
 
-		return self._combine_pres_formulas(set,'tuple_set',rel,'tuple_in',PresSet(deepcopy(rel.tuple_out),Conjunction([]),deepcopy(set.symbolics)+deepcopy(rel.symbolics)),False)
+		#Copy the given set and relation
+		set_copy=deepcopy(set)
+		rel_copy=deepcopy(rel)
+
+		#Rename tuple variables by appending '1' and '2'
+		self._rename_vars(set_copy,set_copy.tuple_set.vars,'1')
+		self._rename_vars(rel_copy,rel_copy.tuple_in.vars+rel_copy.tuple_out.vars,'2')
+
+		#Create the new set that will end up being the final result
+		new_tuple_set=deepcopy(rel_copy.tuple_out)
+		new_symbolics=deepcopy(set_copy.symbolics)+deepcopy(rel_copy.symbolics)
+		new_set=PresSet(new_tuple_set,Conjunction([]),new_symbolics)
+
+		#Copy over the constraints from the set and relation
+		self._copy_constraints(new_set,set_copy,rel_copy)
+
+		#Add equality constraints for set_tuple = rel_tuple_in
+		self._create_equality_constraints(new_set,set_copy.tuple_set.vars,rel_copy.tuple_in.vars)
+
+		#Rename the resulting tuple back to the original names
+		self._unrename_vars(new_set,rel.tuple_in.vars+rel.tuple_out.vars,'2')
+
+		return new_set
 
 	#Returns the lower bound of the given tuple variable
 	def lower_bound(self,var_name):
@@ -322,9 +315,6 @@ class Set(Formula):
 	#-The first element is a collection of lower bound expressions
 	#-The second element is a collection of upper bound expressions
 	def bounds(self,var_name):
-		from copy import deepcopy
-		from iegen.ast.visitor import CollectBoundsVisitor
-
 		#Make sure the given variable is a tuple variable
 		if not self.sets[0].is_tuple_var(var_name):
 			raise ValueError("'%s' is not a tuple variable"%(var_name))
@@ -348,9 +338,6 @@ class Set(Formula):
 	#Destructive call: 'self' is modified rather than creating a new set
 	@normalize_self
 	def _project_out(self,var_name):
-		from iegen.ast import Inequality,NormExp,VarExp
-		from iegen.ast.visitor import CollectBoundsVisitor
-
 		lower_bounds,upper_bounds=CollectBoundsVisitor(var_name).visit(self).bounds
 
 		#Fourier-Motzkin Main Loop
@@ -456,8 +443,6 @@ class Relation(Formula):
 	#Takes the union of this Relation and the given Relation
 	@normalize_result
 	def union(self,other):
-		from copy import deepcopy
-
 		if like_type(other,Relation):
 			if self.arity_in()==other.arity_in() and self.arity_out()==other.arity_out():
 				selfcopy=deepcopy(self)
@@ -475,8 +460,6 @@ class Relation(Formula):
 	#Takes the inverse of all of the PresRelations in this Relation
 	@normalize_result
 	def inverse(self):
-		from copy import deepcopy
-
 		selfcopy=deepcopy(self)
 		for relation in selfcopy.relations:
 			#Swap input and output tuples
@@ -497,8 +480,6 @@ class Relation(Formula):
 	#            R1N(R21) union R1N(R22) union ... union R1N(R2M)
 	@normalize_result
 	def compose(self,other):
-		from copy import deepcopy
-
 		#Make sure we are given a Relation
 		raise_objs_not_like_types(other,Relation)
 
@@ -522,10 +503,6 @@ class Relation(Formula):
 	#Private utility method to perform the compose operation between two PresRelation objects
 	#Returns the PresRelation resulting from the composition operation r1(r2)
 	def _compose(self,r1,r2):
-		from copy import deepcopy
-		from iegen.ast import PresRelation,Conjunction,Equality,NormExp
-		from iegen.ast.visitor import RenameVisitor
-
 		#Make sure we are given PresRelations
 		raise_objs_not_like_types([r1,r2],PresRelation)
 
@@ -533,5 +510,32 @@ class Relation(Formula):
 		if r2.arity_out()!=r1.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(r2.arity_out(),r1.arity_in()))
 
-		return self._combine_pres_formulas(r1,'tuple_in',r2,'tuple_out',PresRelation(deepcopy(r2.tuple_in),deepcopy(r1.tuple_out),Conjunction([]),deepcopy(r1.symbolics)+deepcopy(r2.symbolics)),True)
+		#Copy the given relationsn
+		r1_copy=deepcopy(r1)
+		r2_copy=deepcopy(r2)
+
+		#Rename tuple variables by appending '1' and '2'
+		self._rename_vars(r1_copy,r1_copy.tuple_in.vars+r1_copy.tuple_out.vars,'1')
+		self._rename_vars(r2_copy,r2_copy.tuple_in.vars+r2_copy.tuple_out.vars,'2')
+
+		#Create the new relation that will end up being the final result
+		new_tuple_in=deepcopy(r2_copy.tuple_in)
+		new_tuple_out=deepcopy(r1_copy.tuple_out)
+		new_symbolics=deepcopy(r1_copy.symbolics)+deepcopy(r2_copy.symbolics)
+		new_rel=PresRelation(new_tuple_in,new_tuple_out,Conjunction([]),new_symbolics)
+
+		#Copy over the constraints from the relations
+		self._copy_constraints(new_rel,r1_copy,r2_copy)
+
+		#Add equality constraints for r2_out = r1_in
+		self._create_equality_constraints(new_rel,r2_copy.tuple_out.vars,r1_copy.tuple_in.vars)
+
+		#Rename the resulting tuple back to the original names if necessary
+		r2_in_ids=[var.id for var in r2.tuple_in.vars]
+		r1_out_ids=[var.id for var in r1.tuple_out.vars]
+		if 0==len(set(r2_in_ids).intersection(set(r1_out_ids))):
+			self._unrename_vars(new_rel,r1.tuple_out.vars,'1')
+			self._unrename_vars(new_rel,r2.tuple_in.vars,'2')
+
+		return new_rel
 #------------------------------------

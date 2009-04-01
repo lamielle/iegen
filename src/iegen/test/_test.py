@@ -353,16 +353,43 @@ class SetTestCase(TestCase):
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
-	#Tests that the apply operation doesn't choke on duplicate names
-	def testApplyRename(self):
+	#Tests that the apply operation renames variables back
+	def testApplyRenameBack(self):
 		from iegen import Set,Relation
 
-		set=Set('{[a,b]:1<=a and a<=10 and 1<=b and b<=10}')
-		relation=Relation('{[a,b]->[b,c]:-10<=a and a<=0}')
+		set=Set('{[a]: a=5}')
+		relation=Relation('{[b]->[b,f]: f=12}')
 
 		applied=set.apply(relation)
 
-		applied_res=Set('{[b,c]:1<=a and a<=10 and 1<=b and b<=10 and -10<=a and a<=0}')
+		applied_res=Set('{[b,f]: b=5 and f=12}')
+
+		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
+
+	#Tests that the apply operation doesn't choke on duplicate names
+	def testApplyRename1(self):
+		from iegen import Set,Relation
+
+		set=Set('{[a,b]:1<=a and a<=10 and 1<=b and b<=10}')
+		relation=Relation('{[a,b]->[c,d]:-10<=a and a<=0 and c=6 and d>5}')
+
+		applied=set.apply(relation)
+
+		#TODO: Free var inequality bug #54 forces a1>=1
+		applied_res=Set('{[c,d]: a1>=1 and c=6 and d>5}')
+
+		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
+
+	#Tests that the apply operation doesn't choke on duplicate names
+	def testApplyRename2(self):
+		from iegen import Set,Relation
+
+		set=Set('{[a,b]:1<=a and a<=10 and 1<=b and b<=10}')
+		relation=Relation('{[a,b]->[a,b]:-10<=a and a<=0 and b=6 and a>5}')
+
+		applied=set.apply(relation)
+
+		applied_res=Set('{[a,b]:1<=a and a<=10 and 1<=b and b<=10 and -10<=a and a<=0 and b=6 and a>5}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -972,8 +999,48 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
+	#Tests that variables are renamed back if there are no conflicts
+	def testComposeRenameBack(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a]->[b,c]: a=6 and b=7 and c>10}')
+		relation2=Relation('{[i,j]->[k]: i>0 and j<-5 and k>3}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=Relation('{[i,j]->[b,c]: i>0 and j<-5 and b=7 and c>10}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests that variables are not renamed back if there are conflicts
+	def testComposeNoRenameBack(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a]->[b,c]: a=b and b=7 and c>10}')
+		relation2=Relation('{[b,i]->[k]: i>0 and b<-5 and k>3 and b=k}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=Relation('{[b2,i2]->[b1,c1]: i2>0 and b2<-5 and b2>=4 and b1=7 and c1>10 and b2=b1}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests that mappings from a->a are treated as they should be
+	#This is the main test case for bug #34
+	def testInOutMapping(self):
+		from iegen import Relation
+
+		relation1=Relation('{[i]->[j]: j=f(i)}')
+		relation2=Relation('{[a]->[a]}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=Relation('{[a]->[j]: j=f(a)}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
 	#Tests that the compose operation doesn't choke on duplicate names
-	def testComposeRename(self):
+	def testComposeRename1(self):
 		from iegen import Relation
 
 		relation1=Relation('{[a,b]->[c]:1<=a and a<=10 and 1<=b and b<=10}')
@@ -982,6 +1049,32 @@ class RelationTestCase(TestCase):
 		composed=relation1.compose(relation2)
 
 		composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests that the compose operation doesn't choke on duplicate names
+	def testComposeRename2(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a,b]->[b]:1<=a and a<=11 and 1<=b and b<=10}')
+		relation2=Relation('{[a]->[a,b]:-10<=a and a<=0 and b=5}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=Relation('{[a]->[b]: -10<=a and a<=0 and b=5 and 1<=a and a<=11 and 1<=b and b<=10}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests that the compose operation doesn't choke on duplicate names
+	def testComposeRename3(self):
+		from iegen import Relation
+
+		relation1=Relation('{[a,b]->[a]:1<=a and a<=10 and 1<=b and b<=10}')
+		relation2=Relation('{[a]->[a,b]:-10<=a and a<=0 and b=5}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=Relation('{[a2]->[a1]: -10<=a2 and a2<=0 and 1<=a1 and a1<=10 and a1=a2}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
