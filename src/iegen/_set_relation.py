@@ -69,16 +69,14 @@ class Formula(Node):
 		#Create dictionaries for renaming the tuple variables
 		form1_rename=self._get_prefix_rename_dict(form1,'form1')
 		form2_rename=self._get_prefix_rename_dict(form2,'form2')
-		if filter_rename:
-			form1_unrename=self._get_prefix_unrename_dict(form1,'form1','_out_')
-			form2_unrename=self._get_prefix_unrename_dict(form2,'form2','_in_')
-		else:
-			form1_unrename=self._get_prefix_unrename_dict(form1,'form1')
-			form2_unrename=self._get_prefix_unrename_dict(form2,'form2')
+		form1_unrename=self._get_prefix_unrename_dict(form1,'form1')
+		form2_unrename=self._get_prefix_unrename_dict(form2,'form2')
 
 		#Rename the tuple varibles in form1 and form2
 		RenameVisitor(form1_rename).visit(form1)
 		RenameVisitor(form2_rename).visit(form2)
+		RenameVisitor(form2_rename).visit(new_form)
+		RenameVisitor(form1_rename).visit(new_form)
 
 		#Get the formula variable tuples
 		form1_tuple=getattr(form1,form1_tuple)
