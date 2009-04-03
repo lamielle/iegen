@@ -22,9 +22,10 @@ void ERG_lexmin(ExplicitRelation* relptr, ExplicitRelation*  old2new)
                     
     \param old2new  Explicit relation that maps old iteration 
                     to new iteration.  Should be contructed but empty 
-                    before entry to this function. 
+                    before entry to this function.  old2new will
+                    be a permutation.
 
-    The mapping will be a permutation. 
+    The old2new mapping will be a permutation. 
     Another way of thinking about it is that at index 0 in old2new there
     will be the new id for what was previously output tuple value 0.  
 

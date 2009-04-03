@@ -82,18 +82,9 @@ Algorithm for computing FROM_{SS} and TO_{SS}
         
     //========================================================
     // Create set of dependence that exist within space to be
-    // sparse tiled,  D_{ST}
-    D_{ST} = empty set
-    for each d in D  // iterating over the disjunction
-        // ensure that dependence ends in subspace being sparse tiled
-        temp_dd = iter_sub_space_relation compose d
-        // ensure that dependence starts in subspace being sparse tiled
-        temp_dd = iter_sub_space_relation compose (inverse temp_dd)
-        
-        // could end up with temp_dd being empty set, which means that
-        // D_{ST} should not change
-        D_{ST} = D_{ST} union temp_dd
-            
+    // sparse tiled,  D_{ST}.
+    // Ensure that dependes ends and starts in subspace being sparse tiled.
+    D_{ST} = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse()            
 
     //========================================================
     // Verify that none of the direct dependences in D_{ST} are loop carried.
