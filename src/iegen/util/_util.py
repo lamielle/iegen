@@ -174,7 +174,7 @@ def check_visit(obj):
 
 #Calls the simplification routine on the given object
 def run_simplify(obj):
-	from iegen.util import simplify
+	from iegen.simplify import simplify
 	simplify(obj)
 
 #Decorator that normalizes the first implicit 'self' argument of the decorated function

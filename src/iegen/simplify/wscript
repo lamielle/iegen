@@ -10,14 +10,9 @@ def configure(conf):
 
 def build(bld):
 
-	inst_dir='iegen'+os.sep+'util'
-
-	create_obj_common(bld,
-	                 'iegen_util.c',
-	                 'iegen_util',3)
+	inst_dir='iegen'+os.sep+'simplify'
 
 	install_files('PREFIX',inst_dir,'__init__.py')
-	install_files('PREFIX',inst_dir,'_util.py')
-	install_files('PREFIX',inst_dir,'_test_util.py')
+	install_files('PREFIX',inst_dir,'_simplify.py')
 
 	bld.add_subdirs('test')
