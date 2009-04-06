@@ -15,10 +15,13 @@ class DeclVisitor(TopoVisitor):
 		if len(self.int_vars)>0: decls.append(VarDecl('int',list(self.int_vars)))
 		return decls
 
+	def add_int_vars(self,vars):
+		self.int_vars=self.int_vars.union(vars)
+
 	def collect_iter_space_vars(self):
 		from iegen.ast.visitor import CollectVarsVisitor
 		for statement in self.mapir.get_statements():
-			self.int_vars=self.int_vars.union(statement.iter_space.variables())
+			self.add_int_vars(statement.iter_space.variables())
 
 	def atIDGSymbolic(self,node): pass
 
@@ -27,8 +30,7 @@ class DeclVisitor(TopoVisitor):
 	def atIDGERSpec(self,node):
 		self.decls[node.data.name]=VarDecl('ExplicitRelation *',[node.data.name+'_ER'])
 		for var_decl in gen_tuple_vars_decl(node.data.input_bounds):
-			for var_name in var_decl.var_names:
-				self.decls[var_name]=VarDecl('int',var_name)
+			self.add_int_vars(var_decl.var_names)
 
 	def atIDGIndexArray(self,node):
 		self.decls[node.data.name]=VarDecl('ExplicitRelation *',[node.data.name+'_ER'])
