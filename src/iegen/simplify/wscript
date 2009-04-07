@@ -14,5 +14,6 @@ def build(bld):
 
 	install_files('PREFIX',inst_dir,'__init__.py')
 	install_files('PREFIX',inst_dir,'_simplify.py')
+	install_files('PREFIX',inst_dir,'_rules.py')
 
 	bld.add_subdirs('test')
