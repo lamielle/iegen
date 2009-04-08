@@ -1,5 +1,6 @@
 from unittest import TestCase
 from iegen.lib.nose.tools import raises
+from iegen.simplify import simplify
 
 #---------- Import Tests ----------
 #Test importing of iegen.ast.visitor
@@ -3270,3 +3271,160 @@ class CollectVarsVisitorTestCase(TestCase):
 
 		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
 #--------------------------------------------
+
+#---------- Remove Free Var Constraint Visitor ----------
+class RemoveFreeVarFunctionVisitor(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+		from iegen.ast import Equality,Inequality
+
+		set=Set('{[]}')
+		v=RemoveFreeVarFunctionVisitor([],'_inv').visit(set)
+		self.failUnless(hasattr(v,'changed'),"RemoveFreeVarFunctionVisitor doesn't place result in the 'changed' property.")
+
+	#Make sure the visitor doesn't do anything in 'normal' situations
+	def testNothingToDoSet(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a,b]: 10<=a and a<=n and b>n and b<22}',[Symbolic('n')])
+
+		changed=RemoveFreeVarFunctionVisitor(['f','g'],'_inv').visit(set).changed
+		set_res=Set('{[a,b]: 10<=a and a<=n and b>n and b<22}',[Symbolic('n')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor doesn't do anything in 'normal' situations
+	def testNothingToDoRelation(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Relation,Symbolic
+
+		rel=Relation('{[a,b]->[ap,bp]: 10<=a and a<=n and b>n and b<22}',[Symbolic('n')])
+
+		changed=RemoveFreeVarFunctionVisitor(['f','g'],'_inv').visit(rel).changed
+		rel_res=Relation('{[a,b]->[ap,bp]: 10<=a and a<=n and b>n and b<22}',[Symbolic('n')])
+
+		self.failUnless(rel==rel,'%s!=%s'%(rel,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor doesn't simplify when the function name isn't given
+	def testFunctionNotGiven(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[a]: a=f(b)}')
+
+		changed=RemoveFreeVarFunctionVisitor([],'_inv').visit(set).changed
+		set_res=Set('{[a]: a=f(b)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+		set=Set('{[a]: a=f(b)}')
+
+		changed=RemoveFreeVarFunctionVisitor(['g'],'_inv').visit(set).changed
+		set_res=Set('{[a]: a=f(b)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor simplifies a simple case
+	def testSimplifySimple1(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[a,b]: a=f(c) and b=g(c)}')
+
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b]: b=g(f_inv(a))}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Make sure the visitor simplifies a simple case
+	def testSimplifySimple2(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[a]: a=f(c) and a<=c}')
+
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		simplify(set)
+		set_res=Set('{[a]: a<=f_inv(a)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Make sure the visitor simplifies a simple case
+	def testSimplifySimpleCoeff(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[a,b]: 5a=f(c) and b=g(c)}')
+
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b]: b=g(f_inv(5a))}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Make sure the visitor doesn't simplify functions that aren't given
+	def testSimplifyOnlyGiven1(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[a,b]: a=f(d) and b=g(d) and a<=d}')
+
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b]: b=g(f_inv(a)) and a<=f_inv(a)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Make sure the visitor doesn't simplify functions that aren't given
+	def testSimplifyOnlyGiven2(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]: a=f(d) and b=g(d) and a<=c+d}')
+
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c]: b=g(f_inv(a)) and a<=c+f_inv(a)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Make sure the visitor simplifies all functions that are given
+	def testSimplifyAllGiven(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[a,b,c]: a=f(d) and b=g(e) and a<=d and c<=e}')
+
+		changed=RemoveFreeVarFunctionVisitor(['f','g'],'_inv').visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c]: a<=f_inv(a) and c<=g_inv(b)}')
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Make sure the visitor doesn't simplify functions that aren't given
+	def testSimplifyWithSymbolic(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set,Symbolic
+
+		set=Set('{[a]: a=f(c) and a+n<=c}',[Symbolic('n')])
+
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		simplify(set)
+		set_res=Set('{[a]: a+n<=f_inv(a)}',[Symbolic('n')])
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')

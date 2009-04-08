@@ -25,6 +25,7 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_remove_empty_constraints_visitor.py')
 	install_files('PREFIX',inst_dir,'_remove_zero_coeff_visitor.py')
 	install_files('PREFIX',inst_dir,'_remove_free_var_constraint_visitor.py')
+	install_files('PREFIX',inst_dir,'_remove_free_var_function_visitor.py')
 	install_files('PREFIX',inst_dir,'_remove_duplicate_formulas_visitor.py')
 	install_files('PREFIX',inst_dir,'_remove_duplicate_constraints_visitor.py')
 	install_files('PREFIX',inst_dir,'_remove_symbolics_visitor.py')
