@@ -109,12 +109,7 @@ def inverse_simplify(obj):
 	from iegen.util import like_type
 
 	if iegen.debug: before=str(obj)
-
-	#Only apply this rule to Sets, Relations, PresSets, and PresRelations
-	if like_type(obj,Set) or like_type(obj,Relation) or like_type(obj,PresSet) or like_type(obj,PresRelation):
-		changed=RemoveFreeVarFunctionVisitor(iegen.simplify.inverse_pairs(),'_inv').visit(obj).changed
-	else:
-		changed=False
+	changed=RemoveFreeVarFunctionVisitor(iegen.simplify.inverse_pairs(),'_inv').visit(obj).changed
 	if changed and iegen.debug: iegen.print_debug('Simplify: removed free variable function: %s -> %s'%(before,obj))
 
 	return changed

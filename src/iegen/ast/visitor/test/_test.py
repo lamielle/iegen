@@ -3284,6 +3284,35 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 		v=RemoveFreeVarFunctionVisitor([],'_inv').visit(set)
 		self.failUnless(hasattr(v,'changed'),"RemoveFreeVarFunctionVisitor doesn't place result in the 'changed' property.")
 
+	#Tests that this visitor doesn't die when given something other than a Set/Relation/PresSet/PresRelation
+	#This tests that bug #89 is fixed
+	def testAcceptOtherObjects(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen.ast import VarExp, NormExp, FuncExp,Equality,Inequality,Conjunction
+
+		varexp=VarExp(1,'a')
+		funcexp=FuncExp(1,'f',[NormExp([VarExp(1,'b')],0)])
+		normexp=NormExp([VarExp(1,'c')],10)
+		equality=Equality(NormExp([VarExp(1,'d')],10))
+		inequality=Inequality(NormExp([VarExp(1,'e')],10))
+		conjunction=Conjunction([Inequality(NormExp([VarExp(1,'f')],10))])
+		equality2=Equality(NormExp([VarExp(1,'b'),FuncExp(1,'f',[NormExp([VarExp(1,'c')],0)])],-5))
+
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(varexp).changed
+		self.failUnless(False==changed,'changed!=False')
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(funcexp).changed
+		self.failUnless(False==changed,'changed!=False')
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(normexp).changed
+		self.failUnless(False==changed,'changed!=False')
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(equality).changed
+		self.failUnless(False==changed,'changed!=False')
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(inequality).changed
+		self.failUnless(False==changed,'changed!=False')
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(conjunction).changed
+		self.failUnless(False==changed,'changed!=False')
+		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(equality2).changed
+		self.failUnless(False==changed,'changed!=False')
+
 	#Make sure the visitor doesn't do anything in 'normal' situations
 	def testNothingToDoSet(self):
 		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
