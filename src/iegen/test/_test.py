@@ -433,6 +433,15 @@ class SetTestCase(TestCase):
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
+	#Tests a simple apply case
+	def testApplyRenameBug(self):
+		from iegen import Set,Relation
+
+		s=Set('{[a]}').apply(Relation('{[b]->[c]: c=f(b)}'))
+		s_res=Set('{[c]: c=f(b)}')
+
+		self.failUnless(s==s_res,'%s!=%s'%(s,s_res))
+
 	#Tests the _get_prefix_rename_dict method
 	def testGetPrefixRenameDict(self):
 		from iegen import Set
@@ -1103,6 +1112,16 @@ class RelationTestCase(TestCase):
 		ar_res=Relation('{[ii,s]->[dr_out]:s=1 and dr_out=sigma(inter(ii))}').union(Relation('{[ii,s]->[dr_out]:s=2 and dr_out=sigma(inter(ii))}')).union(Relation('{[ii,s]->[dr_out]:s=3 and dr_out=sigma(inter(ii))}'))
 
 		self.failUnless(ar_composed==ar_res,'%s!=%s'%(ar_composed,ar_res))
+
+	#Tests that Relation('{[c]->[d]: d=f(c)}').compose(Relation('{[a]->[b]}')) produces the correct result
+	#This is bug #79
+	def testComposeRenameBug(self):
+		from iegen import Relation
+
+		r=Relation('{[c]->[d]: d=f(c)}').compose(Relation('{[a]->[b]: a=b}'))
+		r_res=Relation('{[a]->[d]: d=f(a)}')
+
+		self.failUnless(r==r_res,'%s!=%s'%(r,r_res))
 
 	#Tests the _get_prefix_rename_dict method of Relation
 	def testGetPrefixRenameDict(self):
