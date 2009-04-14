@@ -2,6 +2,7 @@
 
 from cStringIO import StringIO
 from copy import deepcopy
+from iegen import Symbolic
 from iegen.ast import Node,PresSet,PresRelation,Conjunction,Equality,Inequality,NormExp,VarExp
 from iegen.ast.visitor import RenameVisitor,CollectVarsVisitor,FindFunctionsVisitor,CollectSymbolicsVisitor,CollectBoundsVisitor
 from iegen.parser import PresParser
@@ -173,6 +174,9 @@ class Set(Formula):
 	def __init__(self,set_string=None,symbolics=None,sets=None):
 		symbolics=[] if symbolics is None else symbolics
 		if None is not set_string and None is sets:
+			#Ensure we are given Symbolic objects
+			raise_objs_not_like_types(symbolics,Symbolic,'Set construction failure: symbolics must be a collect of objects that look like a Symbolic')
+
 			self.sets=[PresParser.parse_set(set_string,symbolics)]
 		elif None is not sets and None is set_string:
 			if len(symbolics)>0:
@@ -377,6 +381,9 @@ class Relation(Formula):
 	def __init__(self,relation_string=None,symbolics=None,relations=None):
 		symbolics=[] if symbolics is None else symbolics
 		if None is not relation_string and None is relations:
+			#Ensure we are given Symbolic objects
+			raise_objs_not_like_types(symbolics,Symbolic,'Set construction failure: symbolics must be a collect of objects that look like a Symbolic')
+
 			self.relations=[PresParser.parse_relation(relation_string,symbolics)]
 		elif None is not relations and None is relation_string:
 			if len(symbolics)>0:
