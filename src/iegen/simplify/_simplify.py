@@ -2,6 +2,7 @@ import iegen
 from iegen.util import raise_objs_not_like_types,like_type
 
 #---------- Formula Simplification ----------
+#---------- Rule Registration ----------
 #Dictionary containing rule groups
 #This is a dictionary that maps integers to lists of tuples
 #Each tuple in the list contains:
@@ -19,7 +20,22 @@ def register_rule(rule_func,instance=None,rule_group=3):
 	if rule_group not in _registered_rules:
 		_registered_rules[rule_group]=[]
 	_registered_rules[rule_group].append((rule_func,instance))
+#---------------------------------------
 
+#---------- Inverse Pair Registration ----------
+#Dictionary of mappings from function names to inverse function names
+#If f->f_inv, then the corresponding f_inv->f should exist here as well
+_inverse_pairs={}
+
+#Accessor for obtaining the inverse pairs dictionary
+def inverse_pairs():
+	return _inverse_pairs
+
+#Registers the given function and its inverse as a pair
+def register_inverse_pair(function_name,inverse_function_name):
+	_inverse_pairs[function_name]=inverse_function_name
+	_inverse_pairs[inverse_function_name]=function_name
+#-----------------------------------------------
 #Given an object of the following types:
 #Set,Relation,PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
 #Applies the registered simplification rules to reduce the complexity of the object

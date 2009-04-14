@@ -309,26 +309,3 @@ class DataDependence(IEGenObject):
 
 define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
 #------------------------------------------
-
-#---------- Inverse Simplification Rule ----------
-#Runs the inverse simplification visitor on the given object
-def inverse_simplify(mapir,obj):
-	from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
-	from iegen import Set,Relation,PresSet,PresRelation
-
-	if iegen.debug: before=str(obj)
-
-	#Gather the permutable functions from the MapIR
-	permutations=[]
-	for er_spec_name,er_spec in mapir.er_specs.items():
-		if er_spec.is_permutation: permutations.append(er_spec_name)
-
-	#Only apply this rule to Sets, Relations, PresSets, and PresRelations
-	if like_type(obj,Set) or like_type(obj,Relation) or like_type(obj,PresSet) or like_type(obj,PresRelation):
-		changed=RemoveFreeVarFunctionVisitor(permutations,'_inv').visit(obj).changed
-	else:
-		changed=False
-	if changed and iegen.debug: iegen.print_debug('Simplify: removed free variable function: %s -> %s'%(before,obj))
-
-	return changed
-#-------------------------------------------------

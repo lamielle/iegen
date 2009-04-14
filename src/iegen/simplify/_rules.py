@@ -100,6 +100,25 @@ def remove_contradictions(obj):
 	removed_contradiction=RemoveContradictionsVisitor().visit(obj).removed_contradiction
 	if removed_contradiction and iegen.debug: iegen.print_debug('Simplify: removed contradiction: %s -> %s'%(before,obj))
 	return removed_contradiction
+
+#---------- Inverse Simplification Rule ----------
+#Runs the inverse simplification visitor on the given object
+def inverse_simplify(obj):
+	from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+	from iegen import Set,Relation,PresSet,PresRelation
+	from iegen.util import like_type
+
+	if iegen.debug: before=str(obj)
+
+	#Only apply this rule to Sets, Relations, PresSets, and PresRelations
+	if like_type(obj,Set) or like_type(obj,Relation) or like_type(obj,PresSet) or like_type(obj,PresRelation):
+		changed=RemoveFreeVarFunctionVisitor(iegen.simplify.inverse_pairs(),'_inv').visit(obj).changed
+	else:
+		changed=False
+	if changed and iegen.debug: iegen.print_debug('Simplify: removed free variable function: %s -> %s'%(before,obj))
+
+	return changed
+#-------------------------------------------------
 #--------------------------------------------------
 
 #---------- Rule Registration ----------
@@ -114,4 +133,5 @@ register_rule(remove_tautologies,rule_group=0)
 register_rule(remove_contradictions,rule_group=0)
 register_rule(remove_free_var_equality,rule_group=0)
 register_rule(remove_free_var_inequality,rule_group=1)
+register_rule(inverse_simplify,rule_group=2)
 #---------------------------------------

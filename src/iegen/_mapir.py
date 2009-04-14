@@ -5,7 +5,7 @@ from cStringIO import StringIO
 
 #IEGen imports
 import iegen.codegen,iegen.simplify
-from iegen import IEGenObject,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation,inverse_simplify
+from iegen import IEGenObject,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
 from iegen.idg import IDG
 
 #---------- MapIR class ----------
@@ -21,9 +21,6 @@ class MapIR(IEGenObject):
 		self.transformations=[]
 		self.erg_specs={}
 		self.idg=IDG()
-
-		#Register the inverse simplification rule for this MapIR instance
-		iegen.simplify.register_rule(inverse_simplify,self)
 
 	#---------- Symbolics ----------
 	#Returns the symbolics that are present in the MapIR
