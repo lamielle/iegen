@@ -16,7 +16,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.ast.visitor classes
 	def testNameImport(self):
 		try:
-			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor,FindFunctionsVisitor,CollectSymbolicsVisitor,CollectVarsVisitor
+			from iegen.ast.visitor import DFVisitor,TransVisitor,RenameVisitor,SortVisitor,CheckVisitor,IsVarVisitor,FindConstraintVisitor,FindFreeVarConstraintVisitor,MergeExpTermsVisitor,RemoveEmptyConstraintsVisitor,RemoveFreeVarConstraintVisitor,RemoveDuplicateFormulasVisitor,RemoveDuplicateConstraintsVisitor,RemoveSymbolicsVisitor,CollectBoundsVisitor,ValueStringVisitor,RemoveTautologiesVisitor,RemoveContradictionsVisitor,FindFunctionsVisitor,CollectSymbolicsVisitor,CollectVarsVisitor,RemoveFreeVarFunctionVisitor,UniqueTupleVarsVisitor
 		except Exception,e:
 			self.fail("Importing classes from iegen.ast.visitor failed: "+str(e))
 #----------------------------------
@@ -3279,7 +3279,6 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 	def testResultPresent(self):
 		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
 		from iegen import Set
-		from iegen.ast import Equality,Inequality
 
 		set=Set('{[]}')
 		v=RemoveFreeVarFunctionVisitor([],'_inv').visit(set)
@@ -3428,3 +3427,223 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(True==changed,'changed!=True')
+#--------------------------------------------------------
+
+#---------- Unique Tuple Vars Visitor ----------
+class UniqueTupleVarsVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=UniqueTupleVarsVisitor().visit(set)
+		self.failUnless(hasattr(v,'changed'),"UniqueTupleVarsVisitor doesn't place result in the 'changed' property.")
+
+	#Make sure the visitor doesn't do anything to empty Sets
+	def testEmptySet(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresSet,VarTuple,Conjunction
+		from iegen import Set
+
+		set=Set(sets=[PresSet(VarTuple([]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(set).changed
+		set_res=Set('{[]}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor doesn't do anything to empty Relations
+	def testEmptyRelation(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction
+		from iegen import Relation
+
+		rel=Relation(relations=[PresRelation(VarTuple([]),VarTuple([]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(rel).changed
+		rel_res=Relation('{[]->[]}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor doesn't do anything to a Set this visitor doesn't apply to
+	def testNoChangeSet(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresSet,VarTuple,Conjunction,VarExp
+		from iegen import Set
+
+		set=Set(sets=[PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'b')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(set).changed
+		set_res=Set('{[a,b]}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor doesn't do anything to a Relation this visitor doesn't apply to
+	def testNoChangeRelation(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction,VarExp
+		from iegen import Relation
+
+		rel=Relation(relations=[PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(rel).changed
+		rel_res=Relation('{[a]->[b]}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor renames variables in Sets for simple cases
+	def testRenameSetSimple(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresSet,VarTuple,Conjunction,VarExp
+		from iegen import Set
+
+		set=Set(sets=[PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'a')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a_0,a_1]:a_0=a_1}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor renames variables in Relations for simple cases
+	def testRenameRelationSimple1(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction,VarExp
+		from iegen import Relation
+
+		rel=Relation(relations=[PresRelation(VarTuple([VarExp(1,'a'),VarExp(1,'a')]),VarTuple([]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(rel).changed
+		simplify(rel)
+		rel_res=Relation('{[a_in0,a_in1]->[]: a_in0=a_in1}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor renames variables in Relations for simple cases
+	def testRenameRelationSimple2(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction,VarExp
+		from iegen import Relation
+
+		rel=Relation(relations=[PresRelation(VarTuple([]),VarTuple([VarExp(1,'a'),VarExp(1,'a')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(rel).changed
+		simplify(rel)
+		rel_res=Relation('{[]->[a_out0,a_out1]: a_out0=a_out1}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor renames variables in Relations for simple cases
+	def testRenameRelationSimple3(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction,VarExp
+		from iegen import Relation
+
+		rel=Relation(relations=[PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'a')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(rel).changed
+		simplify(rel)
+		rel_res=Relation('{[a_in0]->[a_out0]: a_in0=a_out0}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor handles renaming positions properly
+	def testRenameSetPos(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresSet,VarTuple,Conjunction,VarExp
+		from iegen import Set
+
+		set=Set(sets=[PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c'),VarExp(1,'b')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b_1,c,b_3]:b_1=b_3}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor handles renaming positions properly
+	def testRenameRelationPos(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction,VarExp
+		from iegen import Relation
+
+		rel=Relation(relations=[PresRelation(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c'),VarExp(1,'d')]),VarTuple([VarExp(1,'e'),VarExp(1,'f'),VarExp(1,'g'),VarExp(1,'c')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(rel).changed
+		simplify(rel)
+		rel_res=Relation('{[a,b,c_in2,d]->[e,f,g,c_out3]: c_in2=c_out3}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor handles multiple renamings
+	def testMultipleRenameSet(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresSet,VarTuple,Conjunction,VarExp
+		from iegen import Set
+
+		set=Set(sets=[PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c'),VarExp(1,'d'),VarExp(1,'c'),VarExp(1,'a'),VarExp(1,'b')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a_0,b_1,c_2,d,c_4,a_5,b_6]: a_0=a_5 and b_1=b_6 and c_2=c_4}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor handles renaming positions properly
+	def testMultipleRenameRelation(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction,VarExp
+		from iegen import Relation
+
+		rel=Relation(relations=[PresRelation(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'c'),VarExp(1,'c')]),VarTuple([VarExp(1,'d'),VarExp(1,'e'),VarExp(1,'a'),VarExp(1,'d')]),Conjunction([]))])
+
+		changed=UniqueTupleVarsVisitor().visit(rel).changed
+		simplify(rel)
+		rel_res=Relation('{[a_in0,b,c_in2,c_in3]->[d_out0,e,a_out2,d_out3]: a_in0=a_out2 and c_in2=c_in3 and d_out0=d_out3}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor handles renaming with extra constraints
+	def testRenameWithConstraintSet(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,NormExp,VarExp,FuncExp
+		from iegen import Set
+
+		set=Set(sets=[PresSet(VarTuple([VarExp(1,'a'),VarExp(1,'b'),VarExp(1,'a')]),Conjunction([Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([VarExp(1,'a')],0)])],0))]))])
+
+		changed=UniqueTupleVarsVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a_0,b,a_2]: a_0=a_2 and a=a_0 and b=f(a_2)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor handles renaming with extra constraints
+	def testRenameWithConstraintRelation(self):
+		from iegen.ast.visitor import UniqueTupleVarsVisitor
+		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,NormExp,VarExp,FuncExp
+		from iegen import Relation
+
+		rel=Relation(relations=[PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b'),VarExp(1,'a')]),Conjunction([Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([VarExp(1,'a')],0)])],0))]))])
+
+		changed=UniqueTupleVarsVisitor().visit(rel).changed
+		simplify(rel)
+		rel_res=Relation('{[a_in0]->[b,a_out1]: a_in0=a_out1 and a_in0=a and b=f(a_out1)}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+#--------------------------------------------------

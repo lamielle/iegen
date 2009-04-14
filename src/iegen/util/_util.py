@@ -159,6 +159,14 @@ def normalize_names(obj):
 				#Rename to target names
 				RenameVisitor(formula._get_formula_rename_dict(form,base_form)).visit(form)
 
+#Runs normalization code that only needs to be run once rather than multiple
+# times over the life of the object
+def one_time_normalize(obj):
+	from iegen.ast.visitor import UniqueTupleVarsVisitor
+
+	#Run UniqueTupleVarsVisitor
+	UniqueTupleVarsVisitor().visit(obj)
+
 #---------- Decorators ----------
 from iegen.lib.decorator import decorator
 

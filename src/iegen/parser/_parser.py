@@ -16,6 +16,7 @@
 # AML 8/13/2008: Modified to use rewritten expressions and their operators
 # AML 8/25/2008: Removed union support from parser
 
+import iegen.util
 from iegen import IEGenObject
 from iegen.util import is_iterable
 from iegen.ast import PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
@@ -39,6 +40,10 @@ class PresParser(object):
 			#Return the parsed AST
 			set=PresParser.get_set_parser(set).parse(set)
 			set.symbolics=[] if symbolics is None else symbolics
+
+			#Run one time normalization
+			iegen.util.one_time_normalize(set)
+
 			return set
 		finally:
 			#Replace the relation-only tokens and rules
@@ -59,6 +64,10 @@ class PresParser(object):
 			#Return the parsed AST
 			relation=PresParser.get_relation_parser(relation).parse(relation)
 			relation.symbolics=[] if symbolics is None else symbolics
+
+			#Run one time normalization
+			iegen.util.one_time_normalize(relation)
+
 			return relation
 		finally:
 			#Replace the set-only tokens and rules

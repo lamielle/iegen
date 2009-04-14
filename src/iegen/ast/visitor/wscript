@@ -36,5 +36,6 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_find_functions_visitor.py')
 	install_files('PREFIX',inst_dir,'_collect_symbolics_visitor.py')
 	install_files('PREFIX',inst_dir,'_collect_vars_visitor.py')
+	install_files('PREFIX',inst_dir,'_unique_tuple_vars_visitor.py')
 
 	bld.add_subdirs('test')
