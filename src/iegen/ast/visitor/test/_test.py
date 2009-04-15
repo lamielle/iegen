@@ -3539,7 +3539,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		set_res=Set('{[a_0,a_1]:a_0=a_1}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor renames variables in Relations for simple cases
 	def testRenameRelationSimple1(self):
@@ -3554,7 +3554,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		rel_res=Relation('{[a_in0,a_in1]->[]: a_in0=a_in1}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor renames variables in Relations for simple cases
 	def testRenameRelationSimple2(self):
@@ -3569,7 +3569,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		rel_res=Relation('{[]->[a_out0,a_out1]: a_out0=a_out1}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor renames variables in Relations for simple cases
 	def testRenameRelationSimple3(self):
@@ -3584,7 +3584,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		rel_res=Relation('{[a_in0]->[a_out0]: a_in0=a_out0}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor handles renaming positions properly
 	def testRenameSetPos(self):
@@ -3599,7 +3599,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		set_res=Set('{[a,b_1,c,b_3]:b_1=b_3}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor handles renaming positions properly
 	def testRenameRelationPos(self):
@@ -3614,7 +3614,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		rel_res=Relation('{[a,b,c_in2,d]->[e,f,g,c_out3]: c_in2=c_out3}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor handles multiple renamings
 	def testMultipleRenameSet(self):
@@ -3629,7 +3629,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		set_res=Set('{[a_0,b_1,c_2,d,c_4,a_5,b_6]: a_0=a_5 and b_1=b_6 and c_2=c_4}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor handles renaming positions properly
 	def testMultipleRenameRelation(self):
@@ -3644,7 +3644,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		rel_res=Relation('{[a_in0,b,c_in2,c_in3]->[d_out0,e,a_out2,d_out3]: a_in0=a_out2 and c_in2=c_in3 and d_out0=d_out3}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor handles renaming with extra constraints
 	def testRenameWithConstraintSet(self):
@@ -3659,7 +3659,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		set_res=Set('{[a_0,b,a_2]: a_0=a_2 and a=a_0 and b=f(a_2)}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 
 	#Make sure the visitor handles renaming with extra constraints
 	def testRenameWithConstraintRelation(self):
@@ -3674,5 +3674,5 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		rel_res=Relation('{[a_in0]->[b,a_out1]: a_in0=a_out1 and a_in0=a and b=f(a_out1)}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
-		self.failUnless(False==changed,'changed!=False')
+		self.failUnless(True==changed,'changed!=True')
 #--------------------------------------------------

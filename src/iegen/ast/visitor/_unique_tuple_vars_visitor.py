@@ -60,6 +60,9 @@ class UniqueTupleVarsVisitor(DFVisitor):
 					#Add an equality constraint: new_var_name=old_var_name
 					node.conjunct.constraints.append(Equality(NormExp([VarExp(1,old_var_name),VarExp(-1,new_var_name)],0)))
 
+					#We've changed the object we are visiting, make this known
+					self.changed=True
+
 	#The method that actually does renaming for PresRelations
 	#This method uses the current state of vars_info to do renaming
 	def relation_rename(self,node):
@@ -82,6 +85,9 @@ class UniqueTupleVarsVisitor(DFVisitor):
 
 					#Add an equality constraint: new_var_name=old_var_name
 					node.conjunct.constraints.append(Equality(NormExp([VarExp(1,old_var_name),VarExp(-1,new_var_name)],0)))
+
+					#We've changed the object we are visiting, make this known
+					self.changed=True
 
 	def init_vars_info(self,node):
 		if self.in_pres_set:
