@@ -27,15 +27,31 @@ def register_rule(rule_func,instance=None,rule_group=3):
 #If f->f_inv, then the corresponding f_inv->f should exist here as well
 _inverse_pairs={}
 
-#Accessor for obtaining the inverse pairs dictionary
+#Accessor function for obtaining the inverse pairs dictionary
 def inverse_pairs():
 	return _inverse_pairs
 
+#Standard suffix for an inverse function
+_inverse_suffix='_inv'
+
+#Accesor function for obtaining the inverse suffix string
+def inverse_suffix():
+	return _inverse_suffix
+
 #Registers the given function and its inverse as a pair
-def register_inverse_pair(function_name,inverse_function_name):
+#If inverse_function_name is not given, the name is function_name+inverse_suffix
+def register_inverse_pair(function_name,inverse_function_name=None):
+	iegen.print_detail('Registering inverse function pair (%s,%s)...'%(function_name,inverse_function_name))
+
+	#Build the inverse_function_name if it was not given
+	if inverse_function_name is None:
+		inverse_function_name=function_name+inverse_suffix()
+
+	#Register the names in the dictionary of function name pairs
 	_inverse_pairs[function_name]=inverse_function_name
 	_inverse_pairs[inverse_function_name]=function_name
 #-----------------------------------------------
+
 #Given an object of the following types:
 #Set,Relation,PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,VarExp,FuncExp,NormExp
 #Applies the registered simplification rules to reduce the complexity of the object
