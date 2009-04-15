@@ -49,6 +49,9 @@ class MapIR(IEGenObject):
 	#Adds the given ERSpec to the collection of ERSpecs
 	def add_er_spec(self,er_spec):
 		self.print_progress("Adding ERSpec '%s'..."%er_spec.name)
+		#Register this function and its inverse if it is a permutation
+		if er_spec.is_permutation:
+			iegen.simplify.register_inverse_pair(er_spec.name)
 		self.er_specs[er_spec.name]=er_spec
 	#-----------------------------
 
