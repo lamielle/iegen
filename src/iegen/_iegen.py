@@ -12,9 +12,8 @@ from iegen.util import like_type,DimensionalityError,define_properties
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
 #---------- Are we debugging? ----------
-#Setup a property, iegen.debug, that determines if we are debugging
-def _debug(): return iegen.IEGenObject.settings.debug
-debug=property(_debug())
+#Setup a function, iegen.debug(), that determines if we are debugging
+def debug(): return iegen.IEGenObject.settings.debug
 #---------------------------------------
 
 #---------- Printing methods -----
