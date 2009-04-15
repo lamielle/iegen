@@ -362,7 +362,7 @@ class SetTestCase(TestCase):
 
 		applied=set.apply(relation)
 
-		applied_res=Set('{[b,f]: b=5 and f=12}')
+		applied_res=Set('{[b_out0,f]: b_out0=5 and f=12}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -389,7 +389,7 @@ class SetTestCase(TestCase):
 
 		applied=set.apply(relation)
 
-		applied_res=Set('{[a,b]:1<=a and a<=10 and 1<=b and b<=10 and -10<=a and a<=0 and b=6 and a>5}')
+		applied_res=Set('{[a_out0,b_out1]:1<=a_out0 and a_out0<=10 and -10<=a_out0 and a_out0<=0 and b_out1=6 and a_out0>5}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -402,7 +402,7 @@ class SetTestCase(TestCase):
 
 		I_0_applied=I_0.apply(iter_ssr)
 
-		I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }')
+		I_0_res=Set('{ [ii_out0] : 0 <= ii_out0 and ii_out0 <= (n_atom-1) }')
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
@@ -422,7 +422,7 @@ class SetTestCase(TestCase):
 
 		I_0_applied=I_0.apply(iter_ssr)
 
-		I_0_res=Set('{ [ii] : 0 <= ii and ii <= (n_atom-1) }').union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-2) }')).union(Set('{ [ii] : 0 <= ii and ii <= (n_atom-3) }'))
+		I_0_res=Set('{ [ii_out0] : 0 <= ii_out0 and ii_out0 <= (n_atom-1) }').union(Set('{ [ii_out0] : 0 <= ii_out0 and ii_out0 <= (n_atom-2) }')).union(Set('{ [ii_out0] : 0 <= ii_out0 and ii_out0 <= (n_atom-3) }'))
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
@@ -834,9 +834,12 @@ class RelationTestCase(TestCase):
 		from iegen.parser import PresParser
 
 		prelation1=PresParser.parse_relation('{[a]->[a]:a>10}')
-		prelation2=PresParser.parse_relation('{[b]->[b]:b>10}')
+		prelation2=PresParser.parse_relation('{[b]->[b]:b>11}')
 		relation1=Relation(relations=[prelation1,prelation2])
-		relation2=Relation(relations=[prelation2,prelation1])
+
+		prelation1=PresParser.parse_relation('{[a]->[a]:a>11}')
+		prelation2=PresParser.parse_relation('{[b]->[b]:b>10}')
+		relation2=Relation(relations=[prelation1,prelation2])
 
 		self.failUnless(relation1==relation2,'%s!=%s'%(relation1,relation2))
 
@@ -883,19 +886,19 @@ class RelationTestCase(TestCase):
 		from iegen.parser import PresParser
 
 		prelation1=PresParser.parse_relation('{[a]->[a]:a>10}')
-		prelation2=PresParser.parse_relation('{[b]->[b]:b>10}')
+		prelation2=PresParser.parse_relation('{[b]->[b]:b>11}')
 		relation1=Relation('{[a]->[a]:a>10}')
-		relation2=Relation('{[b]->[b]:b>10}')
+		relation2=Relation('{[b]->[b]:b>11}')
 		unioned=relation1.union(relation2)
 		unioned_res=Relation(relations=[prelation1,prelation2])
 
 		self.failUnless(unioned==unioned_res,'%s!=%s'%(unioned,unioned_res))
 
 		prelation1=PresParser.parse_relation('{[a]->[a]:a>10}')
-		prelation2=PresParser.parse_relation('{[b]->[b]:b>10}')
-		prelation3=PresParser.parse_relation('{[b]->[b]:b>10}')
+		prelation2=PresParser.parse_relation('{[b]->[b]:b>11}')
+		prelation3=PresParser.parse_relation('{[b]->[b]:b>11}')
 		relation1=Relation('{[a]->[a]:a>10}')
-		relation2=Relation('{[b]->[b]:b>10}')
+		relation2=Relation('{[b]->[b]:b>11}')
 		unioned=unioned.union(relation1)
 		unioned_res=Relation(relations=[prelation1,prelation2,prelation3])
 
@@ -1044,7 +1047,7 @@ class RelationTestCase(TestCase):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=Relation('{[a]->[j]: j=f(a)}')
+		composed_res=Relation('{[a_in0]->[j]: j=f(a_in0)}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -1070,7 +1073,7 @@ class RelationTestCase(TestCase):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=Relation('{[a]->[b]: -10<=a and a<=0 and b=5 and 1<=a and a<=11 and 1<=b and b<=10}')
+		composed_res=Relation('{[a_in0]->[b_out0]: -10<=a_in0 and a_in0<=0 and b_out0=5 and 1<=a_in0 and a_in0<=11 and 1<=b_out0 and b_out0<=10}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -1083,7 +1086,7 @@ class RelationTestCase(TestCase):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=Relation('{[a2]->[a1]: -10<=a2 and a2<=0 and 1<=a1 and a1<=10 and a1=a2}')
+		composed_res=Relation('{[a_in0]->[a_out0]: -10<=a_in0 and a_in0<=0 and 1<=a_out0 and a_out0<=10 and a_in0=a_out0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
