@@ -4,16 +4,18 @@ from iegen.ast import VarExp,FuncExp
 
 #Searches for equality constraints of the form: a=f(b)
 #a is a tuple variable and b is a free variable
-#If f is in the list of given permutation function names, this constraint
-# can be simplified to: b=f_suffix(a)
+#
+#If f is in the dictionary of given function name mappings, this constraint
+# can be simplified to: b='permutations[f]'(a)
+#
+#permutations: A dictionary mapping names to their associated inverse name
+#              It is assumed that for a pair (f,f_inv), both f->f_inv and
+#              f_inv->f is present in the dictionary
 class RemoveFreeVarFunctionVisitor(DFVisitor):
 
-	def __init__(self,permutations,suffix):
-		#The type of constraint we are removing
+	def __init__(self,permutations):
+		#Dictionary mapping function names to their inverses
 		self.permutations=permutations
-
-		#The suffix to append to function names when simplifying
-		self.suffix=suffix
 
 		#By default we have not changed the formula
 		self.changed=False
@@ -78,8 +80,8 @@ class RemoveFreeVarFunctionVisitor(DFVisitor):
 						var.id,func_arg.id=func_arg.id,var.id
 						var.coeff,func_arg.coeff=func_arg.coeff,var.coeff
 
-						#Append the suffix to the function name
-						func.name+=self.suffix
+						#Change the function name to its associated inverse name
+						func.name=self.permutations[func.name]
 
 						#Set the changed flag
 						self.changed=True

@@ -3281,7 +3281,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 		from iegen import Set
 
 		set=Set('{[]}')
-		v=RemoveFreeVarFunctionVisitor([],'_inv').visit(set)
+		v=RemoveFreeVarFunctionVisitor({}).visit(set)
 		self.failUnless(hasattr(v,'changed'),"RemoveFreeVarFunctionVisitor doesn't place result in the 'changed' property.")
 
 	#Tests that this visitor doesn't die when given something other than a Set/Relation/PresSet/PresRelation
@@ -3298,19 +3298,19 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 		conjunction=Conjunction([Inequality(NormExp([VarExp(1,'f')],10))])
 		equality2=Equality(NormExp([VarExp(1,'b'),FuncExp(1,'f',[NormExp([VarExp(1,'c')],0)])],-5))
 
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(varexp).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(varexp).changed
 		self.failUnless(False==changed,'changed!=False')
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(funcexp).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(funcexp).changed
 		self.failUnless(False==changed,'changed!=False')
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(normexp).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(normexp).changed
 		self.failUnless(False==changed,'changed!=False')
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(equality).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(equality).changed
 		self.failUnless(False==changed,'changed!=False')
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(inequality).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(inequality).changed
 		self.failUnless(False==changed,'changed!=False')
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(conjunction).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(conjunction).changed
 		self.failUnless(False==changed,'changed!=False')
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(equality2).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(equality2).changed
 		self.failUnless(False==changed,'changed!=False')
 
 	#Make sure the visitor doesn't do anything in 'normal' situations
@@ -3320,7 +3320,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a,b]: 10<=a and a<=n and b>n and b<22}',[Symbolic('n')])
 
-		changed=RemoveFreeVarFunctionVisitor(['f','g'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(set).changed
 		set_res=Set('{[a,b]: 10<=a and a<=n and b>n and b<22}',[Symbolic('n')])
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
@@ -3333,7 +3333,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		rel=Relation('{[a,b]->[ap,bp]: 10<=a and a<=n and b>n and b<22}',[Symbolic('n')])
 
-		changed=RemoveFreeVarFunctionVisitor(['f','g'],'_inv').visit(rel).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(rel).changed
 		rel_res=Relation('{[a,b]->[ap,bp]: 10<=a and a<=n and b>n and b<22}',[Symbolic('n')])
 
 		self.failUnless(rel==rel,'%s!=%s'%(rel,rel))
@@ -3346,7 +3346,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a]: a=f(b)}')
 
-		changed=RemoveFreeVarFunctionVisitor([],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({}).visit(set).changed
 		set_res=Set('{[a]: a=f(b)}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
@@ -3354,7 +3354,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a]: a=f(b)}')
 
-		changed=RemoveFreeVarFunctionVisitor(['g'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'g':'g_inv','g_inv':'g'}).visit(set).changed
 		set_res=Set('{[a]: a=f(b)}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
@@ -3367,7 +3367,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a,b]: a=f(c) and b=g(c)}')
 
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(set).changed
 		simplify(set)
 		set_res=Set('{[a,b]: b=g(f_inv(a))}')
 
@@ -3381,7 +3381,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a]: a=f(c) and a<=c}')
 
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(set).changed
 		simplify(set)
 		set_res=Set('{[a]: a<=f_inv(a)}')
 
@@ -3395,7 +3395,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a,b]: 5a=f(c) and b=g(c)}')
 
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(set).changed
 		simplify(set)
 		set_res=Set('{[a,b]: b=g(f_inv(5a))}')
 
@@ -3409,7 +3409,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a,b]: a=f(d) and b=g(d) and a<=d}')
 
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(set).changed
 		simplify(set)
 		set_res=Set('{[a,b]: b=g(f_inv(a)) and a<=f_inv(a)}')
 
@@ -3423,7 +3423,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a,b,c]: a=f(d) and b=g(d) and a<=c+d}')
 
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(set).changed
 		simplify(set)
 		set_res=Set('{[a,b,c]: b=g(f_inv(a)) and a<=c+f_inv(a)}')
 
@@ -3437,7 +3437,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a,b,c]: a=f(d) and b=g(e) and a<=d and c<=e}')
 
-		changed=RemoveFreeVarFunctionVisitor(['f','g'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f','g':'g_inv','g_inv':'g'}).visit(set).changed
 		simplify(set)
 		set_res=Set('{[a,b,c]: a<=f_inv(a) and c<=g_inv(b)}')
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
@@ -3450,7 +3450,7 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		set=Set('{[a]: a=f(c) and a+n<=c}',[Symbolic('n')])
 
-		changed=RemoveFreeVarFunctionVisitor(['f'],'_inv').visit(set).changed
+		changed=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'}).visit(set).changed
 		simplify(set)
 		set_res=Set('{[a]: a+n<=f_inv(a)}',[Symbolic('n')])
 

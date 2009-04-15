@@ -109,7 +109,7 @@ def inverse_simplify(obj):
 	from iegen.util import like_type
 
 	if iegen.debug(): before=str(obj)
-	changed=RemoveFreeVarFunctionVisitor(iegen.simplify.inverse_pairs(),'_inv').visit(obj).changed
+	changed=RemoveFreeVarFunctionVisitor(iegen.simplify.inverse_pairs()).visit(obj).changed
 	if changed and iegen.debug(): iegen.print_debug('Simplify: removed free variable function: %s -> %s'%(before,obj))
 
 	return changed
