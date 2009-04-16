@@ -10,8 +10,11 @@ from iegen import Set
 from iegen import Relation
 from iegen import Symbolic
 
+import iegen.simplify
+
 ##### Compose scheduling/scattering function for each statement
 ##### with the statement's original iteration space.
+#iegen.simplify.registerInversePairs()
 
 syms = [Symbolic("N"),Symbolic("T"), Symbolic("n_inter")]
 
@@ -100,12 +103,12 @@ print
 #### PERFORMANCE PROBLEM: the following composition causes a noticable pause
 print "\toutput:"
 print "\t\tars of interest = " ,iter_sub_space_relation.compose( all_ar.inverse() ).inverse()
-cProfile.run('iter_sub_space_relation.compose( all_ar.inverse() ).inverse()','prof')
-p = pstats.Stats('prof')
-p.strip_dirs()
-p.sort_stats('cumulative').print_stats(20)
-p.sort_stats('time').print_stats(20)
-p.print_callers(20)
+#cProfile.run('iter_sub_space_relation.compose( all_ar.inverse() ).inverse()','prof')
+#p = pstats.Stats('prof')
+#p.strip_dirs()
+#p.sort_stats('cumulative').print_stats(20)
+#p.sort_stats('time').print_stats(20)
+#p.print_callers(20)
 print
 print
 print "Update modified access relations based on automatically derived data reordering specification."
@@ -119,10 +122,25 @@ print "\tR_x0_x1 compose a8_modified = "
 print R_x0_x1.compose(a8_modified)
 
 
+#### Loop Alignment
+print
+print "==== Loop Alignment"
+print "Waiting for f(f_inv(i)) simplification"
+
+
 #### IterPermuteTrans
+iegen.simplify.register_inverse_pair('delta')
 print
 print "==== IterPermuteTrans"
-print "Waiting for inverse simplification"
+T_I0_to_I1 = Relation("{[c0,s1,c1,i,c2] -> [c3,s2,c4,j,c5] : s1=s2 && c0=0 && c1=0 && c2=0 && c3=0 && c4=0 && c5=0 && i=j}")
+T_I0_to_I1 = T_I0_to_I1.union( Relation("{[c6,s3,c7,ii,x] -> [c8,s4,c9,j,y] : s3=s4 && j = delta(ii) && c6=0 && c8=0 && c7=1 && c9=1 && x=y }"))
+print "T_I0_to_I1 = ", T_I0_to_I1
+print
+A_I_to_x = Relation("{[c10,s,c11,ii,c12] -> [r] : r = sigma(inter1(ii)) && c11=1 && c10=0 && c12=0}")
+print "A_I_to_x = ", A_I_to_x
+print
+result = A_I_to_x.compose( T_I0_to_I1.inverse() )
+print "A_I_to_x compose (inverse T_I0_to_I1) = ", result
 
 #### SparseTileTrans
 print
