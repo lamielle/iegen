@@ -21,4 +21,6 @@ class ParamVisitor(TopoVisitor):
 	def atIDGOutputERSpec(self,node):
 		self.params.append(Parameter('ExplicitRelation **',node.data.name))
 
+	def atIDGERGCall(self,node): pass
+
 	def atIDGCall(self,node): pass

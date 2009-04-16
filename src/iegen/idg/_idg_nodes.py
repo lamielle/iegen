@@ -70,6 +70,15 @@ class IDGOutputERSpec(IDGERSpec):
 		visitor.visitIDGOutputERSpec(self)
 #-------------------------------------
 
+#---------- IDGERGCall ----------
+class IDGERGCall(IDGNode):
+	def __init__(self,key,erg_spec):
+		IDGNode.__init__(self,key,erg_spec)
+
+	def apply_visitor(self,visitor):
+		visitor.visitIDGERGCall(self)
+#-----------------------------
+
 #---------- IDGCall ----------
 class IDGCall(IDGNode):
 	def __init__(self,key,erg_spec):

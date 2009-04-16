@@ -164,7 +164,7 @@ class DataPermuteTrans(Transformation):
 	#Update the idg based on this transformation
 	def update_idg(self,mapir):
 		#Add the ERG call node to the IDG
-		call_node=mapir.idg.get_call_node(mapir.erg_specs[self._get_erg_spec_name()])
+		call_node=mapir.idg.get_erg_call_node(mapir.erg_specs[self._get_erg_spec_name()])
 
 		#Add the input ERSpecs to the IDG
 		for input_er_spec in self.inputs:

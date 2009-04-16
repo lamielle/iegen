@@ -53,6 +53,10 @@ class DotVisitor(TopoVisitor):
 		self.write_node_def(node.key,'IDGOutputERSpec\\n%s'%(node.data.name))
 		self.write_node_uses(node)
 
+	def atIDGERGCall(self,node):
+		self.write_node_def(node.key,'IDGERGCall\\n%s'%(node.data.name))
+		self.write_node_uses(node)
+
 	def atIDGCall(self,node):
 		self.write_node_def(node.key,'IDGCall\\n%s'%(node.data.name))
 		self.write_node_uses(node)
