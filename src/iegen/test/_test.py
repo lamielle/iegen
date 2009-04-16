@@ -853,7 +853,7 @@ class RelationTestCase(TestCase):
 			for size_out in xrange(10):
 				var_tuple_in=lowercase[:size_in]
 				var_tuple_in='['+','.join(var_tuple_in)+']'
-				var_tuple_out=lowercase[:size_out]
+				var_tuple_out=[var+'p' for var in lowercase[:size_out]]
 				var_tuple_out='['+','.join(var_tuple_out)+']'
 				relation=Relation('{'+var_tuple_in+'->'+var_tuple_out+'}')
 				self.failUnless(relation.arity_in()==size_in,"Input arity of '%s'!=%d"%(relation,size_in))
