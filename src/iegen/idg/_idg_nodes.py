@@ -79,11 +79,11 @@ class IDGERGCall(IDGNode):
 		visitor.visitIDGERGCall(self)
 #-----------------------------
 
-#---------- IDGCall ----------
-class IDGCall(IDGNode):
-	def __init__(self,key,erg_spec):
-		IDGNode.__init__(self,key,erg_spec)
+#---------- IDGReorderCall ----------
+class IDGReorderCall(IDGNode):
+	def __init__(self,key,call_spec):
+		IDGNode.__init__(self,key,call_spec)
 
 	def apply_visitor(self,visitor):
-		visitor.visitIDGCall(self)
+		visitor.visitIDGReorderCall(self)
 #-----------------------------

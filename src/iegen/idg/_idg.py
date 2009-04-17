@@ -2,7 +2,7 @@
 #Alan LaMielle: 1/7/2009
 
 from iegen import IEGenObject
-from iegen.idg import IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGERGCall,IDGCall
+from iegen.idg import IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGERGCall,IDGReorderCall
 
 #---------- Inspector Dependence Graph ----------
 class IDG(IEGenObject):
@@ -15,7 +15,7 @@ class IDG(IEGenObject):
 	           IDGIndexArray:'er_spec_',
 	           IDGOutputERSpec:'er_spec_',
 	           IDGERGCall:'erg_spec_',
-	           IDGCall:'gen_call_',
+	           IDGReorderCall:'gen_call_',
 	          }
 
 	def __init__(self):
@@ -55,6 +55,6 @@ class IDG(IEGenObject):
 	def get_erg_call_node(self,erg_spec):
 		return self._get_node(erg_spec,IDGERGCall)
 
-	def get_call_node(self,erg_spec):
-		return self._get_node(erg_spec,IDGCall)
+	def get_reorder_call_node(self,call_spec):
+		return self._get_node(call_spec,IDGReorderCall)
 #------------------------------------------------

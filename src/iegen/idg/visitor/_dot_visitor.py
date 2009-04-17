@@ -57,6 +57,6 @@ class DotVisitor(TopoVisitor):
 		self.write_node_def(node.key,'IDGERGCall\\n%s'%(node.data.name))
 		self.write_node_uses(node)
 
-	def atIDGCall(self,node):
-		self.write_node_def(node.key,'IDGCall\\n%s'%(node.data.name))
+	def atIDGReorderCall(self,node):
+		self.write_node_def(node.key,'IDGReorderCall\\n%s'%(node.data.name))
 		self.write_node_uses(node)
