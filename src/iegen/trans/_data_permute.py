@@ -1,7 +1,7 @@
 from copy import deepcopy
 from cStringIO import StringIO
 from iegen.trans import Transformation
-from iegen import ERSpec,Relation
+from iegen import ERSpec,Relation,FunctionCallSpec
 
 #---------- DataPermuteTrans class ----------
 class DataPermuteTrans(Transformation):
@@ -164,7 +164,7 @@ class DataPermuteTrans(Transformation):
 	#Update the idg based on this transformation
 	def update_idg(self,mapir):
 		#Add the ERG call node to the IDG
-		call_node=mapir.idg.get_erg_call_node(mapir.erg_specs[self._get_erg_spec_name()])
+		erg_call_node=mapir.idg.get_erg_call_node(mapir.erg_specs[self._get_erg_spec_name()])
 
 		#Add the input ERSpecs to the IDG
 		for input_er_spec in self.inputs:
@@ -172,10 +172,27 @@ class DataPermuteTrans(Transformation):
 			input_er_spec_node=mapir.idg.get_er_spec_node(input_er_spec)
 
 			#Add dependence of the call to the input
-			call_node.add_dep(input_er_spec_node)
+			erg_call_node.add_dep(input_er_spec_node)
 
 			#Add any dependences that this ERSpec has
 			self.add_er_spec_deps(input_er_spec,mapir)
+
+		#Collection of reorder call nodes
+		reorder_call_nodes=[]
+
+		#Add reorder call nodes for each data array to be reordered
+		for data_array in self.data_arrays:
+			#Add the reorder call node for this data array to the IDG
+			reorder_call_node=mapir.idg.get_reorder_call_node(FunctionCallSpec(self.name+'_reorderArray_'+data_array.name,'reorderArray'))
+
+			#Add the reorder call node to the collection of reorder call nodes
+			reorder_call_nodes.append(reorder_call_node)
+
+			#Get the data array node
+			data_array_node=mapir.idg.get_data_array_node(data_array)
+
+			#Add the dependence of the reorder call on the data array
+			reorder_call_node.add_dep(data_array_node)
 
 		#Add the output ERSpecs to the IDG
 		for output_er_spec in self.outputs:
@@ -183,7 +200,11 @@ class DataPermuteTrans(Transformation):
 			output_er_spec_node=mapir.idg.get_output_er_spec_node(output_er_spec)
 
 			#Add dependence of the output on the call
-			output_er_spec_node.add_dep(call_node)
+			output_er_spec_node.add_dep(erg_call_node)
+
+			#Add dependences of the reorder calls on the output
+			for reorder_call_node in reorder_call_nodes:
+				reorder_call_node.add_dep(output_er_spec_node)
 
 			#Add any dependences that this ERSpec has
 			self.add_er_spec_deps(output_er_spec,mapir)
