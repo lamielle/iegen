@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen classes
 	def testNameImport(self):
 		try:
-			from iegen import IEGenObject,MapIR,Symbolic,DataArray,IndexArray,AccessRelation,Statement,ERGSpec,DataDependence,Set,Relation
+			from iegen import IEGenObject,MapIR,Symbolic,DataArray,IndexArray,AccessRelation,Statement,ERGSpec,FunctionCallSpec,DataDependence,Set,Relation
 		except Exception,e:
 			self.fail("Importing classes from iegen failed: "+str(e))
 #----------------------------------

@@ -308,3 +308,12 @@ class DataDependence(IEGenObject):
 
 define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
 #------------------------------------------
+
+#---------- Function Call class ----------
+class FunctionCallSpec(IEGenObject):
+	__slots__=('name','function_name')
+
+	def __init__(self,name,function_name):
+		self.name=name
+		self.function_name=function_name
+#-----------------------------------------
