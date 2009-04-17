@@ -1,6 +1,6 @@
 import iegen
 from iegen import IEGenObject
-from iegen.codegen import Statement,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string
+from iegen.codegen import Statement,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string,calc_size_string
 
 #Generates code for the inspector
 def gen_inspector(mapir):
@@ -127,14 +127,5 @@ def gen_erg_spec(erg_spec,output_er_specs):
 
 	return stmts
 
-##Generates code that does the data reordering
-#def gen_reorder_data(mapir,data_reordering):
-#	from iegen.codegen import Statement,Comment
-#
-#	stmts=[]
-#	stmts.append(Comment('Reorder the data arrays'))
-#
-#	for data_array in data_reordering.data_arrays:
-#		stmts.append(Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,%s);'%(data_array.name,calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),mapir.sigma.result.name)))
-#
-#	return stmts
+def gen_reorder_call(data_array,reordering):
+	return [Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,%s_ER);'%(data_array.name,calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),reordering.name))]

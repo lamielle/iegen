@@ -23,7 +23,7 @@ class ImportTestCase(TestCase):
 			#_gen.py
 			from iegen.codegen import do_gen,gen_preamble,gen_index_array,gen_tuple_vars_decl
 			#_gen_inspector.py
-			from iegen.codegen import gen_inspector,gen_er_spec,gen_output_er_spec,gen_erg_spec
+			from iegen.codegen import gen_inspector,gen_er_spec,gen_output_er_spec,gen_erg_spec,gen_reorder_call
 			#_gen_executor.py
 			from iegen.codegen import gen_executor
 			#_gen_main.py
