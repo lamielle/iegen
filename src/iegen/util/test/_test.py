@@ -105,3 +105,21 @@ class SignTestCase(TestCase):
 		from iegen.util import sign
 		self.failUnless(-1==sign(-6),'sign(-6)!=-1')
 #--------------------------------
+
+#---------- Invert Dict Tests ----------
+class InvertDictTestCase(TestCase):
+
+	#Tests simple one element dictionary inversions
+	def testInvertOneItem(self):
+		from iegen.util import invert_dict
+		self.failUnless({1:3}==invert_dict({3:1}),'invert_dict({3:1})!={1:3}: %s'%(invert_dict({3:1})))
+		self.failUnless({'a':3}==invert_dict({3:'a'}),"invert_dict({3:'a'})!={'a':3}: %s"%(invert_dict({3:'a'})))
+		self.failUnless({'b':'a'}==invert_dict({'a':'b'}),"invert_dict({'a':'b'})!={'b':'a'}: %s"%(invert_dict({'a':'b'})))
+
+	#Tests multiple element dictionary inversions
+	def testInvertMultipleItems(self):
+		from iegen.util import invert_dict
+		dict=invert_dict({'a':3,6:'d','c':10.3})
+		dict_res={3:'a','d':6,10.3:'c'}
+		self.failUnless(dict_res==dict,'%s!=%s'%(dict_res,dict))
+#---------------------------------------

@@ -56,7 +56,7 @@ def sign(num):
 
 #Inverts key/value pairs of the given dictionary
 def invert_dict(d):
-	return dict(((v,k) for k,v in d.iteritems()))
+	return dict(((v,k) for k,v in d.items()))
 
 #Defines a property called m_name
 #This property is assigned to the given class
