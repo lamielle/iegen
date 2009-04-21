@@ -16,7 +16,7 @@ class ImportTestCase(TestCase):
 	def testNameImport(self):
 		try:
 			#_util.py
-			from iegen.util import run_tests,iter_islast,sign,invert_dict,define_properties,get_basic_term,find_term,like_type,is_iterable,raise_objs_not_like_types,DimensionalityError,normalize_self,normalize_result,check,one_time_normalize
+			from iegen.util import run_tests,iter_islast,sign,invert_dict,equality_sets,define_properties,get_basic_term,find_term,like_type,is_iterable,raise_objs_not_like_types,DimensionalityError,normalize_self,normalize_result,check,one_time_normalize
 			#_test_util.py
 			from iegen.util import tuple_gen,lower_gen,upper_gen,parse_test,ast_equality_test,var_exp_strings,func_exp_strings,norm_exp_strings,test_sets,test_set_strings,test_relations,test_relation_strings
 		except Exception,e:
@@ -123,3 +123,46 @@ class InvertDictTestCase(TestCase):
 		dict_res={3:'a','d':6,10.3:'c'}
 		self.failUnless(dict_res==dict,'%s!=%s'%(dict_res,dict))
 #---------------------------------------
+
+#---------- Equality Sets Tests ----------
+class EqualitySestsTestCase(TestCase):
+
+	#Tests a simple case where there are no equality sets
+	def testNoSets(self):
+		from iegen.util import equality_sets
+		eq_sets=equality_sets({'a':[1],'b':[2],'c':[3],'d':[4]})
+		res=[]
+		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
+
+	#Tests a simple case with one equality set
+	def testSingleSet(self):
+		from iegen.util import equality_sets
+		eq_sets=equality_sets({'a':[1],'b':[1]})
+		res=[set(['a','b'])]
+		res.sort()
+		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
+
+	#Tests a simple case with two equality sets
+	def testTwoSets(self):
+		from iegen.util import equality_sets
+		eq_sets=equality_sets({'a':[1],'b':[2],'c':[1],'d':[2]})
+		res=[set(['a','c']),set(['b','d'])]
+		res.sort()
+		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
+
+	#Tests a more complicated case
+	def testMoreComplex(self):
+		from iegen.util import equality_sets
+		eq_sets=equality_sets({'a':[1,2],'b':[1],'c':[2],'d':[3],'e':[3,4],'f':[2]})
+		res=[set(['a','b']),set(['a','c','f']),set(['d','e'])]
+		res.sort()
+		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
+
+	#Test with multiple duplicate equality values
+	def testDuplicateValues(self):
+		from iegen.util import equality_sets
+		eq_sets=equality_sets({'a':[1,2,2,1],'b':[1,1],'c':[2],'d':[3],'e':[3,4,3,4],'f':[2]})
+		res=[set(['a','b']),set(['a','c','f']),set(['d','e'])]
+		res.sort()
+		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
+#-----------------------------------------

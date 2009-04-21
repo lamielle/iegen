@@ -58,6 +58,49 @@ def sign(num):
 def invert_dict(d):
 	return dict(((v,k) for k,v in d.items()))
 
+#Calculates 'equality sets' for the given input dictionary
+#
+#equality_dict: A dictionary mapping keys to lists of values, such as:
+#               {'a':[1,2],'b':[1],'c':[2],'d':[3],'e':[3,4],'f':[2]}
+#               Intuitively, this says that 'a'=1 and 'a'=2, 'b'=1, etc.
+#               The dictionary says what values the keys are equal to
+#
+#Given the equality dictionary, this function calculates what sets of
+# keys are directly equal to other keys.
+#Note that transitive equalities are not considered, such as the equality
+# c=b by the fact that a=b and a=c.
+#Note also that this function only wants equalities between keys, so an
+# equality set will have at least two keys.  The result will not contain a
+# singleton list with 'e' in it as 'e' is the only key equal to 4.
+#
+#The result of the function is a sorted list of set objects (each set
+# is one equality set).
+#
+#For the above dictionary, the result is:
+# [set(['a','b']),set(['a','c','f']),set(['d','e'])]
+#
+#One line unreadable list comprehension version:
+#[ll for ll in [[k for k,v in d.items() if s in v] for s in values] if len(ll)>1]
+#
+def equality_sets(equality_dict):
+	#Unique collection of all values
+	values=set([val for val_coll in equality_dict.values() for val in val_coll])
+
+	#Equality sets
+	equality_sets=[]
+
+	#For each unique value
+	for value in values:
+		#Determine the keys that are equal to the current unique value
+		equality_set=set([key for key,values_for_key in equality_dict.items() if value in values_for_key])
+
+		#If more than one key is present in this collection, it is an equality set
+		if len(equality_set)>1: equality_sets.append(equality_set)
+
+	equality_sets.sort()
+
+	return equality_sets
+
 #Defines a property called m_name
 #This property is assigned to the given class
 #The getter and setter access a member of the class called _'name'
