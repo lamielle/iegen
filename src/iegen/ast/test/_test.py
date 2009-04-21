@@ -1562,3 +1562,137 @@ class NormExpTestCase(TestCase):
 
 		self.failUnless(n1==n2,'%s!=%s'%(n1,n2))
 #-----------------------------------
+
+#---------- Hash Test Case ----------
+class HashTestCase(TestCase):
+
+	#Tests that AST nodes with the same string have a different hash
+	def testDifferentHash(self):
+		from iegen import Symbolic
+		from iegen.ast import Conjunction,Equality,Inequality,VarTuple,VarExp,FuncExp,NormExp
+
+		var=VarExp(1,'a')
+		exp1=NormExp([var],0)
+
+		self.failUnless(str(var)==str(exp1),'%s!=%s'%(var,exp1))
+		self.failIf(hash(var)==hash(exp1),'%s!=%s'%(hash(var),hash(exp1)))
+
+		func=FuncExp(1,'f',[NormExp([VarExp(1,'b')],0)])
+		exp2=NormExp([func],0)
+
+		self.failUnless(str(func)==str(exp2),'%s!=%s'%(func,exp2))
+		self.failIf(hash(func)==hash(exp2),'%s!=%s'%(hash(func),hash(exp2)))
+
+		equality=Equality(exp1)
+		conj1=Conjunction([equality])
+
+		self.failUnless(str(equality)==str(conj1),'%s!=%s'%(equality,conj1))
+		self.failIf(hash(equality)==hash(conj1),'%s!=%s'%(hash(equality),hash(conj1)))
+
+		inequality=Inequality(exp2)
+		conj2=Conjunction([inequality])
+
+		self.failUnless(str(inequality)==str(conj2),'%s!=%s'%(inequality,conj2))
+		self.failIf(hash(inequality)==hash(conj2),'%s!=%s'%(hash(inequality),hash(conj2)))
+
+	#Tests that AST nodes can be used properly with dictionaries
+	def testHashDictionary(self):
+		from iegen import VarExp
+
+		d={}
+		v1=VarExp(1,'a')
+		v2=VarExp(1,'a')
+		d[v1]='test1'
+
+		self.failUnless(d[v2]=='test1','%s!=%s'%(d[v2],'test1'))
+
+		d[v2]='blargh'
+
+		self.failUnless(d[v1]==d[v2],'%s!=%s'%(d[v1],d[v2]))
+
+	#Tests that AST nodes can be used properly with sets
+	def testHashSet(self):
+		from iegen import Symbolic
+
+		s=set()
+		s.add(Symbolic('n'))
+
+		self.failUnless(1==len(s))
+
+		s.add(Symbolic('n'))
+
+		self.failUnless(1==len(s))
+
+		s.add(Symbolic('m'))
+
+		self.failUnless(2==len(s))
+
+		s.add(Symbolic('m'))
+
+		self.failUnless(2==len(s))
+
+	#Tests that two instances of the same AST node have the same hash
+	def testSameHashPresForm(self):
+		from iegen import Symbolic
+		from iegen.ast import PresSet,PresRelation,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
+		for form_str,form_exp in iegen.util.test_sets+iegen.util.test_set_strings+iegen.util.test_relations+iegen.util.test_relation_strings:
+			#Create the formula twice
+			exec('form1='+form_exp)
+			exec('form2='+form_exp)
+			hash1=hash(form1)
+			hash2=hash(form2)
+			self.failUnless(hash1==hash2,'%s!=%s'%(hash1,hash2))
+			self.failUnless(form1==form2,'%s!=%s'%(form1,form1))
+			self.failIf(id(form1)==id(form2))
+
+	#Tests that two instances of the same AST node have the same hash
+	def testSameHashVarTuple(self):
+		from iegen.ast import VarTuple,VarExp
+		for var_tuple_str in iegen.util.var_tuple_strings:
+			#Create the var tuple twice
+			exec('var_tuple1='+var_tuple_str)
+			exec('var_tuple2='+var_tuple_str)
+			hash1=hash(var_tuple1)
+			hash2=hash(var_tuple2)
+			self.failUnless(hash1==hash2,'%s!=%s'%(hash1,hash2))
+			self.failUnless(var_tuple1==var_tuple2,'%s!=%s'%(var_tuple1,var_tuple2))
+			self.failIf(id(var_tuple1)==id(var_tuple2))
+
+	#Tests that two instances of the same AST node have the same hash
+	def testSameHashConjunction(self):
+		from iegen.ast import Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
+		for conjunction_str in iegen.util.conjunction_strings:
+			#Create the var tuple twice
+			exec('conjunction1='+conjunction_str)
+			exec('conjunction2='+conjunction_str)
+			hash1=hash(conjunction1)
+			hash2=hash(conjunction2)
+			self.failUnless(hash1==hash2,'%s!=%s'%(hash1,hash2))
+			self.failUnless(conjunction1==conjunction2,'%s!=%s'%(conjunction1,conjunction2))
+			self.failIf(id(conjunction1)==id(conjunction2))
+
+	#Tests that two instances of the same AST node have the same hash
+	def testSameHashConstraint(self):
+		from iegen.ast import Equality,Inequality,NormExp,VarExp,FuncExp
+		for constraint_str in iegen.util.equality_strings+iegen.util.inequality_strings:
+			#Create the var tuple twice
+			exec('constraint1='+constraint_str)
+			exec('constraint2='+constraint_str)
+			hash1=hash(constraint1)
+			hash2=hash(constraint2)
+			self.failUnless(hash1==hash2,'%s!=%s'%(hash1,hash2))
+			self.failUnless(constraint1==constraint2,'%s!=%s'%(constraint1,constraint2))
+			self.failIf(id(constraint1)==id(constraint2))
+
+	#Tests that two instances of the same AST node have the same hash
+	def testSameHashExpression(self):
+		from iegen.ast import VarExp,FuncExp,NormExp
+		for expr_str in iegen.util.var_exp_strings+iegen.util.func_exp_strings+iegen.util.norm_exp_strings:
+			#Create the expression twice
+			exec('expr1='+expr_str)
+			exec('expr2='+expr_str)
+			hash1=hash(expr1)
+			hash2=hash(expr2)
+			self.failUnless(hash1==hash2,'%s!=%s'%(hash1,hash2))
+			self.failIf(id(expr1)==id(expr2))
+#------------------------------------

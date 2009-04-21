@@ -19,6 +19,11 @@ class IEGenObject(object):
 
 	def __init__(self): pass
 
+	#Custom hash function
+	#IEGenObjects hashes are the hash of the string class_name+str(object)
+	def __hash__(self):
+		return hash(self.__class__.__name__+str(self))
+
 	#Setup default outputs
 	outputs={}
 	for type,short,default,quiet,verbose,help in output_types:
