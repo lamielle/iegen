@@ -131,38 +131,34 @@ class EqualitySestsTestCase(TestCase):
 	def testNoSets(self):
 		from iegen.util import equality_sets
 		eq_sets=equality_sets({'a':[1],'b':[2],'c':[3],'d':[4]})
-		res=[]
+		res={}
 		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
 
 	#Tests a simple case with one equality set
 	def testSingleSet(self):
 		from iegen.util import equality_sets
 		eq_sets=equality_sets({'a':[1],'b':[1]})
-		res=[set(['a','b'])]
-		res.sort()
+		res={1:set(['a','b'])}
 		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
 
 	#Tests a simple case with two equality sets
 	def testTwoSets(self):
 		from iegen.util import equality_sets
 		eq_sets=equality_sets({'a':[1],'b':[2],'c':[1],'d':[2]})
-		res=[set(['a','c']),set(['b','d'])]
-		res.sort()
+		res={1:set(['a','c']),2:set(['b','d'])}
 		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
 
 	#Tests a more complicated case
 	def testMoreComplex(self):
 		from iegen.util import equality_sets
-		eq_sets=equality_sets({'a':[1,2],'b':[1],'c':[2],'d':[3],'e':[3,4],'f':[2]})
-		res=[set(['a','b']),set(['a','c','f']),set(['d','e'])]
-		res.sort()
+		eq_sets=equality_sets({'a':[1,2],'b':[1],'c':[2],'d':[3],'e':[3,4],'f':[2],'g':[6]})
+		res={1:set(['a','b']),2:set(['a','c','f']),3:set(['d','e'])}
 		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
 
 	#Test with multiple duplicate equality values
 	def testDuplicateValues(self):
 		from iegen.util import equality_sets
 		eq_sets=equality_sets({'a':[1,2,2,1],'b':[1,1],'c':[2],'d':[3],'e':[3,4,3,4],'f':[2]})
-		res=[set(['a','b']),set(['a','c','f']),set(['d','e'])]
-		res.sort()
+		res={1:set(['a','b']),2:set(['a','c','f']),3:set(['d','e'])}
 		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
 #-----------------------------------------
