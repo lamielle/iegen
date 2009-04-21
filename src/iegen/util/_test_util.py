@@ -38,6 +38,47 @@ def ast_equality_test(test_case,formula,ast,parse):
 	test_case.failUnless(repr(ast)==repr(parsed),"repr(%s): %s!=%s"%(formula,ast,parsed))
 	test_case.failUnless(ast==parsed,"eq(%s):%s!=%s"%(formula,ast,parsed))
 
+#Collection of VarExp strings to be used for testing
+var_exp_strings=(
+          "VarExp(0,'')",
+          "VarExp(1,'a')",
+          "VarExp(-10,'b')",
+          "VarExp(-5,'c')",
+          "VarExp(100,'abc')",
+          "VarExp(42,'x')"
+         )
+
+#Collection of FuncExp strings to be used for testing
+func_exp_strings=(
+          "FuncExp(0,'',[])",
+          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(1,'f',[NormExp([VarExp(1,'a'), VarExp(1,'b')],0)])",
+          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(1,'g',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(2,'f',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(2,'g',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(3,'fog',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(4,'rain',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(42,'test',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(-81,'z',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(101,'x',[NormExp([VarExp(1,'a')],0)])",
+          "FuncExp(16,'wxyz',[NormExp([VarExp(1,'a'), VarExp(2,'b')],0)])",
+          "FuncExp(16,\"f'\",[NormExp([VarExp(1,'a'), VarExp(2,'b')],0)])",
+          "FuncExp(16,\"f'\",[NormExp([FuncExp(2,\"g'\",[NormExp([VarExp(1,'a')],0)])],0)])"
+          )
+
+#Collection of NormExp strings to be used for testing
+norm_exp_strings=(
+          "NormExp([],0)",
+          "NormExp([],1)",
+          "NormExp([VarExp(1,'a')],5)",
+          "NormExp([VarExp(1,'a')],1)",
+          "NormExp([VarExp(1,'a'), FuncExp(2,'f',[NormExp([VarExp(1,'b')],0)])],5)",
+          "NormExp([VarExp(1,'a'), FuncExp(2,'f',[NormExp([VarExp(1,'b')],0)])],5)",
+          "NormExp([VarExp(1,'b')],5)",
+          "NormExp([VarExp(1,'a')],6)")
+
 #Collection of set strings and a string that will create an equivalent ast when executed
 test_sets=(
 	('{[]}','PresSet(VarTuple([]),Conjunction([]))'),

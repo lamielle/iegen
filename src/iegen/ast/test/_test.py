@@ -1,5 +1,6 @@
 from unittest import TestCase
 from iegen.lib.nose.tools import raises
+import iegen.util
 
 #---------- Import Tests ----------
 #Test importing of iegen.ast
@@ -55,9 +56,8 @@ class SetTestCase(TestCase):
 	#Tests the __repr__ method
 	def testRepr(self):
 		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
-		from iegen.util import test_sets
 
-		for set_str,set_exp in test_sets:
+		for set_str,set_exp in iegen.util.test_sets:
 			exec('new_set_exp=repr('+set_exp+')')
 			self.failUnless(set_exp==new_set_exp,'%s!=%s'%(set_exp,new_set_exp))
 
@@ -84,20 +84,18 @@ class SetTestCase(TestCase):
 
 	#Tests the __str__ method
 	def testStr(self):
-		from iegen.util import test_set_strings
 		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,NormExp,VarExp
 		from iegen import Symbolic
 
-		for set_str,set_exp in test_set_strings:
+		for set_str,set_exp in iegen.util.test_set_strings:
 			exec('set=%s'%set_exp)
 			self.failUnless(set_str==str(set),'%s!=%s'%(set_str,str(set)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
-		from iegen.util import test_sets
 
-		for set_str,set_exp in test_sets:
+		for set_str,set_exp in iegen.util.test_sets:
 			exec('new_set_exp1='+set_exp)
 			exec('new_set_exp2='+set_exp)
 			self.failUnless(new_set_exp1==new_set_exp2,'%s!=%s'%(new_set_exp1,new_set_exp2))
@@ -112,7 +110,6 @@ class SetTestCase(TestCase):
 	#but instead checks for properties of the object
 	def testCmpNoIsInstance(self):
 		from iegen.ast import PresSet,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp,Node
-		from iegen.util import test_sets
 
 		class DummyPresSet(Node):
 			def __init__(self,tuple_set,conjunct):
@@ -120,7 +117,7 @@ class SetTestCase(TestCase):
 				self.conjunct=conjunct
 				self.symbolics=[]
 
-		for set_str,set_exp in test_sets:
+		for set_str,set_exp in iegen.util.test_sets:
 			exec('new_set_exp1='+set_exp)
 			set_exp=set_exp.replace('PresSet','DummyPresSet')
 			exec('new_set_exp2='+set_exp)
@@ -276,9 +273,8 @@ class RelationTestCase(TestCase):
 	#Tests the __repr__ method
 	def testRepr(self):
 		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
-		from iegen.util import test_relations
 
-		for rel_str,rel_exp in test_relations:
+		for rel_str,rel_exp in iegen.util.test_relations:
 			exec('new_rel_exp=repr('+rel_exp+')')
 			self.failUnless(rel_exp==new_rel_exp,'%s!=%s'%(rel_exp,new_rel_exp))
 
@@ -305,20 +301,18 @@ class RelationTestCase(TestCase):
 
 	#Tests the __str__ method
 	def testStr(self):
-		from iegen.util import test_relation_strings
 		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,NormExp,VarExp
 		from iegen import Symbolic
 
-		for rel_str,rel_exp in test_relation_strings:
+		for rel_str,rel_exp in iegen.util.test_relation_strings:
 			exec('rel=%s'%rel_exp)
 			self.failUnless(rel_str==str(rel),'%s!=%s'%(rel_str,str(rel)))
 
 	#Tests the __cmp__ method
 	def testCmp(self):
 		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp
-		from iegen.util import test_relations
 
-		for rel_str,rel_exp in test_relations:
+		for rel_str,rel_exp in iegen.util.test_relations:
 			exec('new_rel_exp1='+rel_exp)
 			exec('new_rel_exp2='+rel_exp)
 			self.failUnless(new_rel_exp1==new_rel_exp2,'%s!=%s'%(new_rel_exp1,new_rel_exp2))
@@ -333,7 +327,6 @@ class RelationTestCase(TestCase):
 	#but instead checks for properties of the object
 	def testCmpNoIsInstance(self):
 		from iegen.ast import PresRelation,VarTuple,Conjunction,Equality,Inequality,NormExp,VarExp,FuncExp,Node
-		from iegen.util import test_relations
 
 		class DummyPresRelation(Node):
 			def __init__(self,tuple_in,tuple_out,conjunct):
@@ -342,7 +335,7 @@ class RelationTestCase(TestCase):
 				self.conjunct=conjunct
 				self.symbolics=[]
 
-		for rel_str,rel_exp in test_relations:
+		for rel_str,rel_exp in iegen.util.test_relations:
 			exec('new_rel_exp1='+rel_exp)
 			rel_exp=rel_exp.replace('PresRelation','DummyPresRelation')
 			exec('new_rel_exp2='+rel_exp)
@@ -455,7 +448,6 @@ class VarTupleTestCase(TestCase):
 	#but instead checks for properties of the object
 	def testCmpNoIsInstance(self):
 		from iegen.ast import VarTuple,VarExp,Node
-		from iegen.util import test_relations
 
 		class DummyVarTuple(Node):
 			def __init__(self,vars):
@@ -912,19 +904,11 @@ class InequalityTestCase(TestCase):
 #---------- VarExp Tests ----------
 class VarExpTestCase(TestCase):
 
-	var_exps=(
-	          "VarExp(0,'')",
-	          "VarExp(1,'a')",
-	          "VarExp(-10,'b')",
-	          "VarExp(-5,'c')",
-	          "VarExp(100,'abc')",
-	          "VarExp(42,'x')")
-
 	#Tests the __repr__ method
 	def testRepr(self):
 		from iegen.ast import VarExp
 
-		for var_exp in self.var_exps:
+		for var_exp in iegen.util.var_exp_strings:
 			exec('v='+var_exp)
 
 			#Test VarExp's repr function
@@ -958,14 +942,14 @@ class VarExpTestCase(TestCase):
 	def testCmp(self):
 		from iegen.ast import VarExp
 
-		for var_exp in self.var_exps:
+		for var_exp in iegen.util.var_exp_strings:
 			exec('v='+var_exp)
 
 			#Test VarExp's comparison operator
 			self.failUnless(v==v,'%s!=%s'%(v,v))
 			self.failIf(v!=v,'%s!=%s'%(v,v))
 
-			for var_exp2 in [v2 for v2 in self.var_exps if v2!=var_exp]:
+			for var_exp2 in [v2 for v2 in iegen.util.var_exp_strings if v2!=var_exp]:
 				exec('v2='+var_exp2)
 				self.failUnless(v2!=v,'%s==%s'%(v2,v))
 				self.failIf(v2==v,'%s==%s'%(v2,v))
@@ -1004,7 +988,7 @@ class VarExpTestCase(TestCase):
 	def testMul(self):
 		from iegen.ast import VarExp
 
-		for var_exp in self.var_exps:
+		for var_exp in iegen.util.var_exp_strings:
 			exec('v='+var_exp)
 
 			#Test VarExp's multiplication operator
@@ -1029,29 +1013,12 @@ class VarExpTestCase(TestCase):
 
 #---------- FuncExp Tests ----------
 class FuncExpTestCase(TestCase):
-	func_exps=(
-	          "FuncExp(0,'',[])",
-	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(1,'f',[NormExp([VarExp(1,'a'), VarExp(1,'b')],0)])",
-	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(1,'g',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(1,'f',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(2,'f',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(2,'g',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(3,'fog',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(4,'rain',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(42,'test',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(-81,'z',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(101,'x',[NormExp([VarExp(1,'a')],0)])",
-	          "FuncExp(16,'wxyz',[NormExp([VarExp(1,'a'), VarExp(2,'b')],0)])",
-	          "FuncExp(16,\"f'\",[NormExp([VarExp(1,'a'), VarExp(2,'b')],0)])",
-	          "FuncExp(16,\"f'\",[NormExp([FuncExp(2,\"g'\",[NormExp([VarExp(1,'a')],0)])],0)])")
 
 	#Tests the __repr__ method
 	def testRepr(self):
 		from iegen.ast import VarExp,FuncExp,NormExp
 
-		for func_exp in self.func_exps:
+		for func_exp in iegen.util.func_exp_strings:
 			exec('f='+func_exp)
 
 			#Test FuncExp's repr function
@@ -1097,14 +1064,14 @@ class FuncExpTestCase(TestCase):
 	def testCmp(self):
 		from iegen.ast import FuncExp,VarExp,NormExp
 
-		for func_exp in self.func_exps:
+		for func_exp in iegen.util.func_exp_strings:
 			exec('f='+func_exp)
 
 			#Test FuncExp's comparison operator
 			self.failUnless(f==f,'%s!=%s'%(f,f))
 			self.failIf(f!=f,'%s!=%s'%(f,f))
 
-			for func_exp2 in [f2 for f2 in self.func_exps if f2!=func_exp]:
+			for func_exp2 in [f2 for f2 in iegen.util.func_exp_strings if f2!=func_exp]:
 				exec('f2='+func_exp2)
 				self.failUnless(f2!=f,'%s==%s'%(f2,f))
 				self.failIf(f2==f,'%s==%s'%(f2,f))
@@ -1143,7 +1110,7 @@ class FuncExpTestCase(TestCase):
 	def testMul(self):
 		from iegen.ast import FuncExp,VarExp,NormExp
 
-		for func_exp in self.func_exps:
+		for func_exp in iegen.util.func_exp_strings:
 			exec('f='+func_exp)
 
 			#Test FuncExp's multiplication operator
@@ -1170,21 +1137,11 @@ class FuncExpTestCase(TestCase):
 #---------- FuncExp Tests ----------
 class NormExpTestCase(TestCase):
 
-	norm_exps=(
-	          "NormExp([],0)",
-	          "NormExp([],1)",
-	          "NormExp([VarExp(1,'a')],5)",
-	          "NormExp([VarExp(1,'a')],1)",
-	          "NormExp([VarExp(1,'a'), FuncExp(2,'f',[NormExp([VarExp(1,'b')],0)])],5)",
-	          "NormExp([VarExp(1,'a'), FuncExp(2,'f',[NormExp([VarExp(1,'b')],0)])],5)",
-	          "NormExp([VarExp(1,'b')],5)",
-	          "NormExp([VarExp(1,'a')],6)")
-
 	#Tests the __repr__ method
 	def testRepr(self):
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		for norm_exp in self.norm_exps:
+		for norm_exp in iegen.util.norm_exp_strings:
 			exec('n='+norm_exp)
 
 			#Test NormExp's repr function
@@ -1226,14 +1183,14 @@ class NormExpTestCase(TestCase):
 	def testCmp(self):
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		for norm_exp in self.norm_exps:
+		for norm_exp in iegen.util.norm_exp_strings:
 			exec('n='+norm_exp)
 
 			#Test NormExp's comparison operator
 			self.failUnless(n==n,'%s!=%s'%(n,n))
 			self.failIf(n!=n,'%s!=%s'%(n,n))
 
-			for norm_exp2 in [n2 for n2 in self.norm_exps if n2!=norm_exp]:
+			for norm_exp2 in [n2 for n2 in iegen.util.norm_exp_strings if n2!=norm_exp]:
 				exec('n2='+norm_exp2)
 				self.failUnless(n2!=n,'%s==%s'%(n2,n))
 				self.failIf(n2==n,'%s==%s'%(n2,n))
@@ -1388,7 +1345,7 @@ class NormExpTestCase(TestCase):
 	def testMul(self):
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		for norm_exp in self.norm_exps:
+		for norm_exp in iegen.util.norm_exp_strings:
 			exec('n='+norm_exp)
 
 			#Test NormExp's multiplication operator
@@ -1418,7 +1375,7 @@ class NormExpTestCase(TestCase):
 	def testAddConst(self):
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		for norm_exp in self.norm_exps:
+		for norm_exp in iegen.util.norm_exp_strings:
 			exec('n='+norm_exp)
 
 			#Test NormExp's addition operator
@@ -1448,11 +1405,11 @@ class NormExpTestCase(TestCase):
 	def testAddTermConst(self):
 		from iegen.ast import NormExp,FuncExp,VarExp
 
-		for norm_exp in self.norm_exps:
+		for norm_exp in iegen.util.norm_exp_strings:
 			exec('n='+norm_exp)
 
 			#Test adding terms and constants
-			for norm_exp2 in [n2 for n2 in self.norm_exps if n2!=norm_exp]:
+			for norm_exp2 in [n2 for n2 in iegen.util.norm_exp_strings if n2!=norm_exp]:
 				exec('n2='+norm_exp2)
 				n_n2=n+n2
 				n2_n=n2+n
