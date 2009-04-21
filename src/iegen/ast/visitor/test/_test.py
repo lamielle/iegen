@@ -3676,3 +3676,236 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
 		self.failUnless(True==changed,'changed!=True')
 #--------------------------------------------------
+
+#---------- Remove Equal Function Visitor ----------
+class RemoveEqualFunctionVisitorTestCase(TestCase):
+
+	#Make sure the result of the visiting is placed in the proper attribute
+	def testResultPresent(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+		v=RemoveEqualFunctionVisitor().visit(set)
+		self.failUnless(hasattr(v,'changed'),"RemoveEqualFunctionVisitor doesn't place result in the 'changed' property.")
+
+	#Make sure the visitor doesn't do anything to empty Sets
+	def testEmptySet(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[]}')
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		set_res=Set('{[]}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Make sure the visitor doesn't do anything to empty Relations
+	def testEmptyRelation(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen import Relation
+
+		rel=Relation('{[]->[]}')
+
+		changed=RemoveEqualFunctionVisitor().visit(rel).changed
+		rel_res=Relation('{[]->[]}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Test that the equal variable cannot have a non-1 coefficient
+	def testSetNon1Coeff(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([VarExp(1,'c')],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(2,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'c')],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		set_res=Set('{[a,b,c]: 2a=f(c) and b=f(c)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Test that the equality constraint cannot have a constant
+	def testSetNoConst(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([VarExp(1,'c')],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'c')],0)])],5)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		set_res=Set('{[a,b,c]: a+5=f(c) and b=f(c)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(False==changed,'changed!=False')
+
+	#Test a simple case for Sets
+	def testSetSimple(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'c')],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([VarExp(1,'c')],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c]: a=b}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Test a simple case for Relations
+	def testRelationSimple(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Relation
+
+		rel=Relation('{[a,b]->[c]}')
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([VarExp(1,'c')],0)])],0)))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([VarExp(1,'c')],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(rel).changed
+		simplify(rel)
+		rel_res=Relation('{[a,b]->[c]:a=b}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Test a nested function case for Sets
+	def testSetNested(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'c')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'c')],0)])],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c]: a=b}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Test a nested function case for Relations
+	def testRelationNested(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Relation
+
+		rel=Relation('{[a,b]->[c]}')
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'c')],0)])],0)])],0)))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'c')],0)])],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(rel).changed
+		simplify(rel)
+		rel_res=Relation('{[a,b]->[c]: a=b}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Test that more than two constraints are able to be replaced
+	def testSetReplaceThree(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c,d]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'d')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'d')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'d')],0)])],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c,d]: a=b and a=c}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Test that more than two constraints are able to be replaced
+	def testSetReplaceFour(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c,d,e]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c,d,e]: a=b and a=c and a=d}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Test that functions that are not equal are not replaced
+	def testSetNotEqual(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c,d,e]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),FuncExp(-1,'f',[NormExp([FuncExp(1,'s',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d'),FuncExp(-1,'f',[NormExp([FuncExp(1,'r',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c,d,e]: a=b and c=f(s(e)) and d=f(r(e))}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Test that equality constraints with multiple terms are not replaced
+	def testSetMultipleTerms(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c,d,e]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d'),FuncExp(-1,'g',[NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c,d,e]: a=b and c+a=f(g(e)) and d=g(f(e))}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+
+	#Test that multiple different function values are replaced
+	def testSetReplaceDifferent(self):
+		from iegen.ast.visitor import RemoveEqualFunctionVisitor
+		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+		from iegen import Set
+
+		set=Set('{[a,b,c,d,e]}')
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'a'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b'),FuncExp(-1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c'),FuncExp(-1,'g',[NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+		set.sets[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'d'),FuncExp(-1,'g',[NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'e')],0)])],0)])],0)))
+
+		changed=RemoveEqualFunctionVisitor().visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b,c,d,e]: a=b and c=d}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+#---------------------------------------------------

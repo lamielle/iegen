@@ -22,3 +22,4 @@ from _find_functions_visitor import *
 from _collect_symbolics_visitor import *
 from _collect_vars_visitor import *
 from _unique_tuple_vars_visitor import *
+from _remove_equal_function_visitor import *

@@ -101,6 +101,14 @@ def remove_contradictions(obj):
 	if removed_contradiction and iegen.debug(): iegen.print_debug('Simplify: removed contradiction: %s -> %s'%(before,obj))
 	return removed_contradiction
 
+#Uses the RemoveEqualFunctionVisitor to remove any equality constraints such as a=f(b) and c=f(b) -> a=c
+def remove_equal_functions(obj):
+	from iegen.ast.visitor import RemoveEqualFunctionVisitor
+	if iegen.debug(): before=str(obj)
+	changed=RemoveEqualFunctionVisitor().visit(obj).changed
+	if changed and iegen.debug(): iegen.print_debug('Simplify: removed equal functions: %s -> %s'%(before,obj))
+	return changed
+
 #---------- Inverse Simplification Rule ----------
 #Runs the inverse simplification visitor on the given object
 def inverse_simplify(obj):
@@ -126,6 +134,7 @@ register_rule(remove_duplicate_constraints,rule_group=0)
 register_rule(remove_tautologies,rule_group=0)
 register_rule(remove_contradictions,rule_group=0)
 register_rule(remove_free_var_equality,rule_group=0)
+register_rule(remove_equal_functions,rule_group=0)
 register_rule(remove_free_var_inequality,rule_group=1)
 register_rule(inverse_simplify,rule_group=2)
 #---------------------------------------
