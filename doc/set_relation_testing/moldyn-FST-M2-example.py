@@ -125,11 +125,29 @@ print R_x0_x1.compose(a8_modified)
 #### Loop Alignment
 print
 print "==== Loop Alignment"
-print "Waiting for f(f_inv(i)) simplification"
+print "The transformation relation: "
+T_I0_to_I1 = Relation('{[c0, s, c0, i, c0] -> [c0, s, c0, j, c0] : c0=0 && j=sigma(i)}')
+T_I0_to_I1 = T_I0_to_I1.union( Relation('{[c0, s, c1, ii, x] -> [c0, s, c1, ji, x] : c0=0 && c1=1}') )
+print "\tT_I0_to_I1 = ", T_I0_to_I1
+print
+print "An access relation: "
+A_I0_to_x = Relation('{[c0,s,c0,v,c0] -> [r] : c0=0 && r=sigma(v)}')
+print "\tA_I0_to_x = ", A_I0_to_x
+print "Updating the access relation due to the loop alignment transformation."
+print "\tA_I1_to_x = A_I0_to_x compose (inverse T_I0_to_I1)"
+A_I1_to_x = A_I0_to_x.compose( T_I0_to_I1.inverse() )
+print "\t          = ", A_I1_to_x
+print "A data dependence: "
+D_I0_to_I0 = Relation('{[c0,s,c0,i,c0] -> [c0,s,c1,ii,c0] : i=inter1(ii)}')
+print "\tD_I0_to_I0 = ", D_I0_to_I0
+print "Updating the data dependence due to the loop alignment transformation."
+print "\tD_I1_to_I1 = T_I0_to_I1 compose ( D_I0_to_I0 compose (inverse T_I0_to_I1)"
+D_I1_to_I1 = T_I0_to_I1.compose( D_I0_to_I0.compose( T_I0_to_I1.inverse() ) )
+print "\t           = ", D_I1_to_I1
 
 
 #### IterPermuteTrans
-iegen.simplify.register_inverse_pair('delta')
+iegen.simplify.register_inverse_pair('delta','delta_inv')
 print
 print "==== IterPermuteTrans"
 T_I0_to_I1 = Relation("{[c0,s1,c1,i,c2] -> [c3,s2,c4,j,c5] : s1=s2 && c0=0 && c1=0 && c2=0 && c3=0 && c4=0 && c5=0 && i=j}")
