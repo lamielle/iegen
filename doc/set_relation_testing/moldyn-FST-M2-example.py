@@ -63,25 +63,25 @@ print full_I
 print "==== A1, access relation for S1"
 a1 = Relation("{[s,i]->[j] : i=j}")
 print a1
-print "Modified a1"
-a1_modified = a1.compose(S1_sched.inverse())
-print a1_modified
+print "Modified a1, or a1_0"
+a1_0 = a1.compose(S1_sched.inverse())
+print a1_0
 
 # A4, access relation for S2, targets data array x
 print "==== A4, access relation for S2"
 a4 = Relation("{[s,i]->[k]: k=inter1(i)}")
 print a4
-print "Modified a4"
-a4_modified = a4.compose(S2_sched.inverse())
-print a4_modified
+print "Modified a4, or a4_0"
+a4_0 = a4.compose(S2_sched.inverse())
+print a4_0
 
 # A8, access relation for S3, targets data array x
 print "==== A8, access relation for S3"
 a8 = Relation("{[s,i]->[k]: k=inter2(i)}")
 print a8
-print "Modified a8"
-a8_modified = a8.compose(S2_sched.inverse())
-print a8_modified
+print "Modified a8, or a8_0"
+a8_0 = a8.compose(S2_sched.inverse())
+print a8_0
 
 
 
@@ -96,7 +96,7 @@ iter_sub_space_relation = Relation("{[c0,s,c1,i,c2]->[i] : c1=1}")
 print "\t\titer_sub_space_relation = ", iter_sub_space_relation
 print "\talgorithm:"
 print "\t\tall_ar = union of all access relations"
-all_ar = a1_modified.union( a4_modified.union( a8_modified ) )
+all_ar = a1_0.union( a4_0.union( a8_0 ) )
 print "\t\tall_ar = ", all_ar
 print "\t\tars of interest = inverse (iter_sub_space_relation compose (inverse all_ar))"
 print
@@ -115,11 +115,17 @@ print "Update modified access relations based on automatically derived data reor
 R_x0_x1 = Relation("{[k] -> [j] : j = sigma(k)}")
 print "\tdata reordering specification (R_x0_x1) = ", R_x0_x1
 print
-print "\tR_x0_x1 compose a1_modified = "
-print R_x0_x1.compose(a1_modified)
+print "\ta1_1 = R_x0_x1 compose a1_0 = "
+a1_1 = R_x0_x1.compose(a1_0)
+print a1_1
 print
-print "\tR_x0_x1 compose a8_modified = "
-print R_x0_x1.compose(a8_modified)
+print "\ta4_1 = R_x0_x1 compose a4_0 = "
+a4_1 =  R_x0_x1.compose(a4_0)
+print a4_1
+print
+print "\ta8_1 = R_x0_x1 compose a8_0 = "
+a8_1 =  R_x0_x1.compose(a8_0)
+print a8_1
 
 
 #### Loop Alignment
@@ -130,14 +136,21 @@ T_I0_to_I1 = Relation('{[c0, s, c0, i, c0] -> [c0, s, c0, j, c0] : c0=0 && j=sig
 T_I0_to_I1 = T_I0_to_I1.union( Relation('{[c0, s, c1, ii, x] -> [c0, s, c1, ji, x] : c0=0 && c1=1}') )
 print "\tT_I0_to_I1 = ", T_I0_to_I1
 print
-print "An access relation: "
-A_I0_to_x = Relation('{[c0,s,c0,v,c0] -> [r] : c0=0 && r=sigma(v)}')
-print "\tA_I0_to_x = ", A_I0_to_x
-print "Updating the access relation due to the loop alignment transformation."
-print "\tA_I1_to_x = A_I0_to_x compose (inverse T_I0_to_I1)"
-A_I1_to_x = A_I0_to_x.compose( T_I0_to_I1.inverse() )
-print "\t          = ", A_I1_to_x
-print "A data dependence: "
+print "Updating access relations due to T_I0_to_I1: "
+print
+print "\ta1_2  = a1_1 compose (inverse T_I0_to_I1)"
+a1_2 =  a1_1.compose( T_I0_to_I1.inverse() )
+print a1_2
+print
+print "\ta4_2  = a4_1 compose (inverse T_I0_to_I1)"
+a4_2 =  a4_1.compose( T_I0_to_I1.inverse() )
+print a4_2
+print
+print "\ta8_2  = a8_1 compose (inverse T_I0_to_I1)"
+a8_2 =  a8_1.compose( T_I0_to_I1.inverse() )
+print a8_2
+print
+print "Updating a data dependence: "
 D_I0_to_I0 = Relation('{[c0,s,c0,i,c0] -> [c0,s,c1,ii,c0] : i=inter1(ii)}')
 print "\tD_I0_to_I0 = ", D_I0_to_I0
 print "Updating the data dependence due to the loop alignment transformation."
@@ -150,15 +163,38 @@ print "\t           = ", D_I1_to_I1
 iegen.simplify.register_inverse_pair('delta','delta_inv')
 print
 print "==== IterPermuteTrans"
-T_I0_to_I1 = Relation("{[c0,s1,c1,i,c2] -> [c3,s2,c4,j,c5] : s1=s2 && c0=0 && c1=0 && c2=0 && c3=0 && c4=0 && c5=0 && i=j}")
-T_I0_to_I1 = T_I0_to_I1.union( Relation("{[c6,s3,c7,ii,x] -> [c8,s4,c9,j,y] : s3=s4 && j = delta(ii) && c6=0 && c8=0 && c7=1 && c9=1 && x=y }"))
-print "T_I0_to_I1 = ", T_I0_to_I1
+T_I1_to_I2 = Relation("{[c0,s1,c1,i,c2] -> [c3,s2,c4,j,c5] : s1=s2 && c0=0 && c1=0 && c2=0 && c3=0 && c4=0 && c5=0 && i=j}")
+T_I1_to_I2 = T_I1_to_I2.union( Relation("{[c6,s3,c7,ii,x] -> [c8,s4,c9,j,y] : s3=s4 && j = delta(ii) && c6=0 && c8=0 && c7=1 && c9=1 && x=y }"))
+print "T_I1_to_I2 = ", T_I1_to_I2
+
 print
-A_I_to_x = Relation("{[c10,s,c11,ii,c12] -> [r] : r = sigma(inter1(ii)) && c11=1 && c10=0 && c12=0}")
-print "A_I_to_x = ", A_I_to_x
+print "Computing ER_2, or access relation that is input to permutation alg"
+print "\tAR = union over all access relations to x or fx"
+AR = a1_2.union( a4_2.union( a8_2 ) )
+print "\t\t= ", AR
+issr = Relation('{[c0, s, c1, ii, c2] -> [ ii ] : c1=1}')
+print "\tissr = ", issr
 print
-result = A_I_to_x.compose( T_I0_to_I1.inverse() )
-print "A_I_to_x compose (inverse T_I0_to_I1) = ", result
+issr_inv = issr.inverse()
+print "\t(inverse issr) compose AR = ", issr_inv.compose(AR)
+
+print
+print "Updating access relations due to T_I1_to_I2: "
+print
+print "\ta1_3  = a1_1 compose (inverse T_I1_to_I2)"
+a1_3 =  a1_2.compose( T_I1_to_I2.inverse() )
+print a1_3
+print
+print "\ta4_3  = a4_2 compose (inverse T_I1_to_I2)"
+a4_3 =  a4_1.compose( T_I0_to_I1.inverse() )
+print a4_3
+print
+print "\ta8_3  = a8_2 compose (inverse T_I1_to_I2)"
+a8_3 =  a8_2.compose( T_I1_to_I2.inverse() )
+print a8_3
+print
+
+# FIXME: add modification to data dependence example
 
 #### SparseTileTrans
 print
