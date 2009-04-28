@@ -175,18 +175,17 @@ print "\t\t= ", AR
 issr = Relation('{[c0, s, c1, ii, c2] -> [ ii ] : c1=1}')
 print "\tissr = ", issr
 print
-issr_inv = issr.inverse()
-print "\t(inverse issr) compose AR = ", issr_inv.compose(AR)
+print "\tAR compose (inverse issr)= ", AR.compose(issr.inverse())
 
 print
 print "Updating access relations due to T_I1_to_I2: "
 print
-print "\ta1_3  = a1_1 compose (inverse T_I1_to_I2)"
+print "\ta1_3  = a1_2 compose (inverse T_I1_to_I2)"
 a1_3 =  a1_2.compose( T_I1_to_I2.inverse() )
 print a1_3
 print
 print "\ta4_3  = a4_2 compose (inverse T_I1_to_I2)"
-a4_3 =  a4_1.compose( T_I0_to_I1.inverse() )
+a4_3 =  a4_2.compose( T_I1_to_I2.inverse() )
 print a4_3
 print
 print "\ta8_3  = a8_2 compose (inverse T_I1_to_I2)"
