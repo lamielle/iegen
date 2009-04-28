@@ -217,6 +217,13 @@ class Statement(IEGenObject):
 		if self.iter_space.arity()!=access_relation.iter_to_data.arity_in():
 			raise DimensionalityError('The input arity of the access relation (%d) should be the arity of the iteration space (%d).'%(access_relation.iter_to_data.arity_in(),self.iter_space.arity()))
 
+		#Update the access relation's iteration to data relation to
+		# match this statements scattering function
+		self.print_detail("Updating iter_to_data of access relation '%s'..."%(access_relation.name))
+		before=str(access_relation.iter_to_data)
+		access_relation.iter_to_data=access_relation.iter_to_data.compose(self.scatter.inverse())
+		self.print_modified("Updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
+
 		self.access_relations[access_relation.name]=access_relation
 	#--------------------------------------
 #-------------------------------------

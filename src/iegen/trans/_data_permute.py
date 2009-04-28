@@ -91,14 +91,16 @@ class DataPermuteTrans(Transformation):
 		#Iteration Sub Space Relation
 		issr=self.iter_sub_space_relation
 
-		#Calculate the iteration space to data space relation
-		iter_to_data=None
-		for stmt in mapir.get_statements():
-			for ar in stmt.get_access_relations():
-				if not iter_to_data:
-					iter_to_data=issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse()
-				else:
-					iter_to_data=iter_to_data.union(issr.compose(stmt.scatter.compose(ar.iter_to_data.inverse())).inverse())
+		#Calculate the full iteration space to data space relation
+		#Collect all iter_to_data relations in all access relations
+		access_relations=[ar.iter_to_data for stmt in mapir.get_statements() for ar in stmt.get_access_relations()]
+
+		#Union all the relations that were collected into a single relation
+		iter_to_data=reduce(lambda form1,form2: form1.union(form2),access_relations)
+
+		#Compose the unioned access relation with the iteration subspace
+		# relation to remove conjunctions we are not interested in
+		iter_to_data=self.iter_sub_space_relation.compose(iter_to_data.inverse()).inverse()
 
 		#Create the ERSpec for the relation that is input to the reordering
 		self.inputs.append(ERSpec(
