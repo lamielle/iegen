@@ -133,7 +133,7 @@ print
 print "==== Loop Alignment"
 print "The transformation relation: "
 T_I0_to_I1 = Relation('{[c0, s, c0, i, c0] -> [c0, s, c0, j, c0] : c0=0 && j=sigma(i)}')
-T_I0_to_I1 = T_I0_to_I1.union( Relation('{[c0, s, c1, ii, x] -> [c0, s, c1, ji, x] : c0=0 && c1=1}') )
+T_I0_to_I1 = T_I0_to_I1.union( Relation('{[c0, s, c1, ii, x] -> [c0, s, c1, ii, x] : c0=0 && c1=1}') )
 print "\tT_I0_to_I1 = ", T_I0_to_I1
 print
 print "Updating access relations due to T_I0_to_I1: "
