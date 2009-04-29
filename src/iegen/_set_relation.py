@@ -494,16 +494,18 @@ class Relation(Formula):
 		if other.arity_out()!=self.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
 
+		self.print_debug('Compose: \n\t%s\n\n\t.compose(%s)\n\n\t' %(self,other) )
+
 		#Collection of new composed relations
 		new_relations=[]
 
 		for rel1 in self.relations:
 			for rel2 in other.relations:
 				new_relations.append(self._compose(rel1,rel2))
-
+		
 		new_relation=Relation(relations=new_relations)
 
-		self.print_debug('Compose: %s.compose(%s)=%s'%(self,other,new_relation))
+		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
 
 		return new_relation
 
@@ -525,6 +527,9 @@ class Relation(Formula):
 		self._rename_vars(r1_copy,r1_copy.tuple_in.vars+r1_copy.tuple_out.vars,'1')
 		self._rename_vars(r2_copy,r2_copy.tuple_in.vars+r2_copy.tuple_out.vars,'2')
 
+		self.print_debug('\n\tinputs after rename:\n\t%s\n\t%s\n' % (r1_copy,r2_copy))
+
+
 		#Create the new relation that will end up being the final result
 		new_tuple_in=deepcopy(r2_copy.tuple_in)
 		new_tuple_out=deepcopy(r1_copy.tuple_out)
@@ -537,10 +542,14 @@ class Relation(Formula):
 		#Add equality constraints for r2_out = r1_in
 		self._create_equality_constraints(new_rel,r2_copy.tuple_out.vars,r1_copy.tuple_in.vars)
 
+		self.print_debug('\n\toutput before unrename:\n\t%s\n' % (new_rel))
+
 		#Rename the resulting tuple back to the original names if necessary
-		r2_in_ids=[var.id for var in r2.tuple_in.vars]
-		r1_out_ids=[var.id for var in r1.tuple_out.vars]
-		if 0==len(set(r2_in_ids).intersection(set(r1_out_ids))):
+		r2_ids=[var.id for var in r2.tuple_in.vars]
+		r2_ids.extend([var.id for var in r2.tuple_out.vars])
+		r1_ids=[var.id for var in r1.tuple_in.vars]
+		r1_ids.extend([var.id for var in r1.tuple_out.vars])
+		if 0==len(set(r2_ids).intersection(set(r1_ids))):
 			self._unrename_vars(new_rel,r1.tuple_out.vars,'1')
 			self._unrename_vars(new_rel,r2.tuple_in.vars,'2')
 
