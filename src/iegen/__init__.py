@@ -1,3 +1,4 @@
+from _iegen_settings import *
 from _iegen_object import *
 from _iegen import *
 from _set_relation import *

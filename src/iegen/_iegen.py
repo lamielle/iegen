@@ -11,34 +11,6 @@ from iegen.util import like_type,DimensionalityError,define_properties
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 
-#---------- Are we debugging? ----------
-#Setup a function, iegen.debug(), that determines if we are debugging
-def debug(): return iegen.IEGenObject.settings.debug
-#---------------------------------------
-
-#---------- Printing methods -----
-def print_gen(type,output=None):
-	for dest in IEGenObject.settings.outputs[type]:
-		if dest is None:
-			if output is None: print
-			else: print output
-		else:
-			#Code is a special case as we don't want to append
-			if 'code'==type:
-				mode='w'
-				print_progress("Writing generated code to file '%s'..."%(dest))
-			else:
-				mode='a'
-
-			with file(dest,mode) as f:
-				if output is None: print >>f
-				else: print >>f,output
-
-#Dynamically define printing methods based on output types
-for type,short,default,quiet,verbose,help in IEGenObject.output_types:
-	exec("def print_%s(output=None): print_gen('%s',output)"%(type,type))
-#---------------------------------
-
 #---------- Symbolic class ----------
 class Symbolic(Node):
 	__slots__=('name',)

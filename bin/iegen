@@ -48,8 +48,8 @@ def process_cli_arguments():
 	output_group=OptionGroup(parser,'Output Options',
 	             'The options in this group optionally take a file name. If one is given, output of the corresponding type is printed to that file. If no file name is given the output is printed to standard out.')
 
-	#Build the output options based on those specified in IEGenObject.output_types
-	for type,short,default,quiet,verbose,help in iegen.IEGenObject.output_types:
+	#Build the output options based on those specified in iegen.settings.output_types
+	for type,short,default,quiet,verbose,help in iegen.settings.output_types:
 		#Position arguments
 		args=(short,'--output-'+type)
 
@@ -80,10 +80,10 @@ def process_cli_arguments():
 	if not os.path.isfile(spec_file):
 		parser.error("The given spec file, '%s', does not exist."%(spec_file))
 
-	#Setup IEGenObject.settings based on the CLI arguments
+	#Setup iegen.settings based on the CLI arguments
 	#Load the values defined for quiet, verbose, or default
 	outputs={}
-	for type,short,default,quiet,verbose,help in iegen.IEGenObject.output_types:
+	for type,short,default,quiet,verbose,help in iegen.settings.output_types:
 		if options.quiet:
 			outputs[type]=quiet
 		elif options.verbose:
@@ -92,16 +92,16 @@ def process_cli_arguments():
 			outputs[type]=default
 
 	#Load the debug setting
-	iegen.IEGenObject.settings.debug=options.debug
+	iegen.settings.debug=options.debug
 	if options.debug:
 		outputs['debug']=list(set(outputs['debug']+[None]))
 
 	#Load any specific output settings
-	for type,short,default,quiet,verbose,help in iegen.IEGenObject.output_types:
+	for type,short,default,quiet,verbose,help in iegen.settings.output_types:
 		outputs[type]=list(set(outputs[type]+getattr(options,'output_'+type)))
 
 	#Assign the final outputs dictionary to the settings
-	iegen.IEGenObject.settings.outputs=outputs
+	iegen.settings.outputs=outputs
 
 	return spec_file
 
