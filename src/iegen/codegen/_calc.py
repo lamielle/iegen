@@ -1,11 +1,16 @@
+import iegen
+
 #---------- Calculation Phase ----------
 def do_calc(mapir):
-	import iegen
-	from iegen.codegen import calc_initial_idg,calc_full_iter_space
-
-	calc_initial_idg(mapir)
+	from iegen.codegen import calc_initial_idg,calc_full_iter_space,calc_update_access_relations,calc_unupdate_access_relations
 
 	iegen.print_progress('Starting calculation phase...')
+
+	#Update access relations before we start calculations
+	calc_update_access_relations(mapir)
+
+	#Calculate the initial IDG
+	calc_initial_idg(mapir)
 
 	#Do calculations for each reordering
 	for transformation in mapir.transformations:
@@ -44,6 +49,9 @@ def do_calc(mapir):
 		for statement in mapir.get_statements():
 			iegen.print_modified(statement)
 		iegen.print_modified('-----------------------------------------')
+
+	#Un-update access relations now that the calculation phase is over
+	calc_unupdate_access_relations(mapir)
 
 	from iegen.idg.visitor import DotVisitor
 	v=DotVisitor().visit(mapir.idg)
@@ -132,4 +140,59 @@ def calc_initial_idg(mapir):
 	#Create the data array nodes
 	for data_array in mapir.get_data_arrays():
 		mapir.idg.get_data_array_node(data_array)
+
+#Updates access relations for the computation phase
+def calc_update_access_relations(mapir):
+	iegen.print_progress('Updating access relations...')
+
+	#Update each access relation's iteration to data relation to
+	# match its statement's scattering function
+	for statement in mapir.get_statements():
+		for access_relation in statement.get_access_relations():
+			iegen.print_detail("Updating iter_to_data of access relation '%s'..."%(access_relation.name))
+
+			before=str(access_relation.iter_to_data)
+
+			#Compose the access relation to be in terms of the statement's scattering function
+			access_relation.iter_to_data=access_relation.iter_to_data.compose(statement.scatter.inverse())
+
+			iegen.print_modified("Updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
+
+#Un-updates access relations following the computation phase
+def calc_unupdate_access_relations(mapir):
+	from iegen.ast.visitor import RenameVisitor
+
+	iegen.print_progress('Un-updating access relations...')
+
+	#Update each access relation's iteration to data relation to
+	# match its statement's scattering function
+	for statement in mapir.get_statements():
+		for access_relation in statement.get_access_relations():
+			iegen.print_detail("Un-updating iter_to_data of access relation '%s'..."%(access_relation.name))
+
+			before=str(access_relation.iter_to_data)
+
+			#Compose the access relation to be in terms of the statement's iteration space
+			access_relation.iter_to_data=access_relation.iter_to_data.compose(statement.scatter)
+
+			#Rename the input tuple variables to match the statement's iteration space
+			RenameVisitor(calc_access_relation_rename(access_relation.iter_to_data,statement.iter_space)).visit(access_relation.iter_to_data)
+
+			iegen.print_modified("Un-updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
+
+def calc_access_relation_rename(access_relation,iter_space):
+	#Make sure the input arity of the access relation matches
+	# the arity of the iteration set
+	if access_relation.arity_in()!=iter_space.arity():
+		raise ValueError('Input arity of access relation (%d) is not equal to arity of iteration space (%d).'%(access_relation.arity_in(),iter_space.arity()))
+
+	from_vars=access_relation.relations[0].tuple_in.vars
+	to_vars=iter_space.sets[0].tuple_set.vars
+
+	rename={}
+
+	for i in xrange(len(from_vars)):
+		rename[from_vars[i].id]=to_vars[i].id
+
+	return rename
 #---------------------------------------------------
