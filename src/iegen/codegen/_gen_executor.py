@@ -24,6 +24,10 @@ def gen_executor(mapir):
 	executor.body.extend(gen_executor_loop(mapir))
 	executor.newline()
 
+	#Generate the loop statement undefines
+	executor.body.extend(gen_executor_undefs(mapir))
+	executor.newline()
+
 	return executor
 
 #Generates the executor main loop statements
@@ -63,5 +67,18 @@ def gen_executor_loop(mapir):
 	cloog_stmts=codegen(cloog_stmts).split('\n')
 	for cloog_stmt in cloog_stmts:
 		stmts.append(Statement(cloog_stmt))
+
+	return stmts
+
+#Generates the loop statement undefines
+def gen_executor_undefs(mapir):
+	from iegen.codegen import Statement,Comment
+
+	stmts=[]
+
+	stmts.append(Comment('Undefine the executor main loop body statments'))
+
+	for i in xrange(len(mapir.get_statements())):
+		stmts.append(Statement('#undef S%d'%(i,)))
 
 	return stmts
