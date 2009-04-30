@@ -8,7 +8,7 @@ def gen_inspector(mapir):
 	from iegen.idg.visitor import ParamVisitor,DeclVisitor,CodegenVisitor
 
 	#Create the inspector function with the necessary parameters
-	inspector=Function('inspector','void',ParamVisitor().visit(mapir.idg).params)
+	inspector=Function(iegen.settings.inspector_name,'void',ParamVisitor().visit(mapir.idg).params)
 
 	#If there are no transformations, don't bother doing any codegen
 	if len(mapir.transformations)>0:
