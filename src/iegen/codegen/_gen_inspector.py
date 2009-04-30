@@ -69,7 +69,7 @@ def gen_er_spec(er_spec):
 		#Get the value to insert
 		value=calc_equality_value(var_out_name,relation)
 
-		define_stmts.append(Statement('#define S%d ER_in_ordered_insert(%s,Tuple_make(%s),Tuple_make(%s));'%(relation_index,er_spec.name,var_in_name,value)))
+		define_stmts.append(Statement('#define S%d(%s) ER_in_ordered_insert(%s,Tuple_make(%s),Tuple_make(%s));'%(relation_index,var_in_name,er_spec.name,var_in_name,value)))
 
 		cloog_stmts.append(iegen.pycloog.Statement(er_spec.input_bounds))
 		undefine_stmts.append(Statement('#undef S%d'%(relation_index,)))

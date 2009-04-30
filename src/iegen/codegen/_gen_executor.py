@@ -40,7 +40,10 @@ def gen_executor_loop_stmts(mapir):
 			stmts.append(Comment('%s: %s'%(access_relation.name,access_relation.iter_to_data)))
 			ar_dict[access_relation.name]=calc_equality_value(access_relation.iter_to_data.relations[0].tuple_out.vars[0].id,access_relation.iter_to_data)
 
-		stmt_string='#define S%d %s'%(i,statement.text)
+		#Gather the loop iterators
+		iterators=','.join([var.id for var in statement.iter_space.sets[0].tuple_set.vars])
+
+		stmt_string='#define S%d(%s) %s'%(i,iterators,statement.text)
 		stmts.append(Statement(stmt_string%ar_dict))
 
 	return stmts
