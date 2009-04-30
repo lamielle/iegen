@@ -3,7 +3,9 @@
 from __future__ import with_statement
 
 def run_iegen():
+	#Import various packages and objects so they are available to spec files
 	import iegen,iegen.trans
+	from iegen import Set,Relation,Symbolic
 
 	#Get the spec file to run
 	spec_file=process_cli_arguments()
