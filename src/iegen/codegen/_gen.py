@@ -5,10 +5,12 @@ def do_gen(mapir):
 
 	iegen.print_progress('Starting the code generation phase...')
 
-	#Create the program
-	iegen.print_progress('Generating the preamble...')
 	program=Program()
-	program.preamble.extend(gen_preamble())
+
+	#Create the program
+	if iegen.settings.gen_preamble:
+		iegen.print_progress('Generating the preamble...')
+		program.preamble.extend(gen_preamble())
 
 	#Generate the inspector
 	iegen.print_progress('Generating the inspector...')
@@ -19,8 +21,9 @@ def do_gen(mapir):
 	program.functions.append(gen_executor(mapir))
 
 	#Generate the main code
-	iegen.print_progress('Generating main()...')
-	program.functions.append(gen_main(mapir))
+	if iegen.settings.gen_main:
+		iegen.print_progress('Generating main()...')
+		program.functions.append(gen_main(mapir))
 
 	iegen.print_progress('Code generation phase completed...')
 

@@ -44,6 +44,17 @@ def process_cli_arguments():
 	parser.add_option('-d','--debug',action='store_true',dest='debug',default=False,
 	                  help='enable debug mode')
 
+	#Codegen options
+	codegen_group=OptionGroup(parser,'Code Generation Options',
+	              'Options related to the code generation process')
+	codegen_group.add_option('','--gen-preamble',action='store_true',dest='gen_preamble',default=False,
+	                         help='Generate the preamble code')
+	codegen_group.add_option('','--gen-main',action='store_true',dest='gen_main',default=False,
+	                         help='Generate a main driver function')
+
+	#Add the codegen options group to the parser
+	parser.add_option_group(codegen_group)
+
 	#Output options
 	output_group=OptionGroup(parser,'Output Options',
 	             'The options in this group optionally take a file name. If one is given, output of the corresponding type is printed to that file. If no file name is given the output is printed to standard out.')
@@ -95,6 +106,10 @@ def process_cli_arguments():
 	iegen.settings.debug=options.debug
 	if options.debug:
 		outputs['debug']=list(set(outputs['debug']+[None]))
+
+	#Load the codegen settings
+	iegen.settings.gen_preamble=options.gen_preamble
+	iegen.settings.gen_main=options.gen_main
 
 	#Load any specific output settings
 	for type,short,default,quiet,verbose,help in iegen.settings.output_types:
