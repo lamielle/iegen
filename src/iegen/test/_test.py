@@ -1060,7 +1060,7 @@ class RelationTestCase(TestCase):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=Relation('{[a]->[c]: -10<=a and a<=0}')
+		composed_res=Relation('{[a2]->[c1]: -1a2>=0 and a2+10>=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -1086,7 +1086,7 @@ class RelationTestCase(TestCase):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=Relation('{[a_in0]->[a_out0]: -10<=a_in0 and a_in0<=0 and 1<=a_out0 and a_out0<=10 and a_in0=a_out0}')
+		composed_res=Relation('{[a_in02]->[a_out01]: -10<=a_in02 and a_in02<=0 and 1<=a_out01 and a_out01<=10 and a_in02=a_out01}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
