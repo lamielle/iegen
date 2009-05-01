@@ -2,8 +2,8 @@
 # See RTRTJournalShared/moldyn-FST-example.tex for corresponding writeup.
 # Also see iegen/example/moldyn-FST.spec
 
-import cProfile
-import pstats
+#import cProfile
+#import pstats
 
 import iegen
 from iegen import Set
@@ -11,6 +11,10 @@ from iegen import Relation
 from iegen import Symbolic
 
 import iegen.simplify
+
+#from iegen import IEGenObject
+## None corresponds to stdout
+#IEGenObject.settings.outputs['debug'].append(None)
 
 ##### Compose scheduling/scattering function for each statement
 ##### with the statement's original iteration space.
