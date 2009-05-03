@@ -12,6 +12,8 @@ from cStringIO import StringIO
 # to the same name.
 #
 # Limitations
+#	-Doesn't work for sets yet.
+#	-Should only have horizontal bar if have symbolics.
 #	-The same inequality may show up multiple times due to 
 #	equal vars being mapped to same string.
 #
@@ -20,22 +22,11 @@ class PrettyPrintVisitor(DFVisitor):
 	__slots__=('helper','var2string')
 
 	def __init__(self):
-		self.helper = PrettyPrintHelper()
 		self.var2string = {}
 		self.pretty = StringIO()
-
-	def inRelation(self,node):
-		# have the helper visit the whole relation
-		# it will create a mapping of vars to new strings
-		self.helper.visit(node)
-		self.var2string = self.helper.getVarMap()
-		self.no_print_set = self.helper.getNoPrintSet()
-
-	def outRelation(self,node):
-		print self.pretty.getvalue()
+		
 
 	def visitRelation(self,node):
-		self.inRelation(node)
 		first_time = True
 		for relation in node.relations:
 			# for all conjuncts but first, we need union connective
@@ -45,9 +36,16 @@ class PrettyPrintVisitor(DFVisitor):
 				first_time = False
 	
 			relation.apply_visitor(self)
-		self.outRelation(node)
+		print self.pretty.getvalue()
 
 	def visitPresRelation(self,node):
+		# have the helper visit the whole relation
+		# it will create a mapping of vars to new strings
+		self.helper = PrettyPrintHelper()
+		self.helper.visit(node)
+		self.var2string = self.helper.getVarMap()
+		self.no_print_set = self.helper.getNoPrintSet()
+		
 		self.pretty.write('{ ')
 		node.tuple_in.apply_visitor(self)
 		self.pretty.write(' -> ')
@@ -143,43 +141,54 @@ class PrettyPrintHelper(DFVisitor):
 		self.no_print_set = set()
 		self.no_print = False
 		self.func_depth = 0
+		self.in_var_tuple = False
 	
 	def getVarMap(self):
 		return self.var2string
 		
 	def getNoPrintSet(self):
 		return self.no_print_set
+		
+	def inVarTuple(self,node):
+		self.in_var_tuple = True
+	def outVarTuple(self,node):
+		self.in_var_tuple = False
+	
 
 	def inVarExp(self,node):
-		#self.var2string[node.id] = node.id
 		# look var up in dictionary
 		# if not already there 
-		if not self.var2string.has_key(node.id):
+		if self.in_var_tuple and not self.var2string.has_key(node.id):
 			legal = False
 			count = 1
-			#print "node.id = ", node.id
 			while (not legal and count<=len(node.id)):
 				# then come up with candidate shorter name
 				new_name = node.id[0:count]
-				#print "new_name = ", new_name
 				# check if shorter name is in new name set
 				if new_name not in self.new_name_set:
 					legal = True
 				else:
 					count = count + 1
 					
-			# if still have name conflict then append numbers
+			# if still have name conflict then append underscores
 			# to var until no conflict occurs
-			# For now assuming this won't happen.
 			if not legal:
-				print "#### new_name not legal, must have existentially quantified var"
-				print "new_name = ", new_name
-				print "new_name_set = ", self.new_name_set
-				assert 0
-		
+				while not legal:
+					new_name = new_name + '_'
+					if new_name not in self.new_name_set:
+						legal = True
+					
 			# map var to a shorter name
 			self.new_name_set.add(new_name)
 			self.var2string[node.id] = new_name
+
+		# for other non tuple var uses check that the var has mapping
+		if not self.var2string.has_key(node.id):
+			print "#### id not legal, existentially quantified var"
+			print "node.id = ", node.id
+			print "new_name_set = ", self.new_name_set
+			assert 0
+
 		
 	def outVarExp(self,node):
 		self.defaultOut(node)
@@ -209,17 +218,14 @@ class PrettyPrintHelper(DFVisitor):
 		if self.inside_equality and self.func_depth==0:
 			# if only one VarExp, then we could have a var equal to a constant
 			if len(node.terms)==1 and isinstance(node.terms[0],VarExp):
-				# if coefficient of var is -1
 				if node.terms[0].coeff == -1:
-					# map var name to string for negative of constant
-					self.var2string[node.terms[0].id] = "%d" % (-node.const)
-					# set noprint flag
-					self.no_print = True
-				# if coefficient of var is 1
-				if node.terms[0].coeff == 1:
 					# map var name to string for constant
 					self.var2string[node.terms[0].id] = "%d" % (node.const)
-					# set noprint flag
+					self.no_print = True
+					
+				if node.terms[0].coeff == 1:
+					# map var name to string for negative of constant
+					self.var2string[node.terms[0].id] = "%d" % (-node.const)
 					self.no_print = True
 					
 			# if only two VarExpr and one has -1 coeff and the other 1 coeff
@@ -236,13 +242,5 @@ class PrettyPrintHelper(DFVisitor):
 					# other guy's
 					self.var2string[node.terms[0].id] = \
 						self.var2string[node.terms[1].id]
-						
-					# set noprint flag
 					self.no_print = True
-
-
-	def outNormExp(self,node):
-		self.defaultOut(node)
-	def betweenNormExp(self,node):
-		self.defaultBetween(node)
 

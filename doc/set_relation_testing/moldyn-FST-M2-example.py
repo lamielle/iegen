@@ -12,6 +12,9 @@ from iegen import Symbolic
 
 import iegen.simplify
 
+from iegen.ast.visitor import PrettyPrintVisitor
+
+
 #from iegen import IEGenObject
 ## None corresponds to stdout
 #IEGenObject.settings.outputs['debug'].append(None)
@@ -28,7 +31,9 @@ S1_I = Set("{[s,i]: 0<=s && s<T && 0<=i && i<N}", syms)
 print S1_I
 
 S1_sched = Relation("{[s,i]->[c0,s,c1,j,c2]: c0=0 && c1=0 && c2=0 && i=j}")
-print S1_sched
+#print S1_sched
+PrettyPrintVisitor().visit(S1_sched)
+
 
 S1_full_I = S1_I.apply(S1_sched)
 print S1_full_I
@@ -39,7 +44,9 @@ S2_I = Set("{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}", syms)
 print S2_I
 
 S2_sched = Relation("{[s,i]->[c0,s,c1,j,c2]: c0=0 && c1=1 && c2=0 && i=j}")
-print S2_sched
+#print S2_sched
+PrettyPrintVisitor().visit(S2_sched)
+
 
 S2_full_I = S2_I.apply(S2_sched)
 print S2_full_I
@@ -50,7 +57,9 @@ S3_I = Set("{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}", syms)
 print S3_I
 
 S3_sched = Relation("{[s,i]->[c0,s,c1,j,c2]: c0=1 && c1=1 && c2=1 && i=j}")
-print S3_sched
+#print S3_sched
+PrettyPrintVisitor().visit(S3_sched)
+
 
 S3_full_I = S3_I.apply(S3_sched)
 print S3_full_I
@@ -66,26 +75,33 @@ print full_I
 # A1, access relation for S1, targets data array x
 print "==== A1, access relation for S1"
 a1 = Relation("{[s,i]->[j] : i=j}")
-print a1
+#print a1
+PrettyPrintVisitor().visit(a1)
 print "Modified a1, or a1_0"
 a1_0 = a1.compose(S1_sched.inverse())
-print a1_0
+#print a1_0
+PrettyPrintVisitor().visit(a1_0)
+
 
 # A4, access relation for S2, targets data array x
 print "==== A4, access relation for S2"
 a4 = Relation("{[s,i]->[k]: k=inter1(i)}")
-print a4
+#print a4
+PrettyPrintVisitor().visit(a4)
 print "Modified a4, or a4_0"
 a4_0 = a4.compose(S2_sched.inverse())
-print a4_0
+#print a4_0
+PrettyPrintVisitor().visit(a4_0)
 
 # A8, access relation for S3, targets data array x
 print "==== A8, access relation for S3"
 a8 = Relation("{[s,i]->[k]: k=inter2(i)}")
-print a8
+#print a8
+PrettyPrintVisitor().visit(a8)
 print "Modified a8, or a8_0"
 a8_0 = a8.compose(S2_sched.inverse())
-print a8_0
+#print a8_0
+PrettyPrintVisitor().visit(a8_0)
 
 
 
@@ -101,12 +117,16 @@ print "\t\titer_sub_space_relation = ", iter_sub_space_relation
 print "\talgorithm:"
 print "\t\tall_ar = union of all access relations"
 all_ar = a1_0.union( a4_0.union( a8_0 ) )
-print "\t\tall_ar = ", all_ar
-print "\t\tars of interest = inverse (iter_sub_space_relation compose (inverse all_ar))"
+print "\t\tall_ar = "
+PrettyPrintVisitor().visit(all_ar)
 print
 #### PERFORMANCE PROBLEM: the following composition causes a noticable pause
 print "\toutput:"
-print "\t\tars of interest = " ,iter_sub_space_relation.compose( all_ar.inverse() ).inverse()
+print "\t\tars of interest = inverse (iter_sub_space_relation compose (inverse all_ar))"
+ars_of_interest = iter_sub_space_relation.compose( all_ar.inverse() ).inverse()
+print "\t\tars of interest = " 
+PrettyPrintVisitor().visit(ars_of_interest)
+
 #cProfile.run('iter_sub_space_relation.compose( all_ar.inverse() ).inverse()','prof')
 #p = pstats.Stats('prof')
 #p.strip_dirs()
@@ -121,15 +141,18 @@ print "\tdata reordering specification (R_x0_x1) = ", R_x0_x1
 print
 print "\ta1_1 = R_x0_x1 compose a1_0 = "
 a1_1 = R_x0_x1.compose(a1_0)
-print a1_1
+#print a1_1
+PrettyPrintVisitor().visit(a1_1)
 print
 print "\ta4_1 = R_x0_x1 compose a4_0 = "
 a4_1 =  R_x0_x1.compose(a4_0)
-print a4_1
+#print a4_1
+PrettyPrintVisitor().visit(a4_1)
 print
 print "\ta8_1 = R_x0_x1 compose a8_0 = "
 a8_1 =  R_x0_x1.compose(a8_0)
-print a8_1
+#print a8_1
+PrettyPrintVisitor().visit(a8_1)
 
 
 #### Loop Alignment
@@ -138,29 +161,35 @@ print "==== Loop Alignment"
 print "The transformation relation: "
 T_I0_to_I1 = Relation('{[c0, s, c0, i, c0] -> [c0, s, c0, j, c0] : c0=0 && j=sigma(i)}')
 T_I0_to_I1 = T_I0_to_I1.union( Relation('{[c0, s, c1, ii, x] -> [c0, s, c1, ii, x] : c0=0 && c1=1}') )
-print "\tT_I0_to_I1 = ", T_I0_to_I1
+print "\tT_I0_to_I1 = "
+PrettyPrintVisitor().visit(T_I0_to_I1)
 print
 print "Updating access relations due to T_I0_to_I1: "
 print
 print "\ta1_2  = a1_1 compose (inverse T_I0_to_I1)"
 a1_2 =  a1_1.compose( T_I0_to_I1.inverse() )
-print a1_2
+#print a1_2
+PrettyPrintVisitor().visit(a1_2)
 print
 print "\ta4_2  = a4_1 compose (inverse T_I0_to_I1)"
 a4_2 =  a4_1.compose( T_I0_to_I1.inverse() )
-print a4_2
+#print a4_2
+PrettyPrintVisitor().visit(a4_2)
 print
 print "\ta8_2  = a8_1 compose (inverse T_I0_to_I1)"
 a8_2 =  a8_1.compose( T_I0_to_I1.inverse() )
-print a8_2
+#print a8_2
+PrettyPrintVisitor().visit(a8_2)
 print
 print "Updating a data dependence: "
-D_I0_to_I0 = Relation('{[c0,s,c0,i,c0] -> [c0,s,c1,ii,c0] : i=inter1(ii)}')
-print "\tD_I0_to_I0 = ", D_I0_to_I0
+D_I0_to_I0 = Relation('{[c0,s,c0,i,c0] -> [c0,s,c1,ii,c0] : c0=0 && c1=1 && i=inter1(ii)}')
+print "\tD_I0_to_I0 = "
+PrettyPrintVisitor().visit(D_I0_to_I0)
 print "Updating the data dependence due to the loop alignment transformation."
 print "\tD_I1_to_I1 = T_I0_to_I1 compose ( D_I0_to_I0 compose (inverse T_I0_to_I1)"
 D_I1_to_I1 = T_I0_to_I1.compose( D_I0_to_I0.compose( T_I0_to_I1.inverse() ) )
-print "\t           = ", D_I1_to_I1
+print "\t           = "
+PrettyPrintVisitor().visit(D_I1_to_I1)
 
 
 #### IterPermuteTrans
@@ -169,32 +198,43 @@ print
 print "==== IterPermuteTrans"
 T_I1_to_I2 = Relation("{[c0,s1,c1,i,c2] -> [c3,s2,c4,j,c5] : s1=s2 && c0=0 && c1=0 && c2=0 && c3=0 && c4=0 && c5=0 && i=j}")
 T_I1_to_I2 = T_I1_to_I2.union( Relation("{[c6,s3,c7,ii,x] -> [c8,s4,c9,j,y] : s3=s4 && j = delta(ii) && c6=0 && c8=0 && c7=1 && c9=1 && x=y }"))
-print "T_I1_to_I2 = ", T_I1_to_I2
+print "T_I1_to_I2 = "
+PrettyPrintVisitor().visit(T_I1_to_I2)
 
 print
 print "Computing ER_2, or access relation that is input to permutation alg"
 print "\tAR = union over all access relations to x or fx"
 AR = a1_2.union( a4_2.union( a8_2 ) )
-print "\t\t= ", AR
+print "\t\t= "
+PrettyPrintVisitor().visit(AR)
+
 issr = Relation('{[c0, s, c1, ii, c2] -> [ ii ] : c1=1}')
-print "\tissr = ", issr
+print "\tissr = "
+PrettyPrintVisitor().visit(issr)
 print
-print "\tAR compose (inverse issr)= ", AR.compose(issr.inverse())
+temp = AR.compose(issr.inverse())
+print "\tAR compose (inverse issr)= "
+PrettyPrintVisitor().visit(temp)
 
 print
 print "Updating access relations due to T_I1_to_I2: "
 print
 print "\ta1_3  = a1_2 compose (inverse T_I1_to_I2)"
 a1_3 =  a1_2.compose( T_I1_to_I2.inverse() )
-print a1_3
+#print a1_3
+PrettyPrintVisitor().visit(a1_3)
+
 print
 print "\ta4_3  = a4_2 compose (inverse T_I1_to_I2)"
 a4_3 =  a4_2.compose( T_I1_to_I2.inverse() )
-print a4_3
+#print a4_3
+PrettyPrintVisitor().visit(a4_3)
+
 print
 print "\ta8_3  = a8_2 compose (inverse T_I1_to_I2)"
 a8_3 =  a8_2.compose( T_I1_to_I2.inverse() )
-print a8_3
+#print a8_3
+PrettyPrintVisitor().visit(a8_3)
 print
 
 # FIXME: add modification to data dependence example
@@ -211,28 +251,36 @@ print "\tDirect data dependences:"
 D_1_2 = Relation("{[c0,s,c1,i,c2] -> [c0,s,c3,ii,c2] : i = inter1(ii) && c1=0 && c2=0 && c0=0 && c3=1}")
 D_1_2 = D_1_2.union(Relation("{[c0,s,c1,i,c2] -> [c0,s,c3,ii,c2] : i = inter2(ii) && c1=0 && c2=0 && c0=0 && c3=1}"))
 D_1_3 = D_1_2
-D_2_1 = Relation("{[c0,s,c3,ii,c2] -> [c0,s,c1,i,c2] : s2 > s && i=inter1(ii) && c1=0 && c2=0 && c0=0 && c3=1}")
-D_2_1 = D_2_1.union(Relation("{[c0,s,c3,ii,c2] -> [c0,s,c1,i,c2] : s2 > s && i = inter2(ii) && c1=0 && c2=0 && c0=0 && c3=1}"))
-print "\t\tD_1_2 = D_1_3 = ", D_1_2
-print "\t\tD_2_1 = ", D_2_1
+D_2_1 = Relation("{[c0,s,c1,ii,c0] -> [c0,s2,c0,i,c0] : s2 > s && i=inter1(ii) && c0=0 && c1=1}")
+D_2_1 = D_2_1.union(Relation("{[c0,s,c1,ii,c0] -> [c0,s2,c0,i,c0] : s2 > s && i = inter2(ii) && c0=0 && c1=1}"))
+print "\t\tD_1_2 = D_1_3 = "
+PrettyPrintVisitor().visit(D_1_2)
+print "\t\tD_2_1 = "
+PrettyPrintVisitor().visit(D_2_1)
 print "\t\tfull_I = ", full_I
 iter_sub_space_relation = Relation("{[c0,s,x,i,y]->[x,i]}")
 iter_seed_space_relation = Relation("{[c0,s,c1,i,c2]->[i] : c1=1}")
-print "\t\titer_sub_space_relation = ", iter_sub_space_relation
-print "\t\titer_seed_space_relation = ", iter_seed_space_relation
+print "\t\titer_sub_space_relation = "
+PrettyPrintVisitor().visit(iter_sub_space_relation)
+print "\t\titer_seed_space_relation = "
+PrettyPrintVisitor().visit(iter_seed_space_relation)
 print
 print "Algorithm:"
 print "\t\t# Dependences that exist within space being sparse tiled"
 D = D_1_3.union(D_2_1)
 D_ST = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse()
 print "\t\tD_ST = ", D_ST
+#PrettyPrintVisitor().visit(D_ST)
 print
 print "\t\tNOTE: not doing verification that dependences in D_ST are not loop carried because I don't know how to iterate over the disjuntions or in and out tuples yet."
 D_ST_0 = D_ST
 print "D_ST_0 = D_ST = ", D_ST_0
+#PrettyPrintVisitor().visit(D_ST_0)
 print "D_ST_0 compose D_ST = ", D_ST_0.compose(D_ST)
+#PrettyPrintVisitor().visit(D_ST_0.compose(D_ST))
 D_ST_1 = D_ST_0.compose(D_ST).union(D_ST)
-print "D_ST_1 = (D_ST_0 compose D_ST) union D_ST = ", D_ST_1
+print "D_ST_1 = (D_ST_0 compose D_ST) union D_ST = ",D_ST_1
+#PrettyPrintVisitor().visit(D_ST_1)
 
 print "Output:"
 print "\tFROM_SS = "
