@@ -82,36 +82,9 @@ spec.add_access_relation(
 #Define the desired transformations
 spec.add_transformation(
     type=iegen.trans.DataPermuteTrans,
-    name='cpack1',
-    reordering_name='sigma1',
+    name='cpack',
+    reordering_name='sigma',
     data_arrays=['x','fx'],
     iter_sub_space_relation='{[c0,i,c1]->[i]}',
     target_data_array='x',
     erg_func_name='ERG_cpack')
-
-#spec.add_transformation(
-#    type=iegen.trans.DataPermuteTrans,
-#    name='cpack2',
-#    reordering_name='sigma2',
-#    data_arrays=['x','fx'],
-#    iter_sub_space_relation='{[c0,i,c1]->[i]}',
-#    target_data_array='x',
-#    erg_func_name='ERG_cpack')
-
-iter_reordering=None
-#iter_reordering=IterPermuteTrans(
-#                iter_reordering='{ [ i,x ] -> [ k,x ] : k = delta( i ) }',
-##User doesn't specify?
-##This is calculated in step 0
-##               iteration_space=I_0,
-##User doesn's specify?
-##This is calculated in step 1a
-##               access_relation=A_I_0_to_X_1,
-#                iter_sub_space_relation='{ [ i, j ] -> [ i ] }',
-#                erg_func_name='ERG_lexmin',
-#                erg_type='ERG_Permute')
-
-#Data Dependences
-#    Only reduction dependences.  It is important to indicate that there are reduction dependences however, because that means each iteration needs to be executed atomically if the loop is being parallelized.
-
-#XXX: What is the best way that this should be specified using the MapIR specification?
