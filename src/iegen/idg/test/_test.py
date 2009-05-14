@@ -14,7 +14,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.codegen classes
 	def testNameImport(self):
 		try:
-			from iegen.idg import IDG,IDGNode,IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGReorderCall
+			from iegen.idg import IDG,IDGNode,IDGDataNode,IDGTaskNode,IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGGenERSpec,IDGCall
 		except ImportError,e:
 			self.fail('Importing classes from iegen.idg failed: '+str(e))
 #----------------------------------

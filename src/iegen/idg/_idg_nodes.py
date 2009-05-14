@@ -3,6 +3,7 @@
 
 from iegen import IEGenObject
 
+#-------------------- IDG Node Base Classes --------------------
 #---------- IDGNode ----------
 class IDGNode(IEGenObject):
 	__slots__=('deps','uses','key','data')
@@ -25,28 +26,35 @@ class IDGNode(IEGenObject):
 		raise NotImplementedError('apply_visitor must be overridden in child classes')
 #-----------------------------
 
+#---------- IDGDataNode ----------
+class IDGDataNode(IDGNode): pass
+#---------------------------------
+
+#---------- IDGTaskNode ----------
+class IDGTaskNode(IDGNode): pass
+#---------------------------------
+#---------------------------------------------------------------
+
+#-------------------- Data Nodes --------------------
 #---------- IDGSymbolic ----------
-class IDGSymbolic(IDGNode):
-	def __init__(self,key,symbolic):
-		IDGNode.__init__(self,key,symbolic)
+class IDGSymbolic(IDGDataNode):
+	_prefix='sym_'
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGSymbolic(self)
 #---------------------------------
 
 #---------- IDGDataArray ----------
-class IDGDataArray(IDGNode):
-	def __init__(self,key,data_array):
-		IDGNode.__init__(self,key,data_array)
+class IDGDataArray(IDGDataNode):
+	_prefix='data_array_'
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGDataArray(self)
 #----------------------------------
 
 #---------- IDGERSpec ----------
-class IDGERSpec(IDGNode):
-	def __init__(self,key,er_spec):
-		IDGNode.__init__(self,key,er_spec)
+class IDGERSpec(IDGDataNode):
+	_prefix='er_spec_'
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGERSpec(self)
@@ -54,8 +62,7 @@ class IDGERSpec(IDGNode):
 
 #---------- IDGIndexArray ----------
 class IDGIndexArray(IDGERSpec):
-	def __init__(self,key,index_array):
-		IDGERSpec.__init__(self,key,index_array)
+	_prefix='er_spec_'
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGIndexArray(self)
@@ -63,27 +70,27 @@ class IDGIndexArray(IDGERSpec):
 
 #---------- IDGOutputERSpec ----------
 class IDGOutputERSpec(IDGERSpec):
-	def __init__(self,key,er_spec):
-		IDGNode.__init__(self,key,er_spec)
+	_prefix='er_spec_'
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGOutputERSpec(self)
 #-------------------------------------
+#----------------------------------------------------
 
-#---------- IDGERGCall ----------
-class IDGERGCall(IDGNode):
-	def __init__(self,key,erg_spec):
-		IDGNode.__init__(self,key,erg_spec)
-
-	def apply_visitor(self,visitor):
-		visitor.visitIDGERGCall(self)
-#-----------------------------
-
-#---------- IDGReorderCall ----------
-class IDGReorderCall(IDGNode):
-	def __init__(self,key,call_spec):
-		IDGNode.__init__(self,key,call_spec)
+#-------------------- Task Nodes --------------------
+#---------- IDGGenERSpec ----------
+class IDGGenERSpec(IDGTaskNode):
+	_prefix='gen_er_spec_'
 
 	def apply_visitor(self,visitor):
-		visitor.visitIDGReorderCall(self)
+		visitor.visitIDGGenERSpec(self)
+#---------------------------------
+
+#---------- IDGCall ----------
+class IDGCall(IDGTaskNode):
+	_prefix='call_'
+
+	def apply_visitor(self,visitor):
+		visitor.visitIDGCall(self)
 #-----------------------------
+#----------------------------------------------------
