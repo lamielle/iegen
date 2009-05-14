@@ -129,17 +129,19 @@ def calc_equality_value(var_name,formula,raw_array=False):
 
 #Creates an initial set of IDG nodes for Symbolics, Index Arrays, and Data Arrays
 def calc_initial_idg(mapir):
+	from iegen.idg import IDGSymbolic,IDGDataArray,IDGIndexArray
+
 	#Create the symbolic nodes
 	for symbolic in mapir.get_symbolics():
-		mapir.idg.get_symbolic_node(symbolic)
-
-	#Create the index array nodes
-	for index_array in mapir.get_index_arrays():
-		mapir.idg.get_index_array_node(index_array)
+		mapir.idg.get_node(IDGSymbolic,symbolic)
 
 	#Create the data array nodes
 	for data_array in mapir.get_data_arrays():
-		mapir.idg.get_data_array_node(data_array)
+		mapir.idg.get_node(IDGDataArray,data_array)
+
+	#Create the index array nodes
+	for index_array in mapir.get_index_arrays():
+		mapir.idg.get_node(IDGIndexArray,index_array)
 
 #Updates access relations for the computation phase
 def calc_update_access_relations(mapir):
