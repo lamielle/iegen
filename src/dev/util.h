@@ -1,5 +1,5 @@
 /*! \file
- 
+
     util.h
 
     Declarations of general utility macros and functions.
@@ -23,14 +23,30 @@
 
 #define MAXBUF 256
 
+#define max(a,b) (((a)>(b))?(a):(b))
+#define min(a,b) (((a)<(b))?(a):(b))
+
+// -------------------- Memory alloc, init, and free
+void null_int_array(int **array);
+void null_double_array(double **array);
+void alloc_int_array(int **array,int len);
+void alloc_double_array(double **array,int len);
+void free_int_array(int **array);
+void free_double_array(double **array);
+
 // --------------------- Testing
 
 //! Print the values of the integer array as space delimited to stdout.
-void printArray(int *array, int num);
-void printRealArray(double *array, int num);
+void print_int_array(int *array, int len);
+
+//! Print the values of the double array as space delimited to stdout.
+void print_double_array(double *array, int len);
+
+//! Compare the values of two different int arrays and return true if equal.
+bool int_arrays_equal(int *a1, int *a2, int len);
 
 //! Compare the values of two different double arrays and return true if equal.
-bool compareRealArrays(double *a1, double *a2, int num);
+bool double_arrays_equal(double *a1, double *a2, int len);
 
 // --------------------- Functionality for reordering data
 
@@ -38,7 +54,7 @@ bool compareRealArrays(double *a1, double *a2, int num);
 void pointerUpdate(int *index_array, int ia_size, int *old2new, int n_nodes);
 
 //! Reorder an array in place using the mapping in old2new explicit relation.
-void reorderArray(unsigned char *ptr, int elem_size, int num_elem, 
+void reorderArray(unsigned char *ptr, int elem_size, int num_elem,
                   ExplicitRelation *old2new);
 
 
