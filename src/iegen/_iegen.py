@@ -223,49 +223,6 @@ class AccessRelation(IEGenObject):
 %s|-iter_to_data: %s'''%(spaces,spaces,self.name,spaces,self.data_array._get_string(indent+13),spaces,self.iter_to_data)
 #------------------------------------------
 
-#---------- ERGSpec class ----------
-class ERGSpec(IEGenObject):
-	__slots__=('name','erg_func_name','inputs','outputs')
-
-	def __init__(self,name,erg_func_name,inputs,outputs):
-		self.name=name
-		self.erg_func_name=erg_func_name
-		self.inputs=inputs
-		self.outputs=outputs
-
-	def __repr__(self):
-		return 'ERGSpec(%s,%s,%s,%s)'%(self.name,self.erg_func_name,self.inputs,self.outputs)
-
-	def __str__(self):
-		return self._get_string(0)
-
-	def _get_string(self,indent):
-		from cStringIO import StringIO
-
-		if indent>0: indent+=1
-		spaces=' '*indent
-
-		#Calculate the string for the inputs
-		inputs_string=StringIO()
-		for input in self.inputs:
-			print >>inputs_string,input._get_string(indent+8)
-		inputs_string=inputs_string.getvalue()[:-1]
-
-		#Calculate the string for the ouputs
-		outputs_string=StringIO()
-		for output in self.outputs:
-			print >>outputs_string,output._get_string(indent+8)
-		outputs_string=outputs_string.getvalue()[:-1]
-
-		return '''%sERGSpec:
-%s|-name: %s
-%s|-erg_func_name: %s:
-%s|-inputs:
-%s
-%s|-outputs:
-%s'''%(spaces,spaces,self.name,spaces,self.erg_func_name,spaces,inputs_string,spaces,outputs_string)
-#-----------------------------------
-
 #---------- DataDependence class ----------
 class DataDependence(IEGenObject):
 	__slots__=('_iterspace','_dataspace','_data_dependence')
@@ -283,9 +240,10 @@ define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
 
 #---------- Function Call class ----------
 class FunctionCallSpec(IEGenObject):
-	__slots__=('name','function_name')
+	__slots__=('name','function_name','arguments')
 
-	def __init__(self,name,function_name):
+	def __init__(self,name,function_name,arguments):
 		self.name=name
 		self.function_name=function_name
+		self.arguments=arguments
 #-----------------------------------------

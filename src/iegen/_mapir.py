@@ -10,7 +10,7 @@ from iegen.idg import IDG
 
 #---------- MapIR class ----------
 class MapIR(IEGenObject):
-	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','transformations','erg_specs','full_iter_space','idg')
+	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','transformations','full_iter_space','idg')
 
 	def __init__(self):
 		self.symbolics={}
@@ -19,7 +19,6 @@ class MapIR(IEGenObject):
 		self.er_specs={}
 		self.statements={}
 		self.transformations=[]
-		self.erg_specs={}
 		self.idg=IDG()
 
 	#---------- Symbolics ----------
@@ -102,16 +101,6 @@ class MapIR(IEGenObject):
 		#Add the transformation to the list of transformations
 		self.transformations.append(transformation)
 	#-------------------------------------
-
-	#---------- ERGSpecs ----------
-	#Returns the ERGSpecs that are present in the MapIR
-	def get_erg_specs(self): return self.erg_specs.values()
-
-	#Adds the given ERGSpec to the collection of ERGSpecs
-	def add_erg_spec(self,erg_spec):
-		self.print_progress("Adding ERGSpec '%s'..."%(erg_spec.name))
-		self.erg_specs[erg_spec.name]=erg_spec
-	#------------------------------
 
 	#---------- Main 'action' method ---------
 	#This is the main interface that starts the whole code generation process
