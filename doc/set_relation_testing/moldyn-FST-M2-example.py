@@ -237,7 +237,15 @@ a8_3 =  a8_2.compose( T_I1_to_I2.inverse() )
 PrettyPrintVisitor().visit(a8_3)
 print
 
-# FIXME: add modification to data dependence example
+print
+print "Updating a data dependence: "
+print "\tD_I1_to_I1 = "
+PrettyPrintVisitor().visit(D_I1_to_I1)
+print "Updating the data dependence due to the loop alignment transformation."
+print "\tD_I2_to_I2 = T_I1_to_I2 compose ( D_I1_to_I1 compose (inverse T_I1_to_I2)"
+D_I2_to_I2 = T_I1_to_I2.compose( D_I1_to_I1.compose( T_I1_to_I2.inverse() ) )
+print "\t           = "
+PrettyPrintVisitor().visit(D_I2_to_I2)
 
 #### SparseTileTrans
 print
@@ -255,32 +263,65 @@ D_2_1 = Relation("{[c0,s,c1,ii,c0] -> [c0,s2,c0,i,c0] : s2 > s && i=inter1(ii) &
 D_2_1 = D_2_1.union(Relation("{[c0,s,c1,ii,c0] -> [c0,s2,c0,i,c0] : s2 > s && i = inter2(ii) && c0=0 && c1=1}"))
 print "\t\tD_1_2 = D_1_3 = "
 PrettyPrintVisitor().visit(D_1_2)
+print
 print "\t\tD_2_1 = "
 PrettyPrintVisitor().visit(D_2_1)
+print
+print "\tDirect data dependences modified by the previous transformations:"
+print
+print "\t\tD_1_2 = T_I0_to_I1 compose ( D_1_2 compose (inverse T_I0_to_I1) ) ) = "
+D_1_2 = T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )
+PrettyPrintVisitor().visit(D_1_2)
+print
+print "\t\tD_1_2 = T_I1_to_I2 compose ( D_1_2 compose (inverse T_I1_to_I2) ) ) ="
+D_1_2 = T_I1_to_I2.compose( D_1_2.compose( T_I1_to_I2.inverse() ) )
+PrettyPrintVisitor().visit(D_1_2)
+print
+print "\t\tD_1_3 = T_I0_to_I1 compose ( D_1_3 compose (inverse T_I0_to_I1) ) ) ="
+D_1_3 = T_I0_to_I1.compose( D_1_3.compose( T_I0_to_I1.inverse() ) )
+PrettyPrintVisitor().visit(D_1_3)
+print
+print "\t\tD_1_3 = T_I1_to_I2 compose ( D_1_3 compose (inverse T_I1_to_I2) ) ) ="
+D_1_3 = T_I1_to_I2.compose( D_1_3.compose( T_I1_to_I2.inverse() ) )
+PrettyPrintVisitor().visit(D_1_3)
+print
 print "\t\tfull_I = ", full_I
 iter_sub_space_relation = Relation("{[c0,s,x,i,y]->[x,i]}")
 iter_seed_space_relation = Relation("{[c0,s,c1,i,c2]->[i] : c1=1}")
-print "\t\titer_sub_space_relation = "
+print
+print "\t\titer_sub_space_relation (issr) = "
 PrettyPrintVisitor().visit(iter_sub_space_relation)
-print "\t\titer_seed_space_relation = "
+print
+print "\t\titer_seed_space_relation (iseedsr) = "
 PrettyPrintVisitor().visit(iter_seed_space_relation)
 print
 print "Algorithm:"
 print "\t\t# Dependences that exist within space being sparse tiled"
-D = D_1_3.union(D_2_1)
+D = D_1_3.union(D_1_2)
+print "\t\trelevant dependences = D_1_2 union D_1_3 = ",
+PrettyPrintVisitor().visit(D)
+print
+print "\t\tMake it so data dependence relations start and end in sparse tiling subspace"
+print "\t\t\tissr compose D ="
+PrettyPrintVisitor().visit(iter_sub_space_relation.compose(D))
+print
+print "\t\tD_ST = inverse (issr compose (inverse (issr compose D)))"
 D_ST = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse()
-print "\t\tD_ST = ", D_ST
-#PrettyPrintVisitor().visit(D_ST)
+PrettyPrintVisitor().visit(D_ST)
 print
 print "\t\tNOTE: not doing verification that dependences in D_ST are not loop carried because I don't know how to iterate over the disjuntions or in and out tuples yet."
+print
+print "\t\t1) Count number of statements, for example count = 3"
+print "\t\t2) Compute D_ST_+"
 D_ST_0 = D_ST
-print "D_ST_0 = D_ST = ", D_ST_0
-#PrettyPrintVisitor().visit(D_ST_0)
-print "D_ST_0 compose D_ST = ", D_ST_0.compose(D_ST)
-#PrettyPrintVisitor().visit(D_ST_0.compose(D_ST))
+print "\t\t\tD_ST_0 = D_ST = "
+PrettyPrintVisitor().visit(D_ST_0)
+print
+print "\t\t\tD_ST_0 compose D_ST = "
+PrettyPrintVisitor().visit(D_ST_0.compose(D_ST))
 D_ST_1 = D_ST_0.compose(D_ST).union(D_ST)
-print "D_ST_1 = (D_ST_0 compose D_ST) union D_ST = ",D_ST_1
-#PrettyPrintVisitor().visit(D_ST_1)
+print "\t\t\tD_ST_1 = (D_ST_0 compose D_ST) union D_ST = "
+PrettyPrintVisitor().visit(D_ST_1)
 
 print "Output:"
 print "\tFROM_SS = "

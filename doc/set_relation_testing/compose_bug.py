@@ -1,3 +1,7 @@
+# compose_bug.py
+#
+# Turned out this was another un-renaming bug.  Issue #124 is now fixed.
+
 import iegen
 from iegen import Set
 from iegen import Relation

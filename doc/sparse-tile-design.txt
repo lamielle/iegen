@@ -1,76 +1,11 @@
 3/30/09: Outlining sparse tiling calc_input
 
-    Let's say we have the following subspace that we are going to full sparse tile:
-        for (i=0; i<N; i++) {
-            x[f[i]] += ...
-        }
-        for (j=0; j<M; j++) {
-            ... x[j] ...
-        }
-        for (k=0; k<V; k++) {
-            x[g[k]] +=
-        }
-        for (l=0; l<W; l++) {
-            ... x[l]
-        }
-    
-    The set of direct dependences are as follows:
-        D = {[1,i,1]->[2,j,1] : f(i)=j } 
-            union {[2,j,1]->[3,k,1] : g(k)=j }
-            union {[3,k,1]->[4,l,1] : g(k)=l }
-            
-        // Have to take all pairs of conjuncts and compute composition.    
-        D compose D = 
-            {[1,i,1]->[2,j,1] : f(i)=j } compose {[1,i,1]->[2,j,1] : f(i)=j }
-            {[1,i,1]->[2,j,1] : f(i)=j } compose {[2,j,1]->[3,k,1] : g(k)=j }
-            {[1,i,1]->[2,j,1] : f(i)=j } compose {[3,k,1]->[4,l,1] : g(k)=l }
-            {[2,j,1]->[3,k,1] : g(k)=j } compose {[1,i,1]->[2,j,1] : f(i)=j }
-            {[2,j,1]->[3,k,1] : g(k)=j } compose {[2,j,1]->[3,k,1] : g(k)=j }
-            {[2,j,1]->[3,k,1] : g(k)=j } compose {[3,k,1]->[4,l,1] : g(k)=l }
-            {[3,k,1]->[4,l,1] : g(k)=l } compose {[1,i,1]->[2,j,1] : f(i)=j }
-            {[3,k,1]->[4,l,1] : g(k)=l } compose {[2,j,1]->[3,k,1] : g(k)=j }
-            {[3,k,1]->[4,l,1] : g(k)=l } compose {[3,k,1]->[4,l,1] : g(k)=l }
-            union D
-            
-        (D compose D) union D =        
-            empty
-            empty
-            empty
-            {[1,i,1]->[3,k,1] : g(k)=f(i) }
-            empty
-            empty
-            empty
-            {[2,j,1]->[4,l,1] : g(k)=l && g(k)=j } // need new simp rule
-                {[2,j,1]->[4,l,1] : l=j }
-            empty
-            union D
-            
-        (((D compose D) union D) compose D) union D= 
-            {[1,i,1]->[3,k,1] : g(k)=f(i) } union {[2,j,1]->[4,l,1] : l=j }
-            union 
-            {[2,j,1]->[4,l,1] : l=j } compose {[1,i,1]->[2,j,1] : f(i)=j }
-            union D
-            
-        D+ = (((D compose D) union D) compose D) union D = 
-            {[1,i,1]->[3,k,1] : g(k)=f(i) } union {[2,j,1]->[4,l,1] : l=j }
-            union 
-            {[1,i,1]->[4,l,1] :  f(i)=l }
-            union D
-
-        Done because we now have a dependence between the first loop and the last loop.
-        
-        Ok, now we need to do restrict domain and restrict range operations to get the to and from dependences that we want.
-        
-FROM_{SS} = D+ restrict domain {[t,k,1] : t = 3} 
-          = {[3,k,1]->[4,l,1] : g(k)=l }
-            
-TO_{SS} = D+ restrict range {[t,k,1] : t = 3}
-        = {[2,j,1]->[3,k,1] : g(k)=j } union {[1,i,1]->[3,k,1] : g(k)=f(i) }
 
         
 Algorithm for computing FROM_{SS} and TO_{SS}
 (Should be implemented in SparseTileTrans.calc_input method.)
-    input:  D = set of all direct dependences for computation
+    input:  D = set of all direct dependences carried by 
+                subspace being sparse tiled
             full_IS = full iteration space
             iter_sub_space_relation
             iter_seed_space_relation
@@ -79,14 +14,17 @@ Algorithm for computing FROM_{SS} and TO_{SS}
                 the seed space and end somewhere in the subspace to be tiled
             TO_{SS} = set of all transitive dependences that end in the 
                 seed space and start somewhere in the subspace to be tiled
-        
+
     //========================================================
     // Create set of dependence that exist within space to be
     // sparse tiled,  D_{ST}.
     // Ensure that dependes ends and starts in subspace being sparse tiled.
-    D_{ST} = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse()            
+    D_{ST} = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse()
 
+        
     //========================================================
+    // (Optional: for now we can trust dependence levels provided
+    //            by the dependence relation specification).
     // Verify that none of the direct dependences in D_{ST} are loop carried.
     // 1) verify that the first, third, etc indices are set equal to a constant.
     
@@ -110,7 +48,8 @@ Algorithm for computing FROM_{SS} and TO_{SS}
     //========================================================
     // Construct D_{ST}+ under the assumption that there are no
     // loop carried dependences in D_{ST}.
-    // R+ = R^i = (R^{i-1} compose R) union R, while R^{i} is changing.
+    // In general,
+    //      R+ = R^i = (R^{i-1} compose R) union R, while R^{i} is changing.
     // Assume that R^0 is R.
     // The assumption that there are no loop carried dependences means 
     // R+ = R^i, where i is the number of statements minus 1.
@@ -135,3 +74,76 @@ Algorithm for computing FROM_{SS} and TO_{SS}
         = D_{ST}+ restrict domain (iter_seed_space_relation compose full_IS)
     TO_{SS} 
         = D_{ST}+ restrict range (iter_seed_space_relation compose full_IS)
+
+
+
+================================================
+Example of applying algorithm
+
+    Let's say we have the following subspace that we are going to full sparse tile:
+        for (i=0; i<N; i++) {
+            x[f[i]] += ...
+        }
+        for (j=0; j<M; j++) {
+            ... x[j] ...
+        }
+        for (k=0; k<V; k++) {
+            x[g[k]] +=
+        }
+        for (l=0; l<W; l++) {
+            ... x[l]
+        }
+    
+    The set of direct dependences in carried by subspace being sparse tiled
+    are as follows:
+        D_ST = {[1,i,1]->[2,j,1] : f(i)=j } 
+            union {[2,j,1]->[3,k,1] : g(k)=j }
+            union {[3,k,1]->[4,l,1] : g(k)=l }
+            
+        // Have to take all pairs of conjuncts and compute composition.    
+        D_ST compose D_ST = 
+            {[1,i,1]->[2,j,1] : f(i)=j } compose {[1,i,1]->[2,j,1] : f(i)=j }
+            {[1,i,1]->[2,j,1] : f(i)=j } compose {[2,j,1]->[3,k,1] : g(k)=j }
+            {[1,i,1]->[2,j,1] : f(i)=j } compose {[3,k,1]->[4,l,1] : g(k)=l }
+            {[2,j,1]->[3,k,1] : g(k)=j } compose {[1,i,1]->[2,j,1] : f(i)=j }
+            {[2,j,1]->[3,k,1] : g(k)=j } compose {[2,j,1]->[3,k,1] : g(k)=j }
+            {[2,j,1]->[3,k,1] : g(k)=j } compose {[3,k,1]->[4,l,1] : g(k)=l }
+            {[3,k,1]->[4,l,1] : g(k)=l } compose {[1,i,1]->[2,j,1] : f(i)=j }
+            {[3,k,1]->[4,l,1] : g(k)=l } compose {[2,j,1]->[3,k,1] : g(k)=j }
+            {[3,k,1]->[4,l,1] : g(k)=l } compose {[3,k,1]->[4,l,1] : g(k)=l }
+            union D_ST
+            
+        (D_ST compose D_ST) union D_ST =        
+            empty
+            empty
+            empty
+            {[1,i,1]->[3,k,1] : g(k)=f(i) }
+            empty
+            empty
+            empty
+            {[2,j,1]->[4,l,1] : g(k)=l && g(k)=j } // use simplification rule...
+                {[2,j,1]->[4,l,1] : l=j }
+            empty
+            union D
+            
+        (((D_ST compose D_ST) union D_ST) compose D_ST) union D_ST = 
+            {[1,i,1]->[3,k,1] : g(k)=f(i) } union {[2,j,1]->[4,l,1] : l=j }
+            union 
+            {[2,j,1]->[4,l,1] : l=j } compose {[1,i,1]->[2,j,1] : f(i)=j }
+            union D
+            
+        D_ST+ = (((D_ST compose D_ST) union D_ST) compose D_ST) union D_ST = 
+            {[1,i,1]->[3,k,1] : g(k)=f(i) } union {[2,j,1]->[4,l,1] : l=j }
+            union 
+            {[1,i,1]->[4,l,1] :  f(i)=l }
+            union D
+
+        Done because we now have a dependence between the first loop and the last loop.
+        
+        Ok, now we need to do restrict domain and restrict range operations to get the to and from dependences that we want.
+        
+FROM_{SS} = D_ST+ restrict domain {[t,k,1] : t = 3} 
+          = {[3,k,1]->[4,l,1] : g(k)=l }
+            
+TO_{SS} = D_ST+ restrict range {[t,k,1] : t = 3}
+        = {[2,j,1]->[3,k,1] : g(k)=j } union {[1,i,1]->[3,k,1] : g(k)=f(i) }
