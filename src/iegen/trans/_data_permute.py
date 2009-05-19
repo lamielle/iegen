@@ -1,7 +1,7 @@
 from copy import deepcopy
 from cStringIO import StringIO
 from iegen.trans import Transformation
-from iegen import ERSpec,Relation
+from iegen import ERSpec,Relation,VersionedDataArray
 from iegen.idg import IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGGenERSpec,IDGCall
 from iegen.codegen import calc_erg_call,calc_reorder_call
 
@@ -191,11 +191,17 @@ class DataPermuteTrans(Transformation):
 				#Add the reorder call node to the collection of reorder call nodes
 				reorder_call_nodes.append(reorder_call_node)
 
-				#Get the data array node
-				data_array_node=mapir.idg.get_node(IDGDataArray,data_array)
+				#Get the data array node before the reordering
+				before_data_array_node=mapir.idg.get_node(IDGDataArray,VersionedDataArray(data_array))
 
-				#Add the dependence of the reorder call on the data array
-				reorder_call_node.add_dep(data_array_node)
+				#Add the dependence of the reorder call on the before data array
+				reorder_call_node.add_dep(before_data_array_node)
+
+				#Get the data array node after the reordering
+				after_data_array_node=mapir.idg.get_node(IDGDataArray,VersionedDataArray(data_array))
+
+				#Add the dependence of the after data array node on the reorder call
+				after_data_array_node.add_dep(reorder_call_node)
 
 		#Add the output ERSpecs to the IDG
 		for output_er_spec in self.outputs:

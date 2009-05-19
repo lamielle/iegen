@@ -40,12 +40,13 @@ class Symbolic(Node):
 
 #---------- DataArray class ----------
 class DataArray(IEGenObject):
-	__slots__=('name','bounds')
+	__slots__=('name','bounds','max_version')
 	_set_fields=('bounds',)
 
 	def __init__(self,name,bounds):
 		self.name=name
 		self.bounds=bounds
+		self.max_version=0
 
 	def __repr__(self):
 		return 'DataArray(%s,%s)'%(self.name,self.bounds)
@@ -60,6 +61,23 @@ class DataArray(IEGenObject):
 %s|-name: %s
 %s|-bounds: %s'''%(spaces,spaces,self.name,spaces,self.bounds)
 #-------------------------------------
+
+#---------- VersionedDataArray ----------
+class VersionedDataArray(IEGenObject):
+	__slots__=('data_array','version')
+
+	def __init__(self,data_array,version=None):
+		self.data_array=data_array
+
+		if version is not None:
+			self.version=version
+		else:
+			self.version=self.data_array.max_version
+			self.data_array.max_version+=1
+
+	def _get_name(self): return self.data_array.name+'_'+str(self.version)
+	name=property(_get_name)
+#----------------------------------------
 
 #---------- ERSpec class ----------
 class ERSpec(IEGenObject):

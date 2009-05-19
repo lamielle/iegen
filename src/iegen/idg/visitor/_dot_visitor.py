@@ -41,7 +41,7 @@ class DotVisitor(TopoVisitor):
 		self.write_node_uses(node)
 
 	def atIDGDataArray(self,node):
-		self.write_node_def(node.key,'IDGDataArray\\n%s'%(node.data.name),'rectangle')
+		self.write_node_def(node.key,'IDGDataArray\\n%s: %d'%(node.data.data_array.name,node.data.version),'rectangle')
 		self.write_node_uses(node)
 
 	def atIDGERSpec(self,node):
