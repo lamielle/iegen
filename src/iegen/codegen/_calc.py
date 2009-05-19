@@ -197,4 +197,26 @@ def calc_access_relation_rename(access_relation,iter_space):
 		rename[from_vars[i].id]=to_vars[i].id
 
 	return rename
+
+def calc_reorder_call(trans_name,data_array,reordering_name):
+	from iegen import FunctionCallSpec
+
+	func_name='reorderArray'
+	name=trans_name+'_'+func_name+'_'+data_array.name
+	args=[
+	      '(unsigned char*)%s'%(data_array.name),
+	      'sizeof(double)',
+	      calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),
+	      '%s_ER'%(reordering_name)
+	     ]
+
+	return FunctionCallSpec(name,func_name,args)
+
+def calc_erg_call(trans_name,erg_func_name,inputs,outputs):
+	from iegen import FunctionCallSpec
+	name=trans_name+'_'+erg_func_name
+
+	args=[input.name for input in inputs]+[output.name+'_ER' for output in outputs]
+
+	return FunctionCallSpec(name,erg_func_name,args)
 #---------------------------------------------------
