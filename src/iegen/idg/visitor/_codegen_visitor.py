@@ -1,5 +1,5 @@
 from iegen.idg.visitor import TopoVisitor
-from iegen.codegen import gen_er_spec,gen_index_array,gen_output_er_spec,gen_erg_spec,gen_reorder_call
+from iegen.codegen import gen_er_spec,gen_index_array,gen_output_er_spec,gen_call
 
 class CodegenVisitor(TopoVisitor):
 
@@ -17,13 +17,14 @@ class CodegenVisitor(TopoVisitor):
 
 	def atIDGOutputERSpec(self,node): pass
 
-	def atIDGERGCall(self,node):
-		output_er_specs=[out_node.data for out_node in node.uses.values()]
-		self.stmts.extend(gen_erg_spec(node.data,output_er_specs))
+	def atIDGGenERSpec(self,node): pass
 
-	def atIDGReorderCall(self,node):
-		#TODO: This assumes the order of the dependences is reordering
-		# then data_array which may not always be the case
-		reordering=node.deps.values()[0].data
-		data_array=node.deps.values()[1].data
-		self.stmts.extend(gen_reorder_call(data_array,reordering))
+	def atIDGCall(self,node):
+		#First generate any ERs that are output from this call
+		#TODO: Use a better method of checking that a node is an ER node
+		output_er_specs=(out_node.data for out_node in node.uses.values() if 'er_spec_'==node._prefix)
+		for output_er_spec in output_er_specs:
+			gen_output_er_spec(output_er_spec)
+
+		#Generate the call
+		gen_call(node.data)

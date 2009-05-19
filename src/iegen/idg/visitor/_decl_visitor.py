@@ -40,6 +40,6 @@ class DeclVisitor(TopoVisitor):
 	def atIDGOutputERSpec(self,node):
 		self.decls[node.data.name]=VarDecl('ExplicitRelation *',[node.data.name+'_ER'],['*'+node.data.name])
 
-	def atIDGERGCall(self,node): pass
+	def atIDGGenERSpec(self,node): pass
 
-	def atIDGReorderCall(self,node): pass
+	def atIDGCall(self,node): pass

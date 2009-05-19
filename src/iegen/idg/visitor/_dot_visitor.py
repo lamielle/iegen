@@ -22,11 +22,14 @@ class DotVisitor(TopoVisitor):
 	def writeln(self,s=''): print >>self.dot_body,s
 	def write(self,s): print >>self.dot_body,s,
 
-	def write_node_def(self,name,text=None):
-		if not text:
+	def write_node_def(self,name,text=None,shape=None):
+		if not text and not shape:
 			self.writeln('%s;'%(name))
 		else:
-			self.writeln('%s [ label="%s" ];'%(name,text))
+			if not shape:
+				self.writeln('%s [ label="%s" ];'%(name,text))
+			else:
+				self.writeln('%s [ label="%s" shape=%s];'%(name,text,shape))
 
 	def write_node_uses(self,node):
 		for use in node.uses:
@@ -34,29 +37,29 @@ class DotVisitor(TopoVisitor):
 		self.writeln()
 
 	def atIDGSymbolic(self,node):
-		self.write_node_def(node.key,'IDGSymbolic\\n%s'%(node.data.name))
+		self.write_node_def(node.key,'IDGSymbolic\\n%s'%(node.data.name),'rectangle')
 		self.write_node_uses(node)
 
 	def atIDGDataArray(self,node):
-		self.write_node_def(node.key,'IDGDataArray\\n%s'%(node.data.name))
+		self.write_node_def(node.key,'IDGDataArray\\n%s'%(node.data.name),'rectangle')
 		self.write_node_uses(node)
 
 	def atIDGERSpec(self,node):
-		self.write_node_def(node.key,'IDGERSpec\\n%s'%(node.data.name))
+		self.write_node_def(node.key,'IDGERSpec\\n%s'%(node.data.name),'rectangle')
 		self.write_node_uses(node)
 
 	def atIDGIndexArray(self,node):
-		self.write_node_def(node.key,'IDGIndexArray\\n%s'%(node.data.name))
+		self.write_node_def(node.key,'IDGIndexArray\\n%s'%(node.data.name),'rectangle')
 		self.write_node_uses(node)
 
 	def atIDGOutputERSpec(self,node):
-		self.write_node_def(node.key,'IDGOutputERSpec\\n%s'%(node.data.name))
+		self.write_node_def(node.key,'IDGOutputERSpec\\n%s'%(node.data.name),'rectangle')
 		self.write_node_uses(node)
 
-	def atIDGERGCall(self,node):
-		self.write_node_def(node.key,'IDGERGCall\\n%s'%(node.data.name))
+	def atIDGGenERSpec(self,node):
+		self.write_node_def(node.key,'IDGGenERSpec\\n%s'%(node.data.name),'oval')
 		self.write_node_uses(node)
 
-	def atIDGReorderCall(self,node):
-		self.write_node_def(node.key,'IDGReorderCall\\n%s'%(node.data.name))
+	def atIDGCall(self,node):
+		self.write_node_def(node.key,'IDGCall\\n%s'%(node.data.function_name),'oval')
 		self.write_node_uses(node)
