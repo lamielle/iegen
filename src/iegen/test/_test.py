@@ -1126,6 +1126,15 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(r==r_res,'%s!=%s'%(r,r_res))
 
+	#Tests that the inner tuple variables of a composition are renamed
+	#This is a test to ensure that bug #124 was fixed
+	def testComposeRenameInner(self):
+		from iegen import Relation
+
+		r=Relation('{[x]->[x,i]}').compose(Relation('{[c42]->[c4]: c42=0 and -1c4+1=0}'))
+		r_res=Relation('{[c42]->[x_out0,i]: c42=0 and -1x_out0+1=0}')
+		self.failUnless(r==r_res,'%s!=%s'%(r,r_res))
+
 	#Tests the _get_prefix_rename_dict method of Relation
 	def testGetPrefixRenameDict(self):
 		from iegen import Relation

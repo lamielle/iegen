@@ -550,8 +550,8 @@ class Relation(Formula):
 		r1_ids=[var.id for var in r1.tuple_in.vars]
 		r1_ids.extend([var.id for var in r1.tuple_out.vars])
 		if 0==len(set(r2_ids).intersection(set(r1_ids))):
-			self._unrename_vars(new_rel,r1.tuple_out.vars,'1')
-			self._unrename_vars(new_rel,r2.tuple_in.vars,'2')
+			self._unrename_vars(new_rel,r1.tuple_in.vars+r1.tuple_out.vars,'1')
+			self._unrename_vars(new_rel,r2.tuple_in.vars+r2.tuple_out.vars,'2')
 
 		return new_rel
 #------------------------------------
