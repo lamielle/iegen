@@ -17,13 +17,13 @@ class ImportTestCase(TestCase):
 			#_codegen.py
 			from iegen.codegen import codegen
 			#_calc.py
-			from iegen.codegen import do_calc,calc_full_iter_space,calc_size_string,calc_lower_bound_string,calc_upper_bound_string,calc_equality_value,calc_initial_idg
+			from iegen.codegen import do_calc,calc_full_iter_space,calc_size_string,calc_lower_bound_string,calc_upper_bound_string,calc_equality_value,calc_initial_idg,calc_update_access_relations,calc_unupdate_access_relations,calc_access_relation_rename,calc_reorder_call,calc_erg_call
 			#_ito.py
 			from iegen.codegen import do_ito
 			#_gen.py
 			from iegen.codegen import do_gen,gen_preamble,gen_index_array,gen_tuple_vars_decl
 			#_gen_inspector.py
-			from iegen.codegen import gen_inspector,gen_er_spec,gen_output_er_spec,gen_erg_spec,gen_reorder_call
+			from iegen.codegen import gen_inspector,gen_er_spec,gen_output_er_spec,gen_call
 			#_gen_executor.py
 			from iegen.codegen import gen_executor
 			#_gen_main.py

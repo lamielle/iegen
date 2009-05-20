@@ -109,23 +109,6 @@ def gen_output_er_spec(output_er_spec):
 
 	return stmts
 
-def gen_erg_spec(erg_spec,output_er_specs):
-	iegen.print_progress("Generating code for ERGSpec '%s'..."%(erg_spec.name))
-	iegen.print_detail(erg_spec)
-
-	stmts=[]
-
-	#Generate the code to setup the output ERs before making the call
-	for output_er_spec in output_er_specs:
-		gen_output_er_spec(output_er_spec)
-
-	#Generate the code to make the call to the ERG
-	arg_list_template=','.join(['%s']*(len(erg_spec.inputs)+len(erg_spec.outputs)))
-	call_template='%s('+arg_list_template+');'
-	call_strings=tuple([erg_spec.erg_func_name]+[input.name for input in erg_spec.inputs]+[output.name+'_ER' for output in erg_spec.outputs])
-	stmts.append(Statement(call_template%call_strings))
-
-	return stmts
-
-def gen_reorder_call(data_array,reordering):
-	return [Statement('reorderArray((unsigned char*)%s,sizeof(double),%s,%s_ER);'%(data_array.name,calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),reordering.name))]
+def gen_call(call_spec):
+	iegen.print_progress("Generating code for call to '%s'..."%(call_spec.function_name))
+	return [Statement(call_spec.function_name+'('+','.join(call_spec.arguments)+');')]

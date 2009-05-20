@@ -11,7 +11,8 @@ class ParamVisitor(TopoVisitor):
 		self.params.append(Parameter('int',node.data.name))
 
 	def atIDGDataArray(self,node):
-		self.params.append(Parameter('double *',node.data.name))
+		if 0==node.data.version:
+			self.params.append(Parameter('double *',node.data.data_array.name))
 
 	def atIDGERSpec(self,node): pass
 
