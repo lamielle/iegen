@@ -74,7 +74,7 @@ print full_I
 
 # A1, access relation for S1, targets data array x
 print "==== A1, access relation for S1"
-a1 = Relation("{[s,i]->[j] : i=j}")
+a1 = Relation("{[s,i]->[i] }")
 #print a1
 PrettyPrintVisitor().visit(a1)
 print "Modified a1, or a1_0"
@@ -196,8 +196,8 @@ PrettyPrintVisitor().visit(D_I1_to_I1)
 iegen.simplify.register_inverse_pair('delta','delta_inv')
 print
 print "==== IterPermuteTrans"
-T_I1_to_I2 = Relation("{[c0,s1,c1,i,c2] -> [c3,s2,c4,j,c5] : s1=s2 && c0=0 && c1=0 && c2=0 && c3=0 && c4=0 && c5=0 && i=j}")
-T_I1_to_I2 = T_I1_to_I2.union( Relation("{[c6,s3,c7,ii,x] -> [c8,s4,c9,j,y] : s3=s4 && j = delta(ii) && c6=0 && c8=0 && c7=1 && c9=1 && x=y }"))
+T_I1_to_I2 = Relation("{[c0,s,c0,i,c0] -> [c0,s,c0,i,c0] : c0=0 }")
+T_I1_to_I2 = T_I1_to_I2.union( Relation("{[c0,s,c1,ii,x] -> [c0,s,c1,j,x] : j = delta(ii) && c0=0  && c1=1 }"))
 print "T_I1_to_I2 = "
 PrettyPrintVisitor().visit(T_I1_to_I2)
 
@@ -326,6 +326,51 @@ PrettyPrintVisitor().visit(D_ST_1)
 print "Output:"
 print "\tFROM_SS = "
 print "\tTO_SS = "
+
+print 
+print "========\nModifying the MapIR due to sparse tiling transformation:"
+
+T_I2_to_I3 = Relation("{[c0,s,c0,i,c0] -> [c0,s,c0,t,c0,i,c0] : c0=0 && t=theta(0,i)}")
+T_I2_to_I3 = T_I2_to_I3.union( Relation("{[c0,s,c1,ii,x] -> [c0,s4,c0,t,c1,ii,x] : t = theta(1,ii) && c0=0 && c1=1 }"))
+print "\tT_I2_to_I3 = ", T_I2_to_I3
+PrettyPrintVisitor().visit(T_I2_to_I3)
+print
+print "Modifying the scheduling function:"
+S1_sched = Relation("{[s,i]->[c0,s,c0,i,c0] : c0=0}")
+print "\tS1_sched = "
+PrettyPrintVisitor().visit(S1_sched)
+print "\tT_I2_to_I3 compose S1_sched = "
+S1_sched = T_I2_to_I3.compose(S1_sched)
+PrettyPrintVisitor().visit(S1_sched)
+
+
+print
+print "Updating access relations due to T_I2_to_I3: "
+print
+print "\ta1_4  = a1_3 compose (inverse T_I2_to_I3)"
+a1_4 =  a1_3.compose( T_I2_to_I3.inverse() )
+PrettyPrintVisitor().visit(a1_4)
+
+print
+print "\ta4_4  = a4_3 compose (inverse T_I2_to_I3)"
+a4_4 =  a4_3.compose( T_I2_to_I3.inverse() )
+PrettyPrintVisitor().visit(a4_4)
+
+print
+print "\ta8_4  = a8_3 compose (inverse T_I2_to_I3)"
+a8_4 =  a8_3.compose( T_I2_to_I3.inverse() )
+PrettyPrintVisitor().visit(a8_4)
+print
+
+print
+print "Updating the data dependences due to T_I2_to_I3:"
+print "\t\tD_1_2 = T_I2_to_I3 compose ( D_1_2 compose (inverse T_I2_to_I3) ) ) ="
+D_1_2 = T_I2_to_I3.compose( D_1_2.compose( T_I2_to_I3.inverse() ) )
+PrettyPrintVisitor().visit(D_1_2)
+print
+print "\t\tD_1_3 = T_I2_to_I3 compose ( D_1_3 compose (inverse T_I2_to_I3) ) ) ="
+D_1_3 = T_I2_to_I3.compose( D_1_3.compose( T_I2_to_I3.inverse() ) )
+PrettyPrintVisitor().visit(D_1_3)
 
 
 
