@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <strings.h>    // needed for bcopy
 #include <assert.h>
 
@@ -48,6 +49,8 @@ bool int_arrays_equal(int *a1, int *a2, int len);
 //! Compare the values of two different double arrays and return true if equal.
 bool double_arrays_equal(double *a1, double *a2, int len);
 
+//! Print a comparison of the given index and data arrays
+void print_comparison(int *index_arrays[][3],int num_index_arrays,int index_array_len,double *data_arrays[][3],int num_data_arrays,int data_array_len,const char *row_labels[],const char *col_labels[3]);
 // --------------------- Functionality for reordering data
 
 //! Makes index arrays point to new data locations.

@@ -126,6 +126,60 @@ bool double_arrays_equal(double *a1, double *a2, int len)
     return retval;
 }
 
+void print_comparison(int *index_arrays[][3],int num_index_arrays,int index_array_len,double *data_arrays[][3],int num_data_arrays,int data_array_len,const char *row_labels[],const char *col_labels[3])
+{
+	bool compare[num_index_arrays+num_data_arrays][3];
+	int i,num_rows;
+
+	num_rows=num_index_arrays+num_data_arrays;
+
+	/* Compare the given index and data arrays */
+	for(i=0;i<num_index_arrays;i++)
+	{
+		compare[i][0]=int_arrays_equal(index_arrays[i][0],index_arrays[i][1],index_array_len);
+		compare[i][1]=int_arrays_equal(index_arrays[i][0],index_arrays[i][2],index_array_len);
+		compare[i][2]=int_arrays_equal(index_arrays[i][1],index_arrays[i][2],index_array_len);
+	}
+	for(i=0;i<num_data_arrays;i++)
+	{
+		compare[i+num_index_arrays][0]=double_arrays_equal(data_arrays[i][0],data_arrays[i][1],data_array_len);
+		compare[i+num_index_arrays][1]=double_arrays_equal(data_arrays[i][0],data_arrays[i][2],data_array_len);
+		compare[i+num_index_arrays][2]=double_arrays_equal(data_arrays[i][1],data_arrays[i][2],data_array_len);
+	}
+
+	/* Determine the maximum string length of the row and column labels */
+	int max_row_len=0,curr_row_len;
+	for(i=0;i<num_rows;i++)
+	{
+		curr_row_len=strlen(row_labels[i]);
+		if(curr_row_len>max_row_len)
+		{
+			max_row_len=curr_row_len;
+		}
+	}
+	int max_col_len=0,curr_col_len;
+	for(i=0;i<3;i++)
+	{
+		curr_col_len=strlen(col_labels[i]);
+		if(curr_col_len>max_col_len)
+		{
+			max_col_len=curr_col_len;
+		}
+	}
+
+	/* Print the comparison results */
+	char header_format[255],row_format[255];
+	assert(max_col_len<255);
+	assert(max_row_len<255);
+	sprintf(header_format,"%%%ds %%%ds %%%ds %%%ds\n",max_row_len,max_col_len,max_col_len,max_col_len);
+	sprintf(row_format,"%%%ds %%%dd %%%dd %%%dd\n",max_row_len,max_col_len,max_col_len,max_col_len);
+	printf(header_format,"",col_labels[0],col_labels[1],col_labels[2]);
+	for(i=0;i<num_rows;i++)
+	{
+		printf(row_format,row_labels[i],compare[i][0],compare[i][1],compare[i][2]);
+	}
+}
+
 void pointerUpdate(int *index_array, int ia_size, int *old2new, int n_nodes)
 /*------------------------------------------------------------*//*!
   Takes the mapping specified by the reordering function old2new, which
