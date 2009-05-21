@@ -81,7 +81,7 @@ int main()
 	int *inter1_orig,*inter2_orig,*inter1_notrans,*inter2_notrans,*inter1_trans,*inter2_trans;
 
 	/* Explicit relations */
-	ExplicitRelation **sigma;
+	ExplicitRelation *sigma;
 
 	/* Allocate data/index arrays */
 	printf("Allocating data/index arrays... ");
@@ -132,15 +132,25 @@ int main()
 
 	/* Perform the transformed computation */
 	printf("Calling inspector for transformed computation... ");
-	inspector_trans(N,fx_notrans,inter1_notrans,inter2_notrans,x_notrans,n_inter,sigma);
+	inspector_trans(N,fx_trans,inter1_trans,inter2_trans,x_trans,n_inter,&sigma);
 	printf("done\n");
 	printf("Performing transformed computation... ");
-	executor_trans(N,fx_notrans,inter1_notrans,inter2_notrans,x_notrans,n_inter,sigma);
+	executor_trans(N,fx_trans,inter1_trans,inter2_trans,x_trans,n_inter,&sigma);
 	printf("done\n");
 
 	/* Print data/index arrays after transformed computation */
 	printf("After transformed computation: \n");
 	print_arrays(x_trans,fx_trans,inter1_trans,inter2_trans,N,n_inter);
+
+
+	/* Compare data/index arrays to ensure they are the same */
+	int *index_arrays[][3]={{inter1_orig,inter1_notrans,inter1_trans},
+	                     {inter2_orig,inter2_notrans,inter2_trans}};
+	double *data_arrays[][3]={{x_orig,x_notrans,x_trans},
+	                          {fx_orig,fx_notrans,fx_trans}};
+	const char* row_labels[6]={"inter1","inter2","x","fx"};
+	const char* col_labels[3]={"Orig-NoTrans","Orig-Trans","NoTrans-Trans"};
+	print_comparison(index_arrays,2,n_inter,data_arrays,2,N,row_labels,col_labels);
 
 
 	/* Free space allocated for data/index arrays */

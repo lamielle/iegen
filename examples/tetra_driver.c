@@ -39,9 +39,9 @@ void init_arrays(double *data,double *res,int *n1,int *n2,int *n3,int *n4,int N)
 		data[i]=3.0*i;
 		res[i]=0.0;
 		n1[i]=i;
-		n2[i]=i+1%N;
-		n3[i]=i+2%N;
-		n4[i]=i+3%N;
+		n2[i]=(i+1)%N;
+		n3[i]=(i+2)%N;
+		n4[i]=(i+3)%N;
 	}
 }
 
@@ -86,7 +86,7 @@ int main()
 	int *n1_orig,*n2_orig,*n3_orig,*n4_orig,*n1_notrans,*n2_notrans,*n3_notrans,*n4_notrans,*n1_trans,*n2_trans,*n3_trans,*n4_trans;
 
 	/* Explicit relations */
-	ExplicitRelation **sigma;
+	ExplicitRelation *sigma;
 
 	/* Allocate data/index arrays */
 	printf("Allocating data/index arrays... ");
@@ -137,15 +137,27 @@ int main()
 
 	/* Perform the transformed computation */
 	printf("Calling inspector for transformed computation... ");
-	inspector_trans(n4_notrans,N,n3_notrans,res_notrans,data_notrans,n2_notrans,n1_notrans,sigma);
+	inspector_trans(n4_trans,N,n3_trans,res_trans,data_trans,n2_trans,n1_trans,&sigma);
 	printf("done\n");
 	printf("Performing transformed computation... ");
-	executor_trans(n4_notrans,N,n3_notrans,res_notrans,data_notrans,n2_notrans,n1_notrans,sigma);
+	executor_trans(n4_trans,N,n3_trans,res_trans,data_trans,n2_trans,n1_trans,&sigma);
 	printf("done\n");
 
 	/* Print data/index arrays after transformed computation */
 	printf("After transformed computation: \n");
 	print_arrays(data_trans,res_trans,n1_trans,n2_trans,n3_trans,n4_trans,N);
+
+
+	/* Compare data/index arrays to ensure they are the same */
+	int *index_arrays[][3]={{n1_orig,n1_notrans,n1_trans},
+	                     {n2_orig,n2_notrans,n2_trans},
+	                     {n3_orig,n3_notrans,n3_trans},
+	                     {n4_orig,n4_notrans,n4_trans}};
+	double *data_arrays[][3]={{data_orig,data_notrans,data_trans},
+	                          {res_orig,res_notrans,res_trans}};
+	const char* row_labels[6]={"n1","n2","n3","n4","data","res"};
+	const char* col_labels[3]={"Orig-NoTrans","Orig-Trans","NoTrans-Trans"};
+	print_comparison(index_arrays,4,N,data_arrays,2,N,row_labels,col_labels);
 
 
 	/* Free space allocated for data/index arrays */
