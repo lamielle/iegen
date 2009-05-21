@@ -69,7 +69,7 @@ def gen_er_spec(er_spec):
 		#Get the value to insert
 		value=calc_equality_value(var_out_name,relation)
 
-		define_stmts.append(Statement('#define S%d(%s) ER_in_ordered_insert(%s,Tuple_make(%s),Tuple_make(%s));'%(relation_index,var_in_name,er_spec.name,var_in_name,value)))
+		define_stmts.append(Statement('#define S%d(%s) ER_in_ordered_insert(%s_ER,Tuple_make(%s),Tuple_make(%s));'%(relation_index,var_in_name,er_spec.name,var_in_name,value)))
 
 		cloog_stmts.append(iegen.pycloog.Statement(er_spec.input_bounds))
 		undefine_stmts.append(Statement('#undef S%d'%(relation_index,)))
@@ -81,7 +81,7 @@ def gen_er_spec(er_spec):
 	stmts.append(Statement())
 	stmts.append(Comment('Creation of ExplicitRelation of the ARTT'))
 	stmts.append(Comment(str(er_spec.relation)))
-	stmts.append(Statement('ExplicitRelation* %s = ER_ctor(%d,%d,%s,%s,%s);'%(er_spec.name,er_spec.relation.arity_in(),er_spec.relation.arity_out(),in_domain_name,str(er_spec.is_function).lower(),str(er_spec.is_permutation).lower())))
+	stmts.append(Statement('%s_ER = ER_ctor(%d,%d,%s,%s,%s);'%(er_spec.name,er_spec.relation.arity_in(),er_spec.relation.arity_out(),in_domain_name,str(er_spec.is_function).lower(),str(er_spec.is_permutation).lower())))
 	stmts.append(Statement())
 	stmts.append(Comment('Define loop body statements'))
 	stmts.extend(define_stmts)
@@ -104,7 +104,7 @@ def gen_output_er_spec(output_er_spec):
 	#Create a rect domain for the ERSpec
 	in_domain_name='in_domain_%s'%(output_er_spec.name)
 	stmts.extend(gen_rect_domain(in_domain_name,output_er_spec.input_bounds))
-	stmts.append(Statement('*%s=ER_ctor(%d,%d,%s,%s);'%(output_er_spec.name,output_er_spec.input_bounds.arity(),output_er_spec.output_bounds.arity(),in_domain_name,str(output_er_spec.is_permutation).lower())))
+	stmts.append(Statement('*%s=ER_ctor(%d,%d,%s,%s,%s);'%(output_er_spec.name,output_er_spec.input_bounds.arity(),output_er_spec.output_bounds.arity(),in_domain_name,str(output_er_spec.is_function).lower(),str(output_er_spec.is_permutation).lower())))
 	stmts.append(Statement('%s_ER=*%s;'%(output_er_spec.name,output_er_spec.name)))
 
 	return stmts

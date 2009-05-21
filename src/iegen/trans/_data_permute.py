@@ -186,7 +186,7 @@ class DataPermuteTrans(Transformation):
 			for data_array in self.data_arrays:
 				#Build the list of arguments to the function call
 				#Add the reorder call node for this data array to the IDG
-				reorder_call_node=mapir.idg.get_node(IDGCall,calc_reorder_call(self.name,data_array,input_er_spec.name))
+				reorder_call_node=mapir.idg.get_node(IDGCall,calc_reorder_call(self.name,data_array,self.reordering_name))
 
 				#Add the reorder call node to the collection of reorder call nodes
 				reorder_call_nodes.append(reorder_call_node)

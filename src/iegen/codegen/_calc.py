@@ -217,7 +217,7 @@ def calc_erg_call(trans_name,erg_func_name,inputs,outputs):
 	from iegen import FunctionCallSpec
 	name=trans_name+'_'+erg_func_name
 
-	args=[input.name for input in inputs]+[output.name+'_ER' for output in outputs]
+	args=[er.name+'_ER' for er in inputs+outputs]
 
 	return FunctionCallSpec(name,erg_func_name,args)
 #---------------------------------------------------
