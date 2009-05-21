@@ -610,6 +610,45 @@ int main()
     ER_dtor(&relptr);
   }
 
+  //-----------------------------------------------------------------
+  // Testing ERG_blockpart.
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr;
+    RectDomain* in_domain;
+    int in, test_count;
+    bool isFunction, isPermutation;
+
+
+    printf("==== test usage of ERG_blockpart to create part ER\n");
+    // ERG_blockpart assumes partitioning 1D iteration space for now
+    in_domain = RD_ctor(1);
+    int lb = 0; int ub = NUM_IN-1;
+    RD_set_lb(in_domain, 0, lb);
+    RD_set_ub(in_domain, 0, ub);
+    isFunction = true;
+    isPermutation = false;
+    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+
+    // have ERG fill in ER
+    int numpart = 4;
+    ERG_blockpart(lb, ub, numpart, relptr);
+
+    ER_dump(relptr);
+
+    // Iterate over the integer tuple relations
+    printf("\nTraversing part example\n");
+    test_count=0;
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        int out = ER_out_given_in(relptr,in);
+        printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
+        assert(0<=out && out<numpart);
+        test_count++;
+    }
+    assert((ub-lb+1)==test_count);
+
+    ER_dtor(&relptr);
+  }
 
 
     // ok now do somewhat of a stress test of the memory management
