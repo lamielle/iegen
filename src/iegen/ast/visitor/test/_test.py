@@ -245,6 +245,20 @@ class SortVisitorTestCase(TestCase):
 		set_res=Set('{[]: k=s1 and j=s2}')
 
 		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	#Tests that the arguments to functions are not sorted
+	#This ensures that bug #129 is actually fixed
+	def testDontSortFunctionArgs(self):
+		from iegen.ast import NormExp,VarExp,FuncExp
+		from iegen.ast.visitor import SortVisitor
+
+		func=FuncExp(1,'f',[NormExp([],1), NormExp([VarExp(1,'ii')],0)])
+		SortVisitor().visit(func)
+
+		func_res=FuncExp(1,'f',[])
+		func_res.args=[NormExp([],1), NormExp([VarExp(1,'ii')],0)]
+
+		self.failUnless(func==func_res,'%s!=%s'%(func,func_res))
 #----------------------------------------
 
 #---------- Var Visitor Tests ----------

@@ -176,7 +176,7 @@ test_sets=(
 	("{[ii]: ii>=f(x)}","PresSet(VarTuple([VarExp(1,'ii')]),Conjunction([Inequality(NormExp([VarExp(1,'ii'), FuncExp(-1,'f',[NormExp([VarExp(1,'x')],0)])],0))]))"),
 	("{[a]:f(a,a)>=0}","PresSet(VarTuple([VarExp(1,'a')]),Conjunction([Inequality(NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'a')],0), NormExp([VarExp(1,'a')],0)])],0))]))"),
 	("{[a]:f(g(a,a))>=0}","PresSet(VarTuple([VarExp(1,'a')]),Conjunction([Inequality(NormExp([FuncExp(1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'a')],0), NormExp([VarExp(1,'a')],0)])],0)])],0))]))"),
-	("{[a]:3f(5*g(2a,-5*a)-5)>=0}","PresSet(VarTuple([VarExp(1,'a')]),Conjunction([Inequality(NormExp([FuncExp(3,'f',[NormExp([FuncExp(5,'g',[NormExp([VarExp(-5,'a')],0), NormExp([VarExp(2,'a')],0)])],-5)])],0))]))"))
+	("{[a]:3f(5*g(2a,-5*a)-5)>=0}","PresSet(VarTuple([VarExp(1,'a')]),Conjunction([Inequality(NormExp([FuncExp(3,'f',[NormExp([FuncExp(5,'g',[NormExp([VarExp(2,'a')],0), NormExp([VarExp(-5,'a')],0)])],-5)])],0))]))"))
 
 test_set_strings=(
 	('{[]}',"PresSet(VarTuple([]),Conjunction([]))"),
@@ -264,7 +264,7 @@ test_relations=(
 	("{[ii] -> [inter_func]: ii>=f(x)}","PresRelation(VarTuple([VarExp(1,'ii')]),VarTuple([VarExp(1,'inter_func')]),Conjunction([Inequality(NormExp([VarExp(1,'ii'), FuncExp(-1,'f',[NormExp([VarExp(1,'x')],0)])],0))]))"),
 	("{[a]->[b]:f(a,a)>=0}","PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([Inequality(NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'a')],0), NormExp([VarExp(1,'a')],0)])],0))]))"),
 	("{[a]->[b]:f(g(a,a))>=0}","PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([Inequality(NormExp([FuncExp(1,'f',[NormExp([FuncExp(1,'g',[NormExp([VarExp(1,'a')],0), NormExp([VarExp(1,'a')],0)])],0)])],0))]))"),
-	("{[a]->[b]:3f(5*g(2a,-5*a)-5)>=0}","PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([Inequality(NormExp([FuncExp(3,'f',[NormExp([FuncExp(5,'g',[NormExp([VarExp(-5,'a')],0), NormExp([VarExp(2,'a')],0)])],-5)])],0))]))"))
+	("{[a]->[b]:3f(5*g(2a,-5*a)-5)>=0}","PresRelation(VarTuple([VarExp(1,'a')]),VarTuple([VarExp(1,'b')]),Conjunction([Inequality(NormExp([FuncExp(3,'f',[NormExp([FuncExp(5,'g',[NormExp([VarExp(2,'a')],0), NormExp([VarExp(-5,'a')],0)])],-5)])],0))]))"))
 
 test_relation_strings=(
 	('{[]->[]}',"PresRelation(VarTuple([]),VarTuple([]),Conjunction([]))"),

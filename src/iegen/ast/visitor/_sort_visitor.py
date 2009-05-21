@@ -15,8 +15,5 @@ class SortVisitor(DFVisitor):
 	def outEquality(self,node):
 		node._set_largest_exp()
 
-	def outFuncExp(self,node):
-		node.args.sort()
-
 	def outNormExp(self,node):
 		node.terms.sort()
