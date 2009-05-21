@@ -4,7 +4,7 @@ from iegen.codegen import calc_equality_value
 #Generates code for the executor
 def gen_executor(mapir):
 	from iegen.codegen import Function,gen_index_array
-	from iegen.idg.visitor import ParamVisitor,DeclVisitor
+	from iegen.idg.visitor import ParamVisitor,DeclVisitor,OutputERVisitor
 
 	#Create the executor function with the necessary parameters
 	executor=Function(iegen.settings.executor_name,'void',ParamVisitor().visit(mapir.idg).params)
@@ -15,6 +15,9 @@ def gen_executor(mapir):
 	#Generate wrappers for the index arrays
 	for index_array in mapir.get_index_arrays():
 		executor.body.extend(gen_index_array(index_array))
+
+	#Generate assignment statements for the output ERs
+	executor.body.extend(OutputERVisitor(mapir).visit(mapir.idg).get_assigns())
 
 	#Generate the loop statement definitions
 	executor.body.extend(gen_executor_loop_stmts(mapir))

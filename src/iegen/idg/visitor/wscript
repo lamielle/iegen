@@ -18,5 +18,6 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_decl_visitor.py')
 	install_files('PREFIX',inst_dir,'_codegen_visitor.py')
 	install_files('PREFIX',inst_dir,'_dot_visitor.py')
+	install_files('PREFIX',inst_dir,'_output_er_visitor.py')
 
 	bld.add_subdirs('test')
