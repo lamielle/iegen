@@ -67,25 +67,26 @@ args_compile=['g++',driver_file,'-g','-I./src/dev','src/dev/ExplicitRelation.c',
 args_run=[driver_out]
 
 #Run iegen for no transformations
-if notrans:
+exit_code=0
+if notrans and not exit_code:
 	print '---------- Generating Untransformed Code ----------'
 	print 'Command line:',' '.join(args_notrans)
-	subprocess.call(args_notrans)
+	exit_code=subprocess.call(args_notrans)
 
 #Run iegen for transformations
-if trans:
+if trans and not exit_code:
 	print '---------- Generating Transformed Code ----------'
 	print 'Command line:',' '.join(args_trans)
-	subprocess.call(args_trans)
+	exit_code=subprocess.call(args_trans)
 
 #Compile the code
-if compile:
+if compile and not exit_code:
 	print '---------- Compiling code ----------'
 	print 'Command line:',' '.join(args_compile)
-	subprocess.call(args_compile)
+	exit_code=subprocess.call(args_compile)
 
 #Run the compiled code
-if run:
+if run and not exit_code:
 	print '---------- Running driver ----------'
 	print 'Command line:',' '.join(args_run)
-	subprocess.call(args_run)
+	exit_code=subprocess.call(args_run)
