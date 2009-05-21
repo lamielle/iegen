@@ -111,8 +111,7 @@ spec.add_transformation(
     reordering_name='sigma',
     data_arrays=['x','fx'],
     iter_sub_space_relation='{[c0,s,c1,i,c2]->[i]: c1=1}',
-    target_data_array='x',
-#    target_data_arrays=['x','fx'],
+    target_data_arrays=['x','fx'],
     erg_func_name='ERG_cpack')
 
 spec.add_transformation(

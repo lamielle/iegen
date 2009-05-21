@@ -7,24 +7,30 @@ from iegen.codegen import calc_erg_call,calc_reorder_call
 
 #---------- DataPermuteTrans class ----------
 class DataPermuteTrans(Transformation):
-	__slots__=('reordering_name','_data_reordering','data_arrays','iter_sub_space_relation','target_data_array','erg_func_name')
+	__slots__=('reordering_name','_data_reordering','data_arrays','iter_sub_space_relation','target_data_arrays','erg_func_name')
 	_relation_fields=('iter_sub_space_relation',)
-	_data_array_fields=('target_data_array',)
-	_data_arrays_fields=('data_arrays',)
+	_data_arrays_fields=('data_arrays','target_data_arrays')
 
-	def __init__(self,name,reordering_name,data_arrays,iter_sub_space_relation,target_data_array,erg_func_name):
+	def __init__(self,name,reordering_name,data_arrays,iter_sub_space_relation,target_data_arrays,erg_func_name):
 		Transformation.__init__(self,name)
 		self.reordering_name=reordering_name
 		self.data_arrays=data_arrays
 		self.iter_sub_space_relation=iter_sub_space_relation
-		self.target_data_array=target_data_array
+		self.target_data_arrays=target_data_arrays
 		self.erg_func_name=erg_func_name
 
 		#Calculate the data reordering relation
 		self._data_reordering=Relation('{[%s_in]->[%s_out]: %s_out=%s(%s_in)}'%(5*(self.reordering_name,)))
 
+		#Make sure the target data arrays all have the same bounds
+		#We do this by unioning all bounds and simply checking that there is a single conjunction in the disjunction
+		target_bounds=[data_array.bounds for data_array in self.target_data_arrays]
+		unioned_bounds=reduce(lambda da1,da2: da1.union(da2),target_bounds)
+		if len(unioned_bounds.sets)!=1:
+			raise ValueError('All target data arrays must have the same bounds')
+
 	def __repr__(self):
-		return 'DataPermuteTrans(%s,%s,%s,%s,%s)'%(self.data_reordering,self.data_arrays,self.iter_sub_space_relation,self.target_data_array,self.erg_func_name)
+		return 'DataPermuteTrans(%s,%s,%s,%s,%s)'%(self.data_reordering,self.data_arrays,self.iter_sub_space_relation,self.target_data_arrays,self.erg_func_name)
 
 	def __str__(self):
 		return self._get_string(0)
@@ -61,6 +67,13 @@ class DataPermuteTrans(Transformation):
 		data_arrays_string=data_arrays_string.getvalue()[:-1]
 		if len(data_arrays_string)>0: data_arrays_string='\n'+data_arrays_string
 
+		target_data_arrays_string=StringIO()
+		if len(self.target_data_arrays)>0:
+			for data_array in self.target_data_arrays:
+				print >>target_data_arrays_string,data_array._get_string(indent+13)
+		target_data_arrays_string=target_data_arrays_string.getvalue()[:-1]
+		if len(target_data_arrays_string)>0: target_data_arrays_string='\n'+target_data_arrays_string
+
 		return '''%sDataPermuteTrans:
 %s|-name: %s
 %s|-inputs: %s
@@ -71,7 +84,7 @@ class DataPermuteTrans(Transformation):
 %s|-_data_reordering: %s
 %s|-data_arrays: %s
 %s|-iter_sub_space_relation: %s
-%s|-target_data_array:
+%s|-target_data_arrays:
 %s
 %s|-erg_func_name: %s'''%(spaces,spaces,self.name,
     spaces,inputs_string,
@@ -82,7 +95,7 @@ class DataPermuteTrans(Transformation):
     spaces,self._data_reordering,
     spaces,data_arrays_string,
     spaces,self.iter_sub_space_relation,
-    spaces,self.target_data_array._get_string(indent+19),
+    spaces,target_data_arrays_string,
     spaces,self.erg_func_name)
 
 	#Calculate a specification for the explicit relation that is input to
@@ -95,7 +108,7 @@ class DataPermuteTrans(Transformation):
 
 		#Calculate the full iteration space to data space relation
 		#Collect all iter_to_data relations in all access relations
-		access_relations=[ar.iter_to_data for stmt in mapir.get_statements() for ar in stmt.get_access_relations()]
+		access_relations=[ar.iter_to_data for stmt in mapir.get_statements() for ar in stmt.get_access_relations() if set()!=set([ar.data_array]).intersection(set(self.target_data_arrays))]
 
 		#Union all the relations that were collected into a single relation
 		iter_to_data=reduce(lambda form1,form2: form1.union(form2),access_relations)
@@ -108,7 +121,7 @@ class DataPermuteTrans(Transformation):
 		self.inputs.append(ERSpec(
 		    name='%s_input'%(self.name),
 		    input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation),
-		    output_bounds=deepcopy(self.target_data_array.bounds),
+		    output_bounds=deepcopy(self.target_data_arrays[0].bounds),
 		    relation=iter_to_data))
 
 		#Add the ERSpec to the MapIR
@@ -128,14 +141,14 @@ class DataPermuteTrans(Transformation):
 		#What does this look like:
 		#It will be an ERSpec:
 		#-name: %s_output
-		#-input_bounds: deepcopy(self.target_data_array)
-		#-output_bounds: deepcopy(self.target_data_array)
+		#-input_bounds: deepcopy(self.target_data_arrays[0].bounds)
+		#-output_bounds: deepcopy(self.target_data_arrays[0].bounds)
 		#-relation: data reordering relation that was calculated
 		#-it is a permutation
 		self.outputs.append(ERSpec(
 		    name=self.reordering_name,
-		    input_bounds=deepcopy(self.target_data_array.bounds),
-		    output_bounds=deepcopy(self.target_data_array.bounds),
+		    input_bounds=deepcopy(self.target_data_arrays[0].bounds),
+		    output_bounds=deepcopy(self.target_data_arrays[0].bounds),
 		    relation=deepcopy(self._data_reordering),
 		    is_permutation=True))
 
