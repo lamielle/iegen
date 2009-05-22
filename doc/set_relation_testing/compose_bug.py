@@ -64,5 +64,16 @@ temp = iter_sub_space_relation.compose(D_1_2)
 print "\t\t\tissr compose D_1_2 =", temp
 PrettyPrintVisitor().visit(temp)
 
-D_ST = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse()
+D_ST = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D_1_2).inverse()).inverse()
 PrettyPrintVisitor().visit(D_ST)
+
+D_ST_0 = D_ST
+print "\t\t\tD_ST_0 = D_ST = "
+PrettyPrintVisitor().visit(D_ST_0)
+print
+print "\t\t\tD_ST_0 compose D_ST = "
+temp = D_ST_0.compose(D_ST)
+PrettyPrintVisitor().visit(temp)
+D_ST_1 = D_ST_0.compose(D_ST).union(D_ST)
+print "\t\t\tD_ST_1 = (D_ST_0 compose D_ST) union D_ST = "
+PrettyPrintVisitor().visit(D_ST_1)
