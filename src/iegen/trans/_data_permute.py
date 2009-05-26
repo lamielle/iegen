@@ -2,7 +2,7 @@ from copy import deepcopy
 from cStringIO import StringIO
 from iegen.trans import Transformation
 from iegen import ERSpec,Relation,VersionedDataArray
-from iegen.idg import IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGGenERSpec,IDGCall
+from iegen.idg import IDGDataArray,IDGERSpec,IDGOutputERSpec,IDGGenERSpec,IDGCall
 from iegen.codegen import calc_erg_call,calc_reorder_call
 
 #---------- DataPermuteTrans class ----------
@@ -192,9 +192,6 @@ class DataPermuteTrans(Transformation):
 			#Add dependence of the call to the input
 			erg_call_node.add_dep(input_er_spec_node)
 
-			#Add any dependences that this ERSpec has
-			self.add_er_spec_deps(input_er_spec,mapir)
-
 			#Add reorder call nodes for each data array to be reordered
 			for data_array in self.data_arrays:
 				#Build the list of arguments to the function call
@@ -227,47 +224,4 @@ class DataPermuteTrans(Transformation):
 			#Add dependences of the reorder calls on the output
 			for reorder_call_node in reorder_call_nodes:
 				reorder_call_node.add_dep(output_er_spec_node)
-
-			#Add any dependences that this ERSpec has
-			self.add_er_spec_deps(output_er_spec,mapir)
-
-	#Adds any dependences the given ERSpec has to the IDG
-	def add_er_spec_deps(self,er_spec,mapir):
-		#Ignore index arrays
-		if er_spec.name not in mapir.index_arrays:
-			#Get the IDG node for the given ERSpec
-			er_spec_node=mapir.idg.get_node(IDGERSpec,er_spec)
-
-			#Make sure this node is dependent on only one node
-			if len(er_spec_node.deps)>1:
-				raise ValueError("IDG node '%s' is dependent on more than one node"%(er_spec_node.name))
-
-			#Get the node that produced this ERSpec
-			parent_er_spec_node=er_spec_node.deps[er_spec_node.deps.keys()[0]]
-
-			#Gather symbolic dependences
-			for symbolic in er_spec.symbolics():
-				symbolic_node=mapir.idg.get_node(IDGSymbolic,mapir.symbolics[symbolic])
-				parent_er_spec_node.add_dep(symbolic_node)
-
-			#Gather other ERSpec dependences
-			for function in er_spec.functions():
-				#Die if the function is referenced but no associated ERSpec exists in the MapIR
-				if function not in mapir.er_specs:
-					raise ValueError("Function '%s' referenced but no associated ERSpec exists"%function)
-
-				#Ignore self references
-				if function!=er_spec.name:
-					#Get the IDG node for the ERSpec that represents this function
-					#Check if the function is an index array
-					if function in mapir.index_arrays:
-						dep_node=mapir.idg.get_node(IDGIndexArray,mapir.index_arrays[function])
-					else:
-						dep_node=mapir.idg.get_node(IDGERSpec,mapir.er_specs[function])
-
-					#Setup the dependence relationship
-					parent_er_spec_node.add_dep(dep_node)
-
-					#Recursively add dependences for the dependence node
-					self.add_er_spec_deps(dep_node.data,mapir)
 #-------------------------------------------

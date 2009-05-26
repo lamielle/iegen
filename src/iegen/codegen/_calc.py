@@ -45,6 +45,9 @@ def do_calc(mapir):
 		#Tell the transformation to update the IDG
 		transformation.update_idg(mapir)
 
+		#Calculate IDG dependences
+		calc_idg_deps(mapir)
+
 		iegen.print_modified("----- Updated statements (after transformation '%s'): -----"%(transformation.name))
 		for statement in mapir.get_statements():
 			iegen.print_modified(statement)
@@ -59,6 +62,155 @@ def do_calc(mapir):
 
 	iegen.print_progress('Calculation phase completed...')
 #---------------------------------------
+
+#---------- IDG related calculation functions ----------
+#Creates an initial set of IDG nodes for Symbolics, Index Arrays, and Data Arrays
+def calc_initial_idg(mapir):
+	from iegen import VersionedDataArray
+	from iegen.idg import IDGSymbolic,IDGDataArray,IDGIndexArray
+
+	#Create the symbolic nodes
+	for symbolic in mapir.get_symbolics():
+		mapir.idg.get_node(IDGSymbolic,symbolic)
+
+	#Create the data array nodes
+	for data_array in mapir.get_data_arrays():
+		mapir.idg.get_node(IDGDataArray,VersionedDataArray(data_array,0))
+
+	#Create the index array nodes
+	for index_array in mapir.get_index_arrays():
+		mapir.idg.get_node(IDGIndexArray,index_array)
+
+#Calculates general dependences between IDG nodes
+def calc_idg_deps(mapir):
+	#Setup symbolic dependences
+	#Setup index array dependences
+	#Setup ERSpec dependences
+	for er_spec in mapir.get_er_specs():
+		calc_er_spec_deps(er_spec,mapir)
+
+#Adds any dependences the given ERSpec has to the IDG
+def calc_er_spec_deps(er_spec,mapir):
+	from iegen.idg import IDGSymbolic,IDGIndexArray,IDGERSpec
+	#Ignore index arrays
+	if er_spec.name not in mapir.index_arrays:
+		#Get the IDG node for the given ERSpec
+		er_spec_node=mapir.idg.get_node(IDGERSpec,er_spec)
+
+		#Make sure this node is dependent on only one node
+		if len(er_spec_node.deps)>1:
+			raise ValueError("IDG node '%s' is dependent on more than one node"%(er_spec_node.name))
+
+		#Get the node that produced this ERSpec
+		parent_er_spec_node=er_spec_node.deps[er_spec_node.deps.keys()[0]]
+
+		#Gather symbolic dependences
+		for symbolic in er_spec.symbolics():
+			symbolic_node=mapir.idg.get_node(IDGSymbolic,mapir.symbolics[symbolic])
+			parent_er_spec_node.add_dep(symbolic_node)
+
+		#Gather other ERSpec dependences
+		for function in er_spec.functions():
+			#Die if the function is referenced but no associated ERSpec exists in the MapIR
+			if function not in mapir.er_specs:
+				raise ValueError("Function '%s' referenced but no associated ERSpec exists"%function)
+
+			#Ignore self references
+			if function!=er_spec.name:
+				#Get the IDG node for the ERSpec that represents this function
+				#Check if the function is an index array
+				if function in mapir.index_arrays:
+					dep_node=mapir.idg.get_node(IDGIndexArray,mapir.index_arrays[function])
+				else:
+					dep_node=mapir.idg.get_node(IDGERSpec,mapir.er_specs[function])
+
+				#Setup the dependence relationship
+				parent_er_spec_node.add_dep(dep_node)
+
+				#Recursively add dependences for the dependence node
+				calc_er_spec_deps(dep_node.data,mapir)
+#-------------------------------------------------------
+
+#---------- Access Relation calculation functions ----------
+#Updates access relations for the computation phase
+def calc_update_access_relations(mapir):
+	iegen.print_progress('Updating access relations...')
+
+	#Update each access relation's iteration to data relation to
+	# match its statement's scattering function
+	for statement in mapir.get_statements():
+		for access_relation in statement.get_access_relations():
+			iegen.print_detail("Updating iter_to_data of access relation '%s'..."%(access_relation.name))
+
+			before=str(access_relation.iter_to_data)
+
+			#Compose the access relation to be in terms of the statement's scattering function
+			access_relation.iter_to_data=access_relation.iter_to_data.compose(statement.scatter.inverse())
+
+			iegen.print_modified("Updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
+
+#Un-updates access relations following the computation phase
+def calc_unupdate_access_relations(mapir):
+	from iegen.ast.visitor import RenameVisitor
+
+	iegen.print_progress('Un-updating access relations...')
+
+	#Update each access relation's iteration to data relation to
+	# match its statement's scattering function
+	for statement in mapir.get_statements():
+		for access_relation in statement.get_access_relations():
+			iegen.print_detail("Un-updating iter_to_data of access relation '%s'..."%(access_relation.name))
+
+			before=str(access_relation.iter_to_data)
+
+			#Compose the access relation to be in terms of the statement's iteration space
+			access_relation.iter_to_data=access_relation.iter_to_data.compose(statement.scatter)
+
+			#Rename the input tuple variables to match the statement's iteration space
+			RenameVisitor(calc_access_relation_rename(access_relation.iter_to_data,statement.iter_space)).visit(access_relation.iter_to_data)
+
+			iegen.print_modified("Un-updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
+
+def calc_access_relation_rename(access_relation,iter_space):
+	#Make sure the input arity of the access relation matches
+	# the arity of the iteration set
+	if access_relation.arity_in()!=iter_space.arity():
+		raise ValueError('Input arity of access relation (%d) is not equal to arity of iteration space (%d).'%(access_relation.arity_in(),iter_space.arity()))
+
+	from_vars=access_relation.relations[0].tuple_in.vars
+	to_vars=iter_space.sets[0].tuple_set.vars
+
+	rename={}
+
+	for i in xrange(len(from_vars)):
+		rename[from_vars[i].id]=to_vars[i].id
+
+	return rename
+#-----------------------------------------------------------
+
+#---------- IDG Node calculation functions ----------
+def calc_reorder_call(trans_name,data_array,reordering_name):
+	from iegen import FunctionCallSpec
+
+	func_name='reorderArray'
+	name=trans_name+'_'+func_name+'_'+data_array.name
+	args=[
+	      '(unsigned char*)%s'%(data_array.name),
+	      'sizeof(double)',
+	      calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),
+	      '%s_ER'%(reordering_name)
+	     ]
+
+	return FunctionCallSpec(name,func_name,args)
+
+def calc_erg_call(trans_name,erg_func_name,inputs,outputs):
+	from iegen import FunctionCallSpec
+	name=trans_name+'_'+erg_func_name
+
+	args=[er.name+'_ER' for er in inputs+outputs]
+
+	return FunctionCallSpec(name,erg_func_name,args)
+#----------------------------------------------------
 
 #---------- Utility calculation functions ----------
 #Given a collection of Statement objects, calculates the combined iteration space of all statements
@@ -126,98 +278,4 @@ def calc_equality_value(var_name,formula,raw_array=False):
 	value=exp-var
 
 	return ValueStringVisitor(raw_array).visit(value).value
-
-#Creates an initial set of IDG nodes for Symbolics, Index Arrays, and Data Arrays
-def calc_initial_idg(mapir):
-	from iegen import VersionedDataArray
-	from iegen.idg import IDGSymbolic,IDGDataArray,IDGIndexArray
-
-	#Create the symbolic nodes
-	for symbolic in mapir.get_symbolics():
-		mapir.idg.get_node(IDGSymbolic,symbolic)
-
-	#Create the data array nodes
-	for data_array in mapir.get_data_arrays():
-		mapir.idg.get_node(IDGDataArray,VersionedDataArray(data_array,0))
-
-	#Create the index array nodes
-	for index_array in mapir.get_index_arrays():
-		mapir.idg.get_node(IDGIndexArray,index_array)
-
-#Updates access relations for the computation phase
-def calc_update_access_relations(mapir):
-	iegen.print_progress('Updating access relations...')
-
-	#Update each access relation's iteration to data relation to
-	# match its statement's scattering function
-	for statement in mapir.get_statements():
-		for access_relation in statement.get_access_relations():
-			iegen.print_detail("Updating iter_to_data of access relation '%s'..."%(access_relation.name))
-
-			before=str(access_relation.iter_to_data)
-
-			#Compose the access relation to be in terms of the statement's scattering function
-			access_relation.iter_to_data=access_relation.iter_to_data.compose(statement.scatter.inverse())
-
-			iegen.print_modified("Updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
-
-#Un-updates access relations following the computation phase
-def calc_unupdate_access_relations(mapir):
-	from iegen.ast.visitor import RenameVisitor
-
-	iegen.print_progress('Un-updating access relations...')
-
-	#Update each access relation's iteration to data relation to
-	# match its statement's scattering function
-	for statement in mapir.get_statements():
-		for access_relation in statement.get_access_relations():
-			iegen.print_detail("Un-updating iter_to_data of access relation '%s'..."%(access_relation.name))
-
-			before=str(access_relation.iter_to_data)
-
-			#Compose the access relation to be in terms of the statement's iteration space
-			access_relation.iter_to_data=access_relation.iter_to_data.compose(statement.scatter)
-
-			#Rename the input tuple variables to match the statement's iteration space
-			RenameVisitor(calc_access_relation_rename(access_relation.iter_to_data,statement.iter_space)).visit(access_relation.iter_to_data)
-
-			iegen.print_modified("Un-updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
-
-def calc_access_relation_rename(access_relation,iter_space):
-	#Make sure the input arity of the access relation matches
-	# the arity of the iteration set
-	if access_relation.arity_in()!=iter_space.arity():
-		raise ValueError('Input arity of access relation (%d) is not equal to arity of iteration space (%d).'%(access_relation.arity_in(),iter_space.arity()))
-
-	from_vars=access_relation.relations[0].tuple_in.vars
-	to_vars=iter_space.sets[0].tuple_set.vars
-
-	rename={}
-
-	for i in xrange(len(from_vars)):
-		rename[from_vars[i].id]=to_vars[i].id
-
-	return rename
-
-def calc_reorder_call(trans_name,data_array,reordering_name):
-	from iegen import FunctionCallSpec
-
-	func_name='reorderArray'
-	name=trans_name+'_'+func_name+'_'+data_array.name
-	args=[
-	      '(unsigned char*)%s'%(data_array.name),
-	      'sizeof(double)',
-	      calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),
-	      '%s_ER'%(reordering_name)
-	     ]
-
-	return FunctionCallSpec(name,func_name,args)
-
-def calc_erg_call(trans_name,erg_func_name,inputs,outputs):
-	from iegen import FunctionCallSpec
-	name=trans_name+'_'+erg_func_name
-
-	args=[er.name+'_ER' for er in inputs+outputs]
-
-	return FunctionCallSpec(name,erg_func_name,args)
 #---------------------------------------------------
