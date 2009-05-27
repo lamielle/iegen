@@ -282,18 +282,31 @@ CloogDomain* pycloog_get_context(pycloog_names *pycloog_names)
    CloogMatrix *cloog_matrix;
    CloogDomain *cloog_context;
    Value **p;
-   int col;
+   int row,col;
 
    /* Allocate a CloogMatrix object */
-   cloog_matrix=cloog_matrix_alloc(1,pycloog_names->num_params+2);
+   cloog_matrix=cloog_matrix_alloc(pycloog_names->num_params,pycloog_names->num_params+2);
 
    /* Get the pointer to the matricies' data */
    p=cloog_matrix->p;
 
    /* Set zeros at each position in the context matrix */
-   for(col=0;col<pycloog_names->num_params+2;col++)
+   for(row=0;row<pycloog_names->num_params;row++)
    {
-      p[0][col]=0;
+      for(col=0;col<pycloog_names->num_params+2;col++)
+      {
+         p[row][col]=0;
+      }
+   }
+
+   /* Define >=0 constraints for each parameter */
+   for(row=0;row<pycloog_names->num_params;row++)
+   {
+      /* inequality constraint */
+      p[row][0]=1;
+
+      /* current parameter >= 0 */
+      p[row][row+1]=1;
    }
 
    /* Convert the matrix to a CLooG domain structure */
