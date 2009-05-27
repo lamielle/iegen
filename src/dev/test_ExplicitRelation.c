@@ -611,7 +611,7 @@ int main()
   }
 
   //-----------------------------------------------------------------
-  // Testing ERG_blockpart.
+  // Testing ERG_blockpart1D
   //-----------------------------------------------------------------    
   {
     ExplicitRelation* relptr;
@@ -632,7 +632,7 @@ int main()
 
     // have ERG fill in ER
     int numpart = 4;
-    ERG_blockpart(lb, ub, numpart, relptr);
+    ERG_blockpart1D(numpart, relptr);
 
     ER_dump(relptr);
 
@@ -643,6 +643,95 @@ int main()
         int out = ER_out_given_in(relptr,in);
         printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
         assert(0<=out && out<numpart);
+        test_count++;
+    }
+    assert((ub-lb+1)==test_count);
+
+    ER_dtor(&relptr);
+  }
+
+  //-----------------------------------------------------------------
+  // Testing ERG_blockpart1D
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr;
+    RectDomain* in_domain;
+    int in, test_count;
+    bool isFunction, isPermutation;
+
+
+    printf("==== test usage of ERG_blockpart to create part ER\n");
+    // 1D iteration space 
+    in_domain = RD_ctor(1);
+    int lb = 0; int ub = NUM_IN-1;
+    RD_set_lb(in_domain, 0, lb);
+    RD_set_ub(in_domain, 0, ub);
+    isFunction = true;
+    isPermutation = false;
+    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+
+    // have ERG fill in ER
+    int numpart = 4;
+    ERG_blockpart1D(numpart, relptr);
+
+    ER_dump(relptr);
+
+    // Iterate over the integer tuple relations
+    printf("\nTraversing part example\n");
+    test_count=0;
+    FOREACH_in_tuple_1d1d(relptr, in) {
+        int out = ER_out_given_in(relptr,in);
+        printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
+        assert(0<=out && out<numpart);
+        test_count++;
+    }
+    assert((ub-lb+1)==test_count);
+
+    ER_dtor(&relptr);
+  }
+
+  //-----------------------------------------------------------------
+  // Testing ERG_blockpart1D with multidim input
+  //-----------------------------------------------------------------    
+  {
+    ExplicitRelation* relptr;
+    RectDomain* in_domain;
+    int test_count;
+    Tuple in_tuple;
+    bool isFunction, isPermutation;
+
+
+    printf("==== test usage of ERG_blockpart1D with multidim in domain\n");
+    // 2D iteration space with lb==ub in first dim
+    in_domain = RD_ctor(2);
+    int lb = 0; int ub = 0;
+    RD_set_lb(in_domain, 0, lb);
+    RD_set_ub(in_domain, 0, ub);
+    lb = 0; ub = NUM_IN-1;
+    RD_set_lb(in_domain, 1, lb);
+    RD_set_ub(in_domain, 1, ub);
+    isFunction = true;
+    isPermutation = false;
+    relptr = ER_ctor(2, 1, in_domain, isFunction, isPermutation);
+
+    // have ERG fill in ER
+    int numpart = 4;
+    ERG_blockpart1D(numpart, relptr);
+
+    ER_dump(relptr);
+
+    // Iterate over the integer tuple relations
+    printf("\nTraversing part example\n");
+    test_count=0;
+    FOREACH_in_tuple(relptr, in_tuple) {
+        Tuple out_tuple = ER_out_given_in(relptr,in_tuple);
+        printf("\t");
+        Tuple_print(in_tuple);
+        printf(" -> ");
+        Tuple_print(out_tuple);
+        printf("\n");
+
+        assert(0<=Tuple_val(out_tuple,0) && Tuple_val(out_tuple,0)<numpart);
         test_count++;
     }
     assert((ub-lb+1)==test_count);

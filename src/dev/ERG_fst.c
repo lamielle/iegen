@@ -9,9 +9,9 @@
 
 #include "ERG.h"
 
-ExplicitRelation* 
+void 
 ERG_fst(ExplicitRelation* todeps, ExplicitRelation* fromdeps, 
-        ExplicitRelation* seedpart)
+        ExplicitRelation* seedpart, ExplicitRelation* theta)
 /*----------------------------------------------------------------*//*! 
     \brief 
 
@@ -24,13 +24,16 @@ ERG_fst(ExplicitRelation* todeps, ExplicitRelation* fromdeps,
     \param seedpart Seed partition relation, which maps each point in
                     the seed subspace to a seed partition.
                     
-    \return theta    Result of this function.  An explicit relation 
+    \param theta    Result of this function, but this function assumes
+                    that theta has been constructed.  
+                    The in domain for theta is a rectangular approximation
+                    of the sparse tiling subspace.  An explicit relation 
                     that maps points in the iteration space being
                     tiled to tiles.  The points in the seed subspace
                     will be mapped to a tile with the same number as
                     their seed partition.  
 
-    \author Michelle Strout 8/25/08
+    \author Michelle Strout 8/25/08, 5/21/09
 *//*----------------------------------------------------------------*/
 {
     // make sure we don't get any null input information
@@ -40,13 +43,6 @@ ERG_fst(ExplicitRelation* todeps, ExplicitRelation* fromdeps,
     // seed partitions as it is in the dependences.
     assert(ER_in_arity(seedpart)==ER_in_arity(fromdeps));
     assert(ER_in_arity(seedpart)==ER_out_arity(todeps));
-
-    // construct an explicit relation to store theta
-    // theta is a function, each iteration point only mapped to one tile
-    // FIXME: need to get domain space as an input to function so can
-    // pass into constructor
-    // FIXME: how can we indicate that default out value should be 0?
-    theta = ER_ctor( ER_in_arity(seedpart), 1, domain_space, function);
     
     // set all of the seed subspace theta values to the same
     // as their seed partition values.
