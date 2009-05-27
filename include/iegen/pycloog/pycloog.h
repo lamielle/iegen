@@ -72,7 +72,8 @@ char* pycloog_get_error_result(void);
 CloogProgram* pycloog_get_program(
    pycloog_statement *pycloog_statements,
    int pycloog_num_statements,
-   pycloog_names *pycloog_names);
+   pycloog_names *pycloog_names,
+   int num_scatter_dims);
 
 /*
  * Gets a linked list of CloogScatteringList structures,
@@ -115,7 +116,7 @@ void pycloog_close_temp_file(FILE *file);
  * Gets a CloogNames structure filled with the given
  * iterator and parameter names
  */
-CloogNames* pycloog_get_names(pycloog_names *pycloog_names);
+CloogNames* pycloog_get_names(pycloog_names *pycloog_names,int num_scatter_dims);
 
 /*
  * Gets a CloogDomain representing the

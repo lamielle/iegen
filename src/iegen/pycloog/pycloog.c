@@ -26,7 +26,14 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
       do_scatter=(pycloog_statements[0].scatter!=NULL);
 
       /* Build the CLooG program structure for the given statments and names */
-      cloog_program=pycloog_get_program(pycloog_statements,pycloog_num_statements,pycloog_names);
+      if(do_scatter)
+      {
+         cloog_program=pycloog_get_program(pycloog_statements,pycloog_num_statements,pycloog_names,pycloog_statements[0].scatter->num_cols-pycloog_names->num_iters-pycloog_names->num_params-2);
+      }
+      else
+      {
+         cloog_program=pycloog_get_program(pycloog_statements,pycloog_num_statements,pycloog_names,0);
+      }
 
       /* Get an options object */
       cloog_options=pycloog_get_options();
@@ -41,9 +48,16 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
 
          /* Free the scattering list */
          cloog_scattering_list_free(cloog_scatter_list);
+
+         /* Update the scattering names to match the iterators */
+         if(cloog_program->names->nb_iterators==cloog_program->names->nb_scattering)
+         {
+            cloog_program->names->scattering=cloog_program->names->iterators;
+         }
       }
 
       /* Ask CLooG to generate a program from the give domain specifications */
+      cloog_program_print(stdout,cloog_program);
       cloog_program=cloog_program_generate(cloog_program,cloog_options);
 
       /* Get a temporary file for CLooG to write to */
@@ -71,6 +85,7 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
        *  dynamically allocated and we don't want cloog to unallocate them.
        */
       cloog_program->names->iterators=NULL;
+      cloog_program->names->scattering=NULL;
       cloog_program->names->parameters=NULL;
 
       /* Free the allocated structures */
@@ -89,7 +104,8 @@ char* pycloog_get_error_result(void)
 CloogProgram* pycloog_get_program(
    pycloog_statement *pycloog_statements,
    int pycloog_num_statements,
-   pycloog_names *pycloog_names)
+   pycloog_names *pycloog_names,
+   int num_scatter_dims)
 {
    CloogNames *cloog_names;
    CloogDomain *cloog_context;
@@ -97,7 +113,7 @@ CloogProgram* pycloog_get_program(
    CloogProgram *cloog_program;
 
    /* Define the names of the iterators and parameters */
-   cloog_names=pycloog_get_names(pycloog_names);
+   cloog_names=pycloog_get_names(pycloog_names,num_scatter_dims);
 
    /* Define the context (the constraints on the parameters) */
    cloog_context=pycloog_get_context(pycloog_names);
@@ -239,17 +255,24 @@ void pycloog_close_temp_file(FILE *file)
    fclose(file);
 }
 
-CloogNames* pycloog_get_names(pycloog_names *pycloog_names)
+CloogNames* pycloog_get_names(pycloog_names *pycloog_names,int num_scatter_dims)
 {
    CloogNames *cloog_names;
 
    cloog_names=cloog_names_malloc();
-   cloog_names->nb_scattering=0;
    cloog_names->nb_iterators=pycloog_names->num_iters;
    cloog_names->nb_parameters=pycloog_names->num_params;
-   cloog_names->scattering=NULL;
    cloog_names->iterators=pycloog_names->iters;
    cloog_names->parameters=pycloog_names->params;
+   cloog_names->nb_scattering=0;
+   cloog_names->scattering=NULL;
+
+   /* Create scattering dimension names if necessary */
+   if(num_scatter_dims>0)
+   {
+      cloog_names->nb_scattering=num_scatter_dims;
+      cloog_names->scattering=cloog_names_generate_items(num_scatter_dims,"d",'0');
+   }
 
    return cloog_names;
 }
@@ -413,7 +436,6 @@ CloogScatteringList* pycloog_get_domain_list(pycloog_statement *pycloog_statemen
 void pycloog_scatter(CloogProgram *cloog_program,CloogScatteringList *cloog_scatter_list,CloogOptions *cloog_options)
 {
    int i;
-   char **scattering;
 
    if (cloog_scatter_list != NULL)
    {
@@ -423,8 +445,6 @@ void pycloog_scatter(CloogProgram *cloog_program,CloogScatteringList *cloog_scat
       }
 
       cloog_program->nb_scattdims=cloog_scattering_dimension(cloog_scatter_list->domain,cloog_program->loop->domain);
-
-      scattering=cloog_names_generate_items(cloog_program->nb_scattdims,"c",'1');
 
       /* The boolean array for scalar dimensions is created and set to 0. */
       cloog_program->scaldims = (int *)malloc(cloog_program->nb_scattdims*(sizeof(int)));
@@ -442,6 +462,7 @@ void pycloog_scatter(CloogProgram *cloog_program,CloogScatteringList *cloog_scat
       cloog_program_block(cloog_program,cloog_scatter_list,cloog_options);
       cloog_program_extract_scalars(cloog_program,cloog_scatter_list,cloog_options);
       cloog_program_scatter(cloog_program,cloog_scatter_list,cloog_options);
+      cloog_names_scalarize(cloog_program->names,cloog_program->nb_scattdims,cloog_program->scaldims);
    }
    else
    {
