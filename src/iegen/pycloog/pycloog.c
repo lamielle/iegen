@@ -57,7 +57,6 @@ char* pycloog_codegen(pycloog_statement *pycloog_statements,int pycloog_num_stat
       }
 
       /* Ask CLooG to generate a program from the give domain specifications */
-      cloog_program_print(stdout,cloog_program);
       cloog_program=cloog_program_generate(cloog_program,cloog_options);
 
       /* Get a temporary file for CLooG to write to */

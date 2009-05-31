@@ -39,8 +39,10 @@ def gen_executor_loop_stmts(mapir):
 
 	stmts=[]
 	stmts.append(Comment('Define the executor main loop body statments'))
-	for i in xrange(len(mapir.get_statements())):
-		statement=mapir.get_statements()[i]
+	statement_names=mapir.statements.keys()
+	statement_names.sort()
+	for i,statement_name in enumerate(statement_names):
+		statement=mapir.statements[statement_name]
 		stmts.append(Comment('%s'%(statement.text)))
 		ar_dict={}
 		for access_relation in statement.get_access_relations():
@@ -65,8 +67,11 @@ def gen_executor_loop(mapir):
 	stmts.append(Comment('The executor main loop'))
 
 	cloog_stmts=[]
-	for statement in mapir.get_statements():
-		cloog_stmts.append(pycloog.Statement(statement.iter_space))
+	statement_names=mapir.statements.keys()
+	statement_names.sort()
+	for statement_name in statement_names:
+		statement=mapir.statements[statement_name]
+		cloog_stmts.append(pycloog.Statement(statement.iter_space,statement.scatter))
 	cloog_stmts=codegen(cloog_stmts).split('\n')
 	for cloog_stmt in cloog_stmts:
 		stmts.append(Statement(cloog_stmt))

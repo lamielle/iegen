@@ -102,10 +102,10 @@ def _get_pycloog_statements(statements):
 		new_statements[s]=_PYCLOOG_STATEMENT()
 
 		#Set the domain related fields
-		num_domains=len(statements[s].domains)
+		num_domains=len(statements[s].domain)
 		new_domains=(_PYCLOOG_DOMAIN*num_domains)()
 		for d in xrange(num_domains):
-			new_domains[d]=_get_pycloog_domain(statements[s].domains[d])
+			new_domains[d]=_get_pycloog_domain(statements[s].domain[d])
 		new_statements[s].domains=new_domains
 		new_statements[s].num_domains=num_domains
 
@@ -130,37 +130,55 @@ def _get_pycloog_names(iters,params):
 #---------- Public Interface ----------
 #Class representing a single statement:
 #Each statement has an associated iteration domain
-#and scattering function
-#Domains and scattering functions are Set objects
+#and optional scattering function
+#Domains are Set objects and scattering functions are Relation objects
 class Statement(object):
-	__slots__=('domains','scatter','iters','params')
+	__slots__=('domain','scatter')
 
 	def __init__(self,domain,scatter=None):
 		from iegen.util import raise_objs_not_like_types
-		from iegen import Set
-		from iegen.ast.visitor import TransVisitor
+		from iegen import Set,Relation
 
 		raise_objs_not_like_types(domain,Set)
+		self.domain=domain
 
-		self.domains=TransVisitor().visit(domain).mats
-
-		if None is scatter:
-			self.scatter=None
-		else:
-			raise_objs_not_like_types(scatter,Set)
-			self.scatter=TransVisitor().visit(scatter).mats[0]
-
-		#Assumes that all variable and symbolic names are the same for
-		#all sets in the union
-		self.iters=[var.id for var in domain.sets[0].tuple_set.vars]
-		self.params=[sym.name for sym in domain.sets[0].symbolics]
+		if scatter is not None: raise_objs_not_like_types(scatter,Relation)
+		self.scatter=scatter
 
 #The only public function of this module
 #Uses CLooG to generate code based on the given
 #Statement objects
 def codegen(statements):
+	from iegen.ast.visitor import TransVisitor
+
+	#Process the statements
+	iters=None
+	params=set()
+	for statement in statements:
+		#Ensure that the iterators of every statement are the same
+		if iters is None:
+			iters=[var.id for var in statement.domain.sets[0].tuple_set.vars]
+		else:
+			curr_iters=[var.id for var in statement.domain.sets[0].tuple_set.vars]
+
+			if curr_iters!=iters:
+				raise ValueError("Statements's domains do not have the same iterator names: %s!=%s"%(curr_iters,iters))
+
+	#Collect the params from all domain/scatter fields in all statements
+	for statement in statements:
+		params=params.union(set(statement.domain.symbolics()))
+		if statement.scatter is not None:
+			params=params.union(set(statement.scatter.symbolics()))
+	params=list(params)
+
+	#Convert the domain/scatter fields into the CLooG matrix format
+	for statement in statements:
+		statement.domain=TransVisitor(params).visit(statement.domain).mats
+		if statement.scatter is not None:
+			statement.scatter=TransVisitor(params).visit(statement.scatter).mat
+
 	#Convert the parmeters to ctypes
-	names=byref(_get_pycloog_names(statements[0].iters,statements[0].params))
+	names=byref(_get_pycloog_names(iters,params))
 	statements=_get_pycloog_statements(statements)
 	num_statements=len(statements)
 	string_allocator=_string_allocator_type()(_string_allocator)
