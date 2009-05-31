@@ -249,6 +249,14 @@ class SetTestCase(TestCase):
 		self.failIf(unioned is set1,'%s is %s'%(unioned,set1))
 		self.failIf(unioned is set2,'%s is %s'%(unioned,set2))
 
+	#Tests that union does not allow unioning with the same object
+	@raises(ValueError)
+	def testNoUnionSameObject(self):
+		from iegen import Set
+
+		set=Set('{[a]}')
+		set.union(set)
+
 	#Tests the union operation
 	def testUnion(self):
 		from iegen import Set
@@ -880,6 +888,14 @@ class RelationTestCase(TestCase):
 		self.failIf(unioned is relation1,'%s is %s'%(unioned,relation1))
 		self.failIf(unioned is relation2,'%s is %s'%(unioned,relation2))
 
+	#Tests that union does not allow unioning with the same object
+	@raises(ValueError)
+	def testNoUnionSameObject(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[a]}')
+		rel.union(rel)
+
 	#Tests the union operation
 	def testUnion(self):
 		from iegen import Relation
@@ -984,6 +1000,14 @@ class RelationTestCase(TestCase):
 		relation1=Relation('{[]->[c]}')
 		relation2=Relation('{[a,b,c,d]->[e]}')
 		composed=relation1.compose(relation2)
+
+	#Tests that compose does not allow composing with the same object
+	@raises(ValueError)
+	def testNoComposeSameObject(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[a]}')
+		rel.compose(rel)
 
 	#Tests the compose operation
 	def testCompose(self):

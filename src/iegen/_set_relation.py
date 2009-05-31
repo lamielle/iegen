@@ -228,6 +228,10 @@ class Set(Formula):
 	#Takes the union of this Set and the given Set
 	@normalize_result
 	def union(self,other):
+		#Make sure we weren't given the same object twice
+		if self is other:
+			raise ValueError('Cannot union a Set with itself')
+
 		if like_type(other,Set):
 			if self.arity()==other.arity():
 				selfcopy=deepcopy(self)
@@ -450,6 +454,10 @@ class Relation(Formula):
 	#Takes the union of this Relation and the given Relation
 	@normalize_result
 	def union(self,other):
+		#Make sure we weren't given the same object twice
+		if self is other:
+			raise ValueError('Cannot union a Relation with itself')
+
 		if like_type(other,Relation):
 			if self.arity_in()==other.arity_in() and self.arity_out()==other.arity_out():
 				selfcopy=deepcopy(self)
@@ -487,6 +495,10 @@ class Relation(Formula):
 	#            R1N(R21) union R1N(R22) union ... union R1N(R2M)
 	@normalize_result
 	def compose(self,other):
+		#Make sure we weren't given the same object twice
+		if self is other:
+			raise ValueError('Cannot compose a Relation with itself')
+
 		#Make sure we are given a Relation
 		raise_objs_not_like_types(other,Relation)
 
