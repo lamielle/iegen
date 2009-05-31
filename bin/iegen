@@ -3,23 +3,19 @@
 from __future__ import with_statement
 
 def run_iegen():
-	#Import various packages and objects so they are available to spec files
-	import iegen,iegen.trans
-	from iegen import Set,Relation,Symbolic
+	import iegen
 
 	#Get the spec file to run
-	spec_file=process_cli_arguments()
+	iegen.settings.spec_file=process_cli_arguments()
 
 	#Create the MapIR object
-	spec=iegen.MapIR()
-
-	#Run the specified spec file
-	with open(spec_file) as f:
-		exec(f)
+	iegen.spec=iegen.MapIR()
 
 	#Run IEGen given the previous spec file setup
+	iegen.run_spec(iegen.settings.spec_file)
+
 	#Print the generated code if necessary
-	iegen.print_code(spec.codegen())
+	iegen.print_code(iegen.spec.codegen())
 
 #Parse and process command line arguments
 #Ensure that exactly one spec file was given and that it exists

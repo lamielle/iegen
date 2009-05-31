@@ -1,6 +1,6 @@
 #Standard library imports
 from __future__ import with_statement
-import os.path
+import os,os.path
 
 #IEGen imports
 import iegen
@@ -10,6 +10,37 @@ from iegen.util import like_type,DimensionalityError,define_properties
 
 #Store the directory where the iegen module is located
 iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
+
+#---------- run_spec function ----------
+#Function to run a given spec file
+#The 'environment' for the spec file to run is setup before it is run
+def run_spec(spec_file):
+	#Import various packages and objects so they are available to spec files
+	import iegen,iegen.trans
+	from iegen import Set,Relation,Symbolic
+
+	#Get the current MapIR object
+	spec=iegen.spec
+
+	#Run the specified spec file
+	with open(spec_file) as f:
+		exec(f)
+#---------------------------------------
+
+#---------- include function ----------
+#Includes the given spec file
+#The path to this spec file should be relative to the dirname
+# of the initial spec file given to IEGen
+def include(spec_file):
+	#Get the directory the original spec file is in
+	dirname=os.path.dirname(os.path.abspath(iegen.settings.spec_file))
+
+	#Calculate the name of the spec file to include
+	spec_file=dirname+os.sep+spec_file
+
+	#Run the spec file to include
+	iegen.run_spec(spec_file)
+#--------------------------------------
 
 #---------- Symbolic class ----------
 class Symbolic(Node):
