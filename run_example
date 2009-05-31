@@ -10,7 +10,7 @@ def usage(name,valid_actions,message=None):
 	sys.exit(1)
 
 #Valid actions
-valid_actions=['notrans','trans','compile','run']
+valid_actions=['notrans','trans','compile','run','remove']
 
 #Define default actions (all False, do nothing)
 for action in valid_actions:
@@ -66,6 +66,9 @@ args_compile=['g++',driver_file,'-g','-I./src/dev','src/dev/ExplicitRelation.c',
 #Create the arguments for running
 args_run=[driver_out]
 
+#Create the arguments for removing
+args_remove=['rm','-f',out_notrans,out_trans,driver_out]
+
 #Run iegen for no transformations
 exit_code=0
 if notrans and not exit_code:
@@ -90,3 +93,9 @@ if run and not exit_code:
 	print '---------- Running driver ----------'
 	print 'Command line:',' '.join(args_run)
 	exit_code=subprocess.call(args_run)
+
+#Remove the generated code files
+if remove and not exit_code:
+	print '---------- Removing generated code ----------'
+	print 'Command line:',' '.join(args_remove)
+	exit_code=subprocess.call(args_remove)
