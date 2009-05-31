@@ -53,8 +53,8 @@ out_notrans=ex_pre+example_name+'_notrans.c'
 out_trans=ex_pre+example_name+'_trans.c'
 
 #Create the name of the driver file and output binary
-driver_file=ex_pre+example_name+'_driver.c'
-driver_out=ex_pre+example_name+'_driver'
+driver_file=ex_pre+example_name+'_'+transform_suffix+'.c'
+driver_out=ex_pre+example_name+'_'+transform_suffix
 
 #Create the arguments for calling iegen
 args_notrans=[iegen_path,spec_notrans,'-o',out_notrans,'--inspector-name=inspector_notrans','--executor-name=executor_notrans']
