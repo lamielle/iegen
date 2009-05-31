@@ -1,11 +1,9 @@
-IEGen 0.1: Automatic Inspector/Executor Generation for Irregular Computations
--August 15, 2008-
+IEGen 2009-6-1: Automatic Inspector/Executor Generation for Irregular Computations
 
 Alan LaMielle (lamielle at cs dot colostate dot edu)
 Michelle Strout (mstrout at cs dot colostate dot edu)
 
-TODO: Use date stamps for version numbers
-TODO: Add simple example usage and refer to ./test for more complicated usage
+TODO: Add simple example usage and refer to ./run_tests for more complicated usage
 TODO: Format so it looks a bit nicer
 
 INSTALLING:
@@ -31,23 +29,21 @@ setenv PYTHONPATH $PWD
 ./waf build
 ./waf install
 ./run_tests
-python examples/moldyn.spec
-g++ test.c src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/ERG_cpack.c src/dev/util.c -o test -I./src/dev
-./test
+./run_example moldyn_fst cpack
 **************************************************
 
 -Dependencies: Python version >= 2.4.0, CLooG version >= 0.14.0, and Polylib
 |
 |-As IEGen is mostly written in Python, Python is a necessary requirement.
 |
-|-IEGen depends on a polyhedral loop generation tool called CLooG: http://www.cloog.org/
+|-IEGen depends on a polyhedral loop scanning tool called CLooG: http://www.cloog.org/
 | This tool will need to be installed before you can use IEGen.
 |
 |-Indirectly IEGen depends on the Polylib library as CLooG uses it; this will
   need to be installed as well.
 
 -IEGen has currently only been built and tested on 32 and 64 bit x86 Linux machines
- running Fedora 9 and Gentoo. If you have success building and running this software
+ running Fedora 9/10, Gentoo, and Ubuntu. If you have success building and running this software
  on other operating systems or architectures, please let us know.
 
 -IEGen uses a really slick Python based build system called waf.
@@ -74,6 +70,8 @@ g++ test.c src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/ERG_cpack.c s
 
 -4) ./run_tests (Optional)
 
+-5) ./run_example moldyn_fst cpack
+
 -Further building/installation related notes:
 
  -To be sure that the dynamic linker can find the CLooG and Polylib
@@ -93,6 +91,20 @@ g++ test.c src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/ERG_cpack.c s
   -If IEGen is installed elsewhere, be sure that you set the environment
    variable PYTHONPATH to include the location where the 'iegen' directory
    is located.
+
+ -The ./run_example script runs IEGen, generates code based on an example spec
+  file, compiles the generated code and associated driver, and runs the
+  compiled code.  Run ./run_example for usage details.
+
+Writing a new example spec file/test driver:
+-The examples live in the examples/ directory.
+-Create a new spec file called '[spec_name]_[transformation_suffix].spec'
+-For example, the moldyn_fst spec file that applies a single cpack
+ transformation is called 'moldyn_fst_cpack.spec'.
+-Corresponding to each runnable example spec file is a C driver that calls
+ the generated code and tests it.
+-The name of the C drivers should match the name of the corresponding spec
+ file: moldyn_fst_cpack.spec should have a moldyn_fst_cpack.c
 
 -What gets installed:
 
@@ -122,4 +134,4 @@ iegen: Root module for IEGen
 
 (Note: This directory tree was obtained from the useful unix command 'tree')
 
--Alan LaMielle, 2008
+-Alan LaMielle, 2008/2009
