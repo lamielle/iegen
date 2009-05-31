@@ -1,0 +1,81 @@
+# Target loop nest:
+# for(s=0;s<T;s++) {
+#   for(i=0; i<N; i++) {
+#     S0
+#   }
+#   for(i=0; i<n_inter; i++) {
+#     S1
+#     S2
+#   }
+#
+# ---------------------- CONTEXT ----------------------
+c # language is C
+
+# Context (no constraints on three parameters)
+1 5 # 1 lines and 5 columns
+# eq/in T N n_inter 1
+1 0 0 0 0   # 0 == 0, always true
+
+1 # We want to set manually the parameter names
+T N n_inter # parameter names
+
+# --------------------- STATEMENTS --------------------
+3 # Number of statements
+
+1   # one domain for S0
+4 7
+1 1  0 0 0 0 0
+1 -1 0 1 0 0 0
+1 0  1 0 0 0 0
+1 0 -1 0 1 0 0
+0 0 0
+
+1   # one domain for S1 
+4 7
+1 1  0 0 0 0 0
+1 -1 0 1 0 0 0
+1 0  1 0 0 0 0
+1 0 -1 0 0 1 0
+0 0 0
+
+1   # one domain for S2 
+4 7
+1 1  0 0 0 0 0
+1 -1 0 1 0 0 0
+1 0  1 0 0 0 0
+1 0 -1 0 0 1 0
+0 0 0
+
+1
+s i
+
+# --------------------- SCATTERING --------------------
+3 # Scattering functions
+# First function
+5 12 # 2 lines and 12 columns
+# eq/in d0 d1 d2 d3 d4 s  i  T N n_inter const
+0       1  0  0  0  0  0  0  0 0 0       0        # d0 = 0
+0       0  1  0  0  0  -1 0  0 0 0       0        # d1 = s
+0       0  0  1  0  0  0  0  0 0 0       0        # d2 = 0
+0       0  0  0  1  0  0  -1 0 0 0       0        # d3 = i
+0       0  0  0  0  1  0  0  0 0 0       0        # d4 = 0
+# Second function
+5 12 # 2 lines and 12 columns
+# eq/in d0 d1 d2 d3 d4 s  i  T N n_inter const
+0       1  0  0  0  0  0  0  0 0 0       0        # d0 = 0
+0       0  1  0  0  0  -1 0  0 0 0       0        # d1 = s
+0       0  0  1  0  0  0  0  0 0 0       -1       # d2 = 1
+0       0  0  0  1  0  0  -1 0 0 0       0        # d3 = i
+0       0  0  0  0  1  0  0  0 0 0       0        # d4 = 0
+# Third function
+5 12 # 2 lines and 12 columns
+# eq/in d0 d1 d2 d3 d4 s  i  T N n_inter const
+0       1  0  0  0  0  0  0  0 0 0       0        # d0 = 0
+0       0  1  0  0  0  -1 0  0 0 0       0        # d1 = s
+0       0  0  1  0  0  0  0  0 0 0       -1       # d2 = 1
+0       0  0  0  1  0  0  -1 0 0 0       0        # d3 = i
+0       0  0  0  0  1  0  0  0 0 0       -1       # d4 = 1
+
+
+1 # We want to set manually the scattering dimension names
+d0 d1 d2 d3 d4 # scattering dimension names

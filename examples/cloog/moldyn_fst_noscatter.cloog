@@ -1,0 +1,66 @@
+# Target loop nest:
+# for(s=0;s<T;s++) {
+#   for(i=0; i<N; i++) {
+#     S0
+#   }
+#   for(i=0; i<n_inter; i++) {
+#     S1
+#     S2
+#   }
+#
+# ---------------------- CONTEXT ----------------------
+c # language is C
+
+# Context (constraints on three parameters)
+1 5
+1 0 0 0 0
+
+1 # We want to set manually the parameter names
+T N n_inter # parameter names
+
+# --------------------- STATEMENTS --------------------
+3 # Number of statements
+
+1
+4 7
+1 1  0 0 0 0 0
+1 -1 0 1 0 0 0
+1 0  1 0 0 0 0
+1 0 -1 0 1 0 0
+0 0 0
+
+1
+4 7
+1 1  0 0 0 0 0
+1 -1 0 1 0 0 0
+1 0  1 0 0 0 0
+1 0 -1 0 0 1 0
+0 0 0
+
+1
+4 7
+1 1  0 0 0 0 0
+1 -1 0 1 0 0 0
+1 0  1 0 0 0 0
+1 0 -1 0 0 1 0
+0 0 0
+
+1
+s i
+
+# --------------------- SCATTERING --------------------
+#2 # One scattering function
+#4 9
+#0 1 0 0 0 -1  0 0 0 #i
+#0 0 1 0 0  0  0 0 0 #0
+#0 0 0 1 0  0 -1 0 0 #j
+#0 0 0 0 1  0  0 0 0 #0
+#
+#4 9
+#0 1 0 0 0 -1  0 0  0 #i
+#0 0 1 0 0  0  0 0 -1 #1
+#0 0 0 1 0  0 -1 0  0 #j
+#0 0 0 0 1  0  0 0  0 #0
+#
+#1
+#c1 c2 c3 c4
