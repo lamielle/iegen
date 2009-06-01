@@ -19,7 +19,7 @@ int main()
 
 	/* Perform the untransformed computation */
 	printf("Performing untransformed computation... ");
-	executor_notrans(N,fx_notrans,inter1_notrans,inter2_notrans,T,x_notrans,n_inter);
+	executor_notrans(N,T,n_inter,fx_notrans,x_notrans,inter1_notrans,inter2_notrans);
 	printf("done\n");
 
 	/* Print data/index arrays after untransformed computation */
@@ -33,10 +33,10 @@ int main()
 
 	/* Perform the transformed computation */
 	printf("Calling inspector for transformed computation... ");
-	inspector_trans(N,fx_trans,inter1_trans,inter2_trans,T,x_trans,n_inter,&sigma);
+	inspector_trans(N,T,n_inter,fx_trans,x_trans,inter1_trans,inter2_trans,&sigma);
 	printf("done\n");
 	printf("Performing transformed computation... ");
-	executor_trans(N,fx_trans,inter1_trans,inter2_trans,T,x_trans,n_inter,&sigma);
+	executor_trans(N,T,n_inter,fx_trans,x_trans,inter1_trans,inter2_trans,&sigma);
 	printf("done\n");
 
 	/* Print data/index arrays after transformed computation */

@@ -7,7 +7,7 @@ def gen_executor(mapir):
 	from iegen.idg.visitor import ParamVisitor,DeclVisitor,OutputERVisitor
 
 	#Create the executor function with the necessary parameters
-	executor=Function(iegen.settings.executor_name,'void',ParamVisitor().visit(mapir.idg).params)
+	executor=Function(iegen.settings.executor_name,'void',ParamVisitor().visit(mapir.idg).get_params())
 
 	#Add the necessary variable declarations
 	executor.body.extend(DeclVisitor(mapir).visit(mapir.idg).get_decls())
