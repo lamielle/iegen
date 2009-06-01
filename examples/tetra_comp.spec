@@ -44,25 +44,25 @@ spec.add_statement(
     name='S1',
     text='res[%(a1)s]+=data[%(a2)s];',
     iter_space='{[i]: 0<=i && i<=N-1}',
-    scatter='{[i]->[c0,i,c1]: c1=1}')
+    scatter='{[i]->[c0,i,c1]: c0=0 and c1=0}')
 
 spec.add_statement(
     name='S2',
     text='res[%(a3)s]+=data[%(a4)s];',
     iter_space='{[i]: 0<=i && i<=N-1}',
-    scatter='{[i]->[c0,i,c1]: c1=2}')
+    scatter='{[i]->[c0,i,c1]: c0=0 and c1=1}')
 
 spec.add_statement(
     name='S3',
     text='res[%(a5)s]+=data[%(a6)s];',
     iter_space='{[i]: 0<=i && i<=N-1}',
-    scatter='{[i]->[c0,i,c1]: c1=3}')
+    scatter='{[i]->[c0,i,c1]: c0=0 and c1=2}')
 
 spec.add_statement(
     name='S4',
     text='res[%(a7)s]+=data[%(a8)s];',
     iter_space='{[i]: 0<=i && i<=N-1}',
-    scatter='{[i]->[c0,i,c1]: c1=4}')
+    scatter='{[i]->[c0,i,c1]: c0=0 and c1=3}')
 
 #Define the access relations for the statements
 spec.add_access_relation(
