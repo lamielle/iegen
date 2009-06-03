@@ -740,21 +740,70 @@ int main()
   }
 
 
-    // ok now do somewhat of a stress test of the memory management
-    /* MMS, this takes a long time so only do it when MEM_ALLOC_INCREMENT
-     * is set low
-    hg = Hypergraph_ctor();
-    for (he=0; he<MEM_ALLOC_INCREMENT*2+10; he++) {
-      for (n=0; n<MEM_ALLOC_INCREMENT*2+5; n++) {
-      
-            Hypergraph_ordered_insert_node( hg, he, n );
+  //-----------------------------------------------------------------
+  // Stress test of the memory management
+  // and seeing how long the FOREACH_in_tuple implementation takes by 
+  // doing an external time of this driver.
+  // 2D to 2D relation that is a function, but not a permutation.
+  // input domain is specified.
+  // Size of input domain is 
+  //    (K*MEM_ALLOC_INCREMENT+1)*(MEM_ALLOC_INCREMENT+1).
+  // The relation is a simple mapping of the following pattern.
+  //    {[x,y] -> [y,x]}
+  //-----------------------------------------------------------------
+  {
+    const int K=30;
+    ExplicitRelation* relptr;
+    RectDomain* in_domain;
+    bool isFunction, isPermutation;
+
+    // in domain is set {[x,y] : 0<=x<=K*MEM_ALLOC_INCREMENT && 
+    //                           0<=y<=MEM_ALLOC_INCREMENT }
+    in_domain = RD_ctor(2);
+    RD_set_lb(in_domain, 0, 0);
+    RD_set_ub(in_domain, 0, K*MEM_ALLOC_INCREMENT);
+    RD_set_lb(in_domain, 1, 0);
+    RD_set_ub(in_domain, 1, MEM_ALLOC_INCREMENT);
+    isFunction = true; isPermutation = false;
+    relptr = ER_ctor(2,2, in_domain, isFunction, isPermutation);
+    
+    printf("==== Inserting relations into {[x,y]->[y,x]} stress test\n");
+    //ER_dump(relptr);
+    int x,y;
+    for (x=0; x<=K*MEM_ALLOC_INCREMENT; x++) {
+        for (y=0; y<=MEM_ALLOC_INCREMENT; y++) {        
+            ER_insert(relptr, Tuple_make(x,y), Tuple_make(y,x));
         }
     }
-    Hypergraph_finalize(hg);
-    Hypergraph_dtor(&hg);
     
-    //Hypergraph_dump(hg);
-    */
+    // Ad hoc checking with asserts.
+    assert(Tuple_equal(
+        ER_out_given_in(relptr,Tuple_make(0,MEM_ALLOC_INCREMENT/3)), 
+        Tuple_make(MEM_ALLOC_INCREMENT/3,0) ) );
+        
+    assert(Tuple_equal( 
+        ER_out_given_in(relptr,Tuple_make(1,MEM_ALLOC_INCREMENT)), 
+        Tuple_make(MEM_ALLOC_INCREMENT,1) ) );
+
+    // Thorough checking with asserts.
+    Tuple in_tuple;
+    int test_count = 0;
+    FOREACH_in_tuple(relptr, in_tuple) {
+        assert(Tuple_equal( Tuple_make( Tuple_val(in_tuple,1), 
+                                        Tuple_val(in_tuple,0)),
+                            ER_out_given_in(relptr, in_tuple) ) );
+        test_count++;
+
+    }
+    printf("\n");
+    assert(test_count==(K*MEM_ALLOC_INCREMENT+1)*(MEM_ALLOC_INCREMENT+1));
+
+    
+    printf("==== Done checking the {[x,y]->[y,x]} stress test\n");
+    //ER_dump(relptr);
+    ER_dtor(&relptr);
+  }
+
     
     //======= testing creation and iteration over a 2D-to-3D
     //======= explicit relation.
