@@ -215,11 +215,16 @@ Tuple Tuple_make(int x1);
 Tuple Tuple_make(int x1, int x2);
 Tuple Tuple_make(int x1, int x2, int x3);
 Tuple Tuple_make(int x1, int x2, int x3, int x4);
+Tuple Tuple_make_with_arity(int arity);
 
 
 int Tuple_val(Tuple t, int k);
+Tuple Tuple_set_val(Tuple t, int k, int value);
 bool Tuple_in_domain(Tuple t, RectDomain * rd);
 bool Tuple_equal(Tuple t1, Tuple t2);
+
+//! Computes the lexicographically next tuple in domain.
+Tuple Tuple_nextTuple( RectDomain* rd, Tuple in_tuple );
 
 void Tuple_print(Tuple t);
 
@@ -303,7 +308,21 @@ void ER_order_by_in(ExplicitRelation* relptr);
     in_tuple=ER_calcTuple(relptr, 0);                       \
     for (int _FE_i=0;                                       \
          (_FE_i)<RD_size((relptr)->in_domain);              \
+         (_FE_i)++, in_tuple                                \
+                      = Tuple_nextTuple(ER_in_domain(relptr), in_tuple))
+
+/* new implementation
+    for (int _FE_i=0;                                       \
+         (_FE_i)<RD_size((relptr)->in_domain);              \
+         (_FE_i)++, in_tuple                                \
+                      = Tuple_nextTuple(ER_in_domain(relptr), in_tuple))
+*/
+
+/* MMS, 9/3/09, old implementation
+    for (int _FE_i=0;                                       \
+         (_FE_i)<RD_size((relptr)->in_domain);              \
          (_FE_i)++, in_tuple=ER_calcTuple(relptr, _FE_i))
+*/
 
 //! Iterate over output tuples given input tuple.
 //! \param relptr       Pointer to a ExplicitRelation.

@@ -151,7 +151,6 @@ Tuple ER_calcTuple( ExplicitRelation* relptr, int index )
     return retval;
 }
 
-
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
                           RectDomain *in_domain,
                           bool isFunction, bool isPermutation)
@@ -388,6 +387,7 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
         // output tuple and store count in retval's out_index array.
         Tuple in_tuple, out_tuple;
         int count = 0;
+  
         FOREACH_in_tuple(input, in_tuple) {
             FOREACH_out_given_in(input, in_tuple, out_tuple) {
                 // Calculate index into out_index array.
@@ -549,6 +549,28 @@ Tuple Tuple_make(int x1, int x2, int x3, int x4)
     return retval;
 }
 
+Tuple Tuple_make_with_arity(int arity)
+/*----------------------------------------------------------------*//*!
+  \short Creates an Tuple with given arity and returns a copy of it.
+
+  \author Michelle Strout 6/3/09
+*//*----------------------------------------------------------------*/
+{
+    assert(arity>=1);
+    
+    // first create array to store arity values
+    int * valptr = (int*)malloc(sizeof(int));
+
+    // put 0 values in array
+    int i;
+    for (i=0; i<arity; i++) {
+        valptr[i] = 0;
+    }
+    
+    Tuple retval = { valptr, arity };
+    return retval;
+}
+
 
 int Tuple_val(Tuple t, int k)
 /*----------------------------------------------------------------*//*!
@@ -562,6 +584,21 @@ int Tuple_val(Tuple t, int k)
 
     return t.valptr[k];
 }
+
+Tuple Tuple_set_val(Tuple t, int k, int value)
+/*----------------------------------------------------------------*//*!
+  \short Returns a Tuple where the value of the kth element in the 
+         tuple is set to value.
+
+  \author Michelle Strout 9/3/09
+*//*----------------------------------------------------------------*/
+{
+    // check that not attempting to index outside of the tuple
+    assert(k >= 0  && k<t.arity );
+    t.valptr[k] = value;
+    return t;
+}
+
 
 bool Tuple_in_domain(Tuple t, RectDomain * rd)
 /*----------------------------------------------------------------*//*!
@@ -630,6 +667,44 @@ int Tuple_compare( Tuple t1, Tuple t2)
     // All elements in tuples were equal.
     return 0;
 }
+
+Tuple Tuple_nextTuple( RectDomain* rd, Tuple in_tuple ) 
+/*----------------------------------------------------------------*//*! 
+  \short Given a tuple computes the lexicographically next point
+         in the RectDomain.
+
+  \author Michelle Strout 6/3/09
+*//*----------------------------------------------------------------*/
+{
+    assert(RD_dim(rd)==in_tuple.arity);
+    
+    // in a loop check if the elements from innermost to outermost
+    // have hit their upperbounds
+    for (int d=in_tuple.arity-1; d>=0; d--) {
+    
+        // if current element has not hit upper bound then just increment
+        if ( in_tuple.valptr[d] < RD_ub( rd, d ) ) {
+            in_tuple.valptr[d] = in_tuple.valptr[d]+1;
+            return in_tuple;
+            
+        // if current element has hit upperbound then set it
+        // to lower bound so outer elements can increment
+        } else {
+            in_tuple.valptr[d] = RD_lb( rd, d );
+        }
+    }
+    // if get out of this loop then all of the elements were at their
+    // upper bound.
+
+    
+    // Have to enable going one tuple over because the loops will be doing
+    // this even though the last iteration won't pass bounds check.
+    // Just return the same iter.
+    
+    return in_tuple;
+}    
+
+
 
 
 void Tuple_print(Tuple t)

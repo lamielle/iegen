@@ -640,9 +640,9 @@ int main()
     printf("\nTraversing part example\n");
     test_count=0;
     FOREACH_in_tuple_1d1d(relptr, in) {
-        int out = ER_out_given_in(relptr,in);
         printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
-        assert(0<=out && out<numpart);
+        assert(0<=ER_out_given_in(relptr,in) 
+               && ER_out_given_in(relptr,in)<numpart);
         test_count++;
     }
     assert((ub-lb+1)==test_count);
@@ -680,9 +680,9 @@ int main()
     printf("\nTraversing part example\n");
     test_count=0;
     FOREACH_in_tuple_1d1d(relptr, in) {
-        int out = ER_out_given_in(relptr,in);
         printf("\t[%d] -> [%d]\n", in, ER_out_given_in(relptr,in));
-        assert(0<=out && out<numpart);
+        assert(0<=ER_out_given_in(relptr,in) 
+               && ER_out_given_in(relptr,in)<numpart);
         test_count++;
     }
     assert((ub-lb+1)==test_count);

@@ -59,7 +59,7 @@ void ERG_lexmin(ExplicitRelation* relptr, ExplicitRelation*  old2new)
     // based on order of output tuples.
     // To iterate over relation in order of output tuples
     // creating the inverse of the relation.
-    int  in, out, inv_in, inv_out, count;
+    int  in=0, out=0, inv_in, inv_out, count;
     count = 0;
     
     // First create the inverse relation.

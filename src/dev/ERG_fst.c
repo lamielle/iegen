@@ -25,8 +25,8 @@ ERG_fst(ExplicitRelation* todeps, ExplicitRelation* fromdeps,
                     the seed subspace to a seed partition.
                     
     \param theta    Result of this function, but this function assumes
-                    that theta has been constructed.  
-                    The in domain for theta is a rectangular approximation
+                    that theta has been constructed and is empty when passed in.  
+                    The in domain for theta is a rectangular convex hull
                     of the sparse tiling subspace.  An explicit relation 
                     that maps points in the iteration space being
                     tiled to tiles.  The points in the seed subspace

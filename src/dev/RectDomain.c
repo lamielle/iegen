@@ -164,6 +164,7 @@ int RD_size(RectDomain *rd)
     return retval;
 }
 
+
 /*----------------------------------------------------------------*//*! 
   \short Output text representation of RectDomain to standard out.
 
