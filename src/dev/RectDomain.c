@@ -6,7 +6,7 @@
 #include "RectDomain.h"
 
 
-
+/*
 void RD_set_ub( RectDomain *rd, int k, int lb );
 
 
@@ -14,13 +14,11 @@ int RD_dim();
 int RD_lb(int k);
 int RD_ub(int k);
 int RD_size(int k); 
-
+*/
 
 RectDomain* RD_ctor(int dim)
 /*----------------------------------------------------------------*//*! 
   \short Construct RectDomain structure and return a ptr to it.
-
-  Initializes the hypergraph to empty.
 
   \return Returns a ptr to the constructed RectDomain structure.
 
@@ -163,6 +161,65 @@ int RD_size(RectDomain *rd)
     }
     return retval;
 }
+
+Tuple RD_nextTuple( RectDomain* rd, Tuple t )
+/*----------------------------------------------------------------*//*! 
+  \short Given a tuple computes the lexicographically next point
+         in the RectDomain.
+
+  \author Michelle Strout 6/3/09
+*//*----------------------------------------------------------------*/
+{
+    assert(RD_dim(rd)==t.arity);
+    
+    // in a loop check if the elements from innermost to outermost
+    // have hit their upperbounds
+    for (int d=t.arity-1; d>=0; d--) {
+    
+        // if current element has not hit upper bound then just increment
+        if ( t.valptr[d] < RD_ub( rd, d ) ) {
+            t.valptr[d] = t.valptr[d]+1;
+            return t;
+            
+        // if current element has hit upperbound then set it
+        // to lower bound so outer elements can increment
+        } else {
+            t.valptr[d] = RD_lb( rd, d );
+        }
+    }
+    
+    // If get out of this loop then all of the elements were at their
+    // upper bound.
+    // Have to enable going one tuple over because the loops will be doing
+    // this even though the last iteration won't pass bounds check.
+    // Just return the same iter.
+    
+    return t;
+}    
+
+bool RD_in_domain(RectDomain * rd, Tuple t)
+/*----------------------------------------------------------------*//*!
+  \short Indicates with Tuple t is inside domain rd.
+
+  \author Michelle Strout 9/2/08
+*//*----------------------------------------------------------------*/
+{
+    // check that the Tuple and RectDomain have same dimensionality
+    if (t.arity != RD_dim(rd)) {
+        return false;
+    }
+
+    // check that the tuple values lie within bounds.
+    int i;
+    for (i=0; i<t.arity; i++) {
+        if ( t.valptr[i] < RD_lb(rd,i) || t.valptr[i] > RD_ub(rd,i) ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 
 /*----------------------------------------------------------------*//*! 

@@ -174,14 +174,6 @@ typedef struct ER {
     
 } ExplicitRelation;
 
-/* ////////////////////////////////////////////////////////////////////
-// Tuple Definition
-// 
-//////////////////////////////////////////////////////////////////// */
-typedef struct {
-    int *valptr;    //! pts to flat 1D array of vals in tuple
-    int arity;      //! indicates number of values in the tuple
-} Tuple;
 
 /* ////////////////////////////////////////////////////////////////////
 // function prototypes
@@ -207,26 +199,6 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input);
 //! Deallocate all of the memory for the ExplicitRelation.
 void ER_dtor(ExplicitRelation**);
 
-//! Create a Tuple structure and return a copy of it.
-//! Calling it _make because it is different from a constructor in
-//! that it does not return a pointer to the object, but returns
-//! the whole object.
-Tuple Tuple_make(int x1);
-Tuple Tuple_make(int x1, int x2);
-Tuple Tuple_make(int x1, int x2, int x3);
-Tuple Tuple_make(int x1, int x2, int x3, int x4);
-Tuple Tuple_make_with_arity(int arity);
-
-
-int Tuple_val(Tuple t, int k);
-Tuple Tuple_set_val(Tuple t, int k, int value);
-bool Tuple_in_domain(Tuple t, RectDomain * rd);
-bool Tuple_equal(Tuple t1, Tuple t2);
-
-//! Computes the lexicographically next tuple in domain.
-Tuple Tuple_nextTuple( RectDomain* rd, Tuple in_tuple );
-
-void Tuple_print(Tuple t);
 
 //----------------------- Routines for inserting relations
 
@@ -253,18 +225,6 @@ Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple);
 //! If the explicit relation is storing a function and is 1D-to-1D,
 //! return the single output integer for the given input integer.
 int ER_out_given_in( ExplicitRelation* relptr, int in_int);
-
-
-//! Returns the kth element value in the tuple.
-int Tuple_val(Tuple t, int k);
-
-//! Returns true if the given tuple is within the bounds specified in
-//! given RectDomain.
-bool Tuple_in_domain(Tuple t, RectDomain * rd);
-
-//! Returns -1 if first tuple less, 0 if they are equal, 
-//! and 1 if first is greater.
-int Tuple_compare( Tuple t1, Tuple t2);
 
 //! Returns the in domain.  Min and Max vals for each element in tuples.
 RectDomain* ER_in_domain( ExplicitRelation * relptr);
@@ -309,13 +269,13 @@ void ER_order_by_in(ExplicitRelation* relptr);
     for (int _FE_i=0;                                       \
          (_FE_i)<RD_size((relptr)->in_domain);              \
          (_FE_i)++, in_tuple                                \
-                      = Tuple_nextTuple(ER_in_domain(relptr), in_tuple))
+                      = RD_nextTuple(ER_in_domain(relptr), in_tuple))
 
 /* new implementation
     for (int _FE_i=0;                                       \
          (_FE_i)<RD_size((relptr)->in_domain);              \
          (_FE_i)++, in_tuple                                \
-                      = Tuple_nextTuple(ER_in_domain(relptr), in_tuple))
+                      = RD_nextTuple(ER_in_domain(relptr), in_tuple))
 */
 
 /* MMS, 9/3/09, old implementation

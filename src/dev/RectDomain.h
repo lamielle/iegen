@@ -5,6 +5,7 @@
 
  \authors   Michelle Strout
 
+ <pre>
  The RectDomain data structure is for storing the rectangular dynamic
  domain for an integer tuple space.
  
@@ -34,17 +35,26 @@
     
     // Returns size for full domain.
     RD_size(rd)
-    
 
+ The following function enables lexicographical iteration over 
+ the tuples in the domain.
+ 
+    for (int i=0; i<RD_size(rd); i++) {
+        Tuple next = RD_nextTuple( rd, tuple );
+    }
+    
  Copyright ((c)) 2008, Colorado State University
  All rights reserved.
  See COPYING for copyright details.
+ </pre>
  
 *//**********************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+
+#include "Tuple.h"
 
 #ifndef _RectDomain_H
 #define _RectDomain_H
@@ -80,6 +90,13 @@ int RD_lb(RectDomain *rd, int k);
 int RD_ub(RectDomain *rd, int k);
 int RD_size(RectDomain *rd, int k); 
 int RD_size(RectDomain *rd); 
+
+//! Returns lexicographically next tuple after given tuple.
+Tuple RD_nextTuple( RectDomain* rd, Tuple t );
+
+//! Returns true if the given tuple is within the bounds specified in
+//! given RectDomain.
+bool RD_in_domain(RectDomain * rd, Tuple t);
 
 void RD_dump( RectDomain* self ); 
 
