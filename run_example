@@ -61,7 +61,7 @@ args_notrans=[iegen_path,spec_notrans,'-o',out_notrans,'--inspector-name=inspect
 args_trans=[iegen_path,spec_trans,'-o',out_trans,'--inspector-name=inspector_trans','--executor-name=executor_trans']
 
 #Create the arguments for compiling
-args_compile=['g++',driver_file,'-g','-I./src/dev','src/dev/ExplicitRelation.c','src/dev/RectDomain.c','src/dev/util.c','src/dev/ERG_cpack.c','-o',driver_out]
+args_compile=['g++',driver_file,'-g','-I./src/dev','src/dev/ExplicitRelation.c','src/dev/RectDomain.c','src/dev/Tuple.c','src/dev/util.c','src/dev/ERG_cpack.c','-o',driver_out]
 
 #Create the arguments for running
 args_run=[driver_out]
