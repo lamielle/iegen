@@ -162,6 +162,27 @@ int RD_size(RectDomain *rd)
     return retval;
 }
 
+Tuple RD_firstTuple( RectDomain* rd)
+/*----------------------------------------------------------------*//*! 
+  \short Given a tuple returns the lexicographically first point
+         in the RectDomain.
+
+  \author Michelle Strout 7/6/09
+*//*----------------------------------------------------------------*/
+{
+    Tuple retval = Tuple_make_with_arity(RD_dim(rd));
+    
+    // Fill the tuple will all of the lower bounds.
+    for (int d=0; d<RD_dim(rd); d++) {
+        // probably faster than using Tuple_set_val, but does
+        // break data abstraction for Tuple
+        retval.valptr[d] = RD_lb(rd,d); 
+    }
+    
+    return retval;
+}    
+
+
 Tuple RD_nextTuple( RectDomain* rd, Tuple t )
 /*----------------------------------------------------------------*//*! 
   \short Given a tuple computes the lexicographically next point

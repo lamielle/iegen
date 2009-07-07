@@ -91,6 +91,9 @@ int RD_ub(RectDomain *rd, int k);
 int RD_size(RectDomain *rd, int k); 
 int RD_size(RectDomain *rd); 
 
+//! Returns first tuple in domain in terms of lexicographical order.
+Tuple RD_firstTuple( RectDomain* rud);
+
 //! Returns lexicographically next tuple after given tuple.
 Tuple RD_nextTuple( RectDomain* rd, Tuple t );
 

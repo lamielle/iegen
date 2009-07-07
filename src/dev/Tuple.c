@@ -90,7 +90,7 @@ Tuple Tuple_make_with_arity(int arity)
     assert(arity>=1);
     
     // first create array to store arity values
-    int * valptr = (int*)malloc(sizeof(int));
+    int * valptr = (int*)malloc(sizeof(int)*arity);
 
     // put 0 values in array
     int i;

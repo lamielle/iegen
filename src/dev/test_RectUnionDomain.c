@@ -44,9 +44,11 @@ int main()
   {
     int natom = 189;
     int ninter = 1056;
+    //int natom = 3;
+    //int ninter = 5;
 
     int dim = 2; 
-    int num_rects = 1;
+    int num_rects = 2;
 
     RectUnionDomain* rud = RUD_ctor( dim, num_rects );
     RectDomain* rd;
@@ -66,17 +68,22 @@ int main()
     // check the size of the explicit set
     assert(RUD_size(rud)==(natom+ninter));
 
-    // checking the tuplrud in the set
+    // checking the tuple traversal
     Tuple tuple = RUD_firstTuple(rud);
+    printf("natom = %d, ninter = %d\n", natom, ninter);
     for (int i=0; i<RUD_size(rud); i++, tuple = RUD_nextTuple( rud, tuple )) 
     {
+        //printf("tuple = "); Tuple_print(tuple); printf("\n");
+    
         int x0 = Tuple_val(tuple, 0);
         int x1 = Tuple_val(tuple, 1);
         
+        //printf("x0 = %d, x1 = %d\n", x0, x1);
+        
         if (x0==0) {
-            assert(0>=x1 && x1<natom);
+            assert((0<=x1) && (x1<natom));
         } else if (x0==1) {
-            assert(0>=x1 && x1<ninter);
+            assert((0<=x1) && (x1<ninter));
         } else {
             assert(0);
         }

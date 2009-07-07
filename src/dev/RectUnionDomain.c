@@ -109,11 +109,28 @@ Tuple RUD_firstTuple( RectUnionDomain* rud)
 /*----------------------------------------------------------------*//*! 
   \short Returns the lexicographically first tuple in domain.
 
-  \author Michelle Strout 6/3/09
+  \author Michelle Strout 7/6/09
 *//*----------------------------------------------------------------*/
 {
-    assert(0);  // not implemented yet
-    return Tuple_make(0,0);
+    assert(rud->rects[0] != NULL );
+    
+    // If union only contains one RectDomain then call first
+    // tuple on that.
+    if (rud->num_rects==1) {
+        return RD_firstTuple( rud->rects[0] );
+    }
+    
+    // Otherwise have to create tuple in embedded union.
+    else {
+        Tuple t = RD_firstTuple( rud->rects[0] );
+        Tuple retval = Tuple_make_with_arity( RUD_dim(rud) );
+        for (int k=1; k<RUD_dim(rud); k++) {
+            // breaking Tuple interface for efficiency
+            retval.valptr[k] = t.valptr[k-1];   
+        }
+        return retval;
+    }
+    
 }
 
 Tuple RUD_nextTuple( RectUnionDomain* rud, Tuple tuple )
@@ -121,39 +138,56 @@ Tuple RUD_nextTuple( RectUnionDomain* rud, Tuple tuple )
   \short Given a tuple computes the lexicographically next point
          in the RectUnionDomain.
 
-  \author Michelle Strout 6/3/09
+  Implementation notes:  Do not want to use RD_nextTuple for efficiency
+  reasons, so duplicating much of the functionality in RD_nextTuple
+  here.
+
+  \author Michelle Strout 7/6/09
 *//*----------------------------------------------------------------*/
 {
     assert(RUD_dim(rud)==tuple.arity);
     
-    assert(0); // not implemented yet
-    return Tuple_make(0,0);
-
-/*    
-    // in a loop check if the elements from innermost to outermost
-    // have hit their upperbounds
-    for (int d=tuple.arity-1; d>=0; d--) {
-    
-        // if current element has not hit upper bound then just increment
-        if ( tuple.valptr[d] < RD_ub( rd, d ) ) {
-            tuple.valptr[d] = tuple.valptr[d]+1;
-            return in_tuple;
-            
-        // if current element has hit upperbound then set it
-        // to lower bound so outer elements can increment
-        } else {
-            tuple.valptr[d] = RD_lb( rd, d );
-        }
+    // If union only contains one RectDomain then call next
+    // tuple on that.
+    if (rud->num_rects==1) {
+        return RD_nextTuple(rud->rects[0], tuple);
     }
     
-    // If get out of this loop then all of the elements were at their
-    // upper bound.
-    // Have to enable going one tuple over because the loops will be doing
-    // this even though the last iteration won't pass bounds check.
-    // Just return the same iter.
+    // Otherwise have to duplicate much of RD_nextTuple functionality
+    // but still take embedding into account.
+    else {
+        RectDomain * current_rd = rud->rects[Tuple_val(tuple, 0)];
+        assert( current_rd != NULL );
     
-    return tuple;
-*/
+        // in a loop check if the elements from innermost to outermost
+        // have hit their upperbounds
+        for (int d=tuple.arity-1; d>0; d--) {
+    
+            // if current element has not hit upper bound then just increment
+            // shifting to d-1 ub because of embedding
+            if ( tuple.valptr[d] < RD_ub( current_rd, d-1 ) ) {
+                tuple.valptr[d] = tuple.valptr[d]+1;
+                return tuple;
+            
+            // if current element has hit upperbound then set it
+            // to lower bound so outer elements can increment
+            // shifting to d-1 ub because of embedding
+            } else {
+                tuple.valptr[d] = RD_lb( current_rd, d-1 );
+            }
+        }
+    
+        // If get out of this loop then all of the elements in the current 
+        // embedded rectangle were at their upper bound.  
+        // Need to go to next rectangle.
+        tuple.valptr[0]++;
+        
+        // Have to enable going one tuple over because the loops will be doing
+        // this even though the last iteration won't pass bounds check.
+        // Just return the same iter.
+    
+        return tuple;
+    }
 }    
 
 
