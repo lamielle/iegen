@@ -32,6 +32,18 @@ setenv PYTHONPATH $PWD
 ./run_example moldyn_fst cpack
 **************************************************
 
+=============
+Usage Notes
+
+    The main code generator is iegen.
+
+        ./iegen/bin/iegen --help
+
+    ./iegen/bin/iegen --output-progress examples/moldyn_fst_notrans.spec
+    
+    ./run_example moldyn_fst cpack notrans trans compile run
+
+=============
 -Dependencies: Python version >= 2.4.0, CLooG version >= 0.14.0, and Polylib
 |
 |-As IEGen is mostly written in Python, Python is a necessary requirement.
