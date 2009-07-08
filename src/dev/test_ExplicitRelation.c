@@ -35,7 +35,7 @@ int main()
     RD_set_lb(in_domain, 1, 1);
     RD_set_ub(in_domain, 1, 5);
     isFunction = true; isPermutation = false;
-    relptr = ER_ctor(2,2, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(2,2, RUD_ctor(in_domain), isFunction, isPermutation);
     
     printf("==== Before inserting any relations into 2D -> 2D relation\n");
     ER_dump(relptr);
@@ -70,7 +70,7 @@ int main()
     RD_set_lb(in_domain, 0, 3);
     RD_set_ub(in_domain, 0, 6);
     isFunction = false; isPermutation = false;
-    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(1,1, RUD_ctor(in_domain), isFunction, isPermutation);
     
 
     // then add [in]->[out] relationships 
@@ -129,7 +129,7 @@ int main()
     RD_set_ub(in_domain, 0, (NUM_IN - 1));
     isFunction = true;
     isPermutation = true;
-    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(1,1, RUD_ctor(in_domain), isFunction, isPermutation);
 
     // create a permutation that is just a modular shift
     count = 0;
@@ -205,7 +205,7 @@ int main()
     // Notice also that this is a 1Dto1D relation example.
     isFunction = false;
     isPermutation = false;
-    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(1,1, RUD_ctor(in_domain), isFunction, isPermutation);
 
     // add only some out vals for each in val
     count = 0;
@@ -258,7 +258,8 @@ int main()
     RD_set_ub(in_domain, 0, (NUM_OUT - 1));
     isFunction = true;
     isPermutation = true;
-    ExplicitRelation * sigma = ER_ctor(1,1,in_domain,isFunction,isPermutation);
+    ExplicitRelation * sigma 
+        = ER_ctor(1,1,RUD_ctor(in_domain),isFunction,isPermutation);
     
     // relptr is input to ERG_cpack and sigma is output
     ERG_cpack( relptr, sigma );    
@@ -279,7 +280,8 @@ int main()
     RD_set_ub(in_domain, 0, NUM_IN-1);
     isFunction = true;
     isPermutation = true;
-    ExplicitRelation * delta = ER_ctor(1,1,in_domain,isFunction,isPermutation); 
+    ExplicitRelation * delta 
+        = ER_ctor(1,1,RUD_ctor(in_domain),isFunction,isPermutation); 
     
     // relptr is input to ERG_cpack and sigma is output
     ERG_lexmin( relptr, delta );    
@@ -313,7 +315,7 @@ int main()
     // We know in_domain for permutations and a permutation is a function.
     isFunction = true;
     isPermutation = true;
-    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(1,1, RUD_ctor(in_domain), isFunction, isPermutation);
 
     // create a permutation that is just a modular shift
     count = 0;
@@ -365,7 +367,7 @@ int main()
     // We know in_domain for data dependence, but it is not a function.
     isFunction = false;
     isPermutation = false;
-    relptr = ER_ctor(2,3, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(2,3, RUD_ctor(in_domain), isFunction, isPermutation);
     
     // code for explicitly creating the relation
     // we should be able to automatically generate this loop from the
@@ -478,7 +480,7 @@ int main()
     // We know in_domain for data dependence, but it is not a function.
     isFunction = false;
     isPermutation = false;
-    relptr = ER_ctor(4,1, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(4,1, RUD_ctor(in_domain), isFunction, isPermutation);
     
     // create fake index arrays inter1 and inter2
     int * inter1 = (int*)malloc(sizeof(int)*11);
@@ -628,7 +630,7 @@ int main()
     RD_set_ub(in_domain, 0, ub);
     isFunction = true;
     isPermutation = false;
-    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(1,1, RUD_ctor(in_domain), isFunction, isPermutation);
 
     // have ERG fill in ER
     int numpart = 4;
@@ -668,7 +670,7 @@ int main()
     RD_set_ub(in_domain, 0, ub);
     isFunction = true;
     isPermutation = false;
-    relptr = ER_ctor(1,1, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(1,1, RUD_ctor(in_domain), isFunction, isPermutation);
 
     // have ERG fill in ER
     int numpart = 4;
@@ -712,7 +714,7 @@ int main()
     RD_set_ub(in_domain, 1, ub);
     isFunction = true;
     isPermutation = false;
-    relptr = ER_ctor(2, 1, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(2, 1, RUD_ctor(in_domain), isFunction, isPermutation);
 
     // have ERG fill in ER
     int numpart = 4;
@@ -765,7 +767,7 @@ int main()
     RD_set_lb(in_domain, 1, 0);
     RD_set_ub(in_domain, 1, MEM_ALLOC_INCREMENT);
     isFunction = true; isPermutation = false;
-    relptr = ER_ctor(2,2, in_domain, isFunction, isPermutation);
+    relptr = ER_ctor(2,2, RUD_ctor(in_domain), isFunction, isPermutation);
     
     printf("==== Inserting relations into {[x,y]->[y,x]} stress test\n");
     //ER_dump(relptr);

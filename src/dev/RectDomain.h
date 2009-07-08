@@ -101,6 +101,9 @@ Tuple RD_nextTuple( RectDomain* rd, Tuple t );
 //! given RectDomain.
 bool RD_in_domain(RectDomain * rd, Tuple t);
 
+int RD_calcIndex( RectDomain* rd, Tuple t );
+int RD_calcIndex( RectDomain* rd, int val );
+
 void RD_dump( RectDomain* self ); 
 
 #endif

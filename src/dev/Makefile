@@ -10,8 +10,8 @@ all: test_RectDomain test_ExplicitRelation  \
 
 #########
 SRCS_RELATION = ExplicitRelation.c test_ExplicitRelation.c \
-                RectDomain.c Tuple.c  \
-                util.c ERG_cpack.c ERG_lexmin.c ERG_blockpart1D.c
+                RectDomain.c RectUnionDomain.c Tuple.c  \
+                util.c ERG_cpack.c ERG_lexmin.c ERG_blockpart1D.c 
 
 test_ExplicitRelation: ExplicitRelation.h util.h RectDomain.h Tuple.h $(SRCS_RELATION)
 	g++ -Wall $(CFLAGS)  $(SRCS_RELATION) -o test_ExplicitRelation

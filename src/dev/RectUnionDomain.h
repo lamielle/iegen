@@ -69,6 +69,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "RectDomain.h"
 
@@ -91,6 +92,7 @@ typedef struct {
 // function prototypes
 
 RectUnionDomain* RUD_ctor(int dim, int num_rects);
+RectUnionDomain* RUD_ctor(RectDomain* rd);
 void RUD_dtor( RectUnionDomain** self );
 
 void RUD_insert(RectUnionDomain *rud, RectDomain *rd);
@@ -101,6 +103,15 @@ int RUD_size(RectUnionDomain *rud);
 
 Tuple RUD_firstTuple( RectUnionDomain* rud);
 Tuple RUD_nextTuple( RectUnionDomain* rud, Tuple tuple );
+
+//! Returns true if the given tuple is domain.
+bool RUD_in_domain(RectUnionDomain * rud, Tuple t);
+
+int RUD_calcIndex( RectUnionDomain* rud, Tuple t );
+int RD_calcIndex( RectDomain* rd, int val );
+
+//! Approximates given RUD with a rectangular domain.
+RectDomain* RUD_approx( RectUnionDomain* rud );
 
 void RUD_dump( RectUnionDomain* self ); 
 

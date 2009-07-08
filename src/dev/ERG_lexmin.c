@@ -43,7 +43,7 @@ void ERG_lexmin(ExplicitRelation* relptr, ExplicitRelation*  old2new)
 
     // number of items we will be mapping from an old location
     // to a new location
-    int in_count = RD_size(ER_in_domain(old2new));
+    int in_count = RUD_size(ER_in_domain(old2new));
 
 
         

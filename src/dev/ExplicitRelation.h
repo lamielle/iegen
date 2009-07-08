@@ -15,7 +15,7 @@
 
     relptr = ER_ctor(in_tuple_arity, out_tuple_arity,
                      in_domain, isFunction, isPermutation );
-    // see RectDomain.h for instructions on creating an in_domain
+    // see RectUnionDomain.h for instructions on creating an in_domain
                      
                      
  and then add tuple relations by calling one of the following:
@@ -94,7 +94,7 @@
 #include <assert.h>
 #include <limits.h>
 #include "util.h"
-#include "RectDomain.h"
+#include "RectUnionDomain.h"
 
 #ifndef _ExplicitRelation_H
 #define _ExplicitRelation_H
@@ -121,14 +121,15 @@ typedef struct ER {
                                 //! are the same and the relation is one-to-one
                                 //! and onto.
                     
-    RectDomain* in_domain;  //! Domain for the input tuples.  If known at
-                            //! construction time, then it is not necessary to 
-                            //! finalize data structure for efficient access.
-
+    RectUnionDomain* in_domain; //! Domain for the input tuples.  If known at
+                                //! construction time, then it is not necessary
+                                //! to finalize data structure for efficient 
+                                //! access.
+  
     bool        in_domain_given;    //! Keeps track of whether the domain was
                                     //! given or was dynamically built.
                                     
-    RectDomain* out_range;  //! Range for the output tuples.                                 
+    RectDomain* out_range;      //! Range for the output tuples.                                 
     
     //----- relation representation ---------------------------------------
     // WARNING: Do not access these fields directly, use interface.
@@ -183,7 +184,7 @@ typedef struct ER {
 //! Construct an empty ExplicitRelation by specifying arity 
 //! for in and out tuples.
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
-                          RectDomain *in_domain=NULL, 
+                          RectUnionDomain *in_domain=NULL, 
                           bool isFunction=false,
                           bool isPermutation=false);
 
@@ -226,21 +227,11 @@ Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple);
 //! return the single output integer for the given input integer.
 int ER_out_given_in( ExplicitRelation* relptr, int in_int);
 
-//! Returns the in domain.  Min and Max vals for each element in tuples.
-RectDomain* ER_in_domain( ExplicitRelation * relptr);
+//! Returns the in domain.
+RectUnionDomain* ER_in_domain( ExplicitRelation * relptr);
 
-//! Returns the out domain.  Min and Max vals for each element out tuples.
+//! Returns the out domain.
 RectDomain* ER_out_range( ExplicitRelation * relptr);
-
-//! Returns an index into the out_vals for the first out tuple element
-//! associated with the given in tuple.  Assumes we know the in_domain for
-//! the explicit relation.
-int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple );
-
-int ER_calcIndex( ExplicitRelation* relptr, int in_val );
-
-//! Inverse of calcIndex.
-Tuple ER_calcTuple( ExplicitRelation* relptr, int index );
 
 //! Verifies that the given explicit relation is a permutation.
 bool ER_verify_permutation(ExplicitRelation* relptr);
@@ -265,24 +256,11 @@ void ER_order_by_in(ExplicitRelation* relptr);
 //! the in_domain is calculated when things are ordered by in tuples.
 #define FOREACH_in_tuple(relptr, in_tuple)                  \
     ER_order_by_in(relptr);                                 \
-    in_tuple=ER_calcTuple(relptr, 0);                       \
+    in_tuple=RUD_firstTuple((relptr)->in_domain);           \
     for (int _FE_i=0;                                       \
-         (_FE_i)<RD_size((relptr)->in_domain);              \
+         (_FE_i)<RUD_size((relptr)->in_domain);             \
          (_FE_i)++, in_tuple                                \
-                      = RD_nextTuple(ER_in_domain(relptr), in_tuple))
-
-/* new implementation
-    for (int _FE_i=0;                                       \
-         (_FE_i)<RD_size((relptr)->in_domain);              \
-         (_FE_i)++, in_tuple                                \
-                      = RD_nextTuple(ER_in_domain(relptr), in_tuple))
-*/
-
-/* MMS, 9/3/09, old implementation
-    for (int _FE_i=0;                                       \
-         (_FE_i)<RD_size((relptr)->in_domain);              \
-         (_FE_i)++, in_tuple=ER_calcTuple(relptr, _FE_i))
-*/
+                      = RUD_nextTuple(ER_in_domain(relptr), in_tuple))
 
 //! Iterate over output tuples given input tuple.
 //! \param relptr       Pointer to a ExplicitRelation.
@@ -291,13 +269,14 @@ void ER_order_by_in(ExplicitRelation* relptr);
 //! The out_tuple will be set to point into the actual explicit
 //! relation data structure.
 //! Only works for non function explicit relations.
-#define FOREACH_out_given_in(relptr, int_tuple, out_tuple)                  \
+#define FOREACH_out_given_in(relptr, in_tuple, out_tuple)                   \
     assert(! relptr->isFunction );                                          \
     int _FE_iter;                                                           \
+    int _FE_index = RUD_calcIndex(relptr->in_domain,(in_tuple));            \
     out_tuple.arity = relptr->out_arity;                                    \
-    for (_FE_iter=(relptr)->out_index[ER_calcIndex(relptr,(in_tuple))],     \
+    for (_FE_iter=(relptr)->out_index[_FE_index],                           \
             out_tuple.valptr=&((relptr)->out_vals[_FE_iter]);               \
-         _FE_iter<(relptr)->out_index[ER_calcIndex(relptr,(in_tuple))+1];   \
+         _FE_iter<(relptr)->out_index[_FE_index+1];   \
          _FE_iter+=relptr->out_arity,                                       \
            out_tuple.valptr=&((relptr)->out_vals[_FE_iter]) )
         
@@ -305,24 +284,24 @@ void ER_order_by_in(ExplicitRelation* relptr);
 //! Iterate over the special 1D-to-1D arity relations.
 //! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   Variable in which to store the input tuple single entry.
-#define FOREACH_in_tuple_1d1d(relptr, in_int)               \
+#define FOREACH_in_tuple_1d1d(relptr, in_int)                   \
     assert(relptr->in_arity==1);  assert(relptr->out_arity==1); \
-    ER_order_by_in(relptr);                                 \
-    for ((in_int)=RD_lb((relptr)->in_domain,0);             \
-         (in_int)<=RD_ub((relptr)->in_domain,0); (in_int)++) 
+    ER_order_by_in(relptr);                                     \
+    for ((in_int)=RD_lb((relptr)->in_domain->rects[0],0);       \
+         (in_int)<=RD_ub((relptr)->in_domain->rects[0],0); (in_int)++) 
 
 //! Iterate over output ints given input ints for 1D-to-1D arity relations.
 //! \param relptr   Pointer to a ExplicitRelation.
 //! \param in_int   input tuple value
 //! \param out_int  Variable in which to store the output tuple value.
 //! Only works for non function explicit relations.
-#define FOREACH_out_given_in_1d1d(relptr, in_int, out_int)  \
-    assert(! relptr->isFunction );                          \
-    int _lb_adjust = (in_int)-RD_lb((relptr)->in_domain,0); \
-    int _FE_iter;                                           \
-    for (_FE_iter=(relptr)->out_index[_lb_adjust],          \
-            out_int=(relptr)->out_vals[_FE_iter];           \
-         _FE_iter<(relptr)->out_index[_lb_adjust+1];        \
+#define FOREACH_out_given_in_1d1d(relptr, in_int, out_int)              \
+    assert(! relptr->isFunction );                                      \
+    int _lb_adjust = (in_int)-RD_lb((relptr)->in_domain->rects[0],0);   \
+    int _FE_iter;                                                       \
+    for (_FE_iter=(relptr)->out_index[_lb_adjust],                      \
+            out_int=(relptr)->out_vals[_FE_iter];                       \
+         _FE_iter<(relptr)->out_index[_lb_adjust+1];                    \
          _FE_iter++,out_int=(relptr)->out_vals[_FE_iter]) 
 
 

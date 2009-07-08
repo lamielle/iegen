@@ -1,158 +1,27 @@
 /*! \file        ExplicitRelation.c
-    Implements the ExplicitRelation data structure for use with the PIES project.
+    Implements the ExplicitRelation data structure for use with the PIES 
+    project.
 
     See the notes in the ER_ctor function to see how implementation
     of the data structure will vary based on its characteristics.
 
-    If the relation is a function, then the out_index array is not needed and the input tuple can index directly into the out_vals array with ER_calcIndex(relptr, in_tuple)*out_arity.
+    If the relation is a function, then the out_index array is not needed and 
+    the input tuple can index directly into the out_vals array with 
+    RUD_calcIndex(in_domain, in_tuple)*out_arity.
 
-    If each input tuple has a varying number of output tuples or more than one output tuples associated with it, then the input tuple indexes into out_index with ER_calcIndex(relptr, in_tuple) and the out_index indexes into out_vals, pointing at the first output relation for the input_tuple.
+    If each input tuple has a varying number of output tuples or more than one 
+    output tuples associated with it, then the input tuple indexes into 
+    out_index with RUD_calcIndex(in_domain, in_tuple) and the out_index indexes 
+    into out_vals, pointing at the first output relation for the input_tuple.
 */
 
 #include "ExplicitRelation.h"
 
 static bool debug = false;
 
-int ER_calcIndex( ExplicitRelation* relptr, Tuple in_tuple )
-/*----------------------------------------------------------------*//*!
-  \short Given an in tuple calculate the index into out_index array.
-         Can also be used to calculate index into out_vals array where
-         the out tuple is stored if the relptr is a function and
-         the value returned from this function is multiplied by
-         out_arity.
-
-    For a non function:
-    <pre>
-        in_tuple: <x_0, x_1, ..., x_k>
-        index into out_vals will be stored at
-            out_index[ ((x_0-lb_0)*(RD_size(1)*...*RD_size(k))
-                      + (x_1-lb_0)*(RD_size(2)* ... *RD_size(k))
-                      + (x_k-lb_k)) ]
-    </pre>
-
-    For a function (NOTE that multiplication by out_arity must be
-    done externally to the ER_calcIndex function):
-    <pre>
-        in_tuple: <x_0, x_1, ..., x_k>
-        out_tuple will be stored at
-            out_vals[ ((x_0-lb_0)*(RD_size(1)*...*RD_size(k))
-                      + (x_1-lb_0)*(RD_size(2)* ... *RD_size(k))
-                      + (x_k-lb_k)) * out_arity ]
-    </pre>
-
-  \author Michelle Strout 8/30/08
-*//*----------------------------------------------------------------*/
-{
-    int i, j, index;
-    index = 0;
-    RectDomain * in_domain = ER_in_domain(relptr);
-    // add up all the terms for each dimension of the in_tuple
-    for (i=0; i<relptr->in_arity; i++) {
-        // get element value from Tuple
-        int term = Tuple_val(in_tuple, i) - RD_lb(in_domain,i);
-        for (j=i+1; j<relptr->in_arity; j++) {
-            term *= RD_size( in_domain, j );
-        }
-        index += term;
-    }
-
-    return index;
-}
-
-int ER_calcIndex( ExplicitRelation* relptr, int in_val )
-/*----------------------------------------------------------------*//*!
-  \short Given an 1D in tuple (so just the single value)
-         calculates the index into out_vals array where
-         the out tuple value is stored.  1D-to-1D arity specialization.
-
-    <pre>
-        in_tuple: <x_0>
-        out_tuple will be stored at
-            out_vals[ (x_0-lb_0) ]
-    </pre>
-
-    Assumes we are dealing with a function.
-
-  \author Michelle Strout 8/30/08
-*//*----------------------------------------------------------------*/
-{
-    assert(relptr->isFunction);
-
-    return (in_val-RD_lb(relptr->in_domain,0) );
-}
-
-Tuple ER_calcTuple( ExplicitRelation* relptr, int index )
-/*----------------------------------------------------------------*//*!
-  \short This function is the inverse function of ER_calcIndex.
-
-
-  Given an index into out_index, or out_vals/out_arity, calculates the
-  input tuple based on information about the explicit relation
-  input domain.  If the index is a raw index into out_vals, then
-  it must be divided by out_arity before being passed to this
-  function.
-
-  This function is currently being used in the FOREACH macros to iterate
-  over input tuples with arity greater than 1.
-
-
-
-    <pre>
-        Size terms for each dim and then calculate tuple values.
-            in_tuple: <x_0, x_1, ..., x_k>
-            t0 = (RD_size(1)*...*RD_size(k))
-            t1 = (RD_size(2)* ... *RD_size(k))
-            ...
-            tk = 1
-
-        We need to solve the following equation for x values:
-            index = (x_0-lb0)*t0 + (x_1-lb1)*t1 ... + (x_k-lbk)*tk
-
-            x_0 = index/t0 + lb0
-            index = (x_1-lb1)*t1 + (x_2-lb2)*t2 ... + (x_k-lbk)*tk
-                  = index % t0
-
-            x_1 = index/t1 + lb1
-            index = (x_2-lb2)*t2 ... + (x_k-lbk)*tk
-                  = index % t1
-
-            ...
-    </pre>
-
-  \author Michelle Strout 9/22/08
-*//*----------------------------------------------------------------*/
-{
-    int i;
-    RectDomain * in_domain = ER_in_domain(relptr);
-
-    // allocate an array to hold size for each
-    // tuple element in array index computation.
-    int *t = (int*)malloc(sizeof(int)*relptr->in_arity);
-
-    // calculate those sizes
-    // tk = 1
-    t[relptr->in_arity - 1] = 1;
-    for (i=relptr->in_arity - 2; i>=0; i--) {
-        // ti = (RD_size(i+1)* ... *RD_size(k))
-        t[i] = t[i+1] * RD_size(in_domain, i+1);
-    }
-
-    // Solve for the tuple entries based on the sizes and given index.
-    Tuple retval;
-    retval.valptr = (int*)malloc(sizeof(int)*relptr->in_arity);
-    retval.arity = relptr->in_arity;
-    for (i=0; i<relptr->in_arity; i++) {
-        // x_i = index/ti + lbi
-        retval.valptr[i] = index / t[i] + RD_lb(in_domain,i);
-        // index = x_{i+1} * t_{i+1} ... x_k * tk = index % ti
-        index = index % t[i];
-    }
-
-    return retval;
-}
 
 ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
-                          RectDomain *in_domain,
+                          RectUnionDomain *in_domain,
                           bool isFunction, bool isPermutation)
 /*----------------------------------------------------------------*//*!
   \short Construct ExplicitRelation structure and return a ptr to it.
@@ -215,13 +84,13 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     // if in_domain was provided.
     if (in_domain != NULL) {
         self->in_domain_given = true;
-        assert(self->in_arity == RD_dim(self->in_domain));
+        assert(self->in_arity == RUD_dim(self->in_domain));
 
         // With a known in_domain and if we have a function,
         // we know how big out_vals array must be.
         if (self->isFunction) {
             self->out_vals_size
-                = self->out_arity *  RD_size(self->in_domain);
+                = self->out_arity *  RUD_size(self->in_domain);
             // want all out_vals to be initialized to zero
             self->out_vals = (int*)calloc(self->out_vals_size,sizeof(int));
 
@@ -229,7 +98,7 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
         // output tuples are associated with each input tuple, but
         // we do know how big the out_index array must be.
         } else {
-            self->out_index_size = RD_size(self->in_domain) + 1;
+            self->out_index_size = RUD_size(self->in_domain) + 1;
             self->out_index = (int*)calloc(self->out_index_size,sizeof(int));
         }
 
@@ -241,17 +110,19 @@ ExplicitRelation* ER_ctor(int in_tuple_arity, int out_tuple_arity,
     // updated.
     } else {
         self->in_domain_given = false;
-        self->in_domain = RD_ctor(self->in_arity);
+        RectDomain *rd = RD_ctor(self->in_arity);
         int i;
         for (i=0; i<self->in_arity; i++ ) {
-            RD_set_lb( self->in_domain, i, INT_MAX );
-            RD_set_ub( self->in_domain, i, 0 );
+            RD_set_lb( rd, i, INT_MAX );
+            RD_set_ub( rd, i, 0 );
         }
+        self->in_domain = RUD_ctor(rd);
     }
 
     // set up out_range
     self->out_range = RD_ctor(self->out_arity);
     int i;
+    // first set up default values
     for (i=0; i<self->out_arity; i++ ) {
         RD_set_lb( self->out_range, i, INT_MAX );
         RD_set_ub( self->out_range, i, 0 );
@@ -292,9 +163,9 @@ ExplicitRelation* ER_ctor(int * index_array, int size)
     self->out_arity = 1;
     self->isFunction = true;
 
-    RectDomain *in_domain = RD_ctor(1);
-    RD_set_lb(in_domain, 0, 0); RD_set_ub(in_domain, 0, size-1);
-    self->in_domain = in_domain;
+    RectDomain *rd = RD_ctor(1);
+    RD_set_lb(rd, 0, 0); RD_set_ub(rd, 0, size-1);
+    self->in_domain = RUD_ctor(rd);
 
     self->in_vals = NULL;
     self->unique_in_count = size;
@@ -355,7 +226,7 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
     // As input has been constructed, we have been keeping track
     // of its in domain and out range.  Therefore, we can us
     // the out range as the input range for the inverse ER.
-    RectDomain* in_domain = RD_ctor(input->out_range);
+    RectUnionDomain* in_domain = RUD_ctor(input->out_range);
 
     ExplicitRelation* retval;
 
@@ -367,7 +238,7 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
         // have constructor create new ER
         retval = ER_ctor(input->out_arity,input->in_arity, in_domain,
                          true, true);
-        retval->out_range = RD_ctor(input->in_domain);
+        retval->out_range = RUD_approx(input->in_domain);
 
         // Fill the inverted ER by iterating over input ER.
         int in;
@@ -381,7 +252,7 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
         // have constructor create new ER, false indicates we do not know
         // if it is a function or not
         retval = ER_ctor(input->out_arity, input->in_arity, in_domain, false);
-        retval->out_range = RD_ctor(input->in_domain);
+        retval->out_range = RD_ctor(RUD_approx(input->in_domain));
 
         // Count number of input tuples associated with each
         // output tuple and store count in retval's out_index array.
@@ -391,7 +262,7 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
         FOREACH_in_tuple(input, in_tuple) {
             FOREACH_out_given_in(input, in_tuple, out_tuple) {
                 // Calculate index into out_index array.
-                int idx = ER_calcIndex(retval, out_tuple);
+                int idx = RUD_calcIndex(retval->in_domain, out_tuple);
                 retval->out_index[idx] += retval->out_arity;
                 count++;
 
@@ -409,8 +280,9 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
         // Modify out_index array so that it now points correctly
         // into the out_vals array for inverse.
         int i;
-        retval->out_index[RD_size(retval->in_domain)] = count*retval->out_arity;
-        for (i=RD_size(retval->in_domain); i>0; i--) {
+        retval->out_index[RUD_size(retval->in_domain)] 
+            = count*retval->out_arity;
+        for (i=RUD_size(retval->in_domain); i>0; i--) {
             retval->out_index[i-1]
                 = retval->out_index[i] - retval->out_index[i-1];
         }
@@ -426,7 +298,7 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
         FOREACH_in_tuple(input, in_tuple) {
             FOREACH_out_given_in(input, in_tuple, out_tuple) {
                 // Calculate index into out_index array.
-                int idx = ER_calcIndex(retval, out_tuple);
+                int idx = RUD_calcIndex(retval->in_domain, out_tuple);
                 // do actual insertion of output tuple
                 for (int k=0; k<retval->out_arity; k++) {
                     retval->out_vals[retval->out_index[idx]+k]
@@ -437,7 +309,7 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
         }
 
         // Readjust the out_index array for inverse.
-        for (i=RD_size(retval->in_domain); i>0; i--) {
+        for (i=RUD_size(retval->in_domain); i>0; i--) {
             retval->out_index[i] = retval->out_index[i-1];
         }
         retval->out_index[0] = 0;
@@ -457,8 +329,8 @@ ExplicitRelation* ER_genInverse(ExplicitRelation * input)
 /*----------------------------------------------------------------*//*!
   \short Deallocate all memory for ExplicitRelation.
 
-  The ExplicitRelation deletes the RectDomain for the in_domain,
-  which may cause problems if the RectDomain pointer is being used
+  The ExplicitRelation deletes the RectUnionDomain for the in_domain,
+  which may cause problems if the RectUnionDomain pointer is being used
   elsewhere.
 
   \author Michelle Strout 8/19/08
@@ -531,14 +403,15 @@ void ER_insert(ExplicitRelation* self, Tuple in_tuple, Tuple out_tuple)
     // if isFunction and know in_domain then
     if (self->isFunction  && self->in_domain_given) {
         // check that in Tuple is within bounds
-        assert(RD_in_domain(self->in_domain, in_tuple) );
+        assert(RUD_in_domain(self->in_domain, in_tuple) );
 
         // insert output tuple values into locations in out_vals
         // associated with this input tuple
         assert( self->out_arity == out_tuple.arity );
 
         // do actual insertion of output tuple
-        int start_index = ER_calcIndex(self, in_tuple)*self->out_arity;
+        int start_index 
+            = RUD_calcIndex(self->in_domain, in_tuple)*self->out_arity;
         for (k=0; k< self->out_arity; k++) {
             self->out_vals[start_index+k] = out_tuple.valptr[k];
         }
@@ -564,11 +437,14 @@ void ER_insert(ExplicitRelation* self, Tuple in_tuple, Tuple out_tuple)
             self->raw_data[self->raw_num ++ ] = in_tuple.valptr[k];
 
             // keep track of domain as things are being inserted
-            if (in_tuple.valptr[k] < RD_lb(self->in_domain, k) ) {
-                RD_set_lb( self->in_domain, k, in_tuple.valptr[k] );
+            // FIXME: is it ok to assume that in domain is only going
+            // to have one rect if it is not given.
+            // FIXME: Refactor this code that keeps modifying the RD approx.
+            if (in_tuple.valptr[k] < RD_lb(self->in_domain->rects[0], k) ) {
+                RD_set_lb( self->in_domain->rects[0], k, in_tuple.valptr[k] );
             }
-            if (in_tuple.valptr[k] > RD_ub(self->in_domain, k) ) {
-                RD_set_ub( self->in_domain, k, in_tuple.valptr[k] );
+            if (in_tuple.valptr[k] > RD_ub(self->in_domain->rects[0], k) ) {
+                RD_set_ub( self->in_domain->rects[0], k, in_tuple.valptr[k] );
             }
         }
         for (k=0; k<self->out_arity; k++) {
@@ -636,11 +512,15 @@ void ER_in_ordered_insert(ExplicitRelation* self,
         if (self->in_domain_given) {
             // check that indexing matches unique_in_count-1
             // or is greater
-            assert((self->unique_in_count-1) <= ER_calcIndex(self, in_tuple));
-            if ((self->unique_in_count - 1) < ER_calcIndex(self, in_tuple)) {
+            assert((self->unique_in_count-1) 
+                   <= RUD_calcIndex(self->in_domain, in_tuple));
+            if ((self->unique_in_count - 1) 
+                < RUD_calcIndex(self->in_domain, in_tuple)) 
+            {
                 // doing assignment because could be skipping something
                 // in the in_domain
-                self->unique_in_count = ER_calcIndex(self, in_tuple)+1;
+                self->unique_in_count 
+                    = RUD_calcIndex(self->in_domain, in_tuple)+1;
             }
 
         // otherwise we need to look at previous input
@@ -696,11 +576,12 @@ void ER_in_ordered_insert(ExplicitRelation* self,
                     self->in_vals[ i ] = Tuple_val(in_tuple,k);
 
                     // keep track of domain as things are being inserted
-                    if (in_tuple.valptr[k] < RD_lb(self->in_domain, k) ) {
-                        RD_set_lb( self->in_domain, k, in_tuple.valptr[k] );
+                    // FIXME: Rect approx refactor.
+                    if (in_tuple.valptr[k] < RD_lb(self->in_domain->rects[0], k) ) {
+                        RD_set_lb( self->in_domain->rects[0], k, in_tuple.valptr[k] );
                     }
-                    if (in_tuple.valptr[k] > RD_ub(self->in_domain, k) ) {
-                        RD_set_ub( self->in_domain, k, in_tuple.valptr[k] );
+                    if (in_tuple.valptr[k] > RD_ub(self->in_domain->rects[0], k) ) {
+                        RD_set_ub( self->in_domain->rects[0], k, in_tuple.valptr[k] );
                     }
                 }
             }
@@ -803,12 +684,12 @@ Tuple ER_out_given_in( ExplicitRelation* relptr, Tuple in_tuple)
     Tuple retval;
     retval.arity = relptr->out_arity;
     retval.valptr = & (relptr->out_vals[
-            ER_calcIndex(relptr, in_tuple) * relptr->out_arity ]);
+            RUD_calcIndex(relptr->in_domain, in_tuple) * relptr->out_arity ]);
     return retval;
 }
 
 
-RectDomain* ER_in_domain( ExplicitRelation * relptr)
+RectUnionDomain* ER_in_domain( ExplicitRelation * relptr)
 { return relptr->in_domain; }
 
 RectDomain* ER_out_range( ExplicitRelation * relptr)
@@ -879,7 +760,7 @@ void ER_dump( ExplicitRelation* self )
     printf("\tout_arity = %d\n", self->out_arity);
     printf("\tisFunction = %d\n", self->isFunction);
     printf("\tin_domain = ");
-    RD_dump(self->in_domain);
+    RUD_dump(self->in_domain);
     printf("\tout_range = ");
     RD_dump(self->out_range);
     printf("\tin_vals_size = %d\n", self->in_vals_size);

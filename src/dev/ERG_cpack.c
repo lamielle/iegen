@@ -39,7 +39,7 @@ void ERG_cpack(ExplicitRelation* relptr, ExplicitRelation* old2new)
 
     // number of items we will be mapping from an old location
     // to a new location
-    int out_count = RD_size(ER_in_domain(old2new));
+    int out_count = RUD_size(ER_in_domain(old2new));
 
     // allocate array that keeps track of what points in the
     // have been remapped

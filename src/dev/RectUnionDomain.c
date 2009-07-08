@@ -25,6 +25,21 @@ RectUnionDomain* RUD_ctor(int dim, int num_rects)
 }
 
 
+RectUnionDomain* RUD_ctor(RectDomain* rd)
+/*----------------------------------------------------------------*//*! 
+  \short Construct RectUnionDomain structure with only given rectangular 
+         domain and return a ptr to it.
+
+  \return Returns a ptr to the constructed RectUnionDomain structure.
+
+  \author Michelle Strout 7/7/09
+*//*----------------------------------------------------------------*/
+{
+    RectUnionDomain* self = RUD_ctor(RD_dim(rd), 1);
+    RUD_insert(self,rd);
+    return self;
+}
+
 /*----------------------------------------------------------------*//*! 
   \short Deallocate all memory for RectUnionDomain
 
@@ -190,6 +205,152 @@ Tuple RUD_nextTuple( RectUnionDomain* rud, Tuple tuple )
     }
 }    
 
+bool RUD_in_domain(RectUnionDomain * rud, Tuple t)
+/*----------------------------------------------------------------*//*! 
+  \short Returns true if given tuple is in given domain.
+
+    Implementation note: again copied much of the implementation
+    from RD_in_domain.
+
+  \author Michelle Strout 7/7/09
+*//*----------------------------------------------------------------*/
+{
+    // check that the Tuple and RectUnionDomain have same dimensionality
+    if (t.arity != RUD_dim(rud)) {
+        return false;
+    }
+
+    if (rud->num_rects==1) {
+        return RD_in_domain( rud->rects[0], t );
+    }
+    
+    // Otherwise have to check if tuple is in embedded union.
+    else {
+        if (Tuple_val(t, 0) >= rud->num_rects) {
+            return false;
+        }
+        
+        // check that the tuple values lie within bounds.
+        for (int i=1; i<t.arity; i++) {
+            if ( t.valptr[i] < RD_lb(rud->rects[Tuple_val(t, 0)],i-1) 
+                 || t.valptr[i] > RD_ub(rud->rects[Tuple_val(t, 0)],i-1) ) 
+            {
+                return false;
+            }
+        }
+            
+    }
+
+    return true;
+}
+
+int RUD_calcIndex( RectUnionDomain* rud, Tuple t )
+/*----------------------------------------------------------------*//*!
+  \short Given an in tuple calculates an index.  The tuples could
+         be lexicographically sorted using the computed index.
+
+  \author Michelle Strout 7/7/09
+*//*----------------------------------------------------------------*/
+{
+    assert(t.arity != RUD_dim(rud));
+
+    int index;
+
+    // If just have one rectangular domain then call calcIndex on it.
+    if (rud->num_rects==1) {
+        index = RD_calcIndex( rud->rects[0], t );
+    }
+    
+    // Otherwise have to determine which rectangular domain to get
+    // an initial index from and then offset based on the size of
+    // the preceding rectangular domains.
+    else {
+        // create tuple with all elements but first
+        Tuple truncated = Tuple_make_with_arity(RUD_dim(rud)-1);
+        for (int i=1; i<RUD_dim(rud); i++) {
+            truncated.valptr[i-1] = t.valptr[i];
+        }
+        
+        // get index from appropriate rectangle
+        assert( t.valptr[0] >=0 && t.valptr[0] < rud->num_rects );
+        int rd_index = RD_calcIndex(rud->rects[t.valptr[0]], truncated);
+        
+        // Add index in particular RD to sizes of all previous RD.
+        index = rd_index;
+        for (int i=0; i<t.valptr[0]; i++) {
+            index = index + RD_size(rud->rects[i]);
+        }
+    }
+    
+    return index;
+}
+
+int RUD_calcIndex( RectUnionDomain* rud, int val )
+/*----------------------------------------------------------------*//*!
+  \short Given an 1D in tuple (so just the single value)
+         calculates the index into domain.  
+         1D-to-1D arity specialization.
+
+    <pre>
+        in_tuple: <x_0>
+        index: x_0-lb_0
+    </pre>
+
+  \author Michelle Strout 9/22/08, 7/7/09
+*//*----------------------------------------------------------------*/
+{
+    assert(rud->dim==1);
+
+    return (val-RD_lb(rud->rects[0],0) );
+}
+
+RectDomain* RUD_approx( RectUnionDomain* rud )
+/*----------------------------------------------------------------*//*!
+  \short Given a RectUnionDomain constructs and returns a pointer
+         to an approximating RectDomain.
+         
+    The approximation is due to the lowest lower bound for a certain
+    dim and the upper bound is the highest for certain dim.
+
+  \author Michelle Strout 7/7/09
+*//*----------------------------------------------------------------*/
+{
+    RectDomain* retval;
+    
+    // If just have one rectangular domain then return copy of it.
+    if (rud->num_rects==1) {
+        retval = RD_ctor( rud->rects[0] );
+    }
+
+    // Otherwise have to create a new RectDomain.
+    else {
+        retval = RD_ctor(rud->dim);
+    
+        // Set lower and upper bound of indices into rectangles.
+        RD_set_lb( retval, 0, 0 );
+        RD_set_ub( retval, 0, rud->num_rects-1 );
+        
+        // grab lower bounds and upper bounds from embedded rects
+        for (int i=1; i<rud->dim; i++ ) {
+            int lb = INT_MAX;
+            int ub = 0;
+            for (int r=0; r<rud->num_rects; r++) {
+                if ( RD_lb( rud->rects[r], i-1 ) < lb ) {
+                    lb = RD_lb( rud->rects[r], i-1 );
+                }
+                if ( RD_ub( rud->rects[r], i-1 ) > ub ) {
+                    ub = RD_ub( rud->rects[r], i-1 );
+                }
+            
+            }
+            
+            RD_set_lb( retval, i, lb );
+            RD_set_ub( retval, i, ub );
+        }
+    }    
+    
+    return retval;
+}
 
 /*----------------------------------------------------------------*//*! 
   \short Output text representation of RectUnionDomain to standard out.

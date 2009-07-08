@@ -241,7 +241,127 @@ bool RD_in_domain(RectDomain * rd, Tuple t)
     return true;
 }
 
+int RD_calcIndex( RectDomain* rd, Tuple t )
+/*----------------------------------------------------------------*//*!
+  \short Given an in tuple calculates an index.  The tuples could
+         be lexicographically sorted using the computed index.
 
+    <pre>
+        in_tuple: <x_0, x_1, ..., x_k>
+        index: ((x_0-lb_0)*(RD_size(1)*...*RD_size(k))
+               + (x_1-lb_0)*(RD_size(2)* ... *RD_size(k))
+               + (x_k-lb_k)) ]
+    </pre>
+
+  \author Michelle Strout 8/30/08, 7/7/09
+*//*----------------------------------------------------------------*/
+{
+    assert(t.arity != RD_dim(rd));
+
+    int i, j, index;
+    index = 0;
+    // add up all the terms for each dimension of the domain
+    for (i=0; i<rd->dim; i++) {
+        // get element value from Tuple
+        int term = Tuple_val(t, i) - RD_lb(rd, i);
+        for (j=i+1; j<rd->dim; j++) {
+            term *= RD_size( rd, j );
+        }
+        index += term;
+    }
+
+    return index;
+}
+
+int RD_calcIndex( RectDomain* rd, int val )
+/*----------------------------------------------------------------*//*!
+  \short Given an 1D in tuple (so just the single value)
+         calculates the index into domain.  
+         1D-to-1D arity specialization.
+
+    <pre>
+        in_tuple: <x_0>
+        index: x_0-lb_0
+    </pre>
+
+  \author Michelle Strout 9/22/08, 7/7/09
+*//*----------------------------------------------------------------*/
+{
+    assert(rd->dim==1);
+
+    return (val-RD_lb(rd,0) );
+}
+
+//Tuple RD_calcTuple( RectDomain* rd, int index )
+/*----------------------------------------------------------------*//*!
+  \short This function is the inverse function of RD_calcIndex.
+
+
+  Given an index into out_index, or out_vals/out_arity, calculates the
+  input tuple based on information about the domain.  
+  
+  If the index is a raw index into out_vals of the ExplicitRelation data
+  structure, then it must be divided by out_arity before being passed to
+  this function.
+
+  This function is currently being used in the FOREACH macros to iterate
+  over input tuples with arity greater than 1.
+
+
+
+    <pre>
+        Size terms for each dim and then calculate tuple values.
+            in_tuple: <x_0, x_1, ..., x_k>
+            t0 = (RD_size(1)*...*RD_size(k))
+            t1 = (RD_size(2)* ... *RD_size(k))
+            ...
+            tk = 1
+
+        We need to solve the following equation for x values:
+            index = (x_0-lb0)*t0 + (x_1-lb1)*t1 ... + (x_k-lbk)*tk
+
+            x_0 = index/t0 + lb0
+            index = (x_1-lb1)*t1 + (x_2-lb2)*t2 ... + (x_k-lbk)*tk
+                  = index % t0
+
+            x_1 = index/t1 + lb1
+            index = (x_2-lb2)*t2 ... + (x_k-lbk)*tk
+                  = index % t1
+
+            ...
+    </pre>
+
+  \author Michelle Strout 9/22/08
+*//*----------------------------------------------------------------*/
+/*{
+    int i;
+    RectUnionDomain * in_domain = ER_in_domain(relptr);
+
+    // allocate an array to hold size for each
+    // tuple element in array index computation.
+    int *t = (int*)malloc(sizeof(int)*relptr->in_arity);
+
+    // calculate those sizes
+    // tk = 1
+    t[relptr->in_arity - 1] = 1;
+    for (i=relptr->in_arity - 2; i>=0; i--) {
+        // ti = (RD_size(i+1)* ... *RD_size(k))
+        t[i] = t[i+1] * RD_size(in_domain, i+1);
+    }
+
+    // Solve for the tuple entries based on the sizes and given index.
+    Tuple retval;
+    retval.valptr = (int*)malloc(sizeof(int)*relptr->in_arity);
+    retval.arity = relptr->in_arity;
+    for (i=0; i<relptr->in_arity; i++) {
+        // x_i = index/ti + lbi
+        retval.valptr[i] = index / t[i] + RD_lb(in_domain,i);
+        // index = x_{i+1} * t_{i+1} ... x_k * tk = index % ti
+        index = index % t[i];
+    }
+
+    return retval;
+}*/
 
 /*----------------------------------------------------------------*//*! 
   \short Output text representation of RectDomain to standard out.

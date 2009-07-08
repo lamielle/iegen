@@ -42,9 +42,12 @@ void ERG_blockpart1D(int numpart, ExplicitRelation* part)
     
     // determine the partition size by computing the size of the last
     // dimension in the in domain and dividing it by numpart
-    int last_elem = RD_dim(ER_in_domain(part))-1;
-    int lb = RD_lb(ER_in_domain(part), last_elem);
-    int ub = RD_ub(ER_in_domain(part), last_elem);
+    // FIXME: this definitely needs refactored.  The ERGs should
+    // not be exposed to what data structures are being used for the
+    // in domain and out range of the ER.
+    int last_elem = RD_dim(RUD_approx(ER_in_domain(part)))-1;
+    int lb = RD_lb(RUD_approx(ER_in_domain(part)), last_elem);
+    int ub = RD_ub(RUD_approx(ER_in_domain(part)), last_elem);
     int partsize = ((ub-lb+1) / numpart) + 1;
 
     // Loop through points in in domain and assign them to partitions.
