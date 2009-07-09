@@ -256,7 +256,7 @@ int RD_calcIndex( RectDomain* rd, Tuple t )
   \author Michelle Strout 8/30/08, 7/7/09
 *//*----------------------------------------------------------------*/
 {
-    assert(t.arity != RD_dim(rd));
+    assert(t.arity == RD_dim(rd));
 
     int i, j, index;
     index = 0;

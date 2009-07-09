@@ -252,7 +252,7 @@ int RUD_calcIndex( RectUnionDomain* rud, Tuple t )
   \author Michelle Strout 7/7/09
 *//*----------------------------------------------------------------*/
 {
-    assert(t.arity != RUD_dim(rud));
+    assert(t.arity == RUD_dim(rud));
 
     int index;
 
