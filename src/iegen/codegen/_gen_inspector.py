@@ -26,23 +26,45 @@ def gen_inspector(mapir):
 
 	return inspector
 
+# Right now generating a RectUnionDomain, but later might generate a more
+# general data structure.
+def gen_domain(name,set):
+	from iegen.codegen import Statement,Comment
+
+	iegen.print_detail("Generating RectUnionDomain for set %s"%set)
+
+	stmts=[]
+	stmts.append(Comment('RectUnionDomain for set %s'%(set)))
+
+	if 1==len(set.sets):
+		conj_name = '%s_conj0'%(name)
+		stmts.extend(gen_rect_domain(conj_name, iegen.Set(sets=[set.sets[0]])))
+		stmts.append(Statement('RectUnionDomain *%s=RUD_ctor(%s);'%(name,conj_name)))
+	else:
+		stmts.append(Statement('RectUnionDomain *%s=RUD_ctor(%d);'%(name,set.arity())))
+		count = 0
+		for conjunct in set.sets:
+			conj_name = '%s_conj%d'%(name,count)
+			stmts.extend(gen_rect_domain(conj_name, iegen.Set(sets=[conjunct])))
+			stmts.append(Statement('RUD_insert(%s,%s);'%(name,conj_name)))
+			count = count + 1
+
+	return stmts
+
 def gen_rect_domain(name,set):
 	from iegen.codegen import Statement,Comment
 
 	if 1!=len(set.sets): raise ValueError("Set's relation has multiple terms in the disjunction: '%s'"%(set))
 
-	iegen.print_detail("Generating RectDomain for set %s"%set)
-
 	stmts=[]
 	stmts.append(Comment('RectDomain for set %s'%(set)))
-
 	stmts.append(Statement('RectDomain *%s=RD_ctor(%d);'%(name,set.arity())))
-
 	for var in set.sets[0].tuple_set.vars:
 		stmts.append(Statement('RD_set_lb(%s,0,%s);'%(name,calc_lower_bound_string(set.lower_bound(var.id)))))
 		stmts.append(Statement('RD_set_ub(%s,0,%s);'%(name,calc_upper_bound_string(set.upper_bound(var.id)))))
 
 	return stmts
+
 
 #Generate code for a given ERSpec
 def gen_er_spec(er_spec):
@@ -77,7 +99,7 @@ def gen_er_spec(er_spec):
 	#Generate the whole set of statements
 	stmts=[]
 	in_domain_name='in_domain_%s'%(er_spec.name)
-	stmts.extend(gen_rect_domain(in_domain_name,er_spec.input_bounds))
+	stmts.extend(gen_domain(in_domain_name,er_spec.input_bounds))
 	stmts.append(Statement())
 	stmts.append(Comment('Creation of ExplicitRelation of the ARTT'))
 	stmts.append(Comment(str(er_spec.relation)))
@@ -101,9 +123,9 @@ def gen_output_er_spec(output_er_spec):
 
 	stmts=[]
 
-	#Create a rect domain for the ERSpec
+	#Create a domain for the ERSpec
 	in_domain_name='in_domain_%s'%(output_er_spec.name)
-	stmts.extend(gen_rect_domain(in_domain_name,output_er_spec.input_bounds))
+	stmts.extend(gen_domain(in_domain_name,output_er_spec.input_bounds))
 	stmts.append(Statement('*%s=ER_ctor(%d,%d,%s,%s,%s);'%(output_er_spec.name,output_er_spec.input_bounds.arity(),output_er_spec.output_bounds.arity(),in_domain_name,str(output_er_spec.is_function).lower(),str(output_er_spec.is_permutation).lower())))
 	stmts.append(Statement('%s_ER=*%s;'%(output_er_spec.name,output_er_spec.name)))
 
