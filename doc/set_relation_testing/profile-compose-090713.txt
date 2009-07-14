@@ -1,0 +1,153 @@
+#### some profiling to figure out why compose is so slow
+cProfile.run('T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )','prof')
+p = pstats.Stats('prof')
+p.strip_dirs()
+p.sort_stats('cumulative').print_stats(20)p.sort_stats('time').print_stats(20)
+p.print_callers(20)
+####
+
+Mon Jul 13 21:20:13 2009    prof
+
+         27514668 function calls (22053784 primitive calls) in 27.772 CPU seconds
+
+   Ordered by: cumulative time
+   List reduced from 231 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001   27.775   27.775 <string>:1(<module>)
+    852/3    0.008    0.000   27.774    9.258 _util.py:242(normalize_result)
+30950/1759    0.028    0.000   27.098    0.015 _visitor.py:84(visit)
+      301    0.000    0.000   25.953    0.086 _set_relation.py:445(apply_visitor)
+      301    0.002    0.000   25.953    0.086 _visitor.py:102(visitRelation)
+        2    0.001    0.001   23.264   11.632 _set_relation.py:496(compose)
+  891/231    0.004    0.000   22.699    0.098 _util.py:231(normalize_self)
+ 1743/833    0.011    0.000   22.029    0.026 _util.py:225(run_simplify)
+ 1743/833    0.066    0.000   22.024    0.026 _simplify.py:58(simplify)
+2148332/12506    3.550    0.000   17.182    0.001 {cmp}
+    18618    0.032    0.000   17.180    0.001 _ast.py:273(__cmp__)
+281765/61171    0.474    0.000   17.069    0.000 _ast.py:546(__cmp__)
+      105    0.000    0.000   16.091    0.153 _ast.py:183(__cmp__)
+      513    0.001    0.000   16.081    0.031 _ast.py:257(__cmp__)
+1588040/44146    3.701    0.000   15.550    0.000 _ast.py:452(__cmp__)
+     1973    0.018    0.000   10.862    0.006 _rules.py:65(remove_duplicate_formulas)
+       27    0.000    0.000   10.792    0.400 _remove_duplicate_formulas_visitor.py:29(inRelation)
+       27    0.000    0.000   10.792    0.400 _remove_duplicate_formulas_visitor.py:12(_inFormula)
+ 2200/848    0.002    0.000    9.597    0.011 _ast.py:197(apply_visitor)
+ 2200/848    0.011    0.000    9.596    0.011 _visitor.py:108(visitPresRelation)
+
+
+Mon Jul 13 21:20:13 2009    prof
+
+         27514668 function calls (22053784 primitive calls) in 27.772 CPU seconds
+
+   Ordered by: internal time
+   List reduced from 231 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  3760793    5.289    0.000    9.122    0.000 _util.py:142(like_type)
+  9114673    3.871    0.000    3.871    0.000 {hasattr}
+1588040/44146    3.701    0.000   15.550    0.000 _ast.py:452(__cmp__)
+2148332/12506    3.550    0.000   17.182    0.001 {cmp}
+1132653/9241    3.072    0.000    8.475    0.001 copy.py:144(deepcopy)
+130605/18450    1.548    0.000    7.874    0.000 copy.py:231(_deepcopy_tuple)
+   718395    0.920    0.000    1.188    0.000 copy.py:260(_keep_alive)
+281765/61171    0.474    0.000   17.069    0.000 _ast.py:546(__cmp__)
+  1875908    0.472    0.000    0.472    0.000 {method 'get' of 'dict' objects}
+246183/198601    0.424    0.000    2.237    0.000 copy.py:223(_deepcopy_list)
+   259918    0.409    0.000    1.070    0.000 _ast.py:394(__cmp__)
+  2311657    0.362    0.000    0.362    0.000 {id}
+49720/18450    0.322    0.000    7.480    0.000 copy.py:250(_deepcopy_dict)
+67382/35484    0.311    0.000    6.717    0.000 _visitor.py:153(visitNormExp)
+  1451534    0.311    0.000    0.311    0.000 {method 'append' of 'list' objects}
+    24860    0.279    0.000    0.279    0.000 {method '__reduce_ex__' of 'object' objects}
+24860/9225    0.279    0.000    8.220    0.001 copy.py:299(_reconstruct)
+   130605    0.122    0.000    0.122    0.000 {range}
+88292/47346    0.118    0.000    0.676    0.000 _visitor.py:143(visitVarExp)
+88292/47346    0.076    0.000    0.716    0.000 _ast.py:418(apply_visitor)
+
+
+   Ordered by: internal time
+   List reduced from 231 to 20 due to restriction <20>
+
+Function                                      was called by...
+                                                  ncalls  tottime  cumtime
+_util.py:142(like_type)                       <-     105    0.000    0.000  _ast.py:183(__cmp__)
+                                                     309    0.000    0.000  _ast.py:223(__cmp__)
+                                                     513    0.001    0.001  _ast.py:257(__cmp__)
+                                                   18618    0.026    0.040  _ast.py:273(__cmp__)
+                                                  260200    0.346    0.511  _ast.py:394(__cmp__)
+                                                 3175424    4.497    7.940  _ast.py:452(__cmp__)
+                                                  281765    0.393    0.578  _ast.py:546(__cmp__)
+                                                     152    0.000    0.001  _ast.py:556(__add__)
+                                                     697    0.002    0.002  _ast.py:579(__mul__)
+                                                    1042    0.002    0.003  _remove_equal_function_visitor.py:58(inEquality)
+                                                      87    0.000    0.000  _remove_free_var_function_visitor.py:46(inNormExp)
+                                                       9    0.000    0.000  _set_relation.py:98(_get_prefix_rename_dict)
+                                                       9    0.000    0.000  _set_relation.py:132(_get_formula_rename_dict)
+                                                       2    0.000    0.000  _set_relation.py:414(__cmp__)
+                                                   20118    0.020    0.039  _util.py:161(raise_objs_not_like_types)
+                                                    1743    0.003    0.006  _util.py:186(normalize_names)
+{hasattr}                                     <- 9089813    3.832    3.832  _util.py:142(like_type)
+                                                   24860    0.039    0.039  copy.py:299(_reconstruct)
+_ast.py:452(__cmp__)                          <-      40    0.000    0.003  _util.py:85(equality_sets)
+                                               1587736/44234    3.701   15.546  {cmp}
+                                                     106    0.000    0.000  {method 'index' of 'list' objects}
+                                                     158    0.000    0.001  {method 'sort' of 'list' objects}
+{cmp}                                         <-     105    0.001   16.090  _ast.py:183(__cmp__)
+                                                     309    0.001    0.007  _ast.py:223(__cmp__)
+                                                     513    0.009   16.079  _ast.py:257(__cmp__)
+                                                   18618    0.055   17.108  _ast.py:273(__cmp__)
+                                                  259636    0.150    0.150  _ast.py:394(__cmp__)
+                                               1587384/43882    1.623   15.221  _ast.py:452(__cmp__)
+                                               281765/61171    1.711   16.852  _ast.py:546(__cmp__)
+                                                       2    0.000    0.011  _set_relation.py:414(__cmp__)
+copy.py:144(deepcopy)                         <-     833    0.006    0.609  _ast.py:406(__mul__)
+                                                      47    0.000    0.071  _ast.py:463(__mul__)
+                                                     304    0.002    0.427  _ast.py:556(__add__)
+                                                    1394    0.011    1.598  _ast.py:579(__mul__)
+                                                       2    0.000    0.256  _remove_contradictions_visitor.py:8(_inFormula)
+                                                     124    0.001    0.272  _set_relation.py:55(_copy_constraints)
+                                                      80    0.001    0.059  _set_relation.py:61(_create_equality_constraints)
+                                                       1    0.000    0.028  _set_relation.py:476(inverse)
+                                                      48    0.000    0.268  _set_relation.py:528(_compose)
+                                                    6408    0.052    4.888  _util.py:118(get_basic_term)
+                                               119171/95597    0.177    1.841  copy.py:223(_deepcopy_list)
+                                               617665/27675    1.870    7.685  copy.py:231(_deepcopy_tuple)
+                                               336856/72848    0.697    7.386  copy.py:250(_deepcopy_dict)
+                                               49720/18450    0.254    8.026  copy.py:299(_reconstruct)
+copy.py:231(_deepcopy_tuple)                  <- 130605/18450    1.548    7.874  copy.py:144(deepcopy)
+copy.py:260(_keep_alive)                      <-  718395    0.920    1.188  copy.py:144(deepcopy)
+_ast.py:546(__cmp__)                          <-     489    0.001    0.013  _ast.py:293(_set_largest_exp)
+                                               281276/60682    0.473   17.056  {cmp}
+{method 'get' of 'dict' objects}              <- 1875908    0.472    0.472  copy.py:144(deepcopy)
+copy.py:223(_deepcopy_list)                   <- 246183/198601    0.424    2.237  copy.py:144(deepcopy)
+_ast.py:394(__cmp__)                          <-  256650    0.402    1.049  {cmp}
+                                                    2036    0.005    0.013  {method 'index' of 'list' objects}
+                                                    1232    0.003    0.007  {method 'sort' of 'list' objects}
+{id}                                          <- 1132653    0.174    0.174  copy.py:144(deepcopy)
+                                                  246183    0.037    0.037  copy.py:223(_deepcopy_list)
+                                                  130605    0.020    0.020  copy.py:231(_deepcopy_tuple)
+                                                   49720    0.008    0.008  copy.py:250(_deepcopy_dict)
+                                                  727636    0.120    0.120  copy.py:260(_keep_alive)
+                                                   24860    0.004    0.004  copy.py:299(_reconstruct)
+copy.py:250(_deepcopy_dict)                   <- 49720/18450    0.322    7.480  copy.py:144(deepcopy)
+_visitor.py:153(visitNormExp)                 <- 67382/35484    0.311    6.717  _ast.py:623(apply_visitor)
+{method 'append' of 'list' objects}           <-     122    0.000    0.000  _ast.py:556(__add__)
+                                                     880    0.000    0.000  _ast.py:579(__mul__)
+                                                    3166    0.001    0.001  _merge_exp_terms_visitor.py:14(inNormExp)
+                                                    1041    0.000    0.000  _remove_duplicate_constraints_visitor.py:10(inConjunction)
+                                                      74    0.000    0.000  _remove_duplicate_formulas_visitor.py:12(_inFormula)
+                                                      89    0.000    0.000  _remove_equal_function_visitor.py:22(add_var_func_equality)
+                                                     124    0.000    0.000  _set_relation.py:55(_copy_constraints)
+                                                      40    0.000    0.000  _set_relation.py:61(_create_equality_constraints)
+                                                       8    0.000    0.000  _set_relation.py:496(compose)
+                                                  119171    0.036    0.036  copy.py:223(_deepcopy_list)
+                                                  617665    0.125    0.125  copy.py:231(_deepcopy_tuple)
+                                                  709154    0.148    0.148  copy.py:260(_keep_alive)
+{method '__reduce_ex__' of 'object' objects}  <-   24860    0.279    0.279  copy.py:144(deepcopy)
+copy.py:299(_reconstruct)                     <- 24860/9225    0.279    8.220  copy.py:144(deepcopy)
+{range}                                       <-  130605    0.122    0.122  copy.py:231(_deepcopy_tuple)
+_visitor.py:143(visitVarExp)                  <- 88292/47346    0.118    0.676  _ast.py:418(apply_visitor)
+_ast.py:418(apply_visitor)                    <-   22000    0.018    0.082  _visitor.py:121(visitVarTuple)
+                                               66292/38016    0.058    0.680  _visitor.py:153(visitNormExp)
+
