@@ -1,3 +1,9 @@
+/*! \file
+ *
+ * Driver for moldyn_fst_cpack example.  Written by hand.
+ *
+ * \author Alan LaMielle
+ */
 #include "moldyn_fst_common.c"
 
 int main()
@@ -42,6 +48,10 @@ int main()
 	/* Print data/index arrays after transformed computation */
 	printf("After transformed computation: \n");
 	print_arrays(x_trans,fx_trans,inter1_trans,inter2_trans,N,n_inter);
+
+    ExplicitRelation *sigma_inv = ER_genInverse(sigma);
+    reorderArray((unsigned char*)x_trans,sizeof(double),N+-1-0,sigma_inv);
+    reorderArray((unsigned char*)fx_trans,sizeof(double),N+-1-0,sigma_inv);
 
 	MOLDYN_FST_COMMON_COMPARE
 
