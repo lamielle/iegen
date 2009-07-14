@@ -495,9 +495,10 @@ class Relation(Formula):
 	#            R1N(R21) union R1N(R22) union ... union R1N(R2M)
 	@normalize_result
 	def compose(self,other):
-		#Make sure we weren't given the same object twice
+		#If we were given two references to the same object, then
+		#make a copy.
 		if self is other:
-			raise ValueError('Cannot compose a Relation with itself')
+			other = deepcopy(self)			
 
 		#Make sure we are given a Relation
 		raise_objs_not_like_types(other,Relation)
@@ -521,7 +522,8 @@ class Relation(Formula):
 
 		return new_relation
 
-	#Private utility method to perform the compose operation between two PresRelation objects
+	#Private utility method to perform the compose operation between two 
+	#PresRelation objects
 	#Returns the PresRelation resulting from the composition operation r1(r2)
 	def _compose(self,r1,r2):
 		#Make sure we are given PresRelations
@@ -561,6 +563,8 @@ class Relation(Formula):
 		r2_ids.extend([var.id for var in r2.tuple_out.vars])
 		r1_ids=[var.id for var in r1.tuple_in.vars]
 		r1_ids.extend([var.id for var in r1.tuple_out.vars])
+		#Also check if possible.  Don't unrename if the relations shared
+		#any variable names.
 		if 0==len(set(r2_ids).intersection(set(r1_ids))):
 			self._unrename_vars(new_rel,r1.tuple_in.vars+r1.tuple_out.vars,'1')
 			self._unrename_vars(new_rel,r2.tuple_in.vars+r2.tuple_out.vars,'2')

@@ -2,8 +2,8 @@
 # See RTRTJournalShared/moldyn-FST-example.tex for corresponding writeup.
 # Also see iegen/example/moldyn-FST.spec
 
-#import cProfile
-#import pstats
+import cProfile
+import pstats
 
 import iegen
 from iegen import Set
@@ -127,12 +127,6 @@ ars_of_interest = iter_sub_space_relation.compose( all_ar.inverse() ).inverse()
 print "\t\tars of interest = " 
 PrettyPrintVisitor().visit(ars_of_interest)
 
-#cProfile.run('iter_sub_space_relation.compose( all_ar.inverse() ).inverse()','prof')
-#p = pstats.Stats('prof')
-#p.strip_dirs()
-#p.sort_stats('cumulative').print_stats(20)
-#p.sort_stats('time').print_stats(20)
-#p.print_callers(20)
 print
 print
 print "Update modified access relations based on automatically derived data reordering specification."
@@ -198,6 +192,8 @@ print
 print "==== IterPermuteTrans"
 T_I1_to_I2 = Relation("{[c0,s,c0,i,c0] -> [c0,s,c0,i,c0] : c0=0 }")
 T_I1_to_I2 = T_I1_to_I2.union( Relation("{[c0,s,c1,ii,x] -> [c0,s,c1,j,x] : j = delta(ii) && c0=0  && c1=1 }"))
+#related to bug #136
+#T_I1_to_I2 = T_I1_to_I2.union( Relation("{[c0,s,c1,ii,x] -> [c7,s,c8,j,x] : j = delta(ii) && c0=0  && c1=1 }"))
 print "T_I1_to_I2 = "
 PrettyPrintVisitor().visit(T_I1_to_I2)
 
@@ -270,6 +266,15 @@ print
 print "\tDirect data dependences modified by the previous transformations:"
 print
 print "\t\tD_1_2 = T_I0_to_I1 compose ( D_1_2 compose (inverse T_I0_to_I1) ) ) = "
+#### some profiling to figure out why compose is so slow
+cProfile.run('T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )','prof')
+p = pstats.Stats('prof')
+p.strip_dirs()
+p.sort_stats('cumulative').print_stats(20)
+p.sort_stats('time').print_stats(20)
+p.print_callers(20)
+####
+
 D_1_2 = T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )
 PrettyPrintVisitor().visit(D_1_2)
 print
