@@ -1,0 +1,22 @@
+7/14/09
+
+A self-contained example of the inspector and executor code IEGen currently
+generates.
+
+moldyn_fst_cpack.spec
+    Contains python specification of computation and cpack transformation
+    used by IEGen to generate inspector and executor.
+
+moldyn_fst_trans.c
+    Contains generated inspector and executor.
+
+moldyn_fst_cpack.c
+    Driver.
+
+
+To run code type the following:
+
+    g++ -I . moldyn_fst_cpack.c ExplicitRelation.c RectDomain.c RectUnionDomain.c Tuple.c util.c ERG_cpack.c -o moldyn_fst_cpack
+
+    ./moldyn_fst_cpack
+
