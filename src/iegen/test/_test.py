@@ -1001,13 +1001,16 @@ class RelationTestCase(TestCase):
 		relation2=Relation('{[a,b,c,d]->[e]}')
 		composed=relation1.compose(relation2)
 
-	#Tests that compose does not allow composing with the same object
-	@raises(ValueError)
-	def testNoComposeSameObject(self):
+	#Tests that compose can operate with the same object as both operands. 
+	def testComposeSameObject(self):
 		from iegen import Relation
 
 		rel=Relation('{[a]->[a]}')
-		rel.compose(rel)
+		composed=rel.compose(rel)
+		
+		composed_res=Relation('{[a_in02]->[a_out01]: -1a_out01+a_in02=0}')
+		
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
 	#Tests the compose operation
 	def testCompose(self):
