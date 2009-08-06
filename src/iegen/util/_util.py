@@ -140,8 +140,8 @@ def find_term(term,terms):
 #Checks that the given object has all attributes of the __slots__ property of the given class
 #Returns True if so, False otherwise
 def like_type(obj,type):
-    if isinstance(obj,type):
-        return True    
+	if isinstance(obj,type):
+		return True    
 	for attr in type.__slots__:
 		if not hasattr(obj,attr):
 			return False
