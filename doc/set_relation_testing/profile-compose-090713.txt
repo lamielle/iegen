@@ -1,4 +1,4 @@
-#### some profiling to figure out why compose is so slow
+#### some profiling on vega to figure out why compose is so slow
 cProfile.run('T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )','prof')
 p = pstats.Stats('prof')
 p.strip_dirs()
