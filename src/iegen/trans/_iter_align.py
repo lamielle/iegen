@@ -61,15 +61,17 @@ class IterAlignTrans(Transformation):
 	#Update access relations based on the specified transformation
 	def update_mapir(self,mapir):
 		#Update the access relations of all statements
-		self.print_progress('Updating access relations...')
+		self.print_progress('Updating access relations for IterAlignTrans...')
 		for statement in mapir.get_statements():
 			for access_relation in statement.get_access_relations():
 				self.print_detail("Updating access relation '%s'..."%(access_relation.name))
 				access_relation.iter_to_data=access_relation.iter_to_data.compose(self.iter_space_trans.inverse())
 
-	#Need to add any inverse functions that were created
+    #This transformation only needs to modify the MapIR, because if
+    #any inverse ERs were needed then they should be determined
+    #somewhere else.
 	def update_idg(self,mapir):
-		#Here we should add ERSpecs for inverse functions that are created
+		#Here we should add ERSpecs for any inverse functions that are created
 		#However, we currently have no way to know when these are created
 
 		#What is the best way to determine if/when an inverse function
