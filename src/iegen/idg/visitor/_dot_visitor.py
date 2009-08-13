@@ -57,9 +57,9 @@ class DotVisitor(TopoVisitor):
 		self.write_node_uses(node)
 
 	def atIDGGenERSpec(self,node):
-		self.write_node_def(node.key,'IDGGenERSpec\\n%s'%(node.data.name),'oval')
+		self.write_node_def(node.key,'IDGGenERSpec\\n%s'%(node.data.name))
 		self.write_node_uses(node)
 
 	def atIDGCall(self,node):
-		self.write_node_def(node.key,'IDGCall\\n%s'%(node.data.function_name),'oval')
+		self.write_node_def(node.key,'IDGCall\\n%s'%(node.data.function_name))
 		self.write_node_uses(node)
