@@ -161,8 +161,8 @@ def codegen(statements):
 		else:
 			curr_iters=[var.id for var in statement.domain.sets[0].tuple_set.vars]
 
-			if curr_iters!=iters:
-				raise ValueError("Statements's domains do not have the same iterator names: %s!=%s"%(curr_iters,iters))
+			#if curr_iters!=iters:
+			#	raise ValueError("Statements's domains do not have the same iterator names: %s!=%s"%(curr_iters,iters))
 
 	#Collect the params from all domain/scatter fields in all statements
 	for statement in statements:

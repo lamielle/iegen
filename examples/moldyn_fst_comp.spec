@@ -1,7 +1,7 @@
 #Loop nest we are targeting:
 #  for (s=0; s<T; s++) {
-#  for (i=0; i<N; i++) {
-#S1:     x[i] = fx[i] * 1.25;
+#  for (j=0; j<N; j++) {
+#S1:     x[j] = fx[j] * 1.25;
 #  }
 #
 #    for (i=0; i<n_inter; i++) {
@@ -40,8 +40,8 @@ spec.add_index_array(
 spec.add_statement(
     name='S1',
     text='x[%(a1)s] = fx[%(a2)s] * 1.25;',
-    iter_space='{[s,i]: 0<=s && s<T && 0<=i && i<N}',
-    scatter='{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=0 && c2=0}')
+    iter_space='{[s,j]: 0<=s && s<T && 0<=j && j<N}',
+    scatter='{[s,j]->[c0,s,c1,j,c2]: c0=0 && c1=0 && c2=0}')
 
 spec.add_statement(
     name='S2',
