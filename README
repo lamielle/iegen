@@ -35,13 +35,39 @@ setenv PYTHONPATH $PWD
 =============
 Usage Notes
 
-    The main code generator is iegen.
+    The main code generator is iegen.  To see what options are available
+    including debug options use the --help command line option.
 
         ./iegen/bin/iegen --help
 
-    ./iegen/bin/iegen --output-progress examples/moldyn_fst_notrans.spec
+    Example usage of iegen is as follows:
+
+        ./iegen/bin/iegen --output-progress examples/moldyn_fst_notrans.spec
     
-    ./run_example moldyn_fst cpack notrans trans compile run
+    The run_example script constructs a call to iegen and compiles and runs
+    the resulting code.  For example,
+        ./run_example moldyn_fst cpack_align notrans trans compile run
+
+    does the following:
+        iegen/bin/iegen examples/moldyn_fst_notrans.spec -o examples/moldyn_fst_notrans.c --inspector-name=inspector_notrans --executor-name=executor_notrans
+        iegen/bin/iegen examples/moldyn_fst_cpack_align.spec -o examples/moldyn_fst_trans.c --inspector-name=inspector_trans
+        g++ examples/moldyn_fst_cpack_align.c -g -I./src/dev src/dev/ExplicitRelation.c src/dev/RectDomain.c src/dev/RectUnionDomain.c src/dev/Tuple.c src/dev/util.c src/dev/ERG_cpack.c -o examples/moldyn_fst_cpack_align
+        examples/moldyn_fst_cpack_align
+
+    The debug output is summarized as follows:
+    -o, --output-code   generated code
+    --output-progress   progress messages 
+        which is on by default
+    --output-modified   components as they are modified
+        access relations and statements
+    --output-detail     more detailed messages
+        full iteration space, transformations being applied, some simplification detail
+    --output-info       general information messages
+        doesn't seem to provide any info
+    --output-debug      debug messages
+        debug information about all operations like compose, union, inverse, etc. being performed
+    --output-error      error messages
+
 
 =============
 -Dependencies: Python version >= 2.4.0, CLooG version >= 0.14.0, and Polylib

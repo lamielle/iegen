@@ -51,6 +51,7 @@ def do_calc(mapir):
 		iegen.print_modified("----- Updated statements (after transformation '%s'): -----"%(transformation.name))
 		for statement in mapir.get_statements():
 			iegen.print_modified(statement)
+			iegen.print_modified("\n")
 		iegen.print_modified('-----------------------------------------')
 
 	#Un-update access relations now that the calculation phase is over
