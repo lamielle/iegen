@@ -889,11 +889,11 @@ spec.add_access_relation(
         data_array='fz',
         iter_to_data='{ [ tstep, i ]->[ accessRelation60 ] : accessRelation60 = inter1( ii ) }')
 
-spec.add_transformation(
-    type=iegen.trans.DataPermuteTrans,
-    name='cpack',
-    reordering_name='sigma',
-    data_arrays=['x','fx'],
-    iter_sub_space_relation='{[c0,tstep,c1,i,c2]->[i]: c1=1}',
-    target_data_arrays=['x','fx'],
-    erg_func_name='ERG_cpack')
+#spec.add_transformation(
+#    type=iegen.trans.DataPermuteTrans,
+#    name='cpack',
+#    reordering_name='sigma',
+#    data_arrays=['x','fx'],
+#    iter_sub_space_relation='{[c0,tstep,c1,i,c2]->[i]: c1=1}',
+#    target_data_arrays=['x','fx'],
+#    erg_func_name='ERG_cpack')
