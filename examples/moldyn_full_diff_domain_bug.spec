@@ -6,7 +6,8 @@ spec.add_symbolic(name='n_inter')
 
 spec.add_data_array(
         name='x',
-        bounds='{[k]: 0<=k && k<n_moles}')
+        bounds='{[k]: 0<=k && k<n_moles}',
+        formal_decl='double data[][9]')
 
 spec.add_data_array(
         name='fx',
