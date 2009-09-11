@@ -22,16 +22,15 @@ class ParamVisitor(TopoVisitor):
 
 		#Add each symbolic parameter
 		for symbolic in self.symbolics:
-			params.append(Parameter('int',symbolic))
-			params.append
+			params.append(Parameter(symbolic.type,symbolic.name))
 
 		#Add each data array parameter
 		for data_array in self.data_arrays:
-			params.append(Parameter('double *',data_array))
+			params.append(Parameter(data_array.type,data_array.name))
 
 		#Add each index array parameter
 		for index_array in self.index_arrays:
-			params.append(Parameter('int *',index_array))
+			params.append(Parameter(index_array.type,index_array.name))
 
 		#Add each output ERSpec parameter
 		for output_er_spec in self.output_er_specs:
@@ -39,15 +38,15 @@ class ParamVisitor(TopoVisitor):
 
 		return params
 
-	def atIDGSymbolic(self,node): self.symbolics.append(node.data.name)
+	def atIDGSymbolic(self,node): self.symbolics.append(node.data)
 
 	def atIDGDataArray(self,node):
 		if 0==node.data.version:
-			self.data_arrays.append(node.data.data_array.name)
+			self.data_arrays.append(node.data.data_array)
 
 	def atIDGERSpec(self,node): pass
 
-	def atIDGIndexArray(self,node): self.index_arrays.append(node.data.name)
+	def atIDGIndexArray(self,node): self.index_arrays.append(node.data)
 
 	def atIDGOutputERSpec(self,node): self.output_er_specs.append(node.data.name)
 
