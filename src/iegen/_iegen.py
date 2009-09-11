@@ -44,10 +44,11 @@ def include(spec_file):
 
 #---------- Symbolic class ----------
 class Symbolic(Node):
-	__slots__=('name',)
+	__slots__=('name','type')
 
-	def __init__(self,name):
+	def __init__(self,name,type):
 		self.name=name
+		self.type=type
 
 	def __repr__(self):
 		#Use double quotes if this symbolic's name has a "'" in it
@@ -71,12 +72,13 @@ class Symbolic(Node):
 
 #---------- DataArray class ----------
 class DataArray(IEGenObject):
-	__slots__=('name','bounds','max_version')
+	__slots__=('name','bounds','type','max_version')
 	_set_fields=('bounds',)
 
-	def __init__(self,name,bounds):
+	def __init__(self,name,bounds,type):
 		self.name=name
 		self.bounds=bounds
+		self.type=type
 		self.max_version=0
 
 	def __repr__(self):
@@ -164,11 +166,14 @@ class ERSpec(IEGenObject):
 
 #---------- IndexArray class ----------
 class IndexArray(ERSpec):
+	__slots__=('type',)
 	_set_fields=('input_bounds','output_bounds')
 
-	def __init__(self,name,input_bounds,output_bounds):
+	def __init__(self,name,type,input_bounds,output_bounds):
 		from iegen import Relation
 		ERSpec.__init__(self,name,input_bounds,output_bounds,Relation('{[]->[]}'),True,False)
+
+		self.type=type
 
 		#Checking
 		if 1!=self.output_bounds.arity():
