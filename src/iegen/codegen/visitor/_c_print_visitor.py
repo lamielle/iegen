@@ -10,6 +10,8 @@ class CPrintVisitor(DFVisitor):
 		start_end=[' ','*']
 		if param.type[-1] in start_end or param.name[0] in start_end:
 			return '%s%s'%(param.type,param.name)
+		elif '%' in param.type:
+			return param.type%(param.name)
 		else:
 			return '%s %s'%(param.type,param.name)
 

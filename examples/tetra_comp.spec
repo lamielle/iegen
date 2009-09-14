@@ -7,41 +7,41 @@
 #}
 
 #Define the symbolic constants for the computation
-spec.add_symbolic(name='N',type='int') #Number of tetrahedrons
+spec.add_symbolic(name='N',type='int %s') #Number of tetrahedrons
 
 #Define the data arrays for the computation
 spec.add_data_array(
     name='data',
-    type='double *',
+    type='double *%s',
     bounds='{[k]: 0<=k && k<=N-1}')
 
 spec.add_data_array(
     name='res',
-    type='double *',
+    type='double *%s',
     bounds='{[k]: 0<=k && k<=N-1}')
 
 #Define the index arrays for the computation
 spec.add_index_array(
     name='n1',
-    type='int *',
+    type='int *%s',
     input_bounds='{[k]: 0<=k && k<=N-1}',
     output_bounds='{[k]: 0<=k && k<=N-1}')
 
 spec.add_index_array(
     name='n2',
-    type='int *',
+    type='int *%s',
     input_bounds='{[k]: 0<=k && k<=N-1}',
     output_bounds='{[k]: 0<=k && k<=N-1}')
 
 spec.add_index_array(
     name='n3',
-    type='int *',
+    type='int *%s',
     input_bounds='{[k]: 0<=k && k<=N-1}',
     output_bounds='{[k]: 0<=k && k<=N-1}')
 
 spec.add_index_array(
     name='n4',
-    type='int *',
+    type='int *%s',
     input_bounds='{[k]: 0<=k && k<=N-1}',
     output_bounds='{[k]: 0<=k && k<=N-1}')
 

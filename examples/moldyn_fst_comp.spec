@@ -12,31 +12,31 @@
 #  }
 
 #Define the symbolic constants for the computation
-spec.add_symbolic(name='T',type='int') #Number of time steps
-spec.add_symbolic(name='N',type='int') #Number of atoms
-spec.add_symbolic(name='n_inter',type='int') #Number of interactions between atoms
+spec.add_symbolic(name='T',type='int %s') #Number of time steps
+spec.add_symbolic(name='N',type='int %s') #Number of atoms
+spec.add_symbolic(name='n_inter',type='int %s') #Number of interactions between atoms
 
 #Define the data arrays for the computation
 spec.add_data_array(
     name='x',
-    type='double *',
+    type='double *%s',
     bounds='{[k]: 0<=k && k<N}')
 
 spec.add_data_array(
     name='fx',
-    type='double *',
+    type='double *%s',
     bounds='{[k]: 0<=k && k<N}')
 
 #Define the index arrays for the computation
 spec.add_index_array(
     name='inter1',
-    type='int *',
+    type='int *%s',
     input_bounds='{[k]: 0<=k && k<n_inter}',
     output_bounds='{[k]: 0<=k && k<N}')
 
 spec.add_index_array(
     name='inter2',
-    type='int *',
+    type='int *%s',
     input_bounds='{[k]: 0<=k && k<n_inter}',
     output_bounds='{[k]: 0<=k && k<N}')
 
