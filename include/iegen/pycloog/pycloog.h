@@ -39,6 +39,8 @@ struct pycloog_names
    int num_iters;
    char **params;
    int num_params;
+   pycloog_domain *context_domains;
+   int num_context_domains;
 };
 typedef struct pycloog_names pycloog_names;
 

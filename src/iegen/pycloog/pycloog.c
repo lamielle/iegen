@@ -280,6 +280,32 @@ CloogDomain* pycloog_get_context(pycloog_names *pycloog_names)
 {
    CloogMatrix *cloog_matrix;
    CloogDomain *cloog_context;
+
+   /* Convert the context if one is present in the names structure */
+   if(pycloog_names->num_context_domains>0)
+   {
+      printf("Converting context\n");
+      cloog_context=pycloog_get_unioned_domains(pycloog_names->context_domains,pycloog_names->num_context_domains);
+   }
+   /* Otherwise just allocate an empty CloogDomain */
+   else
+   {
+      /* Allocate a CloogMatrix object */
+      cloog_matrix=cloog_matrix_alloc(0,pycloog_names->num_params+2);
+
+      /* Convert the matrix to a CLooG domain structure */
+      cloog_context=cloog_domain_matrix2domain(cloog_matrix);
+
+      /* Free the allocated CLooG matrix structure */
+      cloog_matrix_free(cloog_matrix);
+   }
+
+   return cloog_context;
+
+#if 0
+   /* Old code from before Symbolic lower/upper bounds could be specified */
+   CloogMatrix *cloog_matrix;
+   CloogDomain *cloog_context;
    Value **p;
    int row,col;
 
@@ -305,7 +331,7 @@ CloogDomain* pycloog_get_context(pycloog_names *pycloog_names)
       p[row][0]=1;
 
       /* current parameter >= 0 */
-      p[row][row+1]=1;
+      p[row][row+1]=0;
    }
 
    /* Convert the matrix to a CLooG domain structure */
@@ -315,6 +341,7 @@ CloogDomain* pycloog_get_context(pycloog_names *pycloog_names)
    cloog_matrix_free(cloog_matrix);
 
    return cloog_context;
+#endif
 }
 
 CloogLoop* pycloog_get_loops(

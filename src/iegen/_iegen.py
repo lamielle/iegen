@@ -44,18 +44,20 @@ def include(spec_file):
 
 #---------- Symbolic class ----------
 class Symbolic(Node):
-	__slots__=('name','type')
+	__slots__=('name','type','lower_bound','upper_bound')
 
-	def __init__(self,name,type):
+	def __init__(self,name,type='int',lower_bound=None,upper_bound=None):
 		self.name=name
 		self.type=type
+		self.lower_bound=lower_bound
+		self.upper_bound=upper_bound
 
 	def __repr__(self):
 		#Use double quotes if this symbolic's name has a "'" in it
-		if self.name.find("'")>=0:
-			return 'Symbolic("%s")'%(self.name)
+		if self.name.find("'")>=0 or self.type.find("'")>=0:
+			return 'Symbolic("%s",type="%s",lower_bound=%s,upper_bound=%s)'%(self.name,self.type,self.lower_bound,self.upper_bound)
 		else:
-			return "Symbolic('%s')"%(self.name)
+			return "Symbolic('%s',type='%s',lower_bound=%s,upper_bound=%s))"%(self.name,self.type,self.lower_bound,self.upper_bound)
 
 	def __str__(self):
 		return self.name

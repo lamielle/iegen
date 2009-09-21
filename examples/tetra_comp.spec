@@ -7,7 +7,10 @@
 #}
 
 #Define the symbolic constants for the computation
-spec.add_symbolic(name='N',type='int %s') #Number of tetrahedrons
+spec.add_symbolic(
+    name='N',
+    type='int %s',
+    lower_bound=1) #Number of tetrahedrons
 
 #Define the data arrays for the computation
 spec.add_data_array(

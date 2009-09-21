@@ -12,9 +12,19 @@
 #  }
 
 #Define the symbolic constants for the computation
-spec.add_symbolic(name='T',type='int %s') #Number of time steps
-spec.add_symbolic(name='N',type='int %s') #Number of atoms
-spec.add_symbolic(name='n_inter',type='int %s') #Number of interactions between atoms
+spec.add_symbolic(
+    name='T',
+    type='int %s',
+    lower_bound=1,
+    upper_bound=10) #Number of time steps
+spec.add_symbolic(
+    name='N',
+    type='int %s',
+    lower_bound=1) #Number of atoms
+spec.add_symbolic(
+    name='n_inter',
+    type='int %s',
+    lower_bound=1) #Number of interactions between atoms
 
 #Define the data arrays for the computation
 spec.add_data_array(

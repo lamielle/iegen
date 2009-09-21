@@ -21,7 +21,9 @@ class _PYCLOOG_NAMES(Structure):
 	_fields_=[('iters',POINTER(c_char_p)),
 	         ('num_iters',c_int),
 	         ('params',POINTER(c_char_p)),
-	         ('num_params',c_int)]
+	         ('num_params',c_int),
+	         ('context_domains',POINTER(_PYCLOOG_DOMAIN)),
+	         ('num_context_domains',c_int)]
 
 #Returns a ctypes type for an array of integer pointers
 #The size of the array is equal to num_rows
@@ -118,12 +120,50 @@ def _get_pycloog_statements(statements):
 	return new_statements
 
 #Translates the given iterator and parameter names to a ctypes PYCLOOG_NAMES structure
-def _get_pycloog_names(iters,params):
+def _get_pycloog_names(iters,params,param_names):
 	names=_PYCLOOG_NAMES()
 	names.iters=_get_ctypes_str_arr(iters)
 	names.num_iters=len(iters)
-	names.params=_get_ctypes_str_arr(params)
+	names.params=_get_ctypes_str_arr(param_names)
 	names.num_params=len(params)
+
+	#Create the context based on the upper and lower bounds of the params
+	num_cols=names.num_params+2
+	context=[]
+	for col,param in enumerate(params):
+		if param.lower_bound:
+			constraint=[0]*num_cols
+
+			#param>=lb
+			constraint[0]=1
+			constraint[col+1]=1
+			constraint[-1]=-param.lower_bound
+
+			context.append(constraint)
+
+		if param.upper_bound:
+			constraint=[0]*num_cols
+
+			#param<=ub
+			constraint[0]=1
+			constraint[col+1]=-1
+			constraint[-1]=param.upper_bound
+
+			context.append(constraint)
+
+	#If we have at least one constraint, convert the context to a pycloog_domain
+	if len(context)>0:
+		contexts=(_PYCLOOG_DOMAIN*1)()
+		contexts[0]=_get_pycloog_domain(context)
+		names.context_domains=contexts
+
+		#Only one conjunction in the context (a single polyhedron)
+		names.num_context_domains=1
+	else:
+		names.context_domains=POINTER(_PYCLOOG_DOMAIN)()
+		names.num_context_domains=0
+
+
 	return names
 #---------------------------------------
 
@@ -153,7 +193,6 @@ def codegen(statements):
 
 	#Process the statements
 	iters=None
-	params=set()
 	for statement in statements:
 		#Ensure that the iterators of every statement are the same
 		if iters is None:
@@ -165,20 +204,31 @@ def codegen(statements):
 			#	raise ValueError("Statements's domains do not have the same iterator names: %s!=%s"%(curr_iters,iters))
 
 	#Collect the params from all domain/scatter fields in all statements
+	params=[]
 	for statement in statements:
-		params=params.union(set(statement.domain.symbolics()))
+		#Collect all params from each statement domain
+		for pres_set in statement.domain.sets:
+			params=params+list(pres_set.symbolics)
+
+		#Collect all params from each scattering relation
 		if statement.scatter is not None:
-			params=params.union(set(statement.scatter.symbolics()))
-	params=list(params)
+			for pres_relation in statement.scatter.relations:
+				params=params+list(pres_relation.symbolics)
+
+	#Reduce the collected parameters to a unique set
+	params=list(set(params))
+
+	#Get a list of just the parameter names
+	param_names=[param.name for param in params]
 
 	#Convert the domain/scatter fields into the CLooG matrix format
 	for statement in statements:
-		statement.domain=TransVisitor(params).visit(statement.domain).mats
+		statement.domain=TransVisitor(param_names).visit(statement.domain).mats
 		if statement.scatter is not None:
-			statement.scatter=TransVisitor(params).visit(statement.scatter).mat
+			statement.scatter=TransVisitor(param_names).visit(statement.scatter).mat
 
 	#Convert the parmeters to ctypes
-	names=byref(_get_pycloog_names(iters,params))
+	names=byref(_get_pycloog_names(iters,params,param_names))
 	statements=_get_pycloog_statements(statements)
 	num_statements=len(statements)
 	string_allocator=_string_allocator_type()(_string_allocator)
