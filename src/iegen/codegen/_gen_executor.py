@@ -53,6 +53,7 @@ def gen_executor_loop_stmts(mapir):
 		iterators=','.join([var.id for var in statement.iter_space.sets[0].tuple_set.vars])
 
 		stmt_string='#define S%d(%s) %s'%(i,iterators,statement.text)
+		stmt_string=stmt_string.replace('\n','\\\n')
 		stmts.append(Statement(stmt_string%ar_dict))
 
 	return stmts
