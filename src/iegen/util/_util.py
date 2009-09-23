@@ -178,8 +178,63 @@ def raise_objs_not_like_types(objs,types,message=''):
 		if not found:
 			raise ValueError("The given object, '%s', must have one of the following sets of attributes: %s"%(obj,attrs))
 
+#---------- Exception Classes ----------
 class DimensionalityError(Exception):
 	pass
+#---------------------------------------
+
+#---------- Utility Classes ----------
+class biject(object):
+	def __init__(self):
+		self._dict1={}
+		self._dict2={}
+
+	def __str__(self):
+		return str(self._dict1)
+
+	def _contains(self,obj):
+		if obj in self._dict1 or obj in self._dict2:
+			return True
+		else:
+			return False
+
+	def __getitem__(self,obj):
+		if obj in self._dict1: return self._dict1[obj]
+		elif obj in self._dict2: return self._dict2[obj]
+		else: raise KeyError(str(obj))
+
+	def __setitem__(self,obj1,obj2):
+		if not self._contains(obj1) and not self._contains(obj2):
+			#Neither obj1 nor obj2 present in dict1 nor dict2
+			self._dict1[obj1]=obj2
+			self._dict2[obj2]=obj1
+		elif self._contains(obj1) and not self._contains(obj2):
+			#obj1 is present, obj2 is not present
+			if obj1 in self._dict1:
+				self._dict1[obj1]=obj2
+				self._dict2[obj2]=obj1
+			else:
+				self._dict2[obj1]=obj2
+				self._dict1[obj2]=obj1
+		elif self._contains(obj2) and not self._contains(obj1):
+			#obj2 is present, obj1 is not present
+			if obj2 in self._dict1:
+				self._dict1[obj2]=obj1
+				self._dict2[obj1]=obj2
+			else:
+				self._dict2[obj2]=obj1
+				self._dict1[obj1]=obj2
+		else:
+			#Both obj1 and obj2 are present
+			#Do nothing if obj1 and obj2 are already associated with each other
+			#Raise a KeyError if they are not associated with each other
+			if obj1 in self._dict1:
+				if self._dict1[obj1]!=obj2:
+					raise KeyError(str(obj1)+','+str(obj2))
+			else:
+				if self._dict2[obj1]!=obj2:
+					raise KeyError(str(obj1)+','+str(obj2))
+#-------------------------------------
 
 #Given a Set or Relation, renames all tuple variables in the
 #PresSets/PresRelations in the union to have the same names

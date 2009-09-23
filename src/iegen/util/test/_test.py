@@ -16,7 +16,7 @@ class ImportTestCase(TestCase):
 	def testNameImport(self):
 		try:
 			#_util.py
-			from iegen.util import run_tests,iter_islast,sign,invert_dict,equality_sets,define_properties,get_basic_term,find_term,like_type,is_iterable,raise_objs_not_like_types,DimensionalityError,normalize_self,normalize_result,check,one_time_normalize
+			from iegen.util import run_tests,iter_islast,sign,invert_dict,equality_sets,define_properties,get_basic_term,find_term,like_type,is_iterable,raise_objs_not_like_types,DimensionalityError,biject,normalize_self,normalize_result,check,one_time_normalize
 			#_test_util.py
 			from iegen.util import tuple_gen,lower_gen,upper_gen,parse_test,ast_equality_test,var_exp_strings,func_exp_strings,norm_exp_strings,test_sets,test_set_strings,test_relations,test_relation_strings
 		except Exception,e:
@@ -162,3 +162,61 @@ class EqualitySestsTestCase(TestCase):
 		res={1:set(['a','b']),2:set(['a','c','f']),3:set(['d','e'])}
 		self.failUnless(res==eq_sets,'%s!=%s'%(res,eq_sets))
 #-----------------------------------------
+
+#---------- biject Tests ----------
+class EqualitySestsTestCase(TestCase):
+
+	def testEmptyConstruction(self):
+		from iegen.util import biject
+		biject()
+
+	def testSetItem(self):
+		from iegen.util import biject
+		b=biject()
+		b['a']=1
+
+	def testGetItem(self):
+		from iegen.util import biject
+		b=biject()
+		b['a']=1
+
+		self.failUnless(1==b['a'],"b['a']!=%s"%(b['a']))
+		self.failUnless('a'==b[1],"b[1]!=%s"%(b[1]))
+
+	def testOverrideItem(self):
+		from iegen.util import biject
+		b=biject()
+		b['a']=1
+		b['a']=2
+
+		self.failUnless(2==b['a'],"b['a']!=%s"%(b['a']))
+		self.failUnless('a'==b[2],"b[2]!=%s"%(b[2]))
+
+		b[2]='b'
+
+		self.failUnless(2==b['b'],"b['b']!=%s"%(b['b']))
+		self.failUnless('b'==b[2],"b[2]!=%s"%(b[2]))
+
+	def testOverrideBackwards(self):
+		from iegen.util import biject
+		b=biject()
+		b['a']=1
+		b[2]='a'
+
+		self.failUnless(2==b['a'],"b['a']!=%s"%(b['a']))
+		self.failUnless('a'==b[2],"b[2]!=%s"%(b[2]))
+
+	@raises(KeyError)
+	def testFailCollision(self):
+		from iegen.util import biject
+		b=biject()
+		b['a']=1
+		b[2]='b'
+		b['a']=2
+
+	@raises(KeyError)
+	def testFailNotContains(self):
+		from iegen.util import biject
+		b=biject()
+		b['a']
+#-------------------------------------
