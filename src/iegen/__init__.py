@@ -3,6 +3,7 @@ from _iegen_object import *
 from _iegen import *
 from _set_relation import *
 from _mapir import *
+from _sparse_set_relation import *
 
 #for item in dir(_iegen):
 #	exec("has_module=hasattr(%s,'__module__')"%item)

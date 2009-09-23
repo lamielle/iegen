@@ -65,6 +65,7 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_iegen.py')
 	install_files('PREFIX',inst_dir,'_set_relation.py')
 	install_files('PREFIX',inst_dir,'_mapir.py')
+	install_files('PREFIX',inst_dir,'_sparse_set_relation.py')
 
 	bld.add_subdirs('parser')
 	bld.add_subdirs('ast')

@@ -16,6 +16,9 @@ class ImportTestCase(TestCase):
 	def testNameImport(self):
 		try:
 			from iegen import IEGenObject,MapIR,Symbolic,DataArray,IndexArray,AccessRelation,Statement,FunctionCallSpec,DataDependence,Set,Relation
+
+			#SparseForumla related imports
+			from iegen import SparseFormula,SparseSet,SparseRelation,SparseExpColumnType,TupleVarCol,SymbolicCol,FreeVarCol,ConstantCol,UFCall,SparseExp,SparseConstraint,SparseEquality,SparseInequality
 		except Exception,e:
 			self.fail("Importing classes from iegen failed: "+str(e))
 #----------------------------------
