@@ -51,8 +51,8 @@ class PYCLooGTestCase(TestCase):
   }
 }'''
 
-		dom1=Set('{[i,j]:1<=i and i<=n and 1<=j and j<=n}',[Symbolic('n')])
-		dom2=Set('{[i,j]:1<=i and i<=n and 1<=j and j<=n}',[Symbolic('n')])
+		dom1=Set('{[i,j]:1<=i and i<=n and 1<=j and j<=n}',[Symbolic('n',lower_bound=0)])
+		dom2=Set('{[i,j]:1<=i and i<=n and 1<=j and j<=n}',[Symbolic('n',lower_bound=0)])
 
 		stmt1=Statement(dom1)
 		stmt2=Statement(dom2)
@@ -104,10 +104,10 @@ if (m >= 1) {
   }
 }'''
 
-		dom1=Set('{[i,j]:0<=i and i<=n and 0<=j and j<=m}',[Symbolic('n'),Symbolic('m')])
+		dom1=Set('{[i,j]:0<=i and i<=n and 0<=j and j<=m}',[Symbolic('n',lower_bound=0),Symbolic('m',lower_bound=0)])
 		scat1=Relation('{[i,j]->[p0,i,p1,j,p2]: p0=1 and p1=0 and p2=0}')
 
-		dom2=Set('{[i,j]:0<=i and i<=n and 0<=j and j<=m}',[Symbolic('n'),Symbolic('m')])
+		dom2=Set('{[i,j]:0<=i and i<=n and 0<=j and j<=m}',[Symbolic('n',lower_bound=0),Symbolic('m',lower_bound=0)])
 		scat2=Relation('{[i,j]->[p0,i,p1,j,p2]: p0=0 and p1=0 and p2=0}')
 
 		stmt1=Statement(dom1,scat1)
@@ -131,13 +131,13 @@ if (m >= 1) {
   }
 }'''
 
-		dom0=Set('{[s,i]: 0<=s && s<=T && 0<=i && i<=N}',[Symbolic('T'),Symbolic('N')])
+		dom0=Set('{[s,i]: 0<=s && s<=T && 0<=i && i<=N}',[Symbolic('T',lower_bound=0),Symbolic('N',lower_bound=0)])
 		scat0=Relation('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=0 && c2=0}')
 
-		dom1=Set('{[s,i]: 0<=s && s<=T && 0<=i && i<=n_inter}',[Symbolic('T'),Symbolic('n_inter')])
+		dom1=Set('{[s,i]: 0<=s && s<=T && 0<=i && i<=n_inter}',[Symbolic('T',lower_bound=0),Symbolic('n_inter',lower_bound=0)])
 		scat1=Relation('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=0}')
 
-		dom2=Set('{[s,i]: 0<=s && s<=T && 0<=i && i<=n_inter}',[Symbolic('T'),Symbolic('n_inter')])
+		dom2=Set('{[s,i]: 0<=s && s<=T && 0<=i && i<=n_inter}',[Symbolic('T',lower_bound=0),Symbolic('n_inter',lower_bound=0)])
 		scat2=Relation('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=1}')
 
 		stmt0=Statement(dom0,scat0)

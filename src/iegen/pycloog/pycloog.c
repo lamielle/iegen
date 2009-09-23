@@ -284,7 +284,6 @@ CloogDomain* pycloog_get_context(pycloog_names *pycloog_names)
    /* Convert the context if one is present in the names structure */
    if(pycloog_names->num_context_domains>0)
    {
-      printf("Converting context\n");
       cloog_context=pycloog_get_unioned_domains(pycloog_names->context_domains,pycloog_names->num_context_domains);
    }
    /* Otherwise just allocate an empty CloogDomain */

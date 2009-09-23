@@ -48,6 +48,9 @@ class SetTestCase(TestCase):
 		class DummySymbolic(Node):
 			def __init__(self,name):
 				self.name=name
+				self.type=None
+				self.lower_bound=None
+				self.upper_bound=None
 			def apply_visitor(self,visitor):
 				visitor.visitSymbolic(self)
 
@@ -70,15 +73,15 @@ class SetTestCase(TestCase):
 		from iegen import Symbolic
 		from iegen.ast import PresSet,VarTuple,Conjunction
 
-		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n')])"
+		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n',type='',lower_bound=None,upper_bound=None)])"
 		exec('new_set_str=repr(%s)'%set_str)
 		self.failUnless(set_str==new_set_str,'%s!=%s'%(set_str,new_set_str))
 
-		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n'), Symbolic('m')])"
+		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n',type='',lower_bound=None,upper_bound=None), Symbolic('m',type='',lower_bound=None,upper_bound=None)])"
 		exec('new_set_str=repr(%s)'%set_str)
 		self.failUnless(set_str==new_set_str,'%s!=%s'%(set_str,new_set_str))
 
-		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n'), Symbolic('m'), Symbolic('o')])"
+		set_str="PresSet(VarTuple([]),Conjunction([]),[Symbolic('n',type='',lower_bound=None,upper_bound=None), Symbolic('m',type='',lower_bound=None,upper_bound=None), Symbolic('o',type='',lower_bound=None,upper_bound=None)])"
 		exec('new_set_str=repr(%s)'%set_str)
 		self.failUnless(set_str==new_set_str,'%s!=%s'%(set_str,new_set_str))
 
@@ -265,6 +268,9 @@ class RelationTestCase(TestCase):
 		class DummySymbolic(Node):
 			def __init__(self,name):
 				self.name=name
+				self.type=None
+				self.lower_bound=None
+				self.upper_bound=None
 			def apply_visitor(self,visitor):
 				visitor.visitSymbolic(self)
 
@@ -287,15 +293,15 @@ class RelationTestCase(TestCase):
 		from iegen import Symbolic
 		from iegen.ast import PresRelation,VarTuple,Conjunction
 
-		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n')])"
+		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n',type='',lower_bound=None,upper_bound=None)])"
 		exec('new_rel_str=repr(%s)'%rel_str)
 		self.failUnless(rel_str==new_rel_str,'%s!=%s'%(rel_str,new_rel_str))
 
-		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n'), Symbolic('m')])"
+		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n',type='',lower_bound=None,upper_bound=None), Symbolic('m',type='',lower_bound=None,upper_bound=None)])"
 		exec('new_rel_str=repr(%s)'%rel_str)
 		self.failUnless(rel_str==new_rel_str,'%s!=%s'%(rel_str,new_rel_str))
 
-		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n'), Symbolic('m'), Symbolic('o')])"
+		rel_str="PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n',type='',lower_bound=None,upper_bound=None), Symbolic('m',type='',lower_bound=None,upper_bound=None), Symbolic('o',type='',lower_bound=None,upper_bound=None)])"
 		exec('new_rel_str=repr(%s)'%rel_str)
 		self.failUnless(rel_str==new_rel_str,'%s!=%s'%(rel_str,new_rel_str))
 

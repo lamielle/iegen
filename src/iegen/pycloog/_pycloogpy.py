@@ -131,7 +131,7 @@ def _get_pycloog_names(iters,params,param_names):
 	num_cols=names.num_params+2
 	context=[]
 	for col,param in enumerate(params):
-		if param.lower_bound:
+		if param.lower_bound is not None:
 			constraint=[0]*num_cols
 
 			#param>=lb
@@ -141,7 +141,7 @@ def _get_pycloog_names(iters,params,param_names):
 
 			context.append(constraint)
 
-		if param.upper_bound:
+		if param.upper_bound is not None:
 			constraint=[0]*num_cols
 
 			#param<=ub
@@ -162,7 +162,6 @@ def _get_pycloog_names(iters,params,param_names):
 	else:
 		names.context_domains=POINTER(_PYCLOOG_DOMAIN)()
 		names.num_context_domains=0
-
 
 	return names
 #---------------------------------------

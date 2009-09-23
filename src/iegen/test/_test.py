@@ -144,6 +144,9 @@ class SetTestCase(TestCase):
 		class DummySymbolic(Node):
 			def __init__(self,name):
 				self.name=name
+				self.type=None
+				self.lower_bound=None
+				self.upper_bound=None
 			def apply_visitor(self,visitor):
 				visitor.visitSymbolic(self)
 
@@ -759,6 +762,9 @@ class RelationTestCase(TestCase):
 		class DummySymbolic(Node):
 			def __init__(self,name):
 				self.name=name
+				self.type=None
+				self.lower_bound=None
+				self.upper_bound=None
 			def apply_visitor(self,visitor):
 				visitor.visitSymbolic(self)
 

@@ -57,7 +57,7 @@ class Symbolic(Node):
 		if self.name.find("'")>=0 or self.type.find("'")>=0:
 			return 'Symbolic("%s",type="%s",lower_bound=%s,upper_bound=%s)'%(self.name,self.type,self.lower_bound,self.upper_bound)
 		else:
-			return "Symbolic('%s',type='%s',lower_bound=%s,upper_bound=%s))"%(self.name,self.type,self.lower_bound,self.upper_bound)
+			return "Symbolic('%s',type='%s',lower_bound=%s,upper_bound=%s)"%(self.name,self.type,self.lower_bound,self.upper_bound)
 
 	def __str__(self):
 		return self.name
