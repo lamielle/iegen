@@ -198,6 +198,9 @@ class biject(object):
 		else:
 			return False
 
+	def __len__(self):
+		return len(self._dict1)
+
 	def __getitem__(self,obj):
 		if obj in self._dict1: return self._dict1[obj]
 		elif obj in self._dict2: return self._dict2[obj]

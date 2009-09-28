@@ -206,6 +206,20 @@ class EqualitySestsTestCase(TestCase):
 		self.failUnless(2==b['a'],"b['a']!=%s"%(b['a']))
 		self.failUnless('a'==b[2],"b[2]!=%s"%(b[2]))
 
+	def testLen(self):
+		from iegen.util import biject
+		b=biject()
+		self.failUnless(0==len(b),'Length of biject is not 0')
+
+		b['a']=1
+		self.failUnless(1==len(b),'Length of biject is not 1')
+
+		b['b']=2
+		self.failUnless(2==len(b),'Length of biject is not 2')
+
+		b['c']=3
+		self.failUnless(3==len(b),'Length of biject is not 3')
+
 	@raises(KeyError)
 	def testFailCollision(self):
 		from iegen.util import biject
