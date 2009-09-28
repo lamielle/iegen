@@ -1,9 +1,13 @@
 from iegen.ast.visitor import DFVisitor
 
-#Collects all tuple variables in a Set or Relation
-#Places the list of sorted tuple variable strings in the vars field
+#Collects variable names in a Set or Relation
+#If all_vars is True, all variable names (free, tuple, and symbolic) are collected
+#If all_vars if False, Collects all tuple variables
+#Places the list of sorted variable name strings in the vars field
 class CollectVarsVisitor(DFVisitor):
-	def __init__(self):
+	def __init__(self,all_vars=False):
+		self.all_vars=all_vars
+
 		self.vars=set()
 
 		self.in_var_tuple=False
@@ -14,7 +18,7 @@ class CollectVarsVisitor(DFVisitor):
 		self.in_var_tuple=False
 
 	def inVarExp(self,node):
-		if self.in_var_tuple:
+		if self.in_var_tuple or self.all_vars:
 			self.vars.add(node.id)
 
 	def _outFormula(self,node):

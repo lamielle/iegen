@@ -3373,6 +3373,44 @@ class CollectVarsVisitorTestCase(TestCase):
 		res=['a','d']
 
 		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testCollectFreeVar(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen import Relation
+
+		rel=Relation('{[a]->[d]: a=1}').union(Relation('{[a]->[d]: c=10}'))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],10)))
+		v=CollectVarsVisitor(all_vars=True).visit(rel)
+		res=['a','b','d']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testCollectFreeVars(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen import Relation
+
+		rel=Relation('{[a]->[d]: a=1}').union(Relation('{[a]->[d]: c=10}'))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],10)))
+		rel.relations[1].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c')],10)))
+		v=CollectVarsVisitor(all_vars=True).visit(rel)
+		res=['a','b','c','d']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testCollectSymbolic(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen import Relation,Symbolic
+
+		rel=Relation('{[a]->[d]: a=n}',[Symbolic('n')]).union(Relation('{[a]->[d]: c=10}'))
+		rel.relations[0].conjunct.constraints.append(Equality(NormExp([VarExp(1,'b')],10)))
+		rel.relations[1].conjunct.constraints.append(Equality(NormExp([VarExp(1,'c')],10)))
+		v=CollectVarsVisitor(all_vars=True).visit(rel)
+		res=['a','b','c','d','n']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
 #--------------------------------------------
 
 #---------- Remove Free Var Constraint Visitor ----------
