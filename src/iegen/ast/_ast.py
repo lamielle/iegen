@@ -148,6 +148,10 @@ class PresSet(PresForm):
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
 
+	#Returns a list of this sets tuple variables
+	def _get_tuple_vars(self):
+		return [var.id for var in self.tuple_set.vars]
+
 	def arity(self):
 		return len(self.tuple_set)
 
@@ -186,6 +190,10 @@ class PresRelation(PresForm):
 			return cmp((self.tuple_in,self.tuple_out,self.conjunct,self.symbolics),(other.tuple_in,self.tuple_out,other.conjunct,self.symbolics))
 		else:
 			raise ValueError("Comparison between a '%s' and a '%s' is undefined."%(type(self),type(other)))
+
+	#Returns a list of this relations tuple variables
+	def _get_tuple_vars(self):
+		return [var.id for var in self.tuple_in.vars+self.tuple_out.vars]
 
 	def arity(self):
 		return (self.arity_in(),self.arity_out())

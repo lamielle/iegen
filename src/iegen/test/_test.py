@@ -24,7 +24,7 @@ class ImportTestCase(TestCase):
 #----------------------------------
 
 #---------- Set Tests ----------
-class SetTestCase(TestCase):
+class SetTestCase(object):
 
 	#Tests that we can create a Set by specifying a set string
 	def testSetString(self):
@@ -641,7 +641,7 @@ class SetTestCase(TestCase):
 #-------------------------------
 
 #---------- Relation Tests ----------
-class RelationTestCase(TestCase):
+class RelationTestCase(object):
 
 	#Tests that we can create a Relation by specifying a relation string
 	def testRelationString(self):
@@ -1284,3 +1284,107 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(res==rel.symbolics(),'%s!=%s'%(res,rel.symbolics()))
 #------------------------------------
+
+#---------- SparseSet Tests ----------
+class SparseSetTestCase(TestCase):
+
+	#Tests that we can create a very simple set
+	def testCreation(self):
+		from iegen import SparseSet
+
+		SparseSet('{[a]}')
+
+	#Tests that we can get the tuple variable names
+	def testTupleVarNames(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b,c]}')
+
+		self.failUnless('a'==set.tuple_vars[0],"First tuple var is not 'a'")
+		self.failUnless('b'==set.tuple_vars[1],"Second tuple var is not 'b'")
+		self.failUnless('c'==set.tuple_vars[2],"Third tuple var is not 'c'")
+		self.failUnless('a'==set.tuple_set[0],"First tuple var is not 'a'")
+		self.failUnless('b'==set.tuple_set[1],"Second tuple var is not 'b'")
+		self.failUnless('c'==set.tuple_set[2],"Third tuple var is not 'c'")
+
+	#Tests that we can get the symbolics
+	def testSymbolics(self):
+		from iegen import SparseSet,Symbolic
+
+		set=SparseSet('{[a,b,c]: a=n and b=m}',[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(Symbolic('m')==set.symbolics[0],"First symbolic is not 'm'")
+		self.failUnless(Symbolic('n')==set.symbolics[1],"Second symbolic is not 'n'")
+
+	#Tests that we can get the symbolic names
+	def testSymbolicNames(self):
+		from iegen import SparseSet,Symbolic
+
+		set=SparseSet('{[a,b,c]: a=n and b=m}',[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless('m'==set.symbolic_names[0],"First symbolic is not 'm'")
+		self.failUnless('n'==set.symbolic_names[1],"Second symbolic is not 'n'")
+
+	#Tests that we can get the symbolic names
+	def testArity(self):
+		from iegen import SparseSet,Symbolic
+
+		set=SparseSet('{[a,b,c]: a=n and b=m}',[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(3==set.arity(),"Set's arity is not 3")
+#-------------------------------------
+
+#---------- SparseRelation Tests ----------
+class SparseRelationTestCase(TestCase):
+
+	#Tests that we can create a very simple relation
+	def testCreation(self):
+		from iegen import SparseRelation
+
+		SparseRelation('{[a]->[b]}')
+
+	#Tests that the names bijection is created correctly
+	def testTupleVarNames(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a,b]->[c]}')
+
+		self.failUnless(3==len(rel.tuple_vars),'The relation does not have 3 tuple vars')
+		self.failUnless(2==len(rel.tuple_in),'The relation does not have 2 input tuple vars')
+		self.failUnless(1==len(rel.tuple_out),'The relation does not have 1 output tuple var')
+
+		self.failUnless('a'==rel.tuple_vars[0],"First tuple var is not 'a'")
+		self.failUnless('b'==rel.tuple_vars[1],"Second tuple var is not 'b'")
+		self.failUnless('c'==rel.tuple_vars[2],"Third tuple var is not 'c'")
+		self.failUnless('a'==rel.tuple_in[0],"First in tuple var is not 'a'")
+		self.failUnless('b'==rel.tuple_in[1],"Second in tuple var is not 'b'")
+		self.failUnless('c'==rel.tuple_out[0],"First out tuple var is not 'c'")
+
+	#Tests that we can get the symbolics
+	def testSymbolics(self):
+		from iegen import SparseRelation,Symbolic
+
+		rel=SparseRelation('{[a,b]->[c]: a=n and b=m}',[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(Symbolic('m')==rel.symbolics[0],"First symbolic is not 'm'")
+		self.failUnless(Symbolic('n')==rel.symbolics[1],"Second symbolic is not 'n'")
+
+	#Tests that we can get the symbolic names
+	def testSymbolicNames(self):
+		from iegen import SparseRelation,Symbolic
+
+		rel=SparseRelation('{[a,b]->[c]: a=n and b=m}',[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless('m'==rel.symbolic_names[0],"First symbolic is not 'm'")
+		self.failUnless('n'==rel.symbolic_names[1],"Second symbolic is not 'n'")
+
+	#Tests that we can get the symbolic names
+	def testArity(self):
+		from iegen import SparseRelation,Symbolic
+
+		rel=SparseRelation('{[a,b]->[c]: a=n and b=m}',[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless((2,1)==rel.arity(),"Relation's arity is not (2,1)")
+		self.failUnless(2==rel.arity_in(),"Relation's input arity is not 2")
+		self.failUnless(1==rel.arity_out(),"Relation's output arity is not 1")
+#------------------------------------------
