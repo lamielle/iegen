@@ -21,6 +21,14 @@ class CollectVarsVisitor(DFVisitor):
 		if self.in_var_tuple or self.all_vars:
 			self.vars.add(node.id)
 
+	def _inFormula(self,node):
+		self.vars=set(self.vars)
+
+	def inSet(self,node):
+		self._inFormula(node)
+	def inRelation(self,node):
+		self._inFormula(node)
+
 	def _outFormula(self,node):
 		self.vars=sorted(list(self.vars))
 

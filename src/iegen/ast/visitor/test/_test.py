@@ -3411,6 +3411,19 @@ class CollectVarsVisitorTestCase(TestCase):
 		res=['a','b','c','d','n']
 
 		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
+
+	def testCollectTwice(self):
+		from iegen.ast.visitor import CollectVarsVisitor
+		from iegen.ast import Equality,NormExp,VarExp
+		from iegen import Relation,Symbolic
+
+		rel=Relation('{[a]->[b]: a=n}',[Symbolic('n')])
+		v=CollectVarsVisitor(all_vars=True).visit(rel)
+		rel=Relation('{[c]->[d]: c=n}',[Symbolic('n')])
+		v.visit(rel)
+		res=['a','b','c','d','n']
+
+		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
 #--------------------------------------------
 
 #---------- Remove Free Var Constraint Visitor ----------
