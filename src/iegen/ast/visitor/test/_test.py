@@ -3426,7 +3426,7 @@ class CollectVarsVisitorTestCase(TestCase):
 		self.failUnless(res==v.vars,'%s!=%s'%(res,v.vars))
 #--------------------------------------------
 
-#---------- Remove Free Var Constraint Visitor ----------
+#---------- Remove Free Var Function Visitor ----------
 class RemoveFreeVarFunctionVisitor(TestCase):
 
 	#Make sure the result of the visiting is placed in the proper attribute
@@ -3610,6 +3610,23 @@ class RemoveFreeVarFunctionVisitor(TestCase):
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(True==changed,'changed!=True')
+
+	#Make sure the visitor saves the names of the functions that were used
+	def testSimplifyFuncNames(self):
+		from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
+		from iegen import Set
+
+		set=Set('{[a,b]: a=f(c) and b=g(c)}')
+
+		v=RemoveFreeVarFunctionVisitor({'f':'f_inv','f_inv':'f'})
+		changed=v.visit(set).changed
+		simplify(set)
+		set_res=Set('{[a,b]: b=g(f_inv(a))}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+		self.failUnless(True==changed,'changed!=True')
+		self.failUnless('f'==v.func_name,'v.func_name!=f')
+		self.failUnless('f_inv'==v.func_inv_name,'v.func_inv_name!=f_inv')
 #--------------------------------------------------------
 
 #---------- Unique Tuple Vars Visitor ----------

@@ -80,6 +80,10 @@ class RemoveFreeVarFunctionVisitor(DFVisitor):
 						var.id,func_arg.id=func_arg.id,var.id
 						var.coeff,func_arg.coeff=func_arg.coeff,var.coeff
 
+						#Save the function/inverse function names
+						self.func_name=func.name
+						self.func_inv_name=self.permutations[func.name]
+
 						#Change the function name to its associated inverse name
 						func.name=self.permutations[func.name]
 
