@@ -24,7 +24,7 @@ class ImportTestCase(TestCase):
 #----------------------------------
 
 #---------- Set Tests ----------
-class SetTestCase(object):
+class SetTestCase(TestCase):
 
 	#Tests that we can create a Set by specifying a set string
 	def testSetString(self):
@@ -641,7 +641,7 @@ class SetTestCase(object):
 #-------------------------------
 
 #---------- Relation Tests ----------
-class RelationTestCase(object):
+class RelationTestCase(TestCase):
 
 	#Tests that we can create a Relation by specifying a relation string
 	def testRelationString(self):
