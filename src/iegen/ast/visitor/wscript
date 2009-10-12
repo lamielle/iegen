@@ -40,5 +40,6 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_remove_equal_function_visitor.py')
 	install_files('PREFIX',inst_dir,'_print_ast_visitor.py')
 	install_files('PREFIX',inst_dir,'_pretty_print_visitor.py')
+	install_files('PREFIX',inst_dir,'_sparse_trans_visitor.py')
 
 	bld.add_subdirs('test')
