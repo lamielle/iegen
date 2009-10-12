@@ -34,24 +34,13 @@ class IterAlignTrans(Transformation):
 		outputs_string=outputs_string.getvalue()[:-1]
 		if len(outputs_string)>0: outputs_string='\n'+outputs_string
 
-		simplifications_string=StringIO()
-		if len(self.simplifications)>0:
-			for simplification in self.simplifications:
-				print >>simplifications_string,simplification._get_string(indent+5)
-		simplifications_string=simplifications_string.getvalue()[:-1]
-		if len(simplifications_string)>0: simplifications_string='\n'+simplifications_string
-
 		return '''%sIterAlignTrans:
 %s|-name: %s
 %s|-inputs: %s
 %s|-outputs: %s
-%s|-simplifications: %s
-%s|-symbolic_inputs: %s
 %s|-iter_space_trans: %s'''%(spaces,spaces,self.name,
     spaces,inputs_string,
     spaces,outputs_string,
-    spaces,simplifications_string,
-    spaces,','.join(self.symbolic_inputs),
     spaces,self.iter_space_trans)
 
 	#Nothing to do as no inputs and outputs exist for this transformation

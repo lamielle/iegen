@@ -53,13 +53,6 @@ class DataPermuteTrans(Transformation):
 		outputs_string=outputs_string.getvalue()[:-1]
 		if len(outputs_string)>0: outputs_string='\n'+outputs_string
 
-		simplifications_string=StringIO()
-		if len(self.simplifications)>0:
-			for simplification in self.simplifications:
-				print >>simplifications_string,simplification._get_string(indent+5)
-		simplifications_string=simplifications_string.getvalue()[:-1]
-		if len(simplifications_string)>0: simplifications_string='\n'+simplifications_string
-
 		data_arrays_string=StringIO()
 		if len(self.data_arrays)>0:
 			for data_array in self.data_arrays:
@@ -78,8 +71,6 @@ class DataPermuteTrans(Transformation):
 %s|-name: %s
 %s|-inputs: %s
 %s|-outputs: %s
-%s|-simplifications: %s
-%s|-symbolic_inputs: %s
 %s|-reordering_name: %s
 %s|-_data_reordering: %s
 %s|-data_arrays: %s
@@ -89,8 +80,6 @@ class DataPermuteTrans(Transformation):
 %s|-erg_func_name: %s'''%(spaces,spaces,self.name,
     spaces,inputs_string,
     spaces,outputs_string,
-    spaces,simplifications_string,
-    spaces,','.join(self.symbolic_inputs),
     spaces,self.reordering_name,
     spaces,self._data_reordering,
     spaces,data_arrays_string,
