@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 #         Original code:
-#         #pragma iegen for       moldyn;
+#         #pragma iegen for       spec;
 #              #pragma iegen symbolic  n_moles;
 #              #pragma iegen symbolic  n_inter;
 #              #pragma iegen symbolic  n_tstep;
@@ -95,23 +95,23 @@
 # ------------------------------------------------------------------------------
 
 
-moldyn.add_symbolic(name='n_inter')
+spec.add_symbolic(name='n_inter')
 
-moldyn.add_symbolic(name='n_tstep')
+spec.add_symbolic(name='n_tstep')
 
-moldyn.add_symbolic(name='n_moles')
+spec.add_symbolic(name='n_moles')
 
 
-moldyn.add_data_array(
+spec.add_data_array(
         name='data',
         bounds='{[k]: 0<=k && k<n_moles}')
 
-moldyn.add_index_array(
+spec.add_index_array(
         name='inter1',
         input_bounds='{[k]: 0<=k && k<n_inter}',
         output_bounds='{[k]: 0<=k && k<n_moles}')
 
-moldyn.add_index_array(
+spec.add_index_array(
         name='inter2',
         input_bounds='{[k]: 0<=k && k<n_inter}',
         output_bounds='{[k]: 0<=k && k<n_moles}')
@@ -134,7 +134,7 @@ moldyn.add_index_array(
 #         Line 286: data[i][8]  = 0.0;
 # ------------------------------------------------------------------------------
 
-moldyn.add_statement(
+spec.add_statement(
         name='s__0_tstep_0_i_0',
         text='''data[ %(a1)s ][ 3 ] += data[ %(a1)s ][ 0 ] + data[ %(a1)s ][ 6 ];
 data[ %(a1)s ][ 4 ] += data[ %(a1)s ][ 1 ] + data[ %(a1)s ][ 7 ];
@@ -153,7 +153,7 @@ data[ %(a1)s ][ 7 ] = 0.0;
 data[ %(a1)s ][ 8 ] = 0.0;''',
         iter_space='{ [ tstep, i ] : 0 <= tstep && tstep < n_tstep && 0 <= i && i < n_moles }',
         scatter='{ [ tstep, i ]->[ c0, tstep, c1, i, c2 ] : c0=0 && c1=0 && c2=0 }')
-moldyn.add_access_relation(
+spec.add_access_relation(
         statement_name='s__0_tstep_0_i_0',
         name='a1',
         data_array='data',
@@ -167,7 +167,7 @@ moldyn.add_access_relation(
 #         Line 295: epot = 0.0;
 # ------------------------------------------------------------------------------
 
-moldyn.add_statement(
+spec.add_statement(
         name='s__0_tstep_1',
         text='''cutoffSquare = cutoffRadius * cutoffRadius;
 n_inter = ninter;
@@ -191,7 +191,7 @@ epot = 0.0;''',
 #         Line 310: if ( rd < cutoffSquare ) {
 # ------------------------------------------------------------------------------
 
-moldyn.add_statement(
+spec.add_statement(
         name='s__0_tstep_5_ii_0',
         text='''xx = data[ %(a31)s ][ 3 ] - data[ %(a32)s ][ 3 ];
 yy = data[ %(a31)s ][ 4 ] - data[ %(a32)s ][ 4 ];
@@ -226,12 +226,12 @@ if (rd < cutoffSquare)
 }''',
         iter_space='{ [ tstep, ii ] : 0 <= tstep && tstep < n_tstep && 0 <= ii && ii < n_inter }',
         scatter='{ [ tstep, ii ]->[ c0, tstep, c1, ii, c2 ] : c0=0 && c1=5 && c2=0 }')
-moldyn.add_access_relation(
+spec.add_access_relation(
         statement_name='s__0_tstep_5_ii_0',
         name='a31',
         data_array='data',
         iter_to_data='{ [tstep, ii]->[accessRelation31] : accessRelation31 = inter1(ii) }')
-moldyn.add_access_relation(
+spec.add_access_relation(
         statement_name='s__0_tstep_5_ii_0',
         name='a32',
         data_array='data',
@@ -246,7 +246,7 @@ moldyn.add_access_relation(
 #         Line 344: data[i][2]  += data[i][8];
 # ------------------------------------------------------------------------------
 
-moldyn.add_statement(
+spec.add_statement(
         name='s__0_tstep_6_i_0',
         text='''data[ %(a43)s ][ 6 ] *= timeStepSqHalf;
 data[ %(a43)s ][ 7 ] *= timeStepSqHalf;
@@ -256,7 +256,7 @@ data[ %(a43)s ][ 1 ] += data[ %(a43)s ][ 7 ];
 data[ %(a43)s ][ 2 ] += data[ %(a43)s ][ 8 ];''',
         iter_space='{ [ tstep, i ] : 0 <= tstep && tstep < n_tstep && 0 <= i && i < n_moles }',
         scatter='{ [ tstep, i ]->[ c0, tstep, c1, i, c2 ] : c0=0 && c1=6 && c2=0 }')
-moldyn.add_access_relation(
+spec.add_access_relation(
         statement_name='s__0_tstep_6_i_0',
         name='a43',
         data_array='data',
