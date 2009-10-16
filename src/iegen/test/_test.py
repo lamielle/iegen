@@ -1332,6 +1332,26 @@ class SparseSetTestCase(TestCase):
 		set=SparseSet('{[a,b,c]: a=n and b=m}',[Symbolic('n'),Symbolic('m')])
 
 		self.failUnless(3==set.arity(),"Set's arity is not 3")
+
+	#Test the __str__ method
+	def testStr(self):
+		from iegen import SparseSet,Symbolic
+
+		set_string='{[a,b]: a=10 and b=n and a>=m}'
+		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(set_string==str(set),'%s!=%s'%(str(set),set_string))
+
+	#Test the __repr__ method
+	def testRepr(self):
+		from iegen import SparseSet,Symbolic
+
+		set_string='{[a,b]: a=10 and b=n and a>=m}'
+		repr_string="SparseSet('%s',[Symbolic('m'),Symbolic('n')])"%(set_string)
+
+		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(repr_string==repr(set),'%s!=%s'%(repr(set),repr_string))
 #-------------------------------------
 
 #---------- SparseRelation Tests ----------
@@ -1387,4 +1407,24 @@ class SparseRelationTestCase(TestCase):
 		self.failUnless((2,1)==rel.arity(),"Relation's arity is not (2,1)")
 		self.failUnless(2==rel.arity_in(),"Relation's input arity is not 2")
 		self.failUnless(1==rel.arity_out(),"Relation's output arity is not 1")
+
+	#Test the __str__ method
+	def testStr(self):
+		from iegen import SparseRelation,Symbolic
+
+		rel_string='{[a]->[b]: a=10 and b=n and a>=m}'
+		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(rel_string==str(rel),'%s!=%s'%(str(rel),rel_string))
+
+	#Test the __repr__ method
+	def testRepr(self):
+		from iegen import SparseRelation,Symbolic
+
+		rel_string='{[a]->[b]: a=10 and b=n and a>=m}'
+		repr_string="SparseRelation('%s',[Symbolic('m'),Symbolic('n')])"%(rel_string)
+
+		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
+
+		self.failUnless(repr_string==repr(rel),'%s!=%s'%(repr(rel),repr_string))
 #------------------------------------------

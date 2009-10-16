@@ -2,7 +2,7 @@
 
 from iegen import IEGenObject,Symbolic
 from iegen.parser import PresParser
-from iegen.ast.visitor import CollectVarsVisitor
+from iegen.ast.visitor import CollectVarsVisitor,SparseTransVisitor
 from iegen.util import biject,raise_objs_not_like_types
 
 #Represents a sparse set or relation
@@ -15,8 +15,8 @@ class SparseFormula(IEGenObject):
 		self._symbolics=biject()
 		self._free_vars=biject()
 		self._columns=biject()
-		self._functions=frozenset()
-		self._constraints=frozenset()
+		self._functions=set()
+		self._constraints=set()
 
 		#Get an empty list if no symbolics were given
 		symbolics=[] if symbolics is None else sorted(symbolics)
@@ -40,6 +40,12 @@ class SparseFormula(IEGenObject):
 		self._build_names_bijections(tuple_var_names,symbolics,free_var_names)
 
 		#Run the translation visitor
+		v=SparseTransVisitor(self)
+		for pres_formula in self._pres_formulas:
+			v.visit(pres_formula)
+
+		#Freeze this formula
+		#self.freeze()
 
 	#Returns the arity (number of tuple variables) of this forumla
 	def _arity(self):
@@ -120,6 +126,41 @@ class SparseFormula(IEGenObject):
 		for pos,free_var_name in enumerate(free_var_names):
 			self._free_vars[pos+self._arity()+self._num_symbolics()]=free_var_name
 
+	def __repr__(self):
+		symbolic_strings=','.join(["Symbolic('%s')"%sym.name for sym in self.symbolics])
+		class_name=self.__class__.__name__
+		return "%s('%s',[%s])"%(class_name,str(self),symbolic_strings)
+
+	def __str__(self):
+		try:
+			#Try to obtain the input arity (assume we're a sparse relation)
+			arity_in=self.arity_in()
+		except AttributeError,e:
+			#We must be a sparse set
+			arity_in=None
+
+		#Create the tuple variable string based on whether we are a sparse set or relation
+		if arity_in is None:
+			tuple_var_string='['+','.join(self.tuple_vars)+']'
+		else:
+			tuple_var_string='['+','.join(self.tuple_vars[:arity_in])+']'
+			tuple_var_string+='->'
+			tuple_var_string+='['+','.join(self.tuple_vars[arity_in:])+']'
+
+		#Create strings for the constraints
+		constraints_strings=[]
+		for constraint in self._constraints:
+			constraints_strings.append(str(constraint))
+
+		#Create a single string for all of the constraints
+		constraints_string='and'.join(constraints_strings)
+
+		#Add a ': ' if we have any constraints
+		if len(self._constraints)>0:
+			constraints_string=': '+constraints_string
+
+		return '{%s%s}'%(tuple_var_string,constraints_string)
+
 #Represents a sparse set
 class SparseSet(SparseFormula):
 
@@ -187,7 +228,6 @@ class TupleVarCol(SparseExpColumnType):
 
 	def _get_pos(self):
 		return self._pos
-
 	pos=property(_get_pos)
 
 class SymbolicCol(SparseExpColumnType):
@@ -206,13 +246,40 @@ class SparseExp(IEGenObject):
 	pass
 
 #Represents a sparse constraint (equality or inequality)
+#Create instances of SparseEquality and SparseInequality not SparseConstraint
 class SparseConstraint(IEGenObject):
-	pass
+	__slots__=('_sparse_exp',)
+
+	def __init__(self,exp):
+		self._sparse_exp=exp
+
+	def __str__(self):
+		return str(self.exp)+self.op+'0'
+
+	def _get_exp(self):
+		return self._sparse_exp
+	exp=property(_get_exp)
 
 #Class representing a sparse equality constraint
 class SparseEquality(SparseConstraint):
-	pass
+	__slots__=('_op',)
+
+	def __init__(self,exp):
+		SparseConstraint.__init__(self,exp)
+		self._op='='
+
+	def _get_op(self):
+		return self._op
+	op=property(_get_op)
 
 #Class representing a sparse inequality constraint
 class SparseInequality(SparseConstraint):
-	pass
+	__slots__=('_op',)
+
+	def __init__(self,exp):
+		SparseConstraint.__init__(self,exp)
+		self._op='>='
+
+	def _get_op(self):
+		return self._op
+	op=property(_get_op)
