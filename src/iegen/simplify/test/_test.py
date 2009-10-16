@@ -17,6 +17,8 @@ class ImportTestCase(TestCase):
 		try:
 			#_simplify.py
 			from iegen.simplify import simplify,register_rule,register_inverse_pair,inverse_pairs
+			#_rules.py
+			from iegen.simplify import register_inverse_simplify_listener
 		except Exception,e:
 			self.fail("Importing classes from iegen.simplify failed: "+str(e))
 #----------------------------------

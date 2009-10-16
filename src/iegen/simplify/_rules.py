@@ -110,6 +110,23 @@ def remove_equal_functions(obj):
 	return changed
 
 #---------- Inverse Simplification Rule ----------
+#----- Inverse Simplification Rule Listeners -----
+#Dictionary containing name->(func,instance) mappings
+#name is the name of the function/method
+#func is the function/method object
+#instance is the instance if func is a method
+_inverse_simplify_listeners={}
+
+#Register the given function as a simplification rule
+#rule_func: The function to run for the rule
+#instance: If this is a method, the instance to use for self
+#rule_group: What group (int) to put this rule into
+#            0 and 1 are reserved, 3+ are for users
+def register_inverse_simplify_listener(listener_func,instance=None):
+	listner_func_name=listener_func.__name__
+	iegen.print_debug("Registering inverse simplify function '%s'"%(listner_func_name))
+	_inverse_simplify_listeners[listner_func_name]=(listener_func,instance)
+
 #Runs the inverse simplification visitor on the given object
 def inverse_simplify(obj):
 	from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
@@ -117,8 +134,19 @@ def inverse_simplify(obj):
 	from iegen.util import like_type
 
 	if iegen.settings.debug: before=str(obj)
-	changed=RemoveFreeVarFunctionVisitor(iegen.simplify.inverse_pairs()).visit(obj).changed
-	if changed and iegen.settings.debug: iegen.print_debug('Simplify: removed free variable function: %s -> %s'%(before,obj))
+	v=RemoveFreeVarFunctionVisitor(iegen.simplify.inverse_pairs())
+	changed=v.visit(obj).changed
+	if changed and iegen.settings.debug: iegen.print_debug('Simplify: inverse simplification: %s -> %s'%(before,obj))
+
+	#Notify any listeners that the rule has been applied
+	if changed:
+		for listener_func,listener_instance in _inverse_simplify_listeners:
+			#Is this a function call?
+			if listener_instance is None:
+				listener_func(v.func_name,v.func_inv_name)
+			#This is a method call
+			else:
+				listener_func(listener_instance,v.func_name,v.func_inv_name)
 
 	return changed
 #-------------------------------------------------

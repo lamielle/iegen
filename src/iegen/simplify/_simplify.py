@@ -41,11 +41,11 @@ def inverse_suffix():
 #Registers the given function and its inverse as a pair
 #If inverse_function_name is not given, the name is function_name+inverse_suffix
 def register_inverse_pair(function_name,inverse_function_name=None):
-	iegen.print_detail('Registering inverse function pair (%s,%s)...'%(function_name,inverse_function_name))
-
 	#Build the inverse_function_name if it was not given
 	if inverse_function_name is None:
 		inverse_function_name=function_name+inverse_suffix()
+
+	iegen.print_detail('Registering inverse function pair (%s,%s)...'%(function_name,inverse_function_name))
 
 	#Register the names in the dictionary of function name pairs
 	_inverse_pairs[function_name]=inverse_function_name

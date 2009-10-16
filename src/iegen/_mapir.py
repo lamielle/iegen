@@ -21,6 +21,9 @@ class MapIR(IEGenObject):
 		self.transformations=[]
 		self.idg=IDG()
 
+		#Register this instance's inverse_simplify_fired as a listener
+		iegen.simplify.register_inverse_simplify_listener(self.inverse_simplify_fired,self)
+
 	#---------- Symbolics ----------
 	#Returns the symbolics that are present in the MapIR
 	def get_symbolics(self): return self.symbolics.values()
@@ -52,6 +55,10 @@ class MapIR(IEGenObject):
 		if er_spec.is_permutation:
 			iegen.simplify.register_inverse_pair(er_spec.name)
 		self.er_specs[er_spec.name]=er_spec
+
+	#Listener callback called when the inverse simplification rule fires
+	def inverse_simplify_fired(self,func_name,func_inv_name):
+		self.print_progress("INVERSE SIMPLIFICATION RULE FIRED!!! %s %s"%(func_name,func_inv_name))
 	#-----------------------------
 
 	#---------- Index Arrays ----------
