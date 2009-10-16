@@ -1,12 +1,12 @@
 # ------------------------------------------------------------------------------
 #         Original code:
-#         #pragma iegen for       spec;
-#              #pragma iegen symbolic  n_moles;
-#              #pragma iegen symbolic  n_inter;
-#              #pragma iegen symbolic  n_tstep;
-#              #pragma iegen index     inter1  int[]         {[k]: 0<=k && k<n_inter} -> {[k]: 0<=k && k<n_moles};
-#              #pragma iegen index     inter2  int[]         {[k]: 0<=k && k<n_inter} -> {[k]: 0<=k && k<n_moles};
-#              #pragma iegen data      data    double[][9]   {[k]: 0<=k && k<n_moles};
+#         #pragma iegen for       moldyn;
+#              #pragma iegen symbolic  n_moles "int %s" 0 INF;
+#              #pragma iegen symbolic  n_inter "int %s" 0 INF;
+#              #pragma iegen symbolic  n_tstep "int %s" 0 INF;
+#              #pragma iegen index     inter1  "int %s[]"         {[k]: 0<=k && k<n_inter} -> {[k]: 0<=k && k<n_moles};
+#              #pragma iegen index     inter2  "int %s[]"         {[k]: 0<=k && k<n_inter} -> {[k]: 0<=k && k<n_moles};
+#              #pragma iegen data      data    "double %s[][9]"   {[k]: 0<=k && k<n_moles};
 #              for (tstep = 0; tstep < n_tstep; tstep++) {
 #         
 #                 /*................*/
@@ -95,24 +95,27 @@
 # ------------------------------------------------------------------------------
 
 
-spec.add_symbolic(name='n_inter')
+spec.add_symbolic(name='n_inter',type='int %s')
 
-spec.add_symbolic(name='n_tstep')
+spec.add_symbolic(name='n_tstep',type='int %s')
 
-spec.add_symbolic(name='n_moles')
+spec.add_symbolic(name='n_moles',type='int %s')
 
 
 spec.add_data_array(
         name='data',
+        type='double %s[][9]',
         bounds='{[k]: 0<=k && k<n_moles}')
 
 spec.add_index_array(
         name='inter1',
+        type='int %s[][9]',
         input_bounds='{[k]: 0<=k && k<n_inter}',
         output_bounds='{[k]: 0<=k && k<n_moles}')
 
 spec.add_index_array(
         name='inter2',
+        type='int %s[][9]',
         input_bounds='{[k]: 0<=k && k<n_inter}',
         output_bounds='{[k]: 0<=k && k<n_moles}')
 
