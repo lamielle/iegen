@@ -14,7 +14,7 @@ spec.add_transformation(
 spec.add_transformation(
     type=iegen.trans.IterAlignTrans,
     name='align',
-    iter_space_trans=Relation('{[c0,s,c0,i,c0]->[c0,s,c0,j,c0]: c0=0 && j=sigma(i)}').union(Relation('{[c0, s, c1, ii, x] -> [c0, s, c1, ii, x] : c0=0 && c1=1}')))
+    iter_space_trans=Relation('{[c0,s,c0,i,c0]->[c0,s,c0,ip,c0]: c0=0 && ip=sigma(i)}').union(Relation('{[c0, s, c1, ii, x] -> [c0, s, c1, ii, x] : c0=0 && c1=1}')))
 
 spec.add_transformation(
     type=iegen.trans.IterPermuteTrans,
