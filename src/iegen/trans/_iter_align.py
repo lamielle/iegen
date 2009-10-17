@@ -56,17 +56,8 @@ class IterAlignTrans(Transformation):
 				self.print_detail("Updating access relation '%s'..."%(access_relation.name))
 				access_relation.iter_to_data=access_relation.iter_to_data.compose(self.iter_space_trans.inverse())
 
-    #This transformation only needs to modify the MapIR, because if
-    #any inverse ERs were needed then they should be determined
-    #somewhere else.
-	def update_idg(self,mapir):
-		#Here we should add ERSpecs for any inverse functions that are created
-		#However, we currently have no way to know when these are created
-
-		#What is the best way to determine if/when an inverse function
-		# is created?
-		#This is probably when the inverse simplification rule fires
-		#Should we have a registration mechanism for callbacks when
-		# a particular simplification rule fires?
-		pass
+	#This transformation only needs to modify the MapIR, because if
+	#any inverse ERs were needed then they should be determined
+	#somewhere else.
+	def update_idg(self,mapir): pass
 #-------------------------------------------
