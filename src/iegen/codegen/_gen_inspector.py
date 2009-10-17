@@ -68,6 +68,23 @@ def gen_rect_domain(name,set):
 
 #Generate code for a given ERSpec
 def gen_er_spec(er_spec):
+	if er_spec.is_inverse:
+		stmts=gen_inverse_er_spec(er_spec)
+	else:
+		stmts=gen_explicit_er_spec(er_spec)
+	return stmts
+
+#Generate an ERSpec that is the inverse of another
+def gen_inverse_er_spec(er_spec):
+	from iegen.codegen import Statement,Comment
+	stmts=[]
+	stmts.append(Comment("Create the inverse ER '%s' from the ER '%s'"%(er_spec.name,er_spec.inverse_of)))
+	stmts.append(Statement('*%s=ER_genInverse(%s);'%(er_spec.name,er_spec.inverse_of)))
+	stmts.append(Statement('%s_ER=*%s;'%(er_spec.name,er_spec.name)))
+	return stmts
+
+#Generate code for creating an ERSpec explicitly
+def gen_explicit_er_spec(er_spec):
 	import iegen.pycloog
 	from iegen.pycloog import codegen
 	from iegen.codegen import Statement,Comment

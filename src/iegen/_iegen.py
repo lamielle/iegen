@@ -116,9 +116,9 @@ class VersionedDataArray(IEGenObject):
 
 #---------- ERSpec class ----------
 class ERSpec(IEGenObject):
-	__slots__=('name','input_bounds','output_bounds','relation','_is_function','_is_permutation','is_inverse','created')
+	__slots__=('name','input_bounds','output_bounds','relation','_is_function','_is_permutation','is_inverse','inverse_of')
 
-	def __init__(self,name,input_bounds,output_bounds,relation,is_function=False,is_permutation=False,is_inverse=False):
+	def __init__(self,name,input_bounds,output_bounds,relation,is_function=False,is_permutation=False,is_inverse=False,inverse_of=None):
 		self.name=name
 		self.input_bounds=input_bounds
 		self.output_bounds=output_bounds
@@ -126,7 +126,7 @@ class ERSpec(IEGenObject):
 		self.is_function=is_function
 		self.is_permutation=is_permutation
 		self.is_inverse=is_inverse
-		self.created=False
+		self.inverse_of=inverse_of
 
 	def _get_is_function(self): return self._is_function
 	def _set_is_function(self,is_function):
@@ -141,7 +141,7 @@ class ERSpec(IEGenObject):
 	is_permutation=property(_get_is_permutation,_set_is_permutation)
 
 	def __repr__(self):
-		return 'ERSpec(%s,%s,%s,%s,%s,%s,%s,%s)'%(self.name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation),self.is_function,self.is_permutation,self.is_inverse,self.created)
+		return 'ERSpec(%s,%s,%s,%s,%s,%s,%s,%s)'%(self.name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation),self.is_function,self.is_permutation,self.is_inverse,self.inverse_of)
 
 	def __str__(self):
 		return self._get_string(0)
@@ -155,7 +155,9 @@ class ERSpec(IEGenObject):
 %s|-output_bounds: %s
 %s|-relation: %s
 %s|-is_function: %s
-%s|-permutation: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation,spaces,self.is_function,spaces,self.is_permutation)
+%s|-permutation: %s
+%s|-is_inverse: %s
+%s|-inverse_of: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation,spaces,self.is_function,spaces,self.is_permutation,spaces,self.is_inverse,spaces,self.inverse_of)
 
 	#Returns all symbolics in each Set/Relation that this ERSpec contains
 	def symbolics(self):

@@ -5,8 +5,9 @@ from cStringIO import StringIO
 
 #IEGen imports
 import iegen.codegen,iegen.simplify
-from iegen import IEGenObject,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation
-from iegen.idg import IDG
+from iegen import IEGenObject,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation,ERSpec
+from iegen.idg import IDG,IDGGenERSpec,IDGOutputERSpec
+from copy import deepcopy
 
 #---------- MapIR class ----------
 class MapIR(IEGenObject):
@@ -56,9 +57,58 @@ class MapIR(IEGenObject):
 			iegen.simplify.register_inverse_pair(er_spec.name)
 		self.er_specs[er_spec.name]=er_spec
 
+	#Returns true if an ERSpec with the given name exists in the MapIR
+	def contains_er_spec(self,er_spec_name):
+		contains=False
+		for er_spec in self.get_er_specs():
+			if er_spec_name==er_spec.name:
+				contains=True
+				break
+		return contains
+
+	#Returns the ERSpec in the MapIR of the given name, or dies
+	def get_er_spec(self,er_spec_name):
+		for er_spec in self.get_er_specs():
+			if er_spec_name==er_spec.name:
+				break
+		if er_spec_name!=er_spec.name:
+			raise ValueError("No ERSpec exists in the MapIR that corresponds to function '%s'"%(er_spec_name))
+		return er_spec
+
 	#Listener callback called when the inverse simplification rule fires
 	def inverse_simplify_fired(self,func_name,func_inv_name):
 		self.print_progress("INVERSE SIMPLIFICATION RULE FIRED!!! %s %s"%(func_name,func_inv_name))
+
+		#Make sure an ERSpec exists for the function
+		if not self.contains_er_spec(func_name):
+			raise ValueError("Inverse simplification rule fired on function '%s' but no ERSpec exists in the MapIR that corresponds to this function"%(func_name))
+
+		#Process this notification if the inverse ERSpec doesn't already exist
+		if not self.contains_er_spec(func_inv_name):
+			#Get the ERSpec associated with func_name
+			er_spec=self.get_er_spec(func_name)
+
+			#Create the corresponding inverse ERSpec
+			er_spec_inv=ERSpec(func_inv_name,
+			  input_bounds=deepcopy(er_spec.input_bounds),
+			  output_bounds=deepcopy(er_spec.output_bounds),
+			  relation=er_spec.relation.inverse(),
+			  is_function=er_spec.is_function,
+			  is_permutation=er_spec.is_permutation,
+			  is_inverse=True,
+			  inverse_of=func_name)
+
+			#Add the inverse ERSpec to the MapIR
+			self.add_er_spec(er_spec_inv)
+
+			#Get the IDG nodes
+			er_spec_node=self.idg.get_node(IDGOutputERSpec,er_spec)
+			er_spec_inv_node=self.idg.get_node(IDGOutputERSpec,er_spec_inv)
+			gen_er_spec_inv_node=self.idg.get_node(IDGGenERSpec,er_spec_inv)
+
+			#Setup the dependences
+			gen_er_spec_inv_node.add_dep(er_spec_node)
+			er_spec_inv_node.add_dep(gen_er_spec_inv_node)
 	#-----------------------------
 
 	#---------- Index Arrays ----------
