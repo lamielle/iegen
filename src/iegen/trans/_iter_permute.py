@@ -1,13 +1,13 @@
 from copy import deepcopy
 from cStringIO import StringIO
 from iegen.trans import Transformation
-from iegen import ERSpec
+from iegen import Relation,ERSpec
 from iegen.idg import IDGCall,IDGOutputERSpec,IDGERSpec,IDGGenERSpec
 from iegen.codegen import calc_erg_call
 
 #---------- IterPermuteTrans class ----------
 class IterPermuteTrans(Transformation):
-	__slots__=('reordering_name','iter_sub_space_relation','target_data_arrays','erg_func_name','iter_space_trans')
+	__slots__=('reordering_name','iter_sub_space_relation','target_data_arrays','erg_func_name','iter_space_trans','_data_reordering')
 
 	_relation_fields=('iter_sub_space_relation',)
 	_data_arrays_fields=('target_data_arrays',)
@@ -19,6 +19,9 @@ class IterPermuteTrans(Transformation):
 		self.target_data_arrays=target_data_arrays
 		self.erg_func_name=erg_func_name
 		self.iter_space_trans=iter_space_trans
+
+		#Calculate the data reordering relation
+		self._data_reordering=Relation('{[%s_in]->[%s_out]: %s_out=%s(%s_in)}'%(5*(self.reordering_name,)))
 
 		#Make sure the target data arrays all have the same bounds
 		#We do this by unioning all bounds and simply checking that there is a single conjunction in the disjunction
@@ -67,14 +70,16 @@ class IterPermuteTrans(Transformation):
 %s|-target_data_arrays:
 %s
 %s|-erg_func_name: %s
-%s|-iter_space_trans: %s'''%(spaces,spaces,self.name,
+%s|-iter_space_trans: %s
+%s|-_data_reordering: %s'''%(spaces,spaces,self.name,
     spaces,self.reordering_name,
     spaces,self.iter_sub_space_relation,
     spaces,inputs_string,
     spaces,outputs_string,
     spaces,target_data_arrays_string,
     spaces,self.erg_func_name,
-    spaces,self.iter_space_trans)
+    spaces,self.iter_space_trans,
+    spaces,self._data_reordering)
 
 	#Calculate a specification for the explicit relation that is input to
 	# the data reordering algorithm.
@@ -114,30 +119,29 @@ class IterPermuteTrans(Transformation):
 		self.print_detail(self.inputs[0])
 
 	#Create an ERSpec for the output of the reordering function
-	def calc_output(self,mapir): pass
+	def calc_output(self,mapir):
 
-#TODO: Need to know how to create this still
-#		#Need to create a static description of the output of the reordering
-#		#What does this look like:
-#		#It will be an ERSpec:
-#		#-name: %s_output
-#		#-input_bounds: deepcopy(self.target_data_arrays[0].bounds)
-#		#-output_bounds: deepcopy(self.target_data_arrays[0].bounds)
-#		#-relation: data reordering relation that was calculated
-#		#-it is a permutation
-#		self.outputs.append(ERSpec(
-#		    name=self.reordering_name,
-#		    input_bounds=deepcopy(self.target_data_arrays[0].bounds),
-#		    output_bounds=deepcopy(self.target_data_arrays[0].bounds),
-#		    relation=deepcopy(self._data_reordering),
-#		    is_permutation=True))
-#
-#		#Add the ERSpec to the MapIR
-#		mapir.add_er_spec(self.outputs[0])
-#
-#		self.print_progress("Calculated output ERSpec '%s' for transformation '%s'..."%(self.outputs[0].name,self.name))
-#
-#		self.print_detail(self.outputs[0])
+		#Need to create a static description of the output of the reordering
+		#What does this look like:
+		#It will be an ERSpec:
+		#-name: %s_output
+		#-input_bounds: deepcopy(self.target_data_arrays[0].bounds)
+		#-output_bounds: deepcopy(self.target_data_arrays[0].bounds)
+		#-relation: data reordering relation that was calculated
+		#-it is a permutation
+		self.outputs.append(ERSpec(
+		    name=self.reordering_name,
+		    input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation),
+		    output_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation),
+		    relation=deepcopy(self._data_reordering),
+		    is_permutation=True))
+
+		#Add the ERSpec to the MapIR
+		mapir.add_er_spec(self.outputs[0])
+
+		self.print_progress("Calculated output ERSpec '%s' for transformation '%s'..."%(self.outputs[0].name,self.name))
+
+		self.print_detail(self.outputs[0])
 
 	#Modify access relations and data deps
 	def update_mapir(self,mapir):
@@ -146,8 +150,7 @@ class IterPermuteTrans(Transformation):
 		for statement in mapir.get_statements():
 			for access_relation in statement.get_access_relations():
 				self.print_detail("Updating access relation '%s'..."%(access_relation.name))
-#				BUG: Not sure why, but this causes a 'recursion depth exceeded' error, leaving for now
-#				access_relation.iter_to_data=deepcopy(access_relation.iter_to_data).compose(self.iter_space_trans.inverse())
+				access_relation.iter_to_data=access_relation.iter_to_data.compose(self.iter_space_trans.inverse())
 
 	#Add output ER and ERG call node to IDG
 	def update_idg(self,mapir):
