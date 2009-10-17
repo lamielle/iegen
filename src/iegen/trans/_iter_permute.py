@@ -1,4 +1,3 @@
-from copy import deepcopy
 from cStringIO import StringIO
 from iegen.trans import Transformation
 from iegen import Relation,ERSpec
@@ -108,7 +107,7 @@ class IterPermuteTrans(Transformation):
 		self.inputs.append(ERSpec(
 		    name='%s_input'%(self.name),
 		    input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation),
-		    output_bounds=deepcopy(self.target_data_arrays[0].bounds),
+		    output_bounds=self.target_data_arrays[0].bounds.copy(),
 		    relation=iter_to_data))
 
 		#Add the ERSpec to the MapIR
@@ -122,18 +121,11 @@ class IterPermuteTrans(Transformation):
 	def calc_output(self,mapir):
 
 		#Need to create a static description of the output of the reordering
-		#What does this look like:
-		#It will be an ERSpec:
-		#-name: %s_output
-		#-input_bounds: deepcopy(self.target_data_arrays[0].bounds)
-		#-output_bounds: deepcopy(self.target_data_arrays[0].bounds)
-		#-relation: data reordering relation that was calculated
-		#-it is a permutation
 		self.outputs.append(ERSpec(
 		    name=self.reordering_name,
 		    input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation),
 		    output_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation),
-		    relation=deepcopy(self._data_reordering),
+		    relation=self._data_reordering.copy(),
 		    is_permutation=True))
 
 		#Add the ERSpec to the MapIR

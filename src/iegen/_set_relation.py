@@ -155,6 +155,13 @@ class Formula(Node):
 				rename[from_vars[i].id]=to_vars[i].id
 
 		return rename
+
+	#Returns a copy of this formula
+	@normalize_result
+	def copy(self):
+		selfcopy=deepcopy(self)
+		self.print_debug('Creating copy of %s'%(self))
+		return selfcopy
 #-----------------------------------
 
 

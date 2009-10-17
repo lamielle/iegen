@@ -7,7 +7,6 @@ from cStringIO import StringIO
 import iegen.codegen,iegen.simplify
 from iegen import IEGenObject,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation,ERSpec
 from iegen.idg import IDG,IDGGenERSpec,IDGOutputERSpec
-from copy import deepcopy
 
 #---------- MapIR class ----------
 class MapIR(IEGenObject):
@@ -77,8 +76,6 @@ class MapIR(IEGenObject):
 
 	#Listener callback called when the inverse simplification rule fires
 	def inverse_simplify_fired(self,func_name,func_inv_name):
-		self.print_progress("INVERSE SIMPLIFICATION RULE FIRED!!! %s %s"%(func_name,func_inv_name))
-
 		#Make sure an ERSpec exists for the function
 		if not self.contains_er_spec(func_name):
 			raise ValueError("Inverse simplification rule fired on function '%s' but no ERSpec exists in the MapIR that corresponds to this function"%(func_name))
@@ -90,8 +87,8 @@ class MapIR(IEGenObject):
 
 			#Create the corresponding inverse ERSpec
 			er_spec_inv=ERSpec(func_inv_name,
-			  input_bounds=deepcopy(er_spec.input_bounds),
-			  output_bounds=deepcopy(er_spec.output_bounds),
+			  input_bounds=er_spec.input_bounds.copy(),
+			  output_bounds=er_spec.output_bounds.copy(),
 			  relation=er_spec.relation.inverse(),
 			  is_function=er_spec.is_function,
 			  is_permutation=er_spec.is_permutation,
