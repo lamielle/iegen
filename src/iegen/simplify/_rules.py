@@ -140,7 +140,7 @@ def inverse_simplify(obj):
 
 	#Notify any listeners that the rule has been applied
 	if changed:
-		for listener_func,listener_instance in _inverse_simplify_listeners:
+		for listener_func,listener_instance in _inverse_simplify_listeners.values():
 			#Is this a function call?
 			if listener_instance is None:
 				listener_func(v.func_name,v.func_inv_name)

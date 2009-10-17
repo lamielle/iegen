@@ -22,7 +22,7 @@ class MapIR(IEGenObject):
 		self.idg=IDG()
 
 		#Register this instance's inverse_simplify_fired as a listener
-		iegen.simplify.register_inverse_simplify_listener(self.inverse_simplify_fired,self)
+		iegen.simplify.register_inverse_simplify_listener(MapIR.inverse_simplify_fired,self)
 
 	#---------- Symbolics ----------
 	#Returns the symbolics that are present in the MapIR
