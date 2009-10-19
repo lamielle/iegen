@@ -7,6 +7,6 @@ spec.add_transformation(
     name='cpack',
     reordering_name='sigma',
     data_arrays=['data'],
-    iter_sub_space_relation='{[c0,i,c1,ii,x]->[ii] : c0=0 && c1=5}',
+    iter_sub_space_relation='{[c0,i,c2,ii,x]->[ii] : c0=0 && c2=2}',
     target_data_arrays=['data'],
     erg_func_name='ERG_cpack')

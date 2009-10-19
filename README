@@ -65,6 +65,7 @@ Usage Notes
     --output-info       general information messages
         doesn't seem to provide any info
     --output-debug      debug messages
+    --debug
         debug information about all operations like compose, union, inverse, etc. being performed
     --output-error      error messages
 

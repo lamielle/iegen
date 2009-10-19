@@ -155,7 +155,7 @@ data[ %(a1)s ][ 6 ] = 0.0;
 data[ %(a1)s ][ 7 ] = 0.0;
 data[ %(a1)s ][ 8 ] = 0.0;''',
         iter_space='{ [ tstep, i ] : 0 <= tstep && tstep < n_tstep && 0 <= i && i < n_moles }',
-        scatter='{ [ tstep, i ]->[ c0, tstep, c1, i, c2 ] : c0=0 && c1=0 && c2=0 }')
+        scatter='{ [ tstep, i ]->[ c0, tstep, c0, i, c0 ] : c0=0 }')
 spec.add_access_relation(
         statement_name='s__0_tstep_0_i_0',
         name='a1',
@@ -177,7 +177,7 @@ n_inter = ninter;
 vir = 0.0;
 epot = 0.0;''',
         iter_space='{ [tstep] : 0 <= tstep && tstep < n_tstep }',
-        scatter='{ [ tstep ]->[ c0, tstep, c1, t0, c2 ] : c0=0 && c1=1 && t0=0 && c2=0 }')
+        scatter='{ [ tstep ]->[ c0, tstep, c1, c0, c0 ] : c0=0 && c1=1 }')
 
 
 # ------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ if (rd < cutoffSquare)
     epot += (rrd6 - rrd3);
 }''',
         iter_space='{ [ tstep, ii ] : 0 <= tstep && tstep < n_tstep && 0 <= ii && ii < n_inter }',
-        scatter='{ [ tstep, ii ]->[ c0, tstep, c1, ii, c2 ] : c0=0 && c1=5 && c2=0 }')
+        scatter='{ [ tstep, ii ]->[ c0, tstep, c2, ii, c0 ] : c0=0 && c2=2 }')
 spec.add_access_relation(
         statement_name='s__0_tstep_5_ii_0',
         name='a31',
@@ -258,7 +258,7 @@ data[ %(a43)s ][ 0 ] += data[ %(a43)s ][ 6 ];
 data[ %(a43)s ][ 1 ] += data[ %(a43)s ][ 7 ];
 data[ %(a43)s ][ 2 ] += data[ %(a43)s ][ 8 ];''',
         iter_space='{ [ tstep, i ] : 0 <= tstep && tstep < n_tstep && 0 <= i && i < n_moles }',
-        scatter='{ [ tstep, i ]->[ c0, tstep, c1, i, c2 ] : c0=0 && c1=6 && c2=0 }')
+        scatter='{ [ tstep, i ]->[ c0, tstep, c3, i, c0 ] : c0=0 && c3=3 }')
 spec.add_access_relation(
         statement_name='s__0_tstep_6_i_0',
         name='a43',
