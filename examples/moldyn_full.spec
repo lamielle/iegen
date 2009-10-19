@@ -109,13 +109,13 @@ spec.add_data_array(
 
 spec.add_index_array(
         name='inter1',
-        type='int %s[][9]',
+        type='int * %s',
         input_bounds='{[k]: 0<=k && k<n_inter}',
         output_bounds='{[k]: 0<=k && k<n_moles}')
 
 spec.add_index_array(
         name='inter2',
-        type='int %s[][9]',
+        type='int * %s',
         input_bounds='{[k]: 0<=k && k<n_inter}',
         output_bounds='{[k]: 0<=k && k<n_moles}')
 
