@@ -87,8 +87,8 @@ class MapIR(IEGenObject):
 
 			#Create the corresponding inverse ERSpec
 			er_spec_inv=ERSpec(func_inv_name,
-			  input_bounds=er_spec.input_bounds.copy(),
-			  output_bounds=er_spec.output_bounds.copy(),
+			  input_bounds=er_spec.output_bounds.copy(),
+			  output_bounds=er_spec.input_bounds.copy(),
 			  relation=er_spec.relation.inverse(),
 			  is_function=er_spec.is_function,
 			  is_permutation=er_spec.is_permutation,
