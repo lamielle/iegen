@@ -1337,21 +1337,59 @@ class SparseSetTestCase(TestCase):
 	def testStr(self):
 		from iegen import SparseSet,Symbolic
 
-		set_string='{[a,b]: a=10 and b=n and a>=m}'
+		set_string='{[a,b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
+		res_string='{[a,b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 | m,n}'
 
-		self.failUnless(set_string==str(set),'%s!=%s'%(str(set),set_string))
+		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
+
+		set_string='{[a,b]: a+b+-1*c>=0 and b+-2*n=0  and a+-10=0 and a+-1*m>=0}'
+		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
+		res_string='{[a,b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0 | m,n}'
+
+		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
 	#Test the __repr__ method
 	def testRepr(self):
 		from iegen import SparseSet,Symbolic
 
-		set_string='{[a,b]: a=10 and b=n and a>=m}'
-		repr_string="SparseSet('%s',[Symbolic('m'),Symbolic('n')])"%(set_string)
-
+		set_string='{[a,b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
+		res_string='{[a,b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 | m,n}'
+		res_string="SparseSet('%s',[Symbolic('m'),Symbolic('n')])"%(res_string)
 
-		self.failUnless(repr_string==repr(set),'%s!=%s'%(repr(set),repr_string))
+		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
+
+		set_string='{[a,b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0}'
+		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
+		res_string='{[a,b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0 | m,n}'
+		res_string="SparseSet('%s',[Symbolic('m'),Symbolic('n')])"%(res_string)
+
+		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
+
+	def testDuplicateConstraint(self):
+		from iegen import SparseSet
+
+		set_string='{[a]: a=10 and a=10}'
+		set=SparseSet(set_string)
+		res_string='{[a]: a+-10=0}'
+
+		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
+
+	def testSetEquality(self):
+		from iegen import SparseSet
+
+		set1_string='{[a,b]: a=10 and b>=0 and c>=0}'
+		set2_string='{[c,d]: c=10 and d>=0 and a>=0}'
+		set3_string='{[a,d]: a=10 and d>=0 and b>=0}'
+
+		set1=SparseSet(set1_string)
+		set2=SparseSet(set2_string)
+		set3=SparseSet(set3_string)
+
+		self.failUnless(set1==set2,'%s!=%s'%(set1,set2))
+		self.failUnless(set1==set3,'%s!=%s'%(set1,set3))
+		self.failUnless(set2==set3,'%s!=%s'%(set2,set3))
 #-------------------------------------
 
 #---------- SparseRelation Tests ----------
@@ -1412,19 +1450,57 @@ class SparseRelationTestCase(TestCase):
 	def testStr(self):
 		from iegen import SparseRelation,Symbolic
 
-		rel_string='{[a]->[b]: a=10 and b=n and a>=m}'
+		rel_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 }'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
+		res_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 | m,n}'
 
-		self.failUnless(rel_string==str(rel),'%s!=%s'%(str(rel),rel_string))
+		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
+
+		rel_string='{[a]->[b]: a+b+-1*c>=0 and a+-10=0 and b+-2*n=0 and a+-1*m>=0}'
+		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
+		res_string='{[a]->[b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0 | m,n}'
+
+		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
 	#Test the __repr__ method
 	def testRepr(self):
 		from iegen import SparseRelation,Symbolic
 
-		rel_string='{[a]->[b]: a=10 and b=n and a>=m}'
-		repr_string="SparseRelation('%s',[Symbolic('m'),Symbolic('n')])"%(rel_string)
-
+		rel_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0}'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
+		res_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 | m,n}'
+		res_string="SparseRelation('%s',[Symbolic('m'),Symbolic('n')])"%(res_string)
 
-		self.failUnless(repr_string==repr(rel),'%s!=%s'%(repr(rel),repr_string))
+		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
+
+		rel_string='{[a]->[b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0}'
+		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
+		res_string='{[a]->[b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0 | m,n}'
+		res_string="SparseRelation('%s',[Symbolic('m'),Symbolic('n')])"%(res_string)
+
+		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
+
+	def testDuplicateConstraint(self):
+		from iegen import SparseRelation
+
+		rel_string='{[a]->[b]: a=10 and a=10}'
+		rel=SparseRelation(rel_string)
+		res_string='{[a]->[b]: a+-10=0}'
+
+		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
+
+	def testRelationEquality(self):
+		from iegen import SparseRelation
+
+		rel1_string='{[a]->[b]: a=10 and b>=0 and c>=0}'
+		rel2_string='{[c]->[d]: c=10 and d>=0 and a>=0}'
+		rel3_string='{[a]->[d]: a=10 and d>=0 and b>=0}'
+
+		rel1=SparseRelation(rel1_string)
+		rel2=SparseRelation(rel2_string)
+		rel3=SparseRelation(rel3_string)
+
+		self.failUnless(rel1==rel2,'%s!=%s'%(rel1,rel2))
+		self.failUnless(rel1==rel3,'%s!=%s'%(rel1,rel3))
+		self.failUnless(rel2==rel3,'%s!=%s'%(rel2,rel3))
 #------------------------------------------

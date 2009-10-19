@@ -1,4 +1,5 @@
 import os
+import iegen
 
 #Runs all of the IEGen tests
 def run_tests(subdir=''):
@@ -291,10 +292,11 @@ def run_simplify(obj):
 @decorator
 def normalize_self(func,*args,**kw):
 	result=func(*args,**kw)
-	normalize_names(args[0])
-	sort_visit(args[0])
-	run_simplify(args[0])
-	sort_visit(args[0])
+	if iegen.settings.enable_processing:
+		normalize_names(args[0])
+		sort_visit(args[0])
+		run_simplify(args[0])
+		sort_visit(args[0])
 	return result
 
 #Decorator that normalizes the result of the decorated function
@@ -302,16 +304,18 @@ def normalize_self(func,*args,**kw):
 @decorator
 def normalize_result(func,*args,**kw):
 	result=func(*args,**kw)
-	normalize_names(result)
-	sort_visit(result)
-	run_simplify(result)
-	sort_visit(result)
+	if iegen.settings.enable_processing:
+		normalize_names(result)
+		sort_visit(result)
+		run_simplify(result)
+		sort_visit(result)
 	return result
 
 #Decorator that uses the CheckVisitor to check the first implicit 'self' argument of the decorated function
 @decorator
 def check(func,*args,**kw):
 	result=func(*args,**kw)
-	check_visit(args[0])
+	if iegen.settings.enable_processing:
+		check_visit(args[0])
 	return result
 #--------------------------------

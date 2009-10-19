@@ -1,5 +1,6 @@
 #Classes related to the SparseSet and SparseRelation classes that use the new data structure rather than an AST as a representation
 
+import iegen
 from iegen import IEGenObject,Symbolic
 from iegen.parser import PresParser
 from iegen.ast.visitor import CollectVarsVisitor,SparseTransVisitor
@@ -7,7 +8,7 @@ from iegen.util import biject,raise_objs_not_like_types
 
 #Represents a sparse set or relation
 class SparseFormula(IEGenObject):
-	__slots__=('_tuple_vars','_symbolics','_free_vars','_columns','_functions','_constraints','_pres_formulas')
+	__slots__=('_tuple_vars','_symbolics','_free_vars','_columns','_functions','_constraints','_pres_formulas','_frozen')
 
 	def __init__(self,formula_string,symbolics,parse_func):
 		#Init various fields
@@ -17,6 +18,7 @@ class SparseFormula(IEGenObject):
 		self._columns=biject()
 		self._functions=set()
 		self._constraints=set()
+		self._frozen=False
 
 		#Get an empty list if no symbolics were given
 		symbolics=[] if symbolics is None else sorted(symbolics)
@@ -28,7 +30,9 @@ class SparseFormula(IEGenObject):
 		symbolic_names=[symbolic.name for symbolic in symbolics]
 
 		#Parse the formula string
+		iegen.settings.enable_processing=False
 		self._pres_formulas=[parse_func(formula_string,symbolics)]
+		iegen.settings.enable_processing=True
 
 		#Get the names of the tuple variables
 		tuple_var_names=self._get_tuple_var_names()
@@ -39,13 +43,25 @@ class SparseFormula(IEGenObject):
 		#Build the names bijections
 		self._build_names_bijections(tuple_var_names,symbolics,free_var_names)
 
+		#Setup the column positions
+		self._build_columns_bijection()
+
 		#Run the translation visitor
 		v=SparseTransVisitor(self)
 		for pres_formula in self._pres_formulas:
 			v.visit(pres_formula)
 
 		#Freeze this formula
-		#self.freeze()
+		self.freeze()
+
+#	def __hash__(self):
+#		return hash(self.op+str(hash(self.sparse_exp)))
+#
+#	def __eq__(self,other):
+#		return hash(self)==hash(other)
+#
+#	def __ne__(self,other):
+#		return not self==other
 
 	#Returns the arity (number of tuple variables) of this forumla
 	def _arity(self):
@@ -75,11 +91,16 @@ class SparseFormula(IEGenObject):
 	def _get_free_vars(self):
 		return [self._free_vars[pos] for pos in xrange(self._arity()+self._num_symbolics(),self._arity()+self._num_symbolics()+self._num_free_vars())]
 
+	#Get the frozen state
+	def _get_frozen(self):
+		return self._frozen
+
 	#Property creation
 	tuple_vars=property(_get_tuple_vars)
 	symbolics=property(_get_symbolics)
 	symbolic_names=property(_get_symbolic_names)
 	free_vars=property(_get_free_vars)
+	frozen=property(_get_frozen)
 
 	#Returns the names of the tuple variables in _pres_formulas
 	def _get_tuple_var_names(self):
@@ -111,7 +132,7 @@ class SparseFormula(IEGenObject):
 		#We now have the final list of free variables
 		return sorted(free_var_names)
 
-	#Build the pos<-->name bijections for the tuple variables, symbolics, and free variables
+	#Build the pos <--> name bijections for the tuple variables, symbolics, and free variables
 	def _build_names_bijections(self,tuple_var_names,symbolics,free_var_names):
 
 		#Build the tuple variable bijection
@@ -125,6 +146,23 @@ class SparseFormula(IEGenObject):
 		#Build the free variable bijection
 		for pos,free_var_name in enumerate(free_var_names):
 			self._free_vars[pos+self._arity()+self._num_symbolics()]=free_var_name
+
+	#Build the column bijection
+	def _build_columns_bijection(self):
+		#Add the tuple variables
+		for tuple_var_name in self.tuple_vars:
+			self._columns[TupleVarCol(tuple_var_name)]=self._tuple_vars[tuple_var_name]
+
+		#Add the symbolics
+		for symbolic in self.symbolics:
+			self._columns[SymbolicCol(symbolic.name)]=self._symbolics[symbolic]
+
+		#Add the free variables
+		for free_var_name in self.free_vars:
+			self._columns[FreeVarCol(free_var_name)]=self._free_vars[free_var_name]
+
+		#Add the constant column
+		self._columns[ConstantCol()]=len(self._columns)
 
 	def __repr__(self):
 		symbolic_strings=','.join(["Symbolic('%s')"%sym.name for sym in self.symbolics])
@@ -153,13 +191,97 @@ class SparseFormula(IEGenObject):
 			constraints_strings.append(str(constraint))
 
 		#Create a single string for all of the constraints
-		constraints_string='and'.join(constraints_strings)
+		constraints_string=' and '.join(constraints_strings)
 
 		#Add a ': ' if we have any constraints
 		if len(self._constraints)>0:
 			constraints_string=': '+constraints_string
 
-		return '{%s%s}'%(tuple_var_string,constraints_string)
+		symbolics_string=','.join(self.symbolic_names)
+
+		if len(symbolics_string)>0:
+			res='{%s%s | %s}'%(tuple_var_string,constraints_string,symbolics_string)
+		else:
+			res='{%s%s}'%(tuple_var_string,constraints_string)
+
+		return res
+
+	#Freezes this formula
+	def freeze(self):
+		#Freeze the necessary fields
+		self._functions=frozenset(self._functions)
+		self._constraints=frozenset(self._constraints)
+
+		#Set this sparse formula's state to frozen
+		self._frozen=True
+
+	#Returns the current number of columns in this sparse formula's constraints
+	def num_columns(self):
+		return len(self._columns)
+
+	#Returns the current column position of the given name:
+	#The name could be a symbolic, tuple variable, or free variable
+	def get_column(self,name):
+		if name in self.symbolic_names:
+			column=self._columns[SymbolicCol(name)]
+		elif name in self.tuple_vars:
+			column=self._columns[TupleVarCol(name)]
+		elif name in self.free_vars:
+			column=self._columns[FreeVarCol(name)]
+		else:
+			raise ValueError("Unknown name '%s'"%(name))
+
+		return column
+
+	#Returns the current constant column position
+	def get_constant_column(self):
+		return self._columns[ConstantCol()]
+
+	def _check_mutate(self):
+		#Make sure we're not frozen
+		if self.frozen:
+			raise ValueError('Cannot modify a frozen sparse formula')
+
+	def _check_num_coeff(self,exp_coeff):
+		if self.num_columns()!=len(exp_coeff):
+			raise ValueError('Number of coefficients given (%d) does not match number of columns in sparse formula (%d).'%(len(exp_coeff),self.num_columns()))
+
+	#Returns a new exp_coeff where there first coefficient is positive
+	def _make_first_coeff_positive(self,exp_coeff):
+		for coeff_pos in xrange(len(exp_coeff)):
+			if exp_coeff[coeff_pos]!=0:
+				break
+
+		coeff=exp_coeff[coeff_pos]
+		if coeff<0:
+			for coeff_pos in xrange(len(exp_coeff)):
+				exp_coeff[coeff_pos]*=-1
+
+		return exp_coeff
+
+	def add_equality(self,exp_coeff):
+		#Make sure this sparse formula can be modified
+		self._check_mutate()
+
+		#Make sure the number of coefficients matches the number of columns
+		self._check_num_coeff(exp_coeff)
+
+		#Make sure the first non-zero coefficient is positive
+		#This avoids ambiguous equality expressions
+		exp_coeff=self._make_first_coeff_positive(exp_coeff)
+
+		#Add the constraint to the constraints collection
+		self._constraints.add(SparseEquality(exp_coeff,self._columns))
+
+	def add_inequality(self,exp_coeff):
+		#Make sure this sparse formula can be modified
+		self._check_mutate()
+
+		#Make sure the number of coefficients matches the number of columns
+		self._check_num_coeff(exp_coeff)
+
+		#Add the constraint to the constraints collection
+		self._constraints.add(SparseInequality(exp_coeff,self._columns))
 
 #Represents a sparse set
 class SparseSet(SparseFormula):
@@ -218,24 +340,46 @@ class SparseRelation(SparseFormula):
 
 #Parent class of the various sparse expression column type classes
 class SparseExpColumnType(IEGenObject):
-	pass
+	def __hash__(self):
+		return hash(str(self))
 
-class TupleVarCol(SparseExpColumnType):
-	__slots__=('_pos',)
+	def __eq__(self,other):
+		return hash(self)==hash(other)
 
-	def __init__(self,pos):
-		self._pos=pos
+	def __ne__(self,other):
+		return not self==other
 
-	def _get_pos(self):
-		return self._pos
-	pos=property(_get_pos)
+class SparseExpNameColumnType(SparseExpColumnType):
+	__slots__=('_name',)
 
-class SymbolicCol(SparseExpColumnType):
-	pass
-class FreeVarCol(SparseExpColumnType):
-	pass
-class ConstantCol(SparseExpColumnType):
-	pass
+	def __init__(self,name):
+		self._name=name
+
+	def _get_name(self):
+		return self._name
+	name=property(_get_name)
+
+	def __repr__(self):
+		return str(self)
+
+	def __str__(self):
+		return '%s(%s)'%(self.__class__.__name__,self.name)
+
+class TupleVarCol(SparseExpNameColumnType):
+	def __init__(self,name):
+		SparseExpNameColumnType.__init__(self,name)
+
+class SymbolicCol(SparseExpNameColumnType):
+	def __init__(self,name):
+		SparseExpNameColumnType.__init__(self,name)
+
+class FreeVarCol(SparseExpNameColumnType):
+	def __init__(self,name):
+		SparseExpNameColumnType.__init__(self,name)
+
+class ConstantCol(SparseExpNameColumnType):
+	def __init__(self):
+		SparseExpNameColumnType.__init__(self,'')
 
 #Represents an instance of an uninterpreted function call
 class UFCall(SparseExpColumnType):
@@ -243,43 +387,90 @@ class UFCall(SparseExpColumnType):
 
 #Represents a sparse expression (an affine expression plus uninterpreted function symbols)
 class SparseExp(IEGenObject):
-	pass
+	__slots__=('_exp','_columns')
+
+	def __init__(self,exp_coeff,columns):
+		self._exp=tuple(exp_coeff)
+		self._columns=columns
+
+	def __hash__(self):
+		return hash(self.exp)
+
+	def __eq__(self,other):
+		return hash(self)==hash(other)
+
+	def __ne__(self,other):
+		return not self==other
+
+	def __repr__(self):
+		return '%s(%s,%s)'%(self.__class__.__name__,repr(self.exp),repr(self.columns))
+
+	def __str__(self):
+		exp_strs=[]
+
+		#Look at each coefficient
+		for col_pos in xrange(len(self.columns)):
+			#Grab the current coefficient
+			coeff=self.exp[col_pos]
+
+			#Only work with non-zero coefficients
+			if 0!=coeff:
+				#Handle the constant column
+				if self.columns[ConstantCol()]==col_pos:
+					exp_strs.append('%s'%(coeff))
+				else:
+					#If the coefficient is not 0, add it to the list of expression strints
+					if 1==coeff:
+						exp_strs.append('%s'%(self.columns[col_pos].name))
+					else:
+						exp_strs.append('%s*%s'%(coeff,self.columns[col_pos].name))
+
+		#Return a string for the sum of all expression strings
+		return '+'.join(exp_strs)
+
+	def _get_exp(self):
+		return self._exp
+	exp=property(_get_exp)
+
+	def _get_columns(self):
+		return self._columns
+	columns=property(_get_columns)
 
 #Represents a sparse constraint (equality or inequality)
 #Create instances of SparseEquality and SparseInequality not SparseConstraint
 class SparseConstraint(IEGenObject):
 	__slots__=('_sparse_exp',)
 
-	def __init__(self,exp):
-		self._sparse_exp=exp
+	def __init__(self,exp_coeff,columns):
+		self._sparse_exp=SparseExp(exp_coeff,columns)
+
+	def __hash__(self):
+		return hash(self.op+str(hash(self.sparse_exp)))
+
+	def __eq__(self,other):
+		return hash(self)==hash(other)
+
+	def __ne__(self,other):
+		return not self==other
+
+	def __repr__(self):
+		return '%s(%s,%s)'%(self.__class__.__name__,self.sparse_exp.exp,self.sparse_exp.columns)
 
 	def __str__(self):
-		return str(self.exp)+self.op+'0'
+		return str(self.sparse_exp)+self.op+'0'
 
-	def _get_exp(self):
+	def _get_sparse_exp(self):
 		return self._sparse_exp
-	exp=property(_get_exp)
+	sparse_exp=property(_get_sparse_exp)
+
+	def _get_op(self):
+		return self._op
+	op=property(_get_op)
 
 #Class representing a sparse equality constraint
 class SparseEquality(SparseConstraint):
-	__slots__=('_op',)
-
-	def __init__(self,exp):
-		SparseConstraint.__init__(self,exp)
-		self._op='='
-
-	def _get_op(self):
-		return self._op
-	op=property(_get_op)
+	_op='='
 
 #Class representing a sparse inequality constraint
 class SparseInequality(SparseConstraint):
-	__slots__=('_op',)
-
-	def __init__(self,exp):
-		SparseConstraint.__init__(self,exp)
-		self._op='>='
-
-	def _get_op(self):
-		return self._op
-	op=property(_get_op)
+	_op='>='
