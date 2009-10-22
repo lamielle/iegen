@@ -16,7 +16,7 @@ iegen.base_dir=os.path.dirname(os.path.abspath(iegen.__file__))
 #The 'environment' for the spec file to run is setup before it is run
 def run_spec(spec_file):
 	#Import various packages and objects so they are available to spec files
-	import iegen,iegen.trans
+	import iegen,iegen.trans,iegen.ito
 	from iegen import Set,Relation,Symbolic
 
 	#Get the current MapIR object

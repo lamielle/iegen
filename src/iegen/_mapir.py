@@ -10,7 +10,7 @@ from iegen.idg import IDG,IDGGenERSpec,IDGOutputERSpec
 
 #---------- MapIR class ----------
 class MapIR(IEGenObject):
-	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','transformations','full_iter_space','idg')
+	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','transformations','intertransopts','full_iter_space','idg')
 
 	def __init__(self):
 		self.symbolics={}
@@ -19,6 +19,7 @@ class MapIR(IEGenObject):
 		self.er_specs={}
 		self.statements={}
 		self.transformations=[]
+		self.intertransopts=[]
 		self.idg=IDG()
 
 		#Register this instance's inverse_simplify_fired as a listener
@@ -143,9 +144,11 @@ class MapIR(IEGenObject):
 	#--------------------------------------
 
 	#---------- Transformations ----------
-	#Adds a transformation of the given and constructed from the given arguments to the MapIR
+	#Adds a transformation to the MapIR of the given type and constructs it 
+	#from the given arguments.
 	#Transformations are not stored as a dictionary as
-	#the ordering is meaningful (they will be applied in the order the are added)
+	#the ordering is meaningful (they will be applied in the order 
+    #they are added)
 	def add_transformation(self,type,**kwargs):
 		self.print_progress("Adding transformation '%s'..."%kwargs['name'])
 
@@ -155,6 +158,22 @@ class MapIR(IEGenObject):
 		#Add the transformation to the list of transformations
 		self.transformations.append(transformation)
 	#-------------------------------------
+
+	#---------- InterTransOpts ----------
+	#Adds an inter transformation optimization to the MapIR of the given type 
+	#and constructs it #from the given arguments.
+	#ITOs are not stored as a dictionary as the ordering is meaningful
+    #(they will be applied in the order they are added)
+	def add_intertransopt(self,type,**kwargs):
+		self.print_progress("Adding ITO '%s'..."%kwargs['name'])
+
+		#Create the ITO
+		ito=self._convert_create_add(type,**kwargs)
+
+		#Add the ITO to the list of ITOs
+		self.intertransopts.append(ito)
+	#-------------------------------------
+
 
 	#---------- Main 'action' method ---------
 	#This is the main interface that starts the whole code generation process

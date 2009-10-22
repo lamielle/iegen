@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+
+import os
+
+def set_options(opt):
+    pass
+#	opt.sub_options('test')
+
+def configure(conf):
+    pass
+#	conf.sub_config('test')
+
+def build(bld):
+
+	inst_dir='iegen'+os.sep+'ito'
+
+	install_files('PREFIX',inst_dir,'__init__.py')
+	install_files('PREFIX',inst_dir,'_intertransopt.py')
+	install_files('PREFIX',inst_dir,'_pointer_update.py')
+
+#	bld.add_subdirs('test')

@@ -54,6 +54,14 @@ def do_calc(mapir):
 			iegen.print_modified("\n")
 		iegen.print_modified('-----------------------------------------')
 
+	#Apply inter-transformation optimizations
+	for intertransopt in mapir.intertransopts:
+		iegen.print_progress("Applying intertransopt '%s'..."%(intertransopt.name))
+
+		iegen.print_detail('----- InterTransOpt: -----')
+		iegen.print_detail(intertransopt)
+		iegen.print_detail('------------------------------------')
+
 	#Un-update access relations now that the calculation phase is over
 	calc_unupdate_access_relations(mapir)
 
