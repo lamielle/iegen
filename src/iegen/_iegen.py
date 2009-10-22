@@ -184,7 +184,7 @@ class IndexArray(ERSpec):
 			raise DimensionalityError('The dimensionality of the output bounds of the index array (%d) should be 1.'%self.output_bounds.arity_out())
 
 	def __repr__(self):
-		return 'IndexArray(%s,%s,%s,%s)'%(self,name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation))
+		return 'IndexArray(%s,%s,%s,%s)'%(self.name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation))
 
 	def __str__(self):
 		return self._get_string(0)

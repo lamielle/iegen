@@ -62,6 +62,8 @@ def do_calc(mapir):
 		iegen.print_detail(intertransopt)
 		iegen.print_detail('------------------------------------')
 
+		intertransopt.apply(mapir)
+
 	#Un-update access relations now that the calculation phase is over
 	calc_unupdate_access_relations(mapir)
 

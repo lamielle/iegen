@@ -40,6 +40,6 @@ spec.add_transformation(
 #removed those.
 spec.add_intertransopt(
     type=iegen.ito.PointerUpdate,
-    name='ptrupdate')
-#    nests=[['sigma','inter1'],['sigma','inter2']])
+    name='ptrupdate',
+    nests=[['sigma','inter1'],['sigma','inter2']])
 

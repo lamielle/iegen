@@ -26,3 +26,4 @@ from _remove_equal_function_visitor import *
 from _print_ast_visitor import *
 from _pretty_print_visitor import *
 from _sparse_trans_visitor import *
+from _find_func_nest_visitor import *
