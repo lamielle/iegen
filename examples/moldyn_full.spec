@@ -95,11 +95,11 @@
 # ------------------------------------------------------------------------------
 
 
-spec.add_symbolic(name='n_inter',type='int %s')
+spec.add_symbolic(name='n_inter',type='int %s',lower_bound=1)
 
-spec.add_symbolic(name='n_tstep',type='int %s')
+spec.add_symbolic(name='n_tstep',type='int %s',lower_bound=1)
 
-spec.add_symbolic(name='n_moles',type='int %s')
+spec.add_symbolic(name='n_moles',type='int %s',lower_bound=1)
 
 
 spec.add_data_array(
