@@ -1,6 +1,7 @@
 from iegen.ito import InterTransOpt
 from iegen.ast.visitor import FindFuncNestVisitor
 from iegen import ERSpec,Relation
+from iegen.idg import IDGERSpec, IDGGenERSpec, IDGOutputERSpec
 
 #---------- PointerUpdate class ----------
 class PointerUpdate(InterTransOpt):
@@ -31,7 +32,7 @@ class PointerUpdate(InterTransOpt):
 		#Look for each of the nest patterns in each of the ERSpecs.
 		for nest in self.nests:
 			#Look for a single nest pattern.
-			nestrefs = self.find_nestrefs(nest,mapir)
+			(nestrefs, affected_er_specs) = self.find_nestrefs(nest,mapir)
 			self.print_detail("\tnestrefs = %s\n"%nestrefs)
 					
 			#For this particular nest, if there are any nestdefs found
@@ -47,17 +48,31 @@ class PointerUpdate(InterTransOpt):
 				for nestref in nestrefs:
 					nestref.outer_node.name = newfunc_ERSpec.name
 					nestref.outer_node.args = nestref.inner_node.args
+
+			#Modify the IDG by removing old dependences coming
+			#from individual functions, putting in a new dependences
+			#between the new function ERSpec and where it will be
+			#now used, and putting dependences between the individual
+			#functions and the new function ERSpec.
+			self.update_IDG_for_newfunc(mapir,newfunc_ERSpec,affected_er_specs,nest)
 					
 	#Look for a nest patterns in each of the ERSpecs in mapir.
 	#Input: list of function name strings that specify nest, ["f","g"]
-	#Output: list of FuncNest references for function nests that fit pattern
+	#Output: tuple with a list of FuncNest references for function nests 
+    # that fit pattern and the list of ERSpecs in IDG where those patterns 
+    # were found.
 	def find_nestrefs(self,nest,mapir):
 		nestrefs = []
+		affected_er_specs = []
+
 		#All of the ERSpecs in IDG and MapIR.
 		for er_spec in mapir.er_specs.values():
 			self.print_detail("\ter_spec = %s"%er_spec)
-			nestrefs.extend(
-				FindFuncNestVisitor(nest).visit(er_spec.relation).nestrefs)
+			found_nestrefs = \
+				FindFuncNestVisitor(nest).visit(er_spec.relation).nestrefs
+			if len(found_nestrefs)>0:
+				nestrefs.extend(found_nestrefs)
+				affected_er_specs.append(er_spec)
 			self.print_detail("\tnestrefs = %s\n"%nestrefs)
 
 		#The scattering functions and access relations.
@@ -73,7 +88,7 @@ class PointerUpdate(InterTransOpt):
 					FindFuncNestVisitor(nest).visit(ar.iter_to_data).nestrefs)
 				self.print_detail("\tnestrefs = %s\n"%nestrefs)
 
-		return nestrefs
+		return (nestrefs,affected_er_specs)
 
 	#Returns the ERSpec for the collapsed function.
 	#Input: nest specification ["f","g"], example FuncNest/nestref, and mapir
@@ -110,5 +125,48 @@ class PointerUpdate(InterTransOpt):
 			relation=Relation('{[i] -> [j] : j=%s(%s(i))}'%tuple(nest))
 		)
 
+	#Input: 
+	#   mapir: The MapIR data structure.
+	#   newfunc_ERSpec: ERSpec for new function
+	#   affected_er_specs: ERSpecs that had nest, which will be replaced with
+	#       new function.
+	#   nest: list of function name strings that specify nest, ["f","g"]
+	#
+	#SideEffect:
+	#   Modifies the IDG by removing old dependences coming
+	#   from individual functions, putting in a new dependences
+	#   between the new function ERSpec and where it will be
+	#   now used, and putting dependences between the individual
+	#   functions and the new function ERSpec.
+	def update_IDG_for_newfunc(self,mapir,newfunc_ERSpec,affected_er_specs,nest):
+
+		#Create node for new function ERSpec
+		newfunc_node = mapir.idg.get_node(IDGOutputERSpec,newfunc_ERSpec)
+
+		#Get a gen node for the ERSpec
+		gen_newfunc_node=mapir.idg.get_node(IDGGenERSpec,newfunc_ERSpec)
+
+		#Add dependence between the two.
+		newfunc_node.add_dep(gen_newfunc_node)
+
+		#For each of the ERSpecs that used to depend on the old
+		#functions and now will depend on new function...
+		for er_spec in affected_er_specs:
+			er_node = mapir.idg.get_node(IDGERSpec,er_spec)
+
+			#Remove dependence on old functions.
+			for func_name in nest:
+				func_node = mapir.idg.get_node(IDGERSpec, 
+					mapir.er_specs[func_name])
+				er_node.remove_dep(func_node)
+
+			#Add dependence on new function.
+			er_node.add_dep(newfunc_node)
+
+		#Have new function node depend on old functions.
+		for func_name in nest:
+			func_node = mapir.idg.get_node(IDGERSpec, 
+				mapir.er_specs[func_name])
+			gen_newfunc_node.add_dep(func_node)
 
 #-------------------------------------------

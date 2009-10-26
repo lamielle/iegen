@@ -39,6 +39,8 @@ class DeclVisitor(TopoVisitor):
 	#For convenience, we declare another variable 'ExplicitRelation *var_ER'
 	def atIDGOutputERSpec(self,node):
 		self.decls[node.data.name]=VarDecl('ExplicitRelation *',[node.data.name+'_ER'])
+		for var_decl in gen_tuple_vars_decl(node.data.input_bounds):
+			self.add_int_vars(var_decl.var_names)
 
 	def atIDGGenERSpec(self,node): pass
 

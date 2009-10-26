@@ -18,6 +18,10 @@ class IDGNode(IEGenObject):
 		self.deps[dep.key]=dep
 		dep.uses[self.key]=self
 
+	def remove_dep(self,dep):
+		self.deps.remove(dep.key)
+		dep.uses.remove(self.key)
+
 	def add_use(self,use):
 		self.uses[use.key]=use
 		use.deps[self.key]=self
