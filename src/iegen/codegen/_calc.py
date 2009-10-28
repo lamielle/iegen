@@ -259,7 +259,7 @@ def calc_size_string(set,var_name):
 	lower_bounds=set.lower_bound(var_name)
 
 	#Get the string that calculates the size of the ER at runtime
-	return '%s-%s'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))
+	return '%s-%s+1'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))
 
 #Returns the value that the given variable is equal to in the given formula
 #If raw_array is True, accesses to arrays (functions) will not be treated as explicit relation lookups
