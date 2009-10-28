@@ -2,7 +2,6 @@
 #Alan LaMielle: 1/7/2009
 
 from iegen import IEGenObject
-from iegen.idg import IDGSymbolic,IDGDataArray,IDGERSpec,IDGIndexArray,IDGOutputERSpec,IDGGenERSpec,IDGCall
 
 #---------- Inspector Dependence Graph ----------
 class IDG(IEGenObject):

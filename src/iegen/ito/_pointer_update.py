@@ -1,7 +1,7 @@
 from iegen.ito import InterTransOpt
 from iegen.ast.visitor import FindFuncNestVisitor
 from iegen import ERSpec,Relation
-from iegen.idg import IDGERSpec, IDGGenERSpec, IDGOutputERSpec
+from iegen.idg import IDGERSpec, IDGGenOutputERSpec, IDGOutputERSpec
 
 #---------- PointerUpdate class ----------
 class PointerUpdate(InterTransOpt):
@@ -144,7 +144,7 @@ class PointerUpdate(InterTransOpt):
 		newfunc_node = mapir.idg.get_node(IDGOutputERSpec,newfunc_ERSpec)
 
 		#Get a gen node for the ERSpec
-		gen_newfunc_node=mapir.idg.get_node(IDGGenERSpec,newfunc_ERSpec)
+		gen_newfunc_node=mapir.idg.get_node(IDGGenOutputERSpec,newfunc_ERSpec)
 
 		#Add dependence between the two.
 		newfunc_node.add_dep(gen_newfunc_node)

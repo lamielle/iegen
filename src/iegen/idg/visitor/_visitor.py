@@ -24,6 +24,7 @@ class TopoVisitor(IEGenObject):
 	def atIDGIndexArray(self,node): self.defaultAt(node)
 	def atIDGOutputERSpec(self,node): self.defaultAt(node)
 	def atIDGGenERSpec(self,node): self.defaultAt(node)
+	def atIDGGenOutputERSpec(self,node): self.defaultAt(node)
 	def atIDGCall(self,node): self.defaultAt(node)
 	#--------------------------------
 
@@ -67,6 +68,7 @@ class TopoVisitor(IEGenObject):
 	def visitIDGIndexArray(self,node): self.atIDGIndexArray(node)
 	def visitIDGOutputERSpec(self,node): self.atIDGOutputERSpec(node)
 	def visitIDGGenERSpec(self,node): self.atIDGGenERSpec(node)
+	def visitIDGGenOutputERSpec(self,node): self.atIDGGenOutputERSpec(node)
 	def visitIDGCall(self,node): self.atIDGCall(node)
 	#-----------------------------------
 #-----------------------------------------

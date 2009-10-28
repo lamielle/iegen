@@ -44,4 +44,6 @@ class DeclVisitor(TopoVisitor):
 
 	def atIDGGenERSpec(self,node): pass
 
+	def atIDGGenOutputERSpec(self,node): pass
+
 	def atIDGCall(self,node): pass

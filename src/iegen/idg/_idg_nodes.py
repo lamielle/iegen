@@ -90,6 +90,14 @@ class IDGGenERSpec(IDGTaskNode):
 		visitor.visitIDGGenERSpec(self)
 #---------------------------------
 
+#---------- IDGGenOutputERSpec ----------
+class IDGGenOutputERSpec(IDGTaskNode):
+	_prefix='gen_output_er_spec_'
+
+	def apply_visitor(self,visitor):
+		visitor.visitIDGGenOutputERSpec(self)
+#---------------------------------
+
 #---------- IDGCall ----------
 class IDGCall(IDGTaskNode):
 	_prefix='call_'

@@ -118,7 +118,7 @@ def gen_explicit_er_spec(er_spec):
 	in_domain_name='in_domain_%s'%(er_spec.name)
 	stmts.extend(gen_domain(in_domain_name,er_spec.input_bounds))
 	stmts.append(Statement())
-	stmts.append(Comment('Creation of ExplicitRelation of the ARTT'))
+	stmts.append(Comment('Creation of ExplicitRelation'))
 	stmts.append(Comment(str(er_spec.relation)))
 	stmts.append(Statement('%s_ER = ER_ctor(%d,%d,%s,%s,%s);'%(er_spec.name,er_spec.relation.arity_in(),er_spec.relation.arity_out(),in_domain_name,str(er_spec.is_function).lower(),str(er_spec.is_permutation).lower())))
 	stmts.append(Statement())
