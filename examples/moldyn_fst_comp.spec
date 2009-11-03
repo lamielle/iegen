@@ -30,11 +30,13 @@ spec.add_symbolic(
 spec.add_data_array(
     name='x',
     type='double *%s',
+    elem_size='sizeof(double)',
     bounds='{[k]: 0<=k && k<N}')
 
 spec.add_data_array(
     name='fx',
     type='double *%s',
+    elem_size='sizeof(double)',
     bounds='{[k]: 0<=k && k<N}')
 
 #Define the index arrays for the computation

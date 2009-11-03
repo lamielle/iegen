@@ -207,7 +207,7 @@ def calc_reorder_call(trans_name,data_array,reordering_name):
 	name=trans_name+'_'+func_name+'_'+data_array.name
 	args=[
 	      '(unsigned char*)%s'%(data_array.name),
-	      'sizeof(double)',
+	      data_array.elem_size,
 	      calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),
 	      '%s_ER'%(reordering_name)
 	     ]

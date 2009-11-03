@@ -16,11 +16,13 @@ spec.add_symbolic(
 spec.add_data_array(
     name='data',
     type='double *%s',
+    elem_size='sizeof(double)',
     bounds='{[k]: 0<=k && k<=N-1}')
 
 spec.add_data_array(
     name='res',
     type='double *%s',
+    elem_size='sizeof(double)',
     bounds='{[k]: 0<=k && k<=N-1}')
 
 #Define the index arrays for the computation

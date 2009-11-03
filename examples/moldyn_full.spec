@@ -105,6 +105,7 @@ spec.add_symbolic(name='n_moles',type='int %s',lower_bound=1)
 spec.add_data_array(
         name='data',
         type='double %s[][9]',
+        elem_size='sizeof(double)*9',
         bounds='{[k]: 0<=k && k<n_moles}')
 
 spec.add_index_array(

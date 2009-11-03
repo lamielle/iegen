@@ -74,17 +74,18 @@ class Symbolic(Node):
 
 #---------- DataArray class ----------
 class DataArray(IEGenObject):
-	__slots__=('name','bounds','type','max_version')
+	__slots__=('name','type','elem_size','bounds','max_version')
 	_set_fields=('bounds',)
 
-	def __init__(self,name,bounds,type):
+	def __init__(self,name,type,elem_size,bounds):
 		self.name=name
-		self.bounds=bounds
 		self.type=type
+		self.elem_size=elem_size
+		self.bounds=bounds
 		self.max_version=0
 
 	def __repr__(self):
-		return 'DataArray(%s,%s)'%(self.name,self.bounds)
+		return 'DataArray(%s,%s,%s,%s)'%(self.name,self.type,self.elem_size,self.bounds)
 
 	def __str__(self):
 		return self._get_string(0)
