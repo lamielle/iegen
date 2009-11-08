@@ -3,7 +3,7 @@ from iegen.lib.nose.tools import raises
 
 #---------- Import Tests ----------
 #Test importing of iegen
-class ImportTestCase(TestCase):
+class ImportTestCase(object):
 
 	#Test simple importing of iegen
 	def testImport(self):
@@ -24,7 +24,7 @@ class ImportTestCase(TestCase):
 #----------------------------------
 
 #---------- Set Tests ----------
-class SetTestCase(TestCase):
+class SetTestCase(object):
 
 	#Tests that we can create a Set by specifying a set string
 	def testSetString(self):
@@ -641,7 +641,7 @@ class SetTestCase(TestCase):
 #-------------------------------
 
 #---------- Relation Tests ----------
-class RelationTestCase(TestCase):
+class RelationTestCase(object):
 
 	#Tests that we can create a Relation by specifying a relation string
 	def testRelationString(self):
@@ -1390,6 +1390,46 @@ class SparseSetTestCase(TestCase):
 		self.failUnless(set1==set2,'%s!=%s'%(set1,set2))
 		self.failUnless(set1==set3,'%s!=%s'%(set1,set3))
 		self.failUnless(set2==set3,'%s!=%s'%(set2,set3))
+
+	def testSimpleFunction(self):
+		from iegen import SparseSet
+
+		set_string='{[a,b]: b-1*f(a)=0}'
+
+		set=SparseSet(set_string)
+		res_string=str(set)
+
+		self.failUnless(res_string==set_string,'%s!=%s'%(res_string,set_string))
+
+	def testNestedFunction(self):
+		from iegen import SparseSet
+
+		set_string='{[a,b]: b-1*f(g(a))=0}'
+
+		set=SparseSet(set_string)
+		res_string=str(set)
+
+		self.failUnless(res_string==set_string,'%s!=%s'%(res_string,set_string))
+
+	def testTwoArgumentFunction(self):
+		from iegen import SparseSet
+
+		set_string='{[a,b,c]: c-1*f(a,b)=0}'
+
+		set=SparseSet(set_string)
+		res_string=str(set)
+
+		self.failUnless(res_string==set_string,'%s!=%s'%(res_string,set_string))
+
+	def testConstantArgumentFunction(self):
+		from iegen import SparseSet
+
+		set_string='{[a,b]: b-1*f(a,6)=0}'
+
+		set=SparseSet(set_string)
+		res_string=str(set)
+
+		self.failUnless(res_string==set_string,'%s!=%s'%(res_string,set_string))
 #-------------------------------------
 
 #---------- SparseRelation Tests ----------
@@ -1503,4 +1543,44 @@ class SparseRelationTestCase(TestCase):
 		self.failUnless(rel1==rel2,'%s!=%s'%(rel1,rel2))
 		self.failUnless(rel1==rel3,'%s!=%s'%(rel1,rel3))
 		self.failUnless(rel2==rel3,'%s!=%s'%(rel2,rel3))
+
+	def testSimpleFunction(self):
+		from iegen import SparseRelation
+
+		rel_string='{[a]->[b]: b-1*f(a)=0}'
+
+		rel=SparseRelation(rel_string)
+		res_string=str(rel)
+
+		self.failUnless(res_string==rel_string,'%s!=%s'%(res_string,rel_string))
+
+	def testNestedFunction(self):
+		from iegen import SparseRelation
+
+		rel_string='{[a]->[b]: b-1*f(g(a))=0}'
+
+		rel=SparseRelation(rel_string)
+		res_string=str(rel)
+
+		self.failUnless(res_string==rel_string,'%s!=%s'%(res_string,rel_string))
+
+	def testTwoArgumentFunction(self):
+		from iegen import SparseRelation
+
+		rel_string='{[a,b]->[c]: c-1*f(a,b)=0}'
+
+		rel=SparseRelation(rel_string)
+		res_string=str(rel)
+
+		self.failUnless(res_string==rel_string,'%s!=%s'%(res_string,rel_string))
+
+	def testConstantArgumentFunction(self):
+		from iegen import SparseRelation
+
+		rel_string='{[a]->[b]: b-1*f(a,6)=0}'
+
+		rel=SparseRelation(rel_string)
+		res_string=str(rel)
+
+		self.failUnless(res_string==rel_string,'%s!=%s'%(res_string,rel_string))
 #------------------------------------------

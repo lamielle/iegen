@@ -259,21 +259,19 @@ class SparseFormula(IEGenObject):
 
 		return exp_coeff
 
+	#Add an equality with the given expression coefficients to the formula
 	def add_equality(self,exp_coeff):
-		#Make sure this sparse formula can be modified
-		self._check_mutate()
-
-		#Make sure the number of coefficients matches the number of columns
-		self._check_num_coeff(exp_coeff)
-
 		#Make sure the first non-zero coefficient is positive
 		#This avoids ambiguous equality expressions
 		exp_coeff=self._make_first_coeff_positive(exp_coeff)
 
-		#Add the constraint to the constraints collection
-		self._constraints.add(SparseEquality(exp_coeff,self._columns))
+		self._add_constraint(exp_coeff,SparseEquality)
 
+	#Add an inequality with the given expression coefficients to the formula
 	def add_inequality(self,exp_coeff):
+		self._add_constraint(exp_coeff,SparseInequality)
+
+	def _add_constraint(self,exp_coeff,ConstraintType):
 		#Make sure this sparse formula can be modified
 		self._check_mutate()
 
@@ -281,7 +279,14 @@ class SparseFormula(IEGenObject):
 		self._check_num_coeff(exp_coeff)
 
 		#Add the constraint to the constraints collection
-		self._constraints.add(SparseInequality(exp_coeff,self._columns))
+		self._constraints.add(ConstraintType(exp_coeff,self._columns))
+
+	#Add a function with the given expression coefficients to the formula
+	def add_function(self,name,arg_exps):
+		args=[SparseExp(arg_exp,self._columns) for arg_exp in arg_exps]
+		self._functions.add(UFCall(name,args))
+
+		print self._functions
 
 #Represents a sparse set
 class SparseSet(SparseFormula):
@@ -360,10 +365,10 @@ class SparseExpNameColumnType(SparseExpColumnType):
 	name=property(_get_name)
 
 	def __repr__(self):
-		return str(self)
+		return '%s(%s)'%(self.__class__.__name__,self.name)
 
 	def __str__(self):
-		return '%s(%s)'%(self.__class__.__name__,self.name)
+		return self.name
 
 class TupleVarCol(SparseExpNameColumnType):
 	def __init__(self,name):
@@ -381,9 +386,26 @@ class ConstantCol(SparseExpNameColumnType):
 	def __init__(self):
 		SparseExpNameColumnType.__init__(self,'')
 
+	def __str__(self):
+		return repr(self)
+
 #Represents an instance of an uninterpreted function call
 class UFCall(SparseExpColumnType):
-	pass
+	__slots__=('name','args')
+
+	def __init__(self,name,args):
+		self.name=name
+		self.args=tuple(args)
+
+	def __hash__(self):
+		return hash((self.name,self.args))
+
+	def __repr__(self):
+		return '%s(%s,%s)'%(self.__class__.__name__,repr(self.name),repr(self.args))
+
+	def __str__(self):
+		arg_strs=[str(arg) for arg in self.args]
+		return '%s(%s)'%(self.name,','.join(arg_strs))
 
 #Represents a sparse expression (an affine expression plus uninterpreted function symbols)
 class SparseExp(IEGenObject):
@@ -419,11 +441,11 @@ class SparseExp(IEGenObject):
 				if self.columns[ConstantCol()]==col_pos:
 					exp_strs.append('%s'%(coeff))
 				else:
-					#If the coefficient is not 0, add it to the list of expression strints
+					#If the coefficient is not 0, add it to the list of expression strings
 					if 1==coeff:
 						exp_strs.append('%s'%(self.columns[col_pos].name))
 					else:
-						exp_strs.append('%s*%s'%(coeff,self.columns[col_pos].name))
+						exp_strs.append('%s*%s'%(coeff,self.columns[col_pos]))
 
 		#Return a string for the sum of all expression strings
 		return '+'.join(exp_strs)

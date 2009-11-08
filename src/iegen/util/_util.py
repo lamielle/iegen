@@ -190,6 +190,9 @@ class biject(object):
 		self._dict1={}
 		self._dict2={}
 
+	def __repr__(self):
+		return '%s(%s)'%(self.__class__.__name__,self._dict1)
+
 	def __str__(self):
 		return str(self._dict1)
 
