@@ -1337,15 +1337,15 @@ class SparseSetTestCase(TestCase):
 	def testStr(self):
 		from iegen import SparseSet,Symbolic
 
-		set_string='{[a,b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0}'
+		set_string='{[a,b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 | m,n}'
+		res_string='{[a,b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 | m,n}'
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
-		set_string='{[a,b]: a+b+-1*c>=0 and b+-2*n=0  and a+-10=0 and a+-1*m>=0}'
+		set_string='{[a,b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 and a+b+-1*c>=0}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0 | m,n}'
+		res_string='{[a,b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 and -1*c+a+b>=0 | m,n}'
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
@@ -1353,17 +1353,18 @@ class SparseSetTestCase(TestCase):
 	def testRepr(self):
 		from iegen import SparseSet,Symbolic
 
-		set_string='{[a,b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0}'
-		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 | m,n}'
-		res_string="SparseSet('%s',[Symbolic('m'),Symbolic('n')])"%(res_string)
+		set_string='{[a,b]: -1*m+a>=0 and -2*n+b=0 and a+-10=0}'
+		symbolics=[Symbolic('m'),Symbolic('n')]
+		set=SparseSet(set_string,symbolics)
+		res_string='{[a,b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 | m,n}'
+		res_string='SparseSet("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
 
 		set_string='{[a,b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0}'
-		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0 | m,n}'
-		res_string="SparseSet('%s',[Symbolic('m'),Symbolic('n')])"%(res_string)
+		set=SparseSet(set_string,symbolics)
+		res_string='{[a,b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 and -1*c+a+b>=0 | m,n}'
+		res_string='SparseSet("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
 
@@ -1372,7 +1373,7 @@ class SparseSetTestCase(TestCase):
 
 		set_string='{[a]: a=10 and a=10}'
 		set=SparseSet(set_string)
-		res_string='{[a]: a+-10=0}'
+		res_string=str(SparseSet('{[a]: a=10}'))
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
@@ -1394,7 +1395,7 @@ class SparseSetTestCase(TestCase):
 	def testSimpleFunction(self):
 		from iegen import SparseSet
 
-		set_string='{[a,b]: b-1*f(a)=0}'
+		set_string='{[a,b]: -1*f(a)+b=0}'
 
 		set=SparseSet(set_string)
 		res_string=str(set)
@@ -1404,7 +1405,7 @@ class SparseSetTestCase(TestCase):
 	def testNestedFunction(self):
 		from iegen import SparseSet
 
-		set_string='{[a,b]: b-1*f(g(a))=0}'
+		set_string='{[a,b]: -1*f(g(a))+b=0}'
 
 		set=SparseSet(set_string)
 		res_string=str(set)
@@ -1414,7 +1415,7 @@ class SparseSetTestCase(TestCase):
 	def testTwoArgumentFunction(self):
 		from iegen import SparseSet
 
-		set_string='{[a,b,c]: c-1*f(a,b)=0}'
+		set_string='{[a,b,c]: -1*f(a,b)+c=0}'
 
 		set=SparseSet(set_string)
 		res_string=str(set)
@@ -1424,7 +1425,7 @@ class SparseSetTestCase(TestCase):
 	def testConstantArgumentFunction(self):
 		from iegen import SparseSet
 
-		set_string='{[a,b]: b-1*f(a,6)=0}'
+		set_string='{[a,b]: -1*f(a,6)+b=0}'
 
 		set=SparseSet(set_string)
 		res_string=str(set)
@@ -1492,13 +1493,13 @@ class SparseRelationTestCase(TestCase):
 
 		rel_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 }'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 | m,n}'
+		res_string='{[a]->[b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 | m,n}'
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
 		rel_string='{[a]->[b]: a+b+-1*c>=0 and a+-10=0 and b+-2*n=0 and a+-1*m>=0}'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0 | m,n}'
+		res_string='{[a]->[b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 and -1*c+a+b>=0 | m,n}'
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
@@ -1507,16 +1508,17 @@ class SparseRelationTestCase(TestCase):
 		from iegen import SparseRelation,Symbolic
 
 		rel_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0}'
-		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 | m,n}'
-		res_string="SparseRelation('%s',[Symbolic('m'),Symbolic('n')])"%(res_string)
+		symbolics=[Symbolic('m'),Symbolic('n')]
+		rel=SparseRelation(rel_string,symbolics)
+		res_string='{[a]->[b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 | m,n}'
+		res_string='SparseRelation("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
 
-		rel_string='{[a]->[b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0}'
-		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: a+b+-1*c>=0 and b+-2*n=0 and a+-10=0 and a+-1*m>=0 | m,n}'
-		res_string="SparseRelation('%s',[Symbolic('m'),Symbolic('n')])"%(res_string)
+		rel_string='{[a]->[b]: a+b+-1*c>=0 and -2*n+b=0 and a+-10=0 and -1*m+a>=0}'
+		rel=SparseRelation(rel_string,symbolics)
+		res_string='{[a]->[b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 and -1*c+a+b>=0 | m,n}'
+		res_string='SparseRelation("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
 
@@ -1525,7 +1527,7 @@ class SparseRelationTestCase(TestCase):
 
 		rel_string='{[a]->[b]: a=10 and a=10}'
 		rel=SparseRelation(rel_string)
-		res_string='{[a]->[b]: a+-10=0}'
+		res_string=str(SparseRelation('{[a]->[b]: a=10}'))
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
@@ -1547,7 +1549,7 @@ class SparseRelationTestCase(TestCase):
 	def testSimpleFunction(self):
 		from iegen import SparseRelation
 
-		rel_string='{[a]->[b]: b-1*f(a)=0}'
+		rel_string='{[a]->[b]: -1*f(a)+b=0}'
 
 		rel=SparseRelation(rel_string)
 		res_string=str(rel)
@@ -1557,7 +1559,7 @@ class SparseRelationTestCase(TestCase):
 	def testNestedFunction(self):
 		from iegen import SparseRelation
 
-		rel_string='{[a]->[b]: b-1*f(g(a))=0}'
+		rel_string='{[a]->[b]: -1*f(g(a))+b=0}'
 
 		rel=SparseRelation(rel_string)
 		res_string=str(rel)
@@ -1567,7 +1569,7 @@ class SparseRelationTestCase(TestCase):
 	def testTwoArgumentFunction(self):
 		from iegen import SparseRelation
 
-		rel_string='{[a,b]->[c]: c-1*f(a,b)=0}'
+		rel_string='{[a,b]->[c]: -1*f(a,b)+c=0}'
 
 		rel=SparseRelation(rel_string)
 		res_string=str(rel)
@@ -1577,7 +1579,7 @@ class SparseRelationTestCase(TestCase):
 	def testConstantArgumentFunction(self):
 		from iegen import SparseRelation
 
-		rel_string='{[a]->[b]: b-1*f(a,6)=0}'
+		rel_string='{[a]->[b]: -1*f(a,6)+b=0}'
 
 		rel=SparseRelation(rel_string)
 		res_string=str(rel)

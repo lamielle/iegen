@@ -19,9 +19,9 @@ class SparseTransVisitor(DFVisitor):
 		#----------------------------------------------
 
 	class FunctionContext(object):
-		def __init__(self,name,num_args,zero_coefficients):
+		def __init__(self,name,num_args):
 			self.name=name
-			self.arg_exps=[list(zero_coefficients) for i in xrange(num_args)]
+			self.arg_exps=[{} for i in xrange(num_args)]
 			self.curr_arg=-1
 
 		def curr_arg_exp(self):
@@ -29,9 +29,6 @@ class SparseTransVisitor(DFVisitor):
 
 		def next_arg(self):
 			self.curr_arg+=1
-
-	def _get_zero_coefficients(self):
-		return [0]*self.sparse_formula.num_columns()
 
 	def inSet(self,node):
 		raise ValueError('Translation of a Set not supported')
@@ -56,7 +53,7 @@ class SparseTransVisitor(DFVisitor):
 
 	def _inConstraint(self,node):
 		self.in_constraint=True
-		self.constraint_coeff=self._get_zero_coefficients()
+		self.constraint_coeff={}
 
 	def _outConstraint(self,node):
 		self.in_constraint=False
@@ -97,13 +94,18 @@ class SparseTransVisitor(DFVisitor):
 			self.constraint_coeff[self.sparse_formula.get_constant_column()]=node.const
 
 	def inFuncExp(self,node):
-		self.func_context.append(self.FunctionContext(node.name,len(node.args),self._get_zero_coefficients()))
+		self.func_context.append(self.FunctionContext(node.name,len(node.args)))
 
 	def outFuncExp(self,node):
 		#Grab the function context from the stack
 		curr_func_context=self.func_context.pop()
 
 		#Add the function to the formula
-		self.sparse_formula.add_function(curr_func_context.name,curr_func_context.arg_exps)
+		ufcall=self.sparse_formula.add_function(curr_func_context.name,curr_func_context.arg_exps)
 
 		#TODO: Set the corresponding function coefficient
+		#Check if we are in a function or not
+		if len(self.func_context)>0:
+			self.func_context[-1].curr_arg_exp()[ufcall]=node.coeff
+		else:
+			self.constraint_coeff[ufcall]=node.coeff
