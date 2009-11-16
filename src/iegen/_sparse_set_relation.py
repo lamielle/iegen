@@ -9,11 +9,13 @@ from iegen.util import biject,raise_objs_not_like_types
 
 #Represents a sparse set or relation
 class SparseFormula(IEGenObject):
-	__slots__=('_tuple_var_cols','_symbolic_cols','_free_var_cols','_columns','_functions','_constraints','_pres_formulas','_frozen')
+	__slots__=('_tuple_var_cols','_symbolic_cols','_free_var_cols','_columns','_functions','_constraints','_frozen')
 
-	def __init__(self,formula_string,symbolics,parse_func):
+	#--------------------------------------------------
+	# SparseFormula constructor
+	def __init__(self,tuple_var_names,free_var_names,symbolics):
+		#--------------------
 		#Init various fields
-
 		#'var name' <--> TupleVarCol(pos)
 		self._tuple_var_cols=biject()
 
@@ -32,10 +34,9 @@ class SparseFormula(IEGenObject):
 		#Set of SparseConstraints in this formula (equality or inequality)
 		self._constraints=set()
 
+		#Start off unfrozen
 		self._frozen=False
-
-		#Get an empty list if no symbolics were given
-		symbolics=[] if symbolics is None else sorted(symbolics)
+		#--------------------
 
 		#Ensure we are given Symbolic objects
 		raise_objs_not_like_types(symbolics,Symbolic,'Set construction failure: symbolics must be a collection of objects that look like a Symbolic')
@@ -43,31 +44,80 @@ class SparseFormula(IEGenObject):
 		#Get the names of all symbolic variables
 		symbolic_names=[symbolic.name for symbolic in symbolics]
 
-		#Parse the formula string
-		iegen.settings.enable_processing=False
-		self._pres_formulas=[parse_func(formula_string,symbolics)]
-		iegen.settings.enable_processing=True
-
-		#Get the names of the tuple variables
-		tuple_var_names=self._get_tuple_var_names()
-
-		#Get the names of the free variables
-		free_var_names=self._get_free_var_names(tuple_var_names,symbolic_names)
-
 		#Build the names collections
 		self._build_names_collections(tuple_var_names,symbolics,free_var_names)
 
 		#Create the columns collection
 		self._create_columns_collection()
+	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Construction utility methods
+	def _construct(self,pres_formulas,symbolics):
+		#Get the names of the tuple variables
+		tuple_var_names=self._get_tuple_var_names(pres_formulas)
+
+		#Get an empty list if no symbolics were given
+		symbolics=[] if symbolics is None else sorted(symbolics)
+
+		#Get the names of the free variables
+		free_var_names=self._get_free_var_names(pres_formulas,tuple_var_names,symbolics)
+
+		#Construct this SparseRelation using the SparseFormula constructor and the parsed information
+		SparseFormula.__init__(self,tuple_var_names,free_var_names,symbolics)
 
 		#Run the translation visitor
 		v=SparseTransVisitor(self)
-		for pres_formula in self._pres_formulas:
+		for pres_formula in pres_formulas:
 			v.visit(pres_formula)
 
 		#Freeze this formula
 		self.freeze()
 
+	#Parses the given formula string using the given parsing function
+	@staticmethod
+	def _parse_formula_string(formula_string,symbolics,parse_func):
+		iegen.settings.enable_processing=False
+		pres_formulas=[parse_func(formula_string,symbolics)]
+		iegen.settings.enable_processing=True
+
+		return pres_formulas
+
+	#Returns the names of the tuple variables in _pres_formulas
+	@staticmethod
+	def _get_tuple_var_names(pres_formulas):
+		#Get the names of all tuple variables, in order
+		tuple_var_names=pres_formulas[0]._get_tuple_vars()
+
+		#Ensure that all variable tuples are the same
+		for pres_formula in pres_formulas[1:]:
+			if pres_formula._get_tuple_vars()!=tuple_var_names:
+				raise ValueError('Variable tuples do not match across conjunctions')
+
+		return tuple_var_names
+
+	#Determine the names of all free variables in _pres_formulas
+	#We exclude the names of the given tuple variables and symbolics
+	@staticmethod
+	def _get_free_var_names(pres_formulas,tuple_var_names,symbolics):
+		#Start with the names of all variables
+		free_var_names=CollectVarsVisitor(all_vars=True)
+		for pres_form in pres_formulas:
+			free_var_names.visit(pres_form)
+		free_var_names=set(free_var_names.vars)
+
+		#Remove the names of the tuple variables
+		free_var_names-=set(tuple_var_names)
+
+		#Remove the names of the symbolics
+		free_var_names-=set([symbolic.name for symbolic in symbolics])
+
+		#We now have the final list of free variables
+		return sorted(free_var_names)
+	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Hash and equality methods
 	def __hash__(self):
 		return hash(self._constraints)
 
@@ -76,6 +126,7 @@ class SparseFormula(IEGenObject):
 
 	def __ne__(self,other):
 		return not self==other
+	#--------------------------------------------------
 
 	#Returns the arity (number of tuple variables) of this forumla
 	def _arity(self):
@@ -115,36 +166,6 @@ class SparseFormula(IEGenObject):
 	symbolic_names=property(_get_symbolic_names)
 	free_vars=property(_get_free_vars)
 	frozen=property(_get_frozen)
-
-	#Returns the names of the tuple variables in _pres_formulas
-	def _get_tuple_var_names(self):
-		#Get the names of all tuple variables, in order
-		tuple_var_names=self._pres_formulas[0]._get_tuple_vars()
-
-		#Ensure that all variable tuples are the same
-		for pres_formula in self._pres_formulas[1:]:
-			if pres_formula._get_tuple_vars()!=tuple_var_names:
-				raise ValueError('Variable tuples do not match across conjunctions')
-
-		return tuple_var_names
-
-	#Determine the names of all free variables in _pres_formulas
-	#We exclude the names of the given tuple variables and symbolics
-	def _get_free_var_names(self,tuple_var_names,symbolic_names):
-		#Start with the names of all variables
-		free_var_names=CollectVarsVisitor(all_vars=True)
-		for pres_form in self._pres_formulas:
-			free_var_names.visit(pres_form)
-		free_var_names=set(free_var_names.vars)
-
-		#Remove the names of the tuple variables
-		free_var_names-=set(tuple_var_names)
-
-		#Remove the names of the symbolics
-		free_var_names-=set(symbolic_names)
-
-		#We now have the final list of free variables
-		return sorted(free_var_names)
 
 	#Build the collections of tuple variables, free variables, and symbolics
 	def _build_names_collections(self,tuple_var_names,symbolics,free_var_names):
@@ -307,7 +328,11 @@ class SparseSet(SparseFormula):
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
 	def __init__(self,set_string,symbolics=None):
-		SparseFormula.__init__(self,set_string,symbolics,PresParser.parse_set)
+		#Parse the given set string
+		pres_formulas=self._parse_formula_string(set_string,symbolics,PresParser.parse_set)
+
+		#Construct this set using the construction utility method
+		self._construct(pres_formulas,symbolics)
 
 	#Returns the set tuple variables
 	def _tuple_set(self):
@@ -335,10 +360,14 @@ class SparseRelation(SparseFormula):
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
 	def __init__(self,relation_string,symbolics=None):
-		SparseFormula.__init__(self,relation_string,symbolics,PresParser.parse_relation)
+		#Parse the given relation string
+		pres_formulas=self._parse_formula_string(relation_string,symbolics,PresParser.parse_relation)
+
+		#Construct this relation using the construction utility method
+		self._construct(pres_formulas,symbolics)
 
 		#Determine the input arity
-		self._arity_in=len(self._pres_formulas[0].tuple_in.vars)
+		self._arity_in=pres_formulas[0].arity_in()
 
 	#Returns the input tuple variables
 	def _tuple_in(self):

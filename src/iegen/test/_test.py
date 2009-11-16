@@ -1380,9 +1380,9 @@ class SparseSetTestCase(TestCase):
 	def testSetEquality(self):
 		from iegen import SparseSet
 
-		set1_string='{[a,b]: a=10 and b>=0 and c>=0}'
-		set2_string='{[c,d]: c=10 and d>=0 and a>=0}'
-		set3_string='{[a,d]: a=10 and d>=0 and b>=0}'
+		set1_string='{[a,b]: a=10 and b>=0 and a>=0}'
+		set2_string='{[c,d]: c=10 and d>=0 and c>=0}'
+		set3_string='{[a,d]: a=10 and d>=0 and a>=0}'
 
 		set1=SparseSet(set1_string)
 		set2=SparseSet(set2_string)
@@ -1534,9 +1534,9 @@ class SparseRelationTestCase(TestCase):
 	def testRelationEquality(self):
 		from iegen import SparseRelation
 
-		rel1_string='{[a]->[b]: a=10 and b>=0 and c>=0}'
-		rel2_string='{[c]->[d]: c=10 and d>=0 and a>=0}'
-		rel3_string='{[a]->[d]: a=10 and d>=0 and b>=0}'
+		rel1_string='{[a]->[b]: a=10 and b>=0 and a>=0}'
+		rel2_string='{[c]->[d]: c=10 and d>=0 and c>=0}'
+		rel3_string='{[a]->[d]: a=10 and d>=0 and a>=0}'
 
 		rel1=SparseRelation(rel1_string)
 		rel2=SparseRelation(rel2_string)
