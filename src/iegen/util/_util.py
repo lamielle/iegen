@@ -241,6 +241,10 @@ class biject(object):
 			else:
 				if self._dict2[obj1]!=obj2:
 					raise KeyError(str(obj1)+','+str(obj2))
+
+	def clear(self):
+		self._dict1.clear()
+		self._dict2.clear()
 #-------------------------------------
 
 #Given a Set or Relation, renames all tuple variables in the

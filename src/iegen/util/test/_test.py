@@ -206,7 +206,7 @@ class EqualitySestsTestCase(TestCase):
 		self.failUnless(2==b['a'],"b['a']!=%s"%(b['a']))
 		self.failUnless('a'==b[2],"b[2]!=%s"%(b[2]))
 
-	def testLen(self):
+	def testLength1(self):
 		from iegen.util import biject
 		b=biject()
 		self.failUnless(0==len(b),'Length of biject is not 0')
@@ -233,4 +233,39 @@ class EqualitySestsTestCase(TestCase):
 		from iegen.util import biject
 		b=biject()
 		b['a']
+
+	def testLength2(self):
+		from iegen.util import biject
+
+		b0=biject()
+
+		b1=biject()
+		b1['asdf']=20
+
+		b2=biject()
+		b2['a']=47
+		b2['b']=10
+
+		self.failUnless(0==len(b0),'len(%s)!=0'%(b0))
+		self.failUnless(1==len(b1),'len(%s)!=1'%(b1))
+		self.failUnless(2==len(b2),'len(%s)!=2'%(b2))
+
+	def testClear(self):
+		from iegen.util import biject
+
+		b0=biject()
+		b0.clear()
+
+		b1=biject()
+		b1['asdf']=20
+		b1.clear()
+
+		b2=biject()
+		b2['a']=47
+		b2['b']=10
+		b2.clear()
+
+		self.failUnless(0==len(b0),'len(%s)!=0'%(b0))
+		self.failUnless(0==len(b1),'len(%s)!=0'%(b1))
+		self.failUnless(0==len(b2),'len(%s)!=0'%(b2))
 #-------------------------------------

@@ -1585,4 +1585,30 @@ class SparseRelationTestCase(TestCase):
 		res_string=str(rel)
 
 		self.failUnless(res_string==rel_string,'%s!=%s'%(res_string,rel_string))
+
+
+	#----------------------------------------
+	# Start operation tests
+	#Tests the inverse operation
+	def testInverseEmpty(self):
+		from iegen import SparseRelation
+
+		inverse=SparseRelation('{[a,b]->[c,d]}').inverse()
+		res_inverse=SparseRelation('{[c,d]->[a,b]}')
+
+		self.failUnless(inverse==res_inverse,'%s!=%s'%(inverse,res_inverse))
+		self.failUnless(str(inverse)==str(res_inverse),'%s!=%s'%(str(inverse),str(res_inverse)))
+
+	#Tests the inverse operation with constraints
+	def testInverseConstraints(self):
+		from iegen import SparseRelation
+
+		inverse=SparseRelation('{[a,b]->[c,d]:a>=n && b<5 and c+d=15}').inverse()
+		res_inverse=SparseRelation('{[c,d]->[a,b]:b<5 and a>=n && c+d=15}')
+
+		self.failUnless(inverse==res_inverse,'%s!=%s'%(inverse,res_inverse))
+		self.failUnless(str(inverse)==str(res_inverse),'%s!=%s'%(str(inverse),str(res_inverse)))
+	# End operation tests
+	#----------------------------------------
+
 #------------------------------------------

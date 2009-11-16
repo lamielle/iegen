@@ -146,10 +146,10 @@ class SparseFormula(IEGenObject):
 		#We now have the final list of free variables
 		return sorted(free_var_names)
 
-	#Build the pos <--> name bijections for the tuple variables, symbolics, and free variables
+	#Build the collections of tuple variables, free variables, and symbolics
 	def _build_names_collections(self,tuple_var_names,symbolics,free_var_names):
 
-		#Build the tuple variable bijection
+		#Build the tuple variable column bijection
 		for pos,tuple_var_name in enumerate(tuple_var_names):
 			self._tuple_var_cols[tuple_var_name]=TupleVarCol(pos,tuple_var_name)
 
@@ -288,6 +288,17 @@ class SparseFormula(IEGenObject):
 
 		return ufcall
 
+	#Returns the lower bound of the given tuple variable
+	def lower_bound(self,tuple_var_name):
+		return self.bounds(tuple_var_name)[0]
+	#Returns the upper bound of the given tuple variable
+	def upper_bound(self,tuple_var_name):
+		return self.bounds(tuple_var_name)[1]
+
+	#TODO: implement
+	def bounds(self,tuple_var_name):
+		pass
+
 #Represents a sparse set
 class SparseSet(SparseFormula):
 
@@ -306,6 +317,14 @@ class SparseSet(SparseFormula):
 	#Returns the arity of this set
 	def arity(self):
 		return self._arity()
+
+	#TODO: implement
+	def union(self,other):
+		pass
+
+	#TODO: implement
+	def apply(self,other):
+		pass
 
 #Represents a sparse relation
 class SparseRelation(SparseFormula):
@@ -342,6 +361,39 @@ class SparseRelation(SparseFormula):
 	#Returns the output arity of this relation
 	def arity_out(self):
 		return self._arity()-self._arity_in
+
+	#TODO: implement
+	def union(self,other):
+		pass
+
+	#TODO: implement
+	def inverse(self):
+		pass
+#		selfcopy=deepcopy(self)
+#
+#		new_var_pos={}
+#
+#		#Move the input tuple vars to the output tuple vars
+#		for pos in xrange(selfcopy.arity_in()):
+#			print pos,pos+selfcopy.arity_in()
+#			new_var_pos[pos]=pos+selfcopy.arity_in()
+#
+#		#Move the output tuple vars to the input tuple vars
+#		for pos in xrange(selfcopy.arity_in(),selfcopy.arity_in()+selfcopy.arity_out()):
+#			print pos,pos-selfcopy.arity_in()
+#			new_var_pos[pos]=pos-selfcopy.arity_in()
+#
+#		#Update the TuplePos instances
+#		for tuple_pos in selfcopy._tuple_var_pos:
+#			tuple_pos.pos=new_var_pos[tuple_pos.pos]
+#
+#		self.print_debug('Relation Inverse: %s.inverse()=%s'%(self,selfcopy))
+#
+#		return selfcopy
+
+	#TODO: implement
+	def compose(self,other):
+		pass
 
 #Parent class of the various sparse expression column type classes
 class SparseExpColumnType(IEGenObject):
