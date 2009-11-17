@@ -1452,6 +1452,159 @@ class SparseSetTestCase(TestCase):
 		res_string=str(set)
 
 		self.failUnless(res_string==set_string,'%s!=%s'%(res_string,set_string))
+
+	def testClear(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b,c]: a=b and c>10}',freeze=False)
+
+		self.failUnless(1==len(set1.conjunctions),'Set does not have exactly one conjunction')
+		self.failUnless(2==len(set1.conjunctions[0]),'Set conjunction does not have exactly two constraints')
+
+		set1.clear()
+
+		self.failUnless(0==len(set1.conjunctions),'Set does not have exactly zero conjunctions')
+
+	@raises(ValueError)
+	def testModifyFrozen(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b,c]}')
+		set1.add_conjunction(set())
+
+	def testManualConstruction(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b,c]}',freeze=False)
+
+		#Add conjunction a=b and b>=c
+		set1.clear()
+		set1.add_conjunction(set([set1.get_equality({set1.get_column('a'):1,set1.get_column('b'):-1}),set1.get_inequality({set1.get_column('b'):1,set1.get_column('c'):-1})]))
+		set1.freeze()
+
+		set_res=SparseSet('{[a,b,c]: a=b and b>=c}')
+
+		self.failUnless(set1==set_res,'%s!=%s'%(set1,set_res))
+
+	#----------------------------------------
+	# Start operation tests
+
+	#Tests that hash doesn't work on an unfrozen set
+	@raises(ValueError)
+	def testHashUnfrozen(self):
+		from iegen import SparseSet
+
+		hash(SparseSet('{[a,b]}',freeze=False))
+
+	#Tests that equality doesn't work on an unfrozen set
+	@raises(ValueError)
+	def testEqualityUnfrozen1(self):
+		from iegen import SparseSet
+
+		SparseSet('{[a,b]}',freeze=False)==SparseSet('{[a,b]}')
+
+	@raises(ValueError)
+	def testEqualityUnfrozen2(self):
+		from iegen import SparseSet
+
+		SparseSet('{[a,b]}')==SparseSet('{[a,b]}',freeze=False)
+
+	#Tests that union does not allow sets of differing arity
+	@raises(ValueError)
+	def testUnionDiffArity(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[]}')
+		set2=SparseSet('{[a]}')
+		set1.union(set2)
+
+	#Tests that union is not destructive
+	def testUnionNonDestructive(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a]}')
+		set2=SparseSet('{[b]}')
+		unioned=set1.union(set2)
+
+		self.failIf(unioned is set1,'%s is %s'%(unioned,set1))
+		self.failIf(unioned is set2,'%s is %s'%(unioned,set2))
+
+	#Tests that the union operation doesn't work on an unfrozen set
+	@raises(ValueError)
+	def testUnionUnfrozen1(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b]}',freeze=False)
+		set2=SparseSet('{[c,d]}')
+
+		set1.union(set2)
+
+	@raises(ValueError)
+	def testUnionUnfrozen2(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b]}')
+		set2=SparseSet('{[c,d]}',freeze=False)
+
+		set1.union(set2)
+
+	#Tests the union operation
+	def testUnionEmpty(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b]}')
+		set2=SparseSet('{[c,d]}')
+
+		set3=set1.union(set2)
+
+		self.failUnless(1==len(set3.conjunctions),'Unioned set should have exactly one conjunction')
+		self.failUnless(set3==set1,'%s!=%s'%(set3,set1))
+		self.failUnless(set2==set1,'%s!=%s'%(set2,set1))
+
+	def testUnionConstraints(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b]: a=b}')
+		set2=SparseSet('{[c,d]: c=10 and d=10}')
+
+		set_union=set1.union(set2)
+
+		res_union=SparseSet('{[a,b]}',freeze=False)
+		res_union.clear()
+		res_union.add_conjunction(set([res_union.get_equality({res_union.get_column('a'):1,res_union.get_column('b'):-1})]))
+		res_union.add_conjunction(set([res_union.get_equality({res_union.get_column('a'):1,res_union.get_constant_column():-10}),res_union.get_equality({res_union.get_column('b'):1,res_union.get_constant_column():-10})]))
+		res_union.freeze()
+
+		self.failUnless(2==len(set_union.conjunctions),'Unioned set should have exactly two conjunction')
+		self.failUnless(set_union==res_union,'%s!=%s'%(set_union,res_union))
+
+		set1=SparseSet('{[a,b]: a=b}')
+		set2=SparseSet('{[c,d]: c=d}')
+
+		set_union=set1.union(set2)
+
+		res_union=SparseSet('{[a,b]}',freeze=False)
+		res_union.clear()
+		res_union.add_conjunction(set([res_union.get_equality({res_union.get_column('a'):1,res_union.get_column('b'):-1})]))
+		res_union.freeze()
+
+		self.failUnless(1==len(set_union.conjunctions),'Unioned set should have exactly one conjunction')
+		self.failUnless(set_union==res_union,'%s!=%s'%(set_union,res_union))
+
+	def testUnionStr(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b]: a=b}')
+		set2=SparseSet('{[c,d]: c=10}')
+
+		set_union=set1.union(set2)
+
+		res_str='{[a,b]: a+-1*b=0} union {[a,b]: a+-10=0}'
+
+		self.failUnless(res_str==str(set_union),'%s!=%s'%(str(set_union),res_str))
+
+	# End operation tests
+	#----------------------------------------
 #-------------------------------------
 
 #---------- SparseRelation Tests ----------
@@ -1628,9 +1781,165 @@ class SparseRelationTestCase(TestCase):
 
 		self.failUnless(res_string==rel_string,'%s!=%s'%(res_string,rel_string))
 
+	def testClear(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b,c]: a=b and c>10}',freeze=False)
+
+		self.failUnless(1==len(rel.conjunctions),'Relation does not have exactly one conjunction')
+		self.failUnless(2==len(rel.conjunctions[0]),'Relation conjunction does not have exactly two constraints')
+
+		rel.clear()
+
+		self.failUnless(0==len(rel.conjunctions),'Relation does not have exactly zero conjunctions')
+
+	@raises(ValueError)
+	def testModifyFrozen(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b,c]}')
+		rel.add_conjunction(set())
+
+	def testManualConstruction(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b,c]}',freeze=False)
+
+		#Add conjunction a=b and b>=c
+		rel.clear()
+		rel.add_conjunction(set([rel.get_equality({rel.get_column('a'):1,rel.get_column('b'):-1}),rel.get_inequality({rel.get_column('b'):1,rel.get_column('c'):-1})]))
+		rel.freeze()
+
+		rel_res=SparseRelation('{[a]->[b,c]: a=b and b>=c}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
 
 	#----------------------------------------
 	# Start operation tests
+
+	#Tests that hash doesn't work on an unfrozen relation
+	@raises(ValueError)
+	def testHashUnfrozen(self):
+		from iegen import SparseRelation
+
+		hash(SparseRelation('{[a]->[b]}',freeze=False))
+
+	#Tests that equality doesn't work on an unfrozen relation
+	@raises(ValueError)
+	def testEqualityUnfrozen1(self):
+		from iegen import SparseRelation
+
+		SparseRelation('{[a]->[b]}',freeze=False)==SparseRelation('{[a]->[b]}')
+
+	@raises(ValueError)
+	def testEqualityUnfrozen2(self):
+		from iegen import SparseRelation
+
+		SparseRelation('{[a]->[b]}')==SparseRelation('{[a]->[b]}',freeze=False)
+
+	#Tests that union does not allow relations of differing arity
+	@raises(ValueError)
+	def testUnionDiffArity(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[]->[]}')
+		relation2=SparseRelation('{[a]->[a]}')
+		relation1.union(relation2)
+
+	#Tests that union is not destructive
+	def testUnionNonDestructive(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[a]->[a]}')
+		relation2=SparseRelation('{[b]->[b]}')
+		unioned=relation1.union(relation2)
+
+		self.failIf(unioned is relation1,'%s is %s'%(unioned,relation1))
+		self.failIf(unioned is relation2,'%s is %s'%(unioned,relation2))
+
+	#Tests that the union operation doesn't work on an unfrozen relation
+	@raises(ValueError)
+	def testUnionUnfrozen1(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a]->[b]}',freeze=False)
+		rel2=SparseRelation('{[c]->[d]}')
+
+		rel1.union(rel2)
+
+	@raises(ValueError)
+	def testUnionUnfrozen2(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a]->[b]}')
+		rel2=SparseRelation('{[c]->[d]}',freeze=False)
+
+		rel1.union(rel2)
+
+	#Tests the union operation
+	def testUnionEmpty(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a]->[b]}')
+		rel2=SparseRelation('{[c]->[d]}')
+
+		rel3=rel1.union(rel2)
+
+		self.failUnless(1==len(rel3.conjunctions),'Unioned relation should have exactly one conjunction')
+		self.failUnless(rel3==rel1,'%s!=%s'%(rel3,rel1))
+		self.failUnless(rel2==rel1,'%s!=%s'%(rel2,rel1))
+
+	def testUnionConstraints(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a]->[b]: a=b}')
+		rel2=SparseRelation('{[c]->[d]: c=10 and d=10}')
+
+		rel_union=rel1.union(rel2)
+
+		res_union=SparseRelation('{[a]->[b]}',freeze=False)
+		res_union.clear()
+		res_union.add_conjunction(set([res_union.get_equality({res_union.get_column('a'):1,res_union.get_column('b'):-1})]))
+		res_union.add_conjunction(set([res_union.get_equality({res_union.get_column('a'):1,res_union.get_constant_column():-10}),res_union.get_equality({res_union.get_column('b'):1,res_union.get_constant_column():-10})]))
+		res_union.freeze()
+
+		self.failUnless(2==len(rel_union.conjunctions),'Unioned relation should have exactly two conjunction')
+		self.failUnless(rel_union==res_union,'%s!=%s'%(rel_union,res_union))
+
+		rel1=SparseRelation('{[a]->[b]: a=b}')
+		rel2=SparseRelation('{[c]->[d]: c=d}')
+
+		rel_union=rel1.union(rel2)
+
+		res_union=SparseRelation('{[a]->[b]}',freeze=False)
+		res_union.clear()
+		res_union.add_conjunction(set([res_union.get_equality({res_union.get_column('a'):1,res_union.get_column('b'):-1})]))
+		res_union.freeze()
+
+		self.failUnless(1==len(rel_union.conjunctions),'Unioned relation should have exactly one conjunction')
+		self.failUnless(rel_union==res_union,'%s!=%s'%(rel_union,res_union))
+
+	def testUnionStr(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a]->[b]: a=b}')
+		rel2=SparseRelation('{[c]->[d]: c=10}')
+
+		rel_union=rel1.union(rel2)
+
+		res_str='{[a]->[b]: a+-1*b=0} union {[a]->[b]: a+-10=0}'
+
+		self.failUnless(res_str==str(rel_union),'%s!=%s'%(str(rel_union),res_str))
+
+	#Tests that the inverse operation doesn't work on an unfrozen relation
+	@raises(ValueError)
+	def testInverseUnfrozen(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b]: a=b}',freeze=False)
+
+		rel.inverse()
+
 	#Tests the inverse operation
 	def testInverseEmpty(self):
 		from iegen import SparseRelation
@@ -1650,7 +1959,7 @@ class SparseRelationTestCase(TestCase):
 
 		self.failUnless(inverse==res_inverse,'%s!=%s'%(inverse,res_inverse))
 		self.failUnless(str(inverse)==str(res_inverse),'%s!=%s'%(str(inverse),str(res_inverse)))
+
 	# End operation tests
 	#----------------------------------------
-
 #------------------------------------------

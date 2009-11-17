@@ -7,12 +7,15 @@ from iegen.parser import PresParser
 from iegen.ast.visitor import CollectVarsVisitor,SparseTransVisitor
 from iegen.util import biject,raise_objs_not_like_types
 
+#--------------------------------------------------
+# Start SparseFormula class
+
 #Represents a sparse set or relation
 class SparseFormula(IEGenObject):
 	__slots__=('_tuple_var_cols','_symbolic_cols','_free_var_cols','_columns','_functions','_conjunctions','_frozen')
 
 	#--------------------------------------------------
-	# SparseFormula constructor
+	# Start SparseFormula constructor
 	def __init__(self,tuple_var_names,free_var_names,symbolics,functions,conjunctions):
 		#--------------------
 		#Init various fields
@@ -49,8 +52,9 @@ class SparseFormula(IEGenObject):
 	#--------------------------------------------------
 
 	#--------------------------------------------------
-	# Construction utility methods
-	def _construct(self,pres_formulas=None,tuple_var_names=None,free_var_names=None,symbolics=None,functions=None,conjunctions=None):
+	# Start construction utility methods
+
+	def _construct(self,pres_formulas=None,tuple_var_names=None,free_var_names=None,symbolics=None,functions=None,conjunctions=None,freeze=True):
 		#Get an empty list if no symbolics were given
 		symbolics=[] if symbolics is None else sorted(symbolics)
 
@@ -79,23 +83,24 @@ class SparseFormula(IEGenObject):
 			for pres_formula in pres_formulas:
 				v.visit(pres_formula)
 
-		#Freeze this formula
-		self.freeze()
+		#Freeze this formula if necessary
+		if freeze:
+			self.freeze()
 
 	#Makes a copy of a sparse formula of type FormulaClass
 	#The constraints are copied if copy_constraints is True
-	def _copy(self,new_var_pos,FormulaClass):
+	def _copy(self,new_var_pos,new_var_names,freeze,FormulaClass):
 		#Copy the functions of the formula
 		functions=set()
 		for function in self.functions:
-			functions.add(function.copy())
+			functions.add(function.copy(new_var_pos,new_var_names))
 
 		#Copy the constraints of the formula
 		conjunctions=set()
 		for conjunction in self.conjunctions:
 			conjunction_copy=set()
 			for constraint in conjunction:
-				conjunction_copy.add(constraint.copy(new_var_pos))
+				conjunction_copy.add(constraint.copy(new_var_pos,new_var_names))
 			conjunctions.add(frozenset(conjunction_copy))
 
 		#Reorder the tuple variables if needed
@@ -106,8 +111,16 @@ class SparseFormula(IEGenObject):
 			for old_pos,new_pos in new_var_pos.items():
 				tuple_var_names[new_pos]=self.tuple_vars[old_pos]
 
+		#Rename the tuple variables if needed
+		if new_var_names is None:
+			tuple_var_names=tuple_var_names
+		else:
+			for pos in xrange(len(tuple_var_names)):
+				if tuple_var_names[pos] in new_var_names:
+					tuple_var_names[pos]=new_var_names[tuple_var_names[pos]]
+
 		#Copy the structure of the formula
-		selfcopy=FormulaClass(tuple_var_names=tuple_var_names,free_var_names=self.free_vars,symbolics=self.symbolics,functions=functions,conjunctions=conjunctions)
+		selfcopy=FormulaClass(tuple_var_names=tuple_var_names,free_var_names=self.free_vars,symbolics=self.symbolics,functions=functions,conjunctions=conjunctions,freeze=freeze)
 
 		return selfcopy
 
@@ -151,11 +164,47 @@ class SparseFormula(IEGenObject):
 
 		#We now have the final list of free variables
 		return sorted(free_var_names)
+
+	#Build the collections of tuple variables, free variables, and symbolics
+	def _build_cols_collections(self,tuple_var_names,symbolics,free_var_names):
+
+		#Build the tuple variable column bijection
+		for pos,tuple_var_name in enumerate(tuple_var_names):
+			self._tuple_var_cols[tuple_var_name]=TupleVarCol(pos,tuple_var_name)
+
+		#Build the symbolic list
+		for symbolic in symbolics:
+			self._symbolic_cols.append(SymbolicCol(symbolic))
+
+		#Build the free variable list
+		for free_var_name in free_var_names:
+			self._free_var_cols.append(FreeVarCol(free_var_name))
+
+	#Create the columns collection
+	def _create_columns_collection(self):
+		#Add the tuple variables
+		for tuple_var_name in self.tuple_vars:
+			self._columns.add(self._tuple_var_cols[tuple_var_name])
+
+		#Add the symbolics
+		self._columns|=set(self._symbolic_cols)
+
+		#Add the free variables
+		self._columns|=set(self._free_var_cols)
+
+		#Add the functions
+		self._columns|=set(self._functions)
+
+		#Add the constant column
+		self._columns.add(ConstantCol())
+
+	# End construction utility methods
 	#--------------------------------------------------
 
 	#--------------------------------------------------
 	# Hash and equality methods
 	def __hash__(self):
+		self._check_frozen()
 		return hash((self._columns,self._functions,self._conjunctions))
 
 	def __eq__(self,other):
@@ -164,6 +213,9 @@ class SparseFormula(IEGenObject):
 	def __ne__(self,other):
 		return not self==other
 	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Start property support methods
 
 	#Returns the arity (number of tuple variables) of this forumla
 	def _arity(self):
@@ -205,47 +257,11 @@ class SparseFormula(IEGenObject):
 	def _get_frozen(self):
 		return self._frozen
 
-	#Property creation
-	tuple_vars=property(_get_tuple_vars)
-	symbolics=property(_get_symbolics)
-	symbolic_names=property(_get_symbolic_names)
-	free_vars=property(_get_free_vars)
-	functions=property(_get_functions)
-	conjunctions=property(_get_conjunctions)
-	frozen=property(_get_frozen)
+	# End property support methods
+	#--------------------------------------------------
 
-	#Build the collections of tuple variables, free variables, and symbolics
-	def _build_cols_collections(self,tuple_var_names,symbolics,free_var_names):
-
-		#Build the tuple variable column bijection
-		for pos,tuple_var_name in enumerate(tuple_var_names):
-			self._tuple_var_cols[tuple_var_name]=TupleVarCol(pos,tuple_var_name)
-
-		#Build the symbolic list
-		for symbolic in symbolics:
-			self._symbolic_cols.append(SymbolicCol(symbolic))
-
-		#Build the free variable list
-		for free_var_name in free_var_names:
-			self._free_var_cols.append(FreeVarCol(free_var_name))
-
-	#Create the columns collection
-	def _create_columns_collection(self):
-		#Add the tuple variables
-		for tuple_var_name in self.tuple_vars:
-			self._columns.add(self._tuple_var_cols[tuple_var_name])
-
-		#Add the symbolics
-		self._columns|=set(self._symbolic_cols)
-
-		#Add the free variables
-		self._columns|=set(self._free_var_cols)
-
-		#Add the functions
-		self._columns|=set(self._functions)
-
-		#Add the constant column
-		self._columns.add(ConstantCol())
+	#--------------------------------------------------
+	#Start misc utility methods
 
 	def __repr__(self):
 		symbolic_strings=repr(self.symbolics)
@@ -290,7 +306,78 @@ class SparseFormula(IEGenObject):
 			else:
 				conjunction_strings.append('{%s%s}'%(tuple_var_string,constraints_string))
 
-		return 'union'.join(conjunction_strings)
+		return ' union '.join(conjunction_strings)
+
+	def _check_frozen(self):
+		#Make sure we're frozen
+		if not self.frozen:
+			raise ValueError('Cannot operate on a non-frozen sparse formula')
+
+	def _check_mutate(self):
+		#Make sure we're not frozen
+		if self.frozen:
+			raise ValueError('Cannot modify a frozen sparse formula')
+
+	def _get_constraint(self,exp_coeff,ConstraintType):
+		#Make sure this sparse formula can be modified
+		self._check_mutate()
+
+		#Ensure that a constant column is specificed in the expression
+		if self.get_constant_column() not in exp_coeff:
+			exp_coeff[self.get_constant_column()]=0
+
+		#Return a new constraint
+		return ConstraintType(exp_coeff)
+
+	#End misc utility methods
+	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Start operation utility methods
+
+	def _union(self,other):
+		#Make sure both formulas are frozen
+		self._check_frozen()
+		other._check_frozen()
+
+		#Make sure the arity of both formulas matches
+		if self.arity()==other.arity():
+			#Make a copy of self
+			selfcopy=self.copy(freeze=False)
+
+			#New variable names mapping
+			new_var_names={}
+			for pos in xrange(len(selfcopy.tuple_vars)):
+				new_var_names[other.tuple_vars[pos]]=selfcopy.tuple_vars[pos]
+
+			#Add a copy of each conjunction of the other formula to the copied self
+			for conjunction in other.conjunctions:
+				conjunction_copy=set()
+				for constraint in conjunction:
+					conjunction_copy.add(constraint.copy(new_var_names=new_var_names))
+				selfcopy.add_conjunction(conjunction_copy)
+
+			#Freeze the unioned formulas
+			selfcopy.freeze()
+		else:
+			raise ValueError("Cannot union formulas with differing arity: '%s' (arity %s) and '%s' (arity %s)"%(self,self.arity(),other,other.arity()))
+
+		return selfcopy
+
+	# End operation utility methods
+	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Start public methods/properties
+
+	#Property creation
+	tuple_vars=property(_get_tuple_vars)
+	symbolics=property(_get_symbolics)
+	symbolic_names=property(_get_symbolic_names)
+	free_vars=property(_get_free_vars)
+	functions=property(_get_functions)
+	conjunctions=property(_get_conjunctions)
+	frozen=property(_get_frozen)
 
 	#Freezes this formula
 	def freeze(self):
@@ -335,11 +422,6 @@ class SparseFormula(IEGenObject):
 	def get_constant_column(self):
 		return ConstantCol()
 
-	def _check_mutate(self):
-		#Make sure we're not frozen
-		if self.frozen:
-			raise ValueError('Cannot modify a frozen sparse formula')
-
 	#Get an equality constraint with the given expression coefficients
 	def get_equality(self,exp_coeff):
 		return self._get_constraint(exp_coeff,SparseEquality)
@@ -348,12 +430,9 @@ class SparseFormula(IEGenObject):
 	def get_inequality(self,exp_coeff):
 		return self._get_constraint(exp_coeff,SparseInequality)
 
-	def _get_constraint(self,exp_coeff,ConstraintType):
-		#Make sure this sparse formula can be modified
-		self._check_mutate()
-
-		#Return a new constraint
-		return ConstraintType(exp_coeff)
+	#Removes all conjunctions from this formula
+	def clear(self):
+		self._conjunctions=set()
 
 	#Add the given conjunction (collection of constraints) to the formula
 	def add_conjunction(self,conjunction):
@@ -383,28 +462,53 @@ class SparseFormula(IEGenObject):
 	def bounds(self,tuple_var_name):
 		pass
 
+	# End public methods/properties
+	#--------------------------------------------------
+
+# End SparseFormula class
+#--------------------------------------------------
+
+#--------------------------------------------------
+# Start SparseSet class
+
 #Represents a sparse set
 class SparseSet(SparseFormula):
 
-	#Constructor for SparseSet:
+	#--------------------------------------------------
+	# Start SparseSet constructor
+
 	#Takes a set string, ex {[a]: a>10}
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
-	def __init__(self,set_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,conjunctions=None):
+	def __init__(self,set_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,conjunctions=None,freeze=True):
 		#Determine how to construct this set based on the presence of the set string
 		if set_string is None:
 			#Construct this set using the given tuple variable names, free variable names, and symbolics
-			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,conjunctions=conjunctions)
+			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,conjunctions=conjunctions,freeze=freeze)
 		else:
 			#Parse the given set string
 			pres_formulas=self._parse_formula_string(set_string,symbolics,PresParser.parse_set)
 
 			#Construct this set using the construction utility method
-			self._construct(pres_formulas=pres_formulas,symbolics=symbolics)
+			self._construct(pres_formulas=pres_formulas,symbolics=symbolics,freeze=freeze)
+
+	# End SparseSet constructor
+	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Start property support methods
 
 	#Returns the set tuple variables
 	def _tuple_set(self):
 		return self.tuple_vars
+
+	# End property support methods
+	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Start public methods/properties
+
+	#Property creation
 	tuple_set=property(_tuple_set)
 
 	#Returns the arity of this set
@@ -412,51 +516,78 @@ class SparseSet(SparseFormula):
 		return self._arity()
 
 	#Returns a copy of this SparseSet
-	def copy(self,new_var_pos=None):
+	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
 		#Make a copy of this SparseSet
-		selfcopy=self._copy(new_var_pos,SparseSet)
+		selfcopy=self._copy(new_var_pos,new_var_names,freeze,SparseSet)
 
 		return selfcopy
 
-	#TODO: implement
+	#The union operation
 	def union(self,other):
-		pass
+		res=self._union(other)
+		self.print_debug('Set Union: %s.union(%s)=%s'%(self,other,res))
+		return res
 
 	#TODO: implement
 	def apply(self,other):
 		pass
 
+	# End public methods
+	#--------------------------------------------------
+
+# End SparseSet class
+#--------------------------------------------------
+
+#--------------------------------------------------
+# Start SparseRelation class
+
 #Represents a sparse relation
 class SparseRelation(SparseFormula):
 	__slots__=('_arity_in',)
 
-	#Constructor for Relation:
+	#--------------------------------------------------
+	# Start SparseRelation constructor
+
 	#Takes a relation string, ex {[a]->[a']: a>10}
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
-	def __init__(self,relation_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,conjunctions=None):
+	def __init__(self,relation_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,conjunctions=None,freeze=True):
 		#Determine how to construct this relation based on the presence of the relation string
 		if relation_string is None:
 			#Construct this relation using the given tuple variable names, free variable names, and symbolics
-			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,conjunctions=conjunctions)
+			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,conjunctions=conjunctions,freeze=freeze)
 		else:
 			#Parse the given relation string
 			pres_formulas=self._parse_formula_string(relation_string,symbolics,PresParser.parse_relation)
 
 			#Construct this relation using the construction utility method
-			self._construct(pres_formulas=pres_formulas,symbolics=symbolics)
+			self._construct(pres_formulas=pres_formulas,symbolics=symbolics,freeze=freeze)
 
 			#Determine the input arity
 			self._arity_in=pres_formulas[0].arity_in()
 
+	# End SparseRelation constructor
+	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Start property support methods
+
 	#Returns the input tuple variables
 	def _tuple_in(self):
 		return self.tuple_vars[:self.arity_in()]
-	tuple_in=property(_tuple_in)
 
 	#Returns the output tuple variables
 	def _tuple_out(self):
 		return self.tuple_vars[self.arity_in():]
+
+	# End property support methods
+	#--------------------------------------------------
+
+	#--------------------------------------------------
+	# Start public methods/properties
+
+	#Property creation
+	tuple_in=property(_tuple_in)
 	tuple_out=property(_tuple_out)
 
 	#Returns a 2-tuple of the input/output arity of this relation
@@ -472,21 +603,24 @@ class SparseRelation(SparseFormula):
 		return self._arity()-self._arity_in
 
 	#Returns a copy of this SparseRelation
-	def copy(self,new_var_pos=None):
+	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
 		#Make a copy of this SparseRelation
-		selfcopy=self._copy(new_var_pos,SparseRelation)
+		selfcopy=self._copy(new_var_pos,new_var_names,freeze,SparseRelation)
 
 		#Determine the input arity
 		selfcopy._arity_in=self.arity_in()
 
 		return selfcopy
 
-	#TODO: implement
 	def union(self,other):
-		pass
+		res=self._union(other)
+		self.print_debug('Relation Union: %s.union(%s)=%s'%(self,other,res))
+		return res
 
-	#TODO: implement
 	def inverse(self):
+		#Make sure this relation is frozen
+		self._check_frozen()
+
 		#Mapping from int -> int (old pos to new pos)
 		new_var_pos={}
 
@@ -499,7 +633,7 @@ class SparseRelation(SparseFormula):
 			new_var_pos[pos]=pos-self.arity_in()
 
 		#Create a copy of self and update the tuple columns during the copy
-		selfcopy=self.copy(new_var_pos)
+		selfcopy=self.copy(new_var_pos=new_var_pos)
 
 		self.print_debug('Relation Inverse: %s.inverse()=%s'%(self,selfcopy))
 
@@ -508,6 +642,15 @@ class SparseRelation(SparseFormula):
 	#TODO: implement
 	def compose(self,other):
 		pass
+
+	# End public methods/properties
+	#--------------------------------------------------
+
+# End SparseRelation class
+#--------------------------------------------------
+
+#--------------------------------------------------
+# Start SparseExpColumnType classes
 
 #Parent class of the various sparse expression column type classes
 class SparseExpColumnType(IEGenObject):
@@ -539,14 +682,14 @@ class FreeVarCol(SparseExpNameColumnType):
 	def __init__(self,name):
 		SparseExpNameColumnType.__init__(self,name)
 
-	def copy(self,new_var_pos=None):
+	def copy(self,new_var_pos=None,new_var_names=None):
 		return FreeVarCol(self.name)
 
 class ConstantCol(SparseExpNameColumnType):
 	def __init__(self):
 		SparseExpNameColumnType.__init__(self,'')
 
-	def copy(self,new_var_pos=None):
+	def copy(self,new_var_pos=None,new_var_names=None):
 		return ConstantCol()
 
 class TupleVarCol(SparseExpColumnType):
@@ -562,11 +705,19 @@ class TupleVarCol(SparseExpColumnType):
 	def __str__(self):
 		return '%s(%s)'%(self.__class__.__name__,repr(self.pos))
 
-	def copy(self,new_var_pos=None):
-		if new_var_pos is None:
-			return TupleVarCol(self.pos,self.name)
-		else:
-			return TupleVarCol(new_var_pos[self.pos],self.name)
+	def copy(self,new_var_pos=None,new_var_names=None):
+		pos=self.pos
+		name=self.name
+
+		#Change the column position if necessary
+		if new_var_pos is not None:
+			pos=new_var_pos[self.pos]
+
+		#Change the name if necessary
+		if new_var_names is not None:
+			name=new_var_names[self.name]
+
+		return TupleVarCol(pos,name)
 
 	def exp_str(self):
 		return self.name
@@ -583,7 +734,7 @@ class SymbolicCol(SparseExpColumnType):
 	def __str__(self):
 		return '%s(%s)'%(self.__class__.__name__,self.sym.name)
 
-	def copy(self,new_var_pos=None):
+	def copy(self,new_var_pos=None,new_var_names=None):
 		return SymbolicCol(self.sym)
 
 	def exp_str(self):
@@ -607,11 +758,17 @@ class UFCall(SparseExpColumnType):
 		arg_strs=[str(arg) for arg in self.args]
 		return '%s(%s)'%(self.name,','.join(arg_strs))
 
-	def copy(self,new_var_pos=None):
-		return UFCall(self.name,[arg.copy() for arg in self.args])
+	def copy(self,new_var_pos=None,new_var_names=None):
+		return UFCall(self.name,[arg.copy(new_var_pos,new_var_names) for arg in self.args])
 
 	def exp_str(self):
 		return str(self)
+
+# End SparseExpColumnType classes
+#--------------------------------------------------
+
+#--------------------------------------------------
+# Start SparseExp class
 
 #Represents a sparse expression (an affine expression plus uninterpreted function symbols)
 class SparseExp(IEGenObject):
@@ -659,11 +816,11 @@ class SparseExp(IEGenObject):
 		return self._exp
 	exp=property(_get_exp)
 
-	def copy(self,new_var_pos=None):
+	def copy(self,new_var_pos=None,new_var_names=None):
 		exp_copy={}
 
 		for sub_exp,coeff in self.exp.items():
-			exp_copy[sub_exp.copy(new_var_pos)]=coeff
+			exp_copy[sub_exp.copy(new_var_pos,new_var_names)]=coeff
 
 		return SparseExp(exp_copy)
 
@@ -676,6 +833,12 @@ class SparseExp(IEGenObject):
 			comp_exp[sub_exp]=-1*coeff
 
 		return SparseExp(comp_exp)
+
+# End SparseExp class
+#--------------------------------------------------
+
+#--------------------------------------------------
+# Start SparseConstraint classes
 
 #Represents a sparse constraint (equality or inequality)
 #Create instances of SparseEquality and SparseInequality not SparseConstraint
@@ -732,8 +895,8 @@ class SparseEquality(SparseConstraint):
 		return frozenset([self.sparse_exp,self.comp_sparse_exp])
 	hash_exp=property(_get_hash_exp)
 
-	def copy(self,new_var_pos=None):
-		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos))
+	def copy(self,new_var_pos=None,new_var_names=None):
+		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names))
 
 #Class representing a sparse inequality constraint
 class SparseInequality(SparseConstraint):
@@ -743,5 +906,8 @@ class SparseInequality(SparseConstraint):
 		return self.sparse_exp
 	hash_exp=property(_get_hash_exp)
 
-	def copy(self,new_var_pos=None):
-		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos))
+	def copy(self,new_var_pos=None,new_var_names=None):
+		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names))
+
+# End SparseConstraint classes
+#--------------------------------------------------
