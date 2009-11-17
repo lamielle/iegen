@@ -1337,6 +1337,12 @@ class SparseSetTestCase(TestCase):
 	def testStr(self):
 		from iegen import SparseSet,Symbolic
 
+		set_string='{[a,b]}'
+		set=SparseSet(set_string)
+		res_string='{[a,b]}'
+
+		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
+
 		set_string='{[a,b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
 		res_string='{[a,b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 | m,n}'
@@ -1391,6 +1397,21 @@ class SparseSetTestCase(TestCase):
 		self.failUnless(set1==set2,'%s!=%s'%(set1,set2))
 		self.failUnless(set1==set3,'%s!=%s'%(set1,set3))
 		self.failUnless(set2==set3,'%s!=%s'%(set2,set3))
+
+	def testCopy(self):
+		from iegen import SparseSet,Symbolic
+
+		set=SparseSet('{[a,b]: a=b and b=n}',symbolics=[Symbolic('n')])
+		set_copy=set.copy()
+
+		self.failIf(set_copy is set,'Copy returns same SparseSet instance')
+		self.failUnless(set_copy==set,'%s!=%s'%(set_copy,set))
+
+		set=SparseSet('{[a,b]: a=f(b) and b=n}',symbolics=[Symbolic('n')])
+		set_copy=set.copy()
+
+		self.failIf(set_copy is set,'Copy returns same SparseSet instance')
+		self.failUnless(set_copy==set,'%s!=%s'%(set_copy,set))
 
 	def testSimpleFunction(self):
 		from iegen import SparseSet
@@ -1491,6 +1512,12 @@ class SparseRelationTestCase(TestCase):
 	def testStr(self):
 		from iegen import SparseRelation,Symbolic
 
+		rel_string='{[a]->[b]}'
+		rel=SparseRelation(rel_string)
+		res_string='{[a]->[b]}'
+
+		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
+
 		rel_string='{[a]->[b]: a+-1*m>=0 and b+-2*n=0 and a+-10=0 }'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
 		res_string='{[a]->[b]: -2*n+b=0 and -1*m+a>=0 and a+-10=0 | m,n}'
@@ -1545,6 +1572,21 @@ class SparseRelationTestCase(TestCase):
 		self.failUnless(rel1==rel2,'%s!=%s'%(rel1,rel2))
 		self.failUnless(rel1==rel3,'%s!=%s'%(rel1,rel3))
 		self.failUnless(rel2==rel3,'%s!=%s'%(rel2,rel3))
+
+	def testCopy(self):
+		from iegen import SparseRelation,Symbolic
+
+		rel=SparseRelation('{[a]->[b]: a=b and b=n}',symbolics=[Symbolic('n')])
+		rel_copy=rel.copy()
+
+		self.failIf(rel_copy is rel,'Copy returns same SparseRelation instance')
+		self.failUnless(rel_copy==rel,'%s!=%s'%(rel_copy,rel))
+
+		rel=SparseRelation('{[a]->[b]: a=f(b) and b=n}',symbolics=[Symbolic('n')])
+		rel_copy=rel.copy()
+
+		self.failIf(rel_copy is rel,'Copy returns same SparseRelation instance')
+		self.failUnless(rel_copy==rel,'%s!=%s'%(rel_copy,rel))
 
 	def testSimpleFunction(self):
 		from iegen import SparseRelation

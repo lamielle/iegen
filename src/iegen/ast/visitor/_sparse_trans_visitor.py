@@ -30,20 +30,27 @@ class SparseTransVisitor(DFVisitor):
 		def next_arg(self):
 			self.curr_arg+=1
 
-	def inSet(self,node):
-		raise ValueError('Translation of a Set not supported')
+	def inSet(self,node): pass
 
-	def inRelation(self,node):
-		raise ValueError('Translation of a Relation not supported')
+	def inRelation(self,node): pass
 
-	def inPresSet(self,node): pass
+	def _inFormula(self,node):
+		self.conjunction=set()
 
-	def outPresSet(self,node): pass
+	def _outFormula(self,node):
+		self.sparse_formula.add_conjunction(self.conjunction)
 
+	def inPresSet(self,node):
+		self._inFormula(node)
 
-	def inPresRelation(self,node): pass
+	def outPresSet(self,node):
+		self._outFormula(node)
 
-	def outPresRelation(self,node): pass
+	def inPresRelation(self,node):
+		self._inFormula(node)
+
+	def outPresRelation(self,node):
+		self._outFormula(node)
 
 	def inVarTuple(self,node):
 		self.in_var_tuple=True
@@ -63,14 +70,14 @@ class SparseTransVisitor(DFVisitor):
 
 	def outEquality(self,node):
 		self._outConstraint(node)
-		self.sparse_formula.add_equality(self.constraint_coeff)
+		self.conjunction.add(self.sparse_formula.get_equality(self.constraint_coeff))
 
 	def inInequality(self,node):
 		self._inConstraint(node)
 
 	def outInequality(self,node):
 		self._outConstraint(node)
-		self.sparse_formula.add_inequality(self.constraint_coeff)
+		self.conjunction.add(self.sparse_formula.get_inequality(self.constraint_coeff))
 
 	def inVarExp(self,node):
 		#Do nothing unless we are in a constraint (this ignores tuple variables)
