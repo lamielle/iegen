@@ -269,20 +269,15 @@ class SparseFormula(IEGenObject):
 		return '%s("%s",%s)'%(class_name,str(self),symbolic_strings)
 
 	def __str__(self):
+		#Create the tuple variable string based on whether we are a sparse set or relation
 		try:
-			#Try to obtain the input arity (assume we're a sparse relation)
-			arity_in=self.arity_in()
+			#Assume we are a sparse relation
+			tuple_var_string='['+','.join(self.tuple_in)+']'
+			tuple_var_string+='->'
+			tuple_var_string+='['+','.join(self.tuple_out)+']'
 		except AttributeError,e:
 			#We must be a sparse set
-			arity_in=None
-
-		#Create the tuple variable string based on whether we are a sparse set or relation
-		if arity_in is None:
 			tuple_var_string='['+','.join(self.tuple_vars)+']'
-		else:
-			tuple_var_string='['+','.join(self.tuple_vars[:arity_in])+']'
-			tuple_var_string+='->'
-			tuple_var_string+='['+','.join(self.tuple_vars[arity_in:])+']'
 
 		#Create strings for each conjunction
 		conjunction_strings=[]
@@ -341,26 +336,26 @@ class SparseFormula(IEGenObject):
 		other._check_frozen()
 
 		#Make sure the arity of both formulas matches
-		if self.arity()==other.arity():
-			#Make a copy of self
-			selfcopy=self.copy(freeze=False)
-
-			#New variable names mapping
-			new_var_names={}
-			for pos in xrange(len(selfcopy.tuple_vars)):
-				new_var_names[other.tuple_vars[pos]]=selfcopy.tuple_vars[pos]
-
-			#Add a copy of each conjunction of the other formula to the copied self
-			for conjunction in other.conjunctions:
-				conjunction_copy=set()
-				for constraint in conjunction:
-					conjunction_copy.add(constraint.copy(new_var_names=new_var_names))
-				selfcopy.add_conjunction(conjunction_copy)
-
-			#Freeze the unioned formulas
-			selfcopy.freeze()
-		else:
+		if self.arity()!=other.arity():
 			raise ValueError("Cannot union formulas with differing arity: '%s' (arity %s) and '%s' (arity %s)"%(self,self.arity(),other,other.arity()))
+
+		#Make a copy of self
+		selfcopy=self.copy(freeze=False)
+
+		#New variable names mapping
+		new_var_names={}
+		for pos in xrange(len(selfcopy.tuple_vars)):
+			new_var_names[other.tuple_vars[pos]]=selfcopy.tuple_vars[pos]
+
+		#Add a copy of each conjunction of the other formula to the copied self
+		for conjunction in other.conjunctions:
+			conjunction_copy=set()
+			for constraint in conjunction:
+				conjunction_copy.add(constraint.copy(new_var_names=new_var_names))
+			selfcopy.add_conjunction(conjunction_copy)
+
+		#Freeze the unioned formulas
+		selfcopy.freeze()
 
 		return selfcopy
 
@@ -528,9 +523,58 @@ class SparseSet(SparseFormula):
 		self.print_debug('Set Union: %s.union(%s)=%s'%(self,other,res))
 		return res
 
-	#TODO: implement
+	#Application of a relation to a set: other(self)
+	#Application of unions of relations to unions of sets is defined as:
+	#Let S=S1 union S2 union ... union SN
+	#Let R=R1 union R2 union ... union RM
+	#
+	#Then R(S)=R1(S1) union R1(S2) union ... union R1(SN) union
+	#          R2(S1) union R2(S2) union ... union R2(SN) union
+	#          ...
+	#          RM(S1) union RM(S2) union ... union RM(SN)
 	def apply(self,other):
-		pass
+		#Make sure the set and relation are frozen
+		self._check_frozen()
+		other._check_frozen()
+
+		#Make sure the set's arity matches the input arity of the relation
+		if self.arity()!=other.arity_in():
+			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(other.arity_in(),self.arity()))
+
+		#Gather the new tuple variables, free variables, and symbolics
+		new_tuple_vars=other.tuple_out
+		new_free_vars=list(set(other.tuple_in+other.free_vars+self.tuple_set+self.free_vars))
+		new_symbolics=list(set(other.symbolics+self.symbolics))
+
+		#Create a new set with no constraints, we will build the constraints
+		new_set=SparseSet(tuple_var_names=new_tuple_vars,free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
+
+		#Create equality constraints
+		old_tuple_vars=self.tuple_vars
+		old_in_vars=other.tuple_in
+		equality_conjunction=set()
+
+		for pos in xrange(len(old_tuple_vars)):
+			exp_coeff=defaultdict(int)
+			exp_coeff[new_set.get_column(old_tuple_vars[pos])]+=1
+			exp_coeff[new_set.get_column(old_in_vars[pos])]+=-1
+			equality_conjunction.add(new_set.get_equality(exp_coeff))
+
+		#Create new collection of conjunctions (cross product of both sets of conjunctions)
+		for set_conjunction in self.conjunctions:
+			for rel_conjunction in other.conjunctions:
+				#Merge the two conjunctions and add to the resulting set being created
+				#TODO: Need to change types of some columns depending on tuple/free variables and how they've changed
+				merged_conjunction=set(set_conjunction)|set(rel_conjunction)|set(equality_conjunction)
+
+				new_set.add_conjunction(merged_conjunction)
+
+		#Freeze the new resulting set now that we're done modifying it
+		new_set.freeze()
+
+		self.print_debug('Apply: %s.apply(%s)=%s'%(self,other,new_set))
+
+		return new_set
 
 	# End public methods
 	#--------------------------------------------------
@@ -639,9 +683,61 @@ class SparseRelation(SparseFormula):
 
 		return selfcopy
 
-	#TODO: implement
+	#Relation composition: self(other)
+	#Composition of unions of relations is defined as:
+	#Let R1=R11 union R12 union ... union R1N
+	#Let R2=R21 union R22 union ... union R2M
+	#
+	#Then R1(R2)=R11(R21) union R11(R22) union ... union R11(R2M) union
+	#            R12(R21) union R12(R22) union ... union R12(R2M) union
+	#            ...
+	#            R1N(R21) union R1N(R22) union ... union R1N(R2M)
 	def compose(self,other):
-		pass
+		#Make sure the relations are frozen
+		self._check_frozen()
+		other._check_frozen()
+
+		#Make sure the second relations's output arity matches the first relation's input arity
+		if other.arity_out()!=self.arity_in():
+			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
+
+		#Gather the new tuple variables, free variables, and symbolics
+		new_tuple_vars=other.tuple_in+self.tuple_out
+		new_free_vars=list(set(other.tuple_out+other.free_vars+self.tuple_in+self.free_vars))
+		new_symbolics=list(set(other.symbolics+self.symbolics))
+
+		#Create a new relation with no constraints, we will build the constraints
+		new_relation=SparseRelation(tuple_var_names=new_tuple_vars,free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
+
+		#Create equality constraints
+		old_out_vars=other.tuple_out
+		old_in_vars=self.tuple_in
+		equality_conjunction=set()
+
+		for pos in xrange(len(old_out_vars)):
+			exp_coeff=defaultdict(int)
+			exp_coeff[new_relation.get_column(old_out_vars[pos])]+=1
+			exp_coeff[new_relation.get_column(old_in_vars[pos])]+=-1
+			equality_conjunction.add(new_relation.get_equality(exp_coeff))
+
+		#Create new collection of conjunctions (cross product of both sets of conjunctions)
+		for rel1_conjunction in other.conjunctions:
+			for rel2_conjunction in self.conjunctions:
+				#Merge the two conjunctions and add to the resulting relation being created
+				#TODO: Need to change types of some columns depending on tuple/free variables and how they've changed
+				merged_conjunction=set(rel1_conjunction)|set(rel2_conjunction)|set(equality_conjunction)
+
+				new_relation.add_conjunction(merged_conjunction)
+
+		#Freeze the new resulting relation now that we're done modifying it
+		new_relation.freeze()
+
+		self.print_debug('Compose: \n\t%s\n\n\t.compose(%s)\n\n\t' %(self,other) )
+		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
+
+		return new_relation
+
+		return self
 
 	# End public methods/properties
 	#--------------------------------------------------
@@ -864,6 +960,7 @@ class SparseConstraint(IEGenObject):
 		return '%s(%s)'%(self.__class__.__name__,self.sparse_exp.exp)
 
 	def __str__(self):
+		#TODO: Add a more sophisticated routine that produces more readable constraint strings
 		return str(self.sparse_exp)+self.op+'0'
 
 	def _get_sparse_exp(self):

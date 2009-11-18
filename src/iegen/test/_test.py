@@ -1603,6 +1603,76 @@ class SparseSetTestCase(TestCase):
 
 		self.failUnless(res_str==str(set_union),'%s!=%s'%(str(set_union),res_str))
 
+	#Tests that the apply operation doesn't work on unfrozen sets/relations
+	@raises(ValueError)
+	def testApplyUnfrozen1(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[a,b]: a=b}',freeze=False)
+		relation=SparseRelation('{[a]->[b]: b=10}')
+		set.apply(relation)
+
+	@raises(ValueError)
+	def testApplyUnfrozen2(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[a,b]: a=b}')
+		relation=SparseRelation('{[a]->[b]: b=10}',freeze=False)
+		set.apply(relation)
+
+	#Tests that apply is not destructive
+	def testApplyNonDestructive(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[a]}')
+		relation=SparseRelation('{[a]->[b]}')
+		applied=set.apply(relation)
+
+		self.failIf(applied is set,'%s is %s'%(applied,set))
+
+	#Tests that apply fails when the arity of the set does not match the input arity of the relation
+	@raises(ValueError)
+	def testApplyArityFail1(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[a,b]}')
+		relation=SparseRelation('{[b]->[b]}')
+		applied=set.apply(relation)
+
+	@raises(ValueError)
+	def testApplyArityFail2(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[a,b,c]}')
+		relation=SparseRelation('{[a,b]->[e,f]}')
+		applied=set.apply(relation)
+
+	#Tests the apply operation
+	def testApply(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[a]:1<=a and a<=10}')
+		relation=SparseRelation('{[d]->[e,f]:e=d && -10<=f and f<=0}')
+
+		applied=set.apply(relation)
+
+		applied_res=SparseSet('{[e,f]: 1<=e and e<=10 && -10<=f and f<=0}')
+
+		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
+
+	#Tests the apply operation with equality constraints
+	def testApplyEquality(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[a]}')
+		relation=SparseRelation('{[d]->[e,f]:e=d and f=d}')
+
+		applied=set.apply(relation)
+
+		applied_res=SparseSet('{[e,f]: e=f}')
+
+		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
+
 	# End operation tests
 	#----------------------------------------
 #-------------------------------------
@@ -1936,9 +2006,7 @@ class SparseRelationTestCase(TestCase):
 	def testInverseUnfrozen(self):
 		from iegen import SparseRelation
 
-		rel=SparseRelation('{[a]->[b]: a=b}',freeze=False)
-
-		rel.inverse()
+		SparseRelation('{[a]->[b]: a=b}',freeze=False).inverse()
 
 	#Tests the inverse operation
 	def testInverseEmpty(self):
@@ -1959,6 +2027,77 @@ class SparseRelationTestCase(TestCase):
 
 		self.failUnless(inverse==res_inverse,'%s!=%s'%(inverse,res_inverse))
 		self.failUnless(str(inverse)==str(res_inverse),'%s!=%s'%(str(inverse),str(res_inverse)))
+
+	#Tests that the compose operation doesn't work on unfrozen relations
+	@raises(ValueError)
+	def testComposeUnfrozen1(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a]->[b]: a=b}',freeze=False)
+		rel2=SparseRelation('{[a]->[b]: b=10}')
+		rel1.compose(rel2)
+
+	@raises(ValueError)
+	def testComposeUnfrozen2(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a]->[b]: a=b}')
+		rel2=SparseRelation('{[a]->[b]: b=10}',freeze=False)
+		rel1.compose(rel2)
+
+	#Tests that compose is not destructive
+	def testComposeNonDestructive(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a]->[a]}')
+		rel2=SparseRelation('{[b]->[b]}')
+		composed=rel1.compose(rel2)
+
+		self.failIf(composed is rel1,'%s is %s'%(composed,rel1))
+		self.failIf(composed is rel2,'%s is %s'%(composed,rel2))
+
+	#Tests that compose fails when the output arity of the second relation does not match the input arity of the first relation
+	@raises(ValueError)
+	def testComposeArityFail1(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[a,b]->[c]}')
+		rel2=SparseRelation('{[b]->[b]}')
+		composed=rel1.compose(rel2)
+
+	@raises(ValueError)
+	def testComposeArityFail2(self):
+		from iegen import SparseRelation
+
+		rel1=SparseRelation('{[]->[c]}')
+		rel2=SparseRelation('{[a,b,c,d]->[e]}')
+		composed=rel1.compose(rel2)
+
+	#Tests the compose operation
+	def testCompose(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[a,b]->[c]:1<=a and a<=10 and 1<=b and b<=10}')
+		relation2=SparseRelation('{[d]->[e,f]:-10<=d and d<=0}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=SparseRelation('{[d]->[c]: -10<=d and d<=0}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests the compose operation with equality constraints
+	def testComposeEquality(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[a,b]->[c]:c=a}')
+		relation2=SparseRelation('{[d]->[e,f]:e=d and f=d}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=SparseRelation('{[d]->[c]: d=c}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
 	# End operation tests
 	#----------------------------------------
