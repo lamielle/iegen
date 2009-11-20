@@ -35,7 +35,7 @@ class SparseTransVisitor(DFVisitor):
 	def inRelation(self,node): pass
 
 	def _inFormula(self,node):
-		self.conjunction=set()
+		self.conjunction=self.sparse_formula.get_conjunction()
 
 	def _outFormula(self,node):
 		self.sparse_formula.add_conjunction(self.conjunction)
@@ -70,14 +70,14 @@ class SparseTransVisitor(DFVisitor):
 
 	def outEquality(self,node):
 		self._outConstraint(node)
-		self.conjunction.add(self.sparse_formula.get_equality(self.constraint_coeff))
+		self.conjunction.add_constraint(self.sparse_formula.get_equality(self.constraint_coeff))
 
 	def inInequality(self,node):
 		self._inConstraint(node)
 
 	def outInequality(self,node):
 		self._outConstraint(node)
-		self.conjunction.add(self.sparse_formula.get_inequality(self.constraint_coeff))
+		self.conjunction.add_constraint(self.sparse_formula.get_inequality(self.constraint_coeff))
 
 	def inVarExp(self,node):
 		#Do nothing unless we are in a constraint (this ignores tuple variables)

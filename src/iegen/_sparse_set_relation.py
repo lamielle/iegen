@@ -12,11 +12,11 @@ from iegen.util import biject,raise_objs_not_like_types
 
 #Represents a sparse set or relation
 class SparseFormula(IEGenObject):
-	__slots__=('_tuple_var_cols','_symbolic_cols','_free_var_cols','_columns','_functions','_conjunctions','_frozen')
+	__slots__=('_tuple_var_cols','_symbolic_cols','_free_var_cols','_columns','_functions','_disjunction','_frozen')
 
 	#--------------------------------------------------
 	# Start SparseFormula constructor
-	def __init__(self,tuple_var_names,free_var_names,symbolics,functions,conjunctions):
+	def __init__(self,tuple_var_names,free_var_names,symbolics,functions,disjunction):
 		#--------------------
 		#Init various fields
 		#'var name' <--> TupleVarCol(pos)
@@ -34,8 +34,8 @@ class SparseFormula(IEGenObject):
 		#Set of UFCalls present in this formula
 		self._functions=set(functions)
 
-		#Set of SparseConstraints in this formula (equality or inequality)
-		self._conjunctions=set(conjunctions)
+		#SparseDisjunction containing all conjunctions in this formula (equalities or inequalities)
+		self._disjunction=SparseDisjunction() if disjunction is None else disjunction
 
 		#Start off unfrozen
 		self._frozen=False
@@ -54,20 +54,17 @@ class SparseFormula(IEGenObject):
 	#--------------------------------------------------
 	# Start construction utility methods
 
-	def _construct(self,pres_formulas=None,tuple_var_names=None,free_var_names=None,symbolics=None,functions=None,conjunctions=None,freeze=True):
+	def _construct(self,pres_formulas=None,tuple_var_names=None,free_var_names=None,symbolics=None,functions=None,disjunction=None,freeze=True):
 		#Get an empty list if no symbolics were given
 		symbolics=[] if symbolics is None else sorted(symbolics)
 
 		#Get an empty list if no functions were given
 		functions=[] if functions is None else functions
 
-		#Get an empty list if no conjunctions were given
-		conjunctions=[] if conjunctions is None else conjunctions
-
 		#Determine how to construct based on the presence of the pres_formulas argument
 		if pres_formulas is None:
 			#Construct this formula using the SparseFormula constructor and the parsed information
-			SparseFormula.__init__(self,tuple_var_names,free_var_names,symbolics,functions,conjunctions)
+			SparseFormula.__init__(self,tuple_var_names,free_var_names,symbolics,functions,disjunction)
 		else:
 			#Get the names of the tuple variables
 			tuple_var_names=self._get_tuple_var_names(pres_formulas)
@@ -76,7 +73,7 @@ class SparseFormula(IEGenObject):
 			free_var_names=self._get_free_var_names(pres_formulas,tuple_var_names,symbolics)
 
 			#Construct this formula using the SparseFormula constructor and the parsed information
-			SparseFormula.__init__(self,tuple_var_names,free_var_names,symbolics,[],[])
+			SparseFormula.__init__(self,tuple_var_names,free_var_names,symbolics,[],disjunction)
 
 			#Run the translation visitor
 			v=SparseTransVisitor(self)
@@ -91,17 +88,12 @@ class SparseFormula(IEGenObject):
 	#The constraints are copied if copy_constraints is True
 	def _copy(self,new_var_pos,new_var_names,freeze,FormulaClass):
 		#Copy the functions of the formula
-		functions=set()
+		functions_copy=set()
 		for function in self.functions:
-			functions.add(function.copy(new_var_pos,new_var_names))
+			functions_copy.add(function.copy(new_var_pos,new_var_names))
 
 		#Copy the constraints of the formula
-		conjunctions=set()
-		for conjunction in self.conjunctions:
-			conjunction_copy=set()
-			for constraint in conjunction:
-				conjunction_copy.add(constraint.copy(new_var_pos,new_var_names))
-			conjunctions.add(frozenset(conjunction_copy))
+		disjunction_copy=self.disjunction.copy(new_var_pos,new_var_names,freeze=freeze)
 
 		#Reorder the tuple variables if needed
 		if new_var_pos is None:
@@ -120,7 +112,7 @@ class SparseFormula(IEGenObject):
 					tuple_var_names[pos]=new_var_names[tuple_var_names[pos]]
 
 		#Copy the structure of the formula
-		selfcopy=FormulaClass(tuple_var_names=tuple_var_names,free_var_names=self.free_vars,symbolics=self.symbolics,functions=functions,conjunctions=conjunctions,freeze=freeze)
+		selfcopy=FormulaClass(tuple_var_names=tuple_var_names,free_var_names=self.free_vars,symbolics=self.symbolics,functions=functions_copy,disjunction=disjunction_copy,freeze=freeze)
 
 		return selfcopy
 
@@ -205,7 +197,7 @@ class SparseFormula(IEGenObject):
 	# Hash and equality methods
 	def __hash__(self):
 		self._check_frozen()
-		return hash((self._columns,self._functions,self._conjunctions))
+		return hash((self._columns,self._functions,self._disjunction))
 
 	def __eq__(self,other):
 		return hash(self)==hash(other)
@@ -249,9 +241,9 @@ class SparseFormula(IEGenObject):
 	def _get_functions(self):
 		return list(self._functions)
 
-	#Get the conjunctions in the formula
-	def _get_conjunctions(self):
-		return list(self._conjunctions)
+	#Get the disjunction of the formula
+	def _get_disjunction(self):
+		return self._disjunction
 
 	#Get the frozen state
 	def _get_frozen(self):
@@ -281,14 +273,9 @@ class SparseFormula(IEGenObject):
 
 		#Create strings for each conjunction
 		conjunction_strings=[]
-		for conjunction in self.conjunctions:
-			#Create strings for the constraints
-			constraint_strings=[]
-			for constraint in conjunction:
-				constraint_strings.append(str(constraint))
-
-			#Create a single string for all of the constraints
-			constraints_string=' and '.join(constraint_strings)
+		for conjunction in self.disjunction.conjunctions:
+			#Get a string for the current conjunction
+			constraints_string=str(conjunction)
 
 			#Add a ': ' if we have any constraints
 			if len(conjunction)>0:
@@ -347,12 +334,8 @@ class SparseFormula(IEGenObject):
 		for pos in xrange(len(selfcopy.tuple_vars)):
 			new_var_names[other.tuple_vars[pos]]=selfcopy.tuple_vars[pos]
 
-		#Add a copy of each conjunction of the other formula to the copied self
-		for conjunction in other.conjunctions:
-			conjunction_copy=set()
-			for constraint in conjunction:
-				conjunction_copy.add(constraint.copy(new_var_names=new_var_names))
-			selfcopy.add_conjunction(conjunction_copy)
+		#Add a copy of the other formula's disjunction to the copied self
+		selfcopy.add_disjunction(other.disjunction.copy(new_var_names=new_var_names))
 
 		#Freeze the unioned formulas
 		selfcopy.freeze()
@@ -371,7 +354,7 @@ class SparseFormula(IEGenObject):
 	symbolic_names=property(_get_symbolic_names)
 	free_vars=property(_get_free_vars)
 	functions=property(_get_functions)
-	conjunctions=property(_get_conjunctions)
+	disjunction=property(_get_disjunction)
 	frozen=property(_get_frozen)
 
 	#Freezes this formula
@@ -379,7 +362,7 @@ class SparseFormula(IEGenObject):
 		#Freeze the necessary fields
 		self._columns=frozenset(self._columns)
 		self._functions=frozenset(self._functions)
-		self._conjunctions=frozenset(self._conjunctions)
+		self.disjunction.freeze()
 
 		#Set this sparse formula's state to frozen
 		self._frozen=True
@@ -425,20 +408,34 @@ class SparseFormula(IEGenObject):
 	def get_inequality(self,exp_coeff):
 		return self._get_constraint(exp_coeff,SparseInequality)
 
-	#Removes all conjunctions from this formula
-	def clear(self):
-		self._conjunctions=set()
+	#Get a SparseConjunction with the given constraints
+	def get_conjunction(self,constraints=None):
+		return SparseConjunction(constraints)
 
-	#Add the given conjunction (collection of constraints) to the formula
+	#Clears this formula's disjunction of all conjunctions
+	def clear(self):
+		self._check_mutate()
+		self.disjunction.clear()
+
+	#Add the given SparseConjunction (collection of constraints) to the formula
 	def add_conjunction(self,conjunction):
 		#Make sure this sparse formula can be modified
 		self._check_mutate()
 
 		#Add the constraint to the constraints collection
-		self._conjunctions.add(frozenset(conjunction))
+		self.disjunction.add_conjunction(conjunction)
+
+	#Merge the given SparseDisjunction (collection of conjunctions) with the existing disjunction
+	def add_disjunction(self,disjunction):
+		#Make sure this sparse formula can be modified
+		self._check_mutate()
+
+		#Merge the disjunctions
+		self.disjunction.add_disjunction(disjunction)
 
 	#Add a function with the given expression coefficients to the formula
 	def add_function(self,name,arg_exps):
+		self._check_mutate()
 		args=[SparseExp(arg_exp) for arg_exp in arg_exps]
 		ufcall=UFCall(name,args)
 		self._functions.add(ufcall)
@@ -475,11 +472,11 @@ class SparseSet(SparseFormula):
 	#Takes a set string, ex {[a]: a>10}
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
-	def __init__(self,set_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,conjunctions=None,freeze=True):
+	def __init__(self,set_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,disjunction=None,freeze=True):
 		#Determine how to construct this set based on the presence of the set string
 		if set_string is None:
 			#Construct this set using the given tuple variable names, free variable names, and symbolics
-			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,conjunctions=conjunctions,freeze=freeze)
+			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,disjunction=disjunction,freeze=freeze)
 		else:
 			#Parse the given set string
 			pres_formulas=self._parse_formula_string(set_string,symbolics,PresParser.parse_set)
@@ -552,21 +549,23 @@ class SparseSet(SparseFormula):
 		#Create equality constraints
 		old_tuple_vars=self.tuple_vars
 		old_in_vars=other.tuple_in
-		equality_conjunction=set()
+		equality_conjunction=new_set.get_conjunction()
 
 		for pos in xrange(len(old_tuple_vars)):
 			exp_coeff=defaultdict(int)
 			exp_coeff[new_set.get_column(old_tuple_vars[pos])]+=1
 			exp_coeff[new_set.get_column(old_in_vars[pos])]+=-1
-			equality_conjunction.add(new_set.get_equality(exp_coeff))
+			equality_conjunction.add_constraint(new_set.get_equality(exp_coeff))
 
-		#Create new collection of conjunctions (cross product of both sets of conjunctions)
-		for set_conjunction in self.conjunctions:
-			for rel_conjunction in other.conjunctions:
+		#Create new collection of conjunctions (cartesian product of both sets of conjunctions)
+		for set_conjunction in self.disjunction.conjunctions:
+			for rel_conjunction in other.disjunction.conjunctions:
 				#Merge the two conjunctions and add to the resulting set being created
-				#TODO: Need to change types of some columns depending on tuple/free variables and how they've changed
-				merged_conjunction=set(set_conjunction)|set(rel_conjunction)|set(equality_conjunction)
-
+				#TODO: Need to change types of some columns while copying depending on tuple/free variables and how they've changed
+				merged_conjunction=new_set.get_conjunction()
+				merged_conjunction.add_conjunction(set_conjunction)
+				merged_conjunction.add_conjunction(rel_conjunction)
+				merged_conjunction.add_conjunction(equality_conjunction)
 				new_set.add_conjunction(merged_conjunction)
 
 		#Freeze the new resulting set now that we're done modifying it
@@ -595,11 +594,11 @@ class SparseRelation(SparseFormula):
 	#Takes a relation string, ex {[a]->[a']: a>10}
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
-	def __init__(self,relation_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,conjunctions=None,freeze=True):
+	def __init__(self,relation_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,disjunction=None,freeze=True):
 		#Determine how to construct this relation based on the presence of the relation string
 		if relation_string is None:
 			#Construct this relation using the given tuple variable names, free variable names, and symbolics
-			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,conjunctions=conjunctions,freeze=freeze)
+			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,disjunction=disjunction,freeze=freeze)
 		else:
 			#Parse the given relation string
 			pres_formulas=self._parse_formula_string(relation_string,symbolics,PresParser.parse_relation)
@@ -712,21 +711,23 @@ class SparseRelation(SparseFormula):
 		#Create equality constraints
 		old_out_vars=other.tuple_out
 		old_in_vars=self.tuple_in
-		equality_conjunction=set()
+		equality_conjunction=new_relation.get_conjunction()
 
 		for pos in xrange(len(old_out_vars)):
 			exp_coeff=defaultdict(int)
 			exp_coeff[new_relation.get_column(old_out_vars[pos])]+=1
 			exp_coeff[new_relation.get_column(old_in_vars[pos])]+=-1
-			equality_conjunction.add(new_relation.get_equality(exp_coeff))
+			equality_conjunction.add_constraint(new_relation.get_equality(exp_coeff))
 
-		#Create new collection of conjunctions (cross product of both sets of conjunctions)
-		for rel1_conjunction in other.conjunctions:
-			for rel2_conjunction in self.conjunctions:
+		#Create new collection of conjunctions (cartesian product of both sets of conjunctions)
+		for rel1_conjunction in other.disjunction.conjunctions:
+			for rel2_conjunction in self.disjunction.conjunctions:
 				#Merge the two conjunctions and add to the resulting relation being created
-				#TODO: Need to change types of some columns depending on tuple/free variables and how they've changed
-				merged_conjunction=set(rel1_conjunction)|set(rel2_conjunction)|set(equality_conjunction)
-
+				#TODO: Need to change types of some columns while copying depending on tuple/free variables and how they've changed
+				merged_conjunction=new_relation.get_conjunction()
+				merged_conjunction.add_conjunction(rel1_conjunction)
+				merged_conjunction.add_conjunction(rel2_conjunction)
+				merged_conjunction.add_conjunction(equality_conjunction)
 				new_relation.add_conjunction(merged_conjunction)
 
 		#Freeze the new resulting relation now that we're done modifying it
@@ -1007,4 +1008,176 @@ class SparseInequality(SparseConstraint):
 		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names))
 
 # End SparseConstraint classes
+#--------------------------------------------------
+
+#--------------------------------------------------
+# Start SparseConjunction class
+
+class SparseConjunction(IEGenObject):
+	__slots__=('_constraints','_frozen')
+
+	def __init__(self,constraints=None):
+		constraints=[] if constraints is None else constraints
+
+		self._constraints=set(constraints)
+		self._frozen=False
+
+	def __hash__(self):
+		self._check_frozen()
+		return hash(self.constraints)
+
+	def __eq__(self,other):
+		return hash(self)==hash(other)
+
+	def __ne__(self,other):
+		return not self==other
+
+	def __len__(self):
+		return len(self.constraints)
+
+	def __repr__(self):
+		return '%s(%s)'%(self.__class__.__name__,repr(self.constraints))
+
+	def __str__(self):
+		#Create strings for the constraints
+		constraint_strings=[str(constraint) for constraint in self.constraints]
+
+		#Create a single string for all of the constraints
+		constraints_string=' and '.join(constraint_strings)
+
+		return constraints_string
+
+	def _check_frozen(self):
+		#Make sure we're frozen
+		if not self.frozen:
+			raise ValueError('Cannot operate on a non-frozen sparse conjunction')
+
+	def _check_mutate(self):
+		#Make sure we're not frozen
+		if self.frozen:
+			raise ValueError('Cannot modify a frozen sparse conjunction')
+
+	def _get_constraints(self):
+		return self._constraints
+
+	def _get_frozen(self):
+		return self._frozen
+
+	constraints=property(_get_constraints)
+	frozen=property(_get_frozen)
+
+	def add_constraint(self,constraint):
+		self._check_mutate()
+
+		self._constraints.add(constraint)
+
+	def add_conjunction(self,conjunction):
+		self._check_mutate()
+
+		conjunction.freeze()
+
+		self._constraints|=conjunction.constraints
+
+	def freeze(self):
+		self._constraints=frozenset(self.constraints)
+
+		self._frozen=True
+
+	def copy(self,new_var_pos=None,new_var_names=None):
+		selfcopy=SparseConjunction()
+
+		for constraint in self.constraints:
+			selfcopy.add_constraint(constraint.copy(new_var_pos,new_var_names))
+
+		if self.frozen:
+			selfcopy.freeze()
+
+		return selfcopy
+
+# End SparseConjunction class
+#--------------------------------------------------
+
+#--------------------------------------------------
+# Start SparseDisjunction class
+
+class SparseDisjunction(IEGenObject):
+	__slots__=('_conjunctions','_frozen')
+
+	def __init__(self,conjunctions=None):
+		conjunctions=[] if conjunctions is None else conjunctions
+
+		self._conjunctions=set(conjunctions)
+		self._frozen=False
+
+	def __hash__(self):
+		self._check_frozen()
+		return hash(self.conjunctions)
+
+	def __eq__(self,other):
+		return hash(self)==hash(other)
+
+	def __ne__(self,other):
+		return not self==other
+
+	def __len__(self):
+		return len(self.conjunctions)
+
+	def __repr__(self):
+		return '%s(%s)'%(self.__class__.__name__,repr(self.conjunctions))
+
+	def _check_frozen(self):
+		#Make sure we're frozen
+		if not self.frozen:
+			raise ValueError('Cannot operate on a non-frozen sparse disjunction')
+
+	def _check_mutate(self):
+		#Make sure we're not frozen
+		if self.frozen:
+			raise ValueError('Cannot modify a frozen sparse disjunction')
+
+	def _get_conjunctions(self):
+		return self._conjunctions
+
+	def _get_frozen(self):
+		return self._frozen
+
+	conjunctions=property(_get_conjunctions)
+	frozen=property(_get_frozen)
+
+	def add_conjunction(self,conjunction):
+		self._check_mutate()
+
+		conjunction.freeze()
+
+		self._conjunctions.add(conjunction)
+
+	def add_disjunction(self,disjunction):
+		self._check_mutate()
+
+		disjunction.freeze()
+
+		self._conjunctions|=disjunction.conjunctions
+
+	def clear(self):
+		self._check_mutate()
+
+		self._conjunctions=set()
+
+	def freeze(self):
+		self._conjunctions=frozenset(self.conjunctions)
+
+		self._frozen=True
+
+	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
+		selfcopy=SparseDisjunction()
+
+		for conjunction in self.conjunctions:
+			selfcopy.add_conjunction(conjunction.copy(new_var_pos,new_var_names))
+
+		if self.frozen and freeze:
+			selfcopy.freeze()
+
+		return selfcopy
+
+# End SparseDisjunction class
 #--------------------------------------------------
