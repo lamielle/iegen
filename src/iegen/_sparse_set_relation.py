@@ -960,8 +960,45 @@ class SparseConstraint(IEGenObject):
 		return '%s(%s)'%(self.__class__.__name__,self.sparse_exp.exp)
 
 	def __str__(self):
-		#TODO: Add a more sophisticated routine that produces more readable constraint strings
-		return str(self.sparse_exp)+self.op+'0'
+		lhs_exp_strs=[]
+		rhs_exp_strs=[]
+
+		#Look at each sub-expression
+		for sub_exp in self.sparse_exp.exp:
+			#Grab the current sub_exp's coefficient
+			coeff=self.sparse_exp.exp[sub_exp]
+
+			#Only work with non-zero coefficients
+			if 0!=coeff:
+				#Handle the constant
+				if ConstantCol()==sub_exp:
+					if coeff>0:
+						lhs_exp_strs.append('%s'%(coeff))
+					else:
+						rhs_exp_strs.append('%s'%(-1*coeff))
+				else:
+					#If the coefficient is not 0, add it to the list of expression strings
+					if coeff>0:
+						if 1==coeff:
+							lhs_exp_strs.append('%s'%(sub_exp.exp_str()))
+						else:
+							lhs_exp_strs.append('%s%s'%(coeff,sub_exp.exp_str()))
+					else:
+						if -1==coeff:
+							rhs_exp_strs.append('%s'%(sub_exp.exp_str()))
+						else:
+							rhs_exp_strs.append('%s%s'%(-1*coeff,sub_exp.exp_str()))
+
+		lhs_exp_str='+'.join(lhs_exp_strs)
+		rhs_exp_str='+'.join(rhs_exp_strs)
+
+		if ''==lhs_exp_str:
+			lhs_exp_str='0'
+
+		if ''==rhs_exp_str:
+			rhs_exp_str='0'
+
+		return lhs_exp_str+self.op+rhs_exp_str
 
 	def _get_sparse_exp(self):
 		return self._sparse_exp
