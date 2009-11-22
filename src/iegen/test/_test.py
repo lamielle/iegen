@@ -1686,7 +1686,7 @@ class SparseSetTestCase(TestCase):
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
 	#Tests the apply operation with equality constraints
-	def testApplyEquality(self):
+	def testApplyEquality1(self):
 		from iegen import SparseSet,SparseRelation
 
 		set=SparseSet('{[a]}')
@@ -1695,6 +1695,18 @@ class SparseSetTestCase(TestCase):
 		applied=set.apply(relation)
 
 		applied_res=SparseSet('{[e,f]: e=f}')
+
+		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
+
+	def testApplyEquality2(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[a]: a=10}')
+		relation=SparseRelation('{[b]->[c,d]: b=c and d=10}')
+
+		applied=set.apply(relation)
+
+		applied_res=SparseSet('{[c,d]: c=10 and d=10}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -2137,7 +2149,7 @@ class SparseRelationTestCase(TestCase):
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
 	#Tests the compose operation with equality constraints
-	def testComposeEquality(self):
+	def testComposeEquality1(self):
 		from iegen import SparseRelation
 
 		relation1=SparseRelation('{[a,b]->[c]:c=a}')
@@ -2146,6 +2158,54 @@ class SparseRelationTestCase(TestCase):
 		composed=relation1.compose(relation2)
 
 		composed_res=SparseRelation('{[d]->[c]: d=c}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	def testComposeEquality2(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[a]->[b,c]: a=10}')
+		relation2=SparseRelation('{[d,e]->[f]: f=10}')
+
+		composed=relation2.compose(relation1)
+
+		composed_res=SparseRelation('{[a]->[f]: a=10 and f=10}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	def testComposeEquality3(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[a]->[b,c]: a=10}')
+		relation2=SparseRelation('{[d,e]->[f]: f=10}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=SparseRelation('{[d,e]->[b,c]}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	def testComposeEquality4(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[a]->[b,c]: a=10}')
+		relation2=SparseRelation('{[c,d]->[e]: e=10}')
+
+		composed=relation2.compose(relation1)
+
+		composed_res=SparseRelation('{[a]->[e]: a=10 and e=10}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	def testComposeEquality5(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[a]->[b,c]: a=10}')
+		relation2=SparseRelation('{[c,d]->[e]: e=10}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=SparseRelation('{[c,d]->[b,c]}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 

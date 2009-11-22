@@ -342,6 +342,37 @@ class SparseFormula(IEGenObject):
 
 		return selfcopy
 
+	#Adds new constraints from the cartesian product of the disjunctions of two given formulas
+	#Adds equality constraints for each pair of variables to each item in the cartesian product
+	#Converts any tuple variable columns to free variable columns to match this formula's free/tuple variables
+	#This utility method is used by the apply and compose operations
+	def _join(self,formula1,formula2,equality_var_pairs):
+		#Create a conjunction with equalities for the given variable pairs
+		#AND create a mapping from old tuple variable columns to new free variable columns
+		equality_conjunction=self.get_conjunction()
+		new_cols={}
+		for var1,var2 in equality_var_pairs:
+			exp_coeff=defaultdict(int)
+			exp_coeff[self.get_column(var1)]+=1
+			exp_coeff[self.get_column(var2)]+=-1
+			equality_conjunction.add_constraint(self.get_equality(exp_coeff))
+
+			if var1 not in self.tuple_vars:
+				new_cols[formula1.get_column(var1)]=self.get_column(var1)
+
+			if var2 not in self.tuple_vars:
+				new_cols[formula2.get_column(var2)]=self.get_column(var2)
+
+		#Create new collection of conjunctions (cartesian product of both sets of conjunctions)
+		for rel1_conjunction in formula1.disjunction.conjunctions:
+			for rel2_conjunction in formula2.disjunction.conjunctions:
+				#Merge the two conjunctions and add to the resulting relation being created
+				merged_conjunction=self.get_conjunction()
+				merged_conjunction.add_conjunction(rel1_conjunction.copy(new_cols=new_cols))
+				merged_conjunction.add_conjunction(rel2_conjunction.copy(new_cols=new_cols))
+				merged_conjunction.add_conjunction(equality_conjunction.copy())
+				self.add_conjunction(merged_conjunction)
+
 	# End operation utility methods
 	#--------------------------------------------------
 
@@ -546,27 +577,8 @@ class SparseSet(SparseFormula):
 		#Create a new set with no constraints, we will build the constraints
 		new_set=SparseSet(tuple_var_names=new_tuple_vars,free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
 
-		#Create equality constraints
-		old_tuple_vars=self.tuple_vars
-		old_in_vars=other.tuple_in
-		equality_conjunction=new_set.get_conjunction()
-
-		for pos in xrange(len(old_tuple_vars)):
-			exp_coeff=defaultdict(int)
-			exp_coeff[new_set.get_column(old_tuple_vars[pos])]+=1
-			exp_coeff[new_set.get_column(old_in_vars[pos])]+=-1
-			equality_conjunction.add_constraint(new_set.get_equality(exp_coeff))
-
-		#Create new collection of conjunctions (cartesian product of both sets of conjunctions)
-		for set_conjunction in self.disjunction.conjunctions:
-			for rel_conjunction in other.disjunction.conjunctions:
-				#Merge the two conjunctions and add to the resulting set being created
-				#TODO: Need to change types of some columns while copying depending on tuple/free variables and how they've changed
-				merged_conjunction=new_set.get_conjunction()
-				merged_conjunction.add_conjunction(set_conjunction)
-				merged_conjunction.add_conjunction(rel_conjunction)
-				merged_conjunction.add_conjunction(equality_conjunction)
-				new_set.add_conjunction(merged_conjunction)
+		#Create the constraints: cartesian product of both disjunctions + free variable equalities
+		new_set._join(self,other,zip(self.tuple_set,other.tuple_in))
 
 		#Freeze the new resulting set now that we're done modifying it
 		new_set.freeze()
@@ -594,11 +606,13 @@ class SparseRelation(SparseFormula):
 	#Takes a relation string, ex {[a]->[a']: a>10}
 	#Also, an optional parameter, 'symbolics', is a collection
 	#of instances of the iegen.Symbolic class.
-	def __init__(self,relation_string=None,symbolics=None,tuple_var_names=None,free_var_names=None,functions=None,disjunction=None,freeze=True):
+	def __init__(self,relation_string=None,symbolics=None,tuple_var_names=None,arity_in=None,free_var_names=None,functions=None,disjunction=None,freeze=True):
 		#Determine how to construct this relation based on the presence of the relation string
 		if relation_string is None:
 			#Construct this relation using the given tuple variable names, free variable names, and symbolics
 			self._construct(tuple_var_names=tuple_var_names,free_var_names=free_var_names,symbolics=symbolics,functions=functions,disjunction=disjunction,freeze=freeze)
+
+			self._arity_in=arity_in
 		else:
 			#Parse the given relation string
 			pres_formulas=self._parse_formula_string(relation_string,symbolics,PresParser.parse_relation)
@@ -706,29 +720,10 @@ class SparseRelation(SparseFormula):
 		new_symbolics=list(set(other.symbolics+self.symbolics))
 
 		#Create a new relation with no constraints, we will build the constraints
-		new_relation=SparseRelation(tuple_var_names=new_tuple_vars,free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
+		new_relation=SparseRelation(tuple_var_names=new_tuple_vars,arity_in=other.arity_in(),free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
 
-		#Create equality constraints
-		old_out_vars=other.tuple_out
-		old_in_vars=self.tuple_in
-		equality_conjunction=new_relation.get_conjunction()
-
-		for pos in xrange(len(old_out_vars)):
-			exp_coeff=defaultdict(int)
-			exp_coeff[new_relation.get_column(old_out_vars[pos])]+=1
-			exp_coeff[new_relation.get_column(old_in_vars[pos])]+=-1
-			equality_conjunction.add_constraint(new_relation.get_equality(exp_coeff))
-
-		#Create new collection of conjunctions (cartesian product of both sets of conjunctions)
-		for rel1_conjunction in other.disjunction.conjunctions:
-			for rel2_conjunction in self.disjunction.conjunctions:
-				#Merge the two conjunctions and add to the resulting relation being created
-				#TODO: Need to change types of some columns while copying depending on tuple/free variables and how they've changed
-				merged_conjunction=new_relation.get_conjunction()
-				merged_conjunction.add_conjunction(rel1_conjunction)
-				merged_conjunction.add_conjunction(rel2_conjunction)
-				merged_conjunction.add_conjunction(equality_conjunction)
-				new_relation.add_conjunction(merged_conjunction)
+		#Create the constraints: cartesian product of both disjunctions + free variable equalities
+		new_relation._join(other,self,zip(other.tuple_out,self.tuple_in))
 
 		#Freeze the new resulting relation now that we're done modifying it
 		new_relation.freeze()
@@ -913,11 +908,15 @@ class SparseExp(IEGenObject):
 		return self._exp
 	exp=property(_get_exp)
 
-	def copy(self,new_var_pos=None,new_var_names=None):
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+		new_cols={} if new_cols is None else new_cols
 		exp_copy={}
 
 		for sub_exp,coeff in self.exp.items():
-			exp_copy[sub_exp.copy(new_var_pos,new_var_names)]=coeff
+			if sub_exp in new_cols:
+				exp_copy[new_cols[sub_exp].copy(new_var_pos,new_var_names)]=coeff
+			else:
+				exp_copy[sub_exp.copy(new_var_pos,new_var_names)]=coeff
 
 		return SparseExp(exp_copy)
 
@@ -993,8 +992,8 @@ class SparseEquality(SparseConstraint):
 		return frozenset([self.sparse_exp,self.comp_sparse_exp])
 	hash_exp=property(_get_hash_exp)
 
-	def copy(self,new_var_pos=None,new_var_names=None):
-		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names))
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names,new_cols))
 
 #Class representing a sparse inequality constraint
 class SparseInequality(SparseConstraint):
@@ -1004,8 +1003,8 @@ class SparseInequality(SparseConstraint):
 		return self.sparse_exp
 	hash_exp=property(_get_hash_exp)
 
-	def copy(self,new_var_pos=None,new_var_names=None):
-		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names))
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names,new_cols))
 
 # End SparseConstraint classes
 #--------------------------------------------------
@@ -1083,11 +1082,11 @@ class SparseConjunction(IEGenObject):
 
 		self._frozen=True
 
-	def copy(self,new_var_pos=None,new_var_names=None):
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		selfcopy=SparseConjunction()
 
 		for constraint in self.constraints:
-			selfcopy.add_constraint(constraint.copy(new_var_pos,new_var_names))
+			selfcopy.add_constraint(constraint.copy(new_var_pos,new_var_names,new_cols))
 
 		if self.frozen:
 			selfcopy.freeze()
