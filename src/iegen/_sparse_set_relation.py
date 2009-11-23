@@ -683,7 +683,7 @@ class SparseRelation(SparseFormula):
 
 		#Move the input tuple vars to the output tuple vars
 		for pos in xrange(self.arity_in()):
-			new_var_pos[pos]=pos+self.arity_in()
+			new_var_pos[pos]=pos+self.arity_out()
 
 		#Move the output tuple vars to the input tuple vars
 		for pos in xrange(self.arity_in(),self.arity_in()+self.arity_out()):
@@ -691,6 +691,8 @@ class SparseRelation(SparseFormula):
 
 		#Create a copy of self and update the tuple columns during the copy
 		selfcopy=self.copy(new_var_pos=new_var_pos)
+
+		selfcopy._arity_in=self.arity_out()
 
 		self.print_debug('Relation Inverse: %s.inverse()=%s'%(self,selfcopy))
 

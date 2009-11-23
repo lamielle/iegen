@@ -2134,6 +2134,15 @@ class SparseRelationTestCase(TestCase):
 		self.failUnless(inverse==res_inverse,'%s!=%s'%(inverse,res_inverse))
 		self.failUnless(str(inverse)==str(res_inverse),'%s!=%s'%(str(inverse),str(res_inverse)))
 
+	def testInverseArity(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a,b]->[c,d,e,f,g]}')
+		inverse=rel.inverse()
+
+		self.failUnless((2,5)==rel.arity(),'Arity of %s is not (2,5)'%(rel))
+		self.failUnless((5,2)==inverse.arity(),'Arity of %s is not (5,2)'%(inverse))
+
 	#Tests that the compose operation doesn't work on unfrozen relations
 	@raises(ValueError)
 	def testComposeUnfrozen1(self):
