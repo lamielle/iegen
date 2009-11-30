@@ -56,6 +56,12 @@ class IterAlignTrans(Transformation):
 				self.print_detail("Updating access relation '%s'..."%(access_relation.name))
 				access_relation.iter_to_data=access_relation.iter_to_data.compose(self.iter_space_trans.inverse())
 
+		#Update the data dependences
+		self.print_progress('Updating data dependences for IterAlignTrans...')
+		for data_dependence in mapir.get_data_dependences():
+			self.print_detail("Updating data dependence '%s'..."%(data_dependence.name))
+			data_dependence.dep_rel=self.iter_space_trans.compose(data_dependence.dep_rel.compose(self.iter_space_trans.inverse()))
+
 	#This transformation only needs to modify the MapIR, because if
 	#any inverse ERs were needed then they should be determined
 	#somewhere else.

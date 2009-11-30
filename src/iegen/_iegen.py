@@ -284,17 +284,25 @@ class AccessRelation(IEGenObject):
 
 #---------- DataDependence class ----------
 class DataDependence(IEGenObject):
-	__slots__=('_iterspace','_dataspace','_data_dependence')
+	__slots__=('name','dep_rel')
+	_relation_fields=('dep_rel',)
 
-	def __init__(self,iterspace,dataspace,data_dependence):
-		self.m_iterspace=iterspace
-		self.m_dataspace=dataspace
-		self.m_data_dependence=data_dependence
+	def __init__(self,name,dep_rel):
+		self.name=name
+		self.dep_rel=dep_rel
 
-		#Checking
-		#Can we check that given the iteration space, data spaces, and access functions, the given data dependence is valid?  Is it overly conservative?  optimistic?
+	def __repr__(self):
+		return 'DataDependence(%s,%s)'%(self.name,self.dep_rel)
 
-define_properties(DataDependence,('iterspace','dataspace','data_dependence'))
+	def __str__(self):
+		return self._get_string(0)
+
+	def _get_string(self,indent):
+		if indent>0: indent+=1
+		spaces=' '*indent
+		return '''%sDataDependence:
+%s|-name: %s
+%s|-dep_rel: %s'''%(spaces,spaces,self.name,spaces,self.dep_rel)
 #------------------------------------------
 
 #---------- Function Call class ----------

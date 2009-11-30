@@ -119,3 +119,8 @@ spec.add_access_relation(
     name='a8',
     data_array='x',
     iter_to_data='{[s,i]->[k]: k=inter2(i)}')
+
+#Data dependences
+spec.add_data_dependence(
+    name='D0',
+    dep_rel='{[c0,s,c0,i,c0] -> [c0,s,c1,ii,c0] : c0=0 && c1=1 && i=inter1(ii)}')

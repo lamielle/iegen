@@ -5,12 +5,12 @@ from cStringIO import StringIO
 
 #IEGen imports
 import iegen.codegen,iegen.simplify
-from iegen import IEGenObject,Symbolic,DataArray,IndexArray,Statement,AccessRelation,Set,Relation,ERSpec
+from iegen import IEGenObject,Symbolic,DataArray,IndexArray,Statement,AccessRelation,DataDependence,Set,Relation,ERSpec
 from iegen.idg import IDG,IDGGenERSpec,IDGOutputERSpec
 
 #---------- MapIR class ----------
 class MapIR(IEGenObject):
-	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','transformations','intertransopts','full_iter_space','idg')
+	__slots__=('symbolics','data_arrays','er_specs','index_arrays','statements','data_dependences','transformations','intertransopts','full_iter_space','idg')
 
 	def __init__(self):
 		self.symbolics={}
@@ -18,6 +18,7 @@ class MapIR(IEGenObject):
 		self.index_arrays={}
 		self.er_specs={}
 		self.statements={}
+		self.data_dependences={}
 		self.transformations=[]
 		self.intertransopts=[]
 		self.idg=IDG()
@@ -143,12 +144,22 @@ class MapIR(IEGenObject):
 		self.statements[statement_name].add_access_relation(access_relation)
 	#--------------------------------------
 
+	#---------- Data Dependences ----------
+	#Returns the data dependences that are present in the MapIR
+	def get_data_dependences(self): return self.data_dependences.values()
+
+	def add_data_dependence(self,**kwargs):
+		self.print_progress("Adding data dependence '%s'..."%kwargs['name'])
+
+		#Create the data dependence
+		data_dependence=self._convert_create_add(DataDependence,[self.data_dependences],**kwargs)
+	#--------------------------------------
+
 	#---------- Transformations ----------
 	#Adds a transformation to the MapIR of the given type and constructs it 
 	#from the given arguments.
-	#Transformations are not stored as a dictionary as
-	#the ordering is meaningful (they will be applied in the order 
-    #they are added)
+	#Transformations are not stored as a dictionary as the ordering
+	# is meaningful (they will be applied in the order they are added)
 	def add_transformation(self,type,**kwargs):
 		self.print_progress("Adding transformation '%s'..."%kwargs['name'])
 
@@ -160,10 +171,10 @@ class MapIR(IEGenObject):
 	#-------------------------------------
 
 	#---------- InterTransOpts ----------
-	#Adds an inter transformation optimization to the MapIR of the given type 
-	#and constructs it #from the given arguments.
-	#ITOs are not stored as a dictionary as the ordering is meaningful
-    #(they will be applied in the order they are added)
+	#Adds an inter transformation optimization to the MapIR of the given type
+	# and constructs it from the given arguments.
+	#ITOs are not stored as a dictionary as the ordering
+	# is meaningful (they will be applied in the order they are added)
 	def add_intertransopt(self,type,**kwargs):
 		self.print_progress("Adding ITO '%s'..."%kwargs['name'])
 
