@@ -1707,6 +1707,19 @@ class SparseSetTestCase(TestCase):
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
+	#Tests that variable name collisions are handled
+	def testApplyRename(self):
+		from iegen import SparseSet,SparseRelation
+
+		set=SparseSet('{[b,d]}')
+		relation=SparseRelation('{[a,b]->[c,d]}')
+
+		applied=set.apply(relation)
+
+		applied_res=SparseSet('{[c,d]: b0=a and d0=b}')
+
+		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
+
 	#Tests the apply operation with equality constraints
 	def testApplyEquality1(self):
 		from iegen import SparseSet,SparseRelation
@@ -2198,6 +2211,19 @@ class SparseRelationTestCase(TestCase):
 		composed=relation1.compose(relation2)
 
 		composed_res=SparseRelation('{[d]->[c]: -10<=d and d<=0}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	#Tests that variable name collisions are handled
+	def testComposeRename(self):
+		from iegen import SparseRelation
+
+		relation1=SparseRelation('{[a,b]->[c,d]}')
+		relation2=SparseRelation('{[b,c]->[d,e]}')
+
+		composed=relation1.compose(relation2)
+
+		composed_res=SparseRelation('{[b,c]->[c0,d]: d0=a and e=b0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 

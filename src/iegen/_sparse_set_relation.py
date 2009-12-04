@@ -90,10 +90,10 @@ class SparseFormula(IEGenObject):
 		#Copy the functions of the formula
 		functions_copy=set()
 		for function in self.functions:
-			functions_copy.add(function.copy(new_var_pos,new_var_names))
+			functions_copy.add(function.copy(new_var_pos=new_var_pos,new_var_names=new_var_names))
 
 		#Copy the constraints of the formula
-		disjunction_copy=self.disjunction.copy(new_var_pos,new_var_names,freeze=freeze)
+		disjunction_copy=self.disjunction.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze)
 
 		#Reorder the tuple variables if needed
 		if new_var_pos is None:
@@ -342,34 +342,68 @@ class SparseFormula(IEGenObject):
 
 		return selfcopy
 
+	#Creates a unique name for the given variable
+	#The variable will be unique with respect to the given used variables
+	@staticmethod
+	def get_unique_var(var,used_vars):
+		if var in used_vars:
+			counter=0
+			unique_var=var
+			while unique_var in used_vars:
+				unique_var=var+str(counter)
+				counter+=1
+		else:
+			unique_var=var
+
+		return unique_var
+
+	#Creates unique variables for the given variables and adds each to the
+	# given collection of unique variables
+	#They created variables are unique with respect to the given used variables
+	#The given variable map will contain a mapping from each given variable to
+	# each new variable (even if no change was made)
+	@staticmethod
+	def get_unique_vars(vars,unique_vars,used_vars,var_map):
+		#Get unique varables for each of the given variables
+		for var in vars:
+			#Get a unique variable for the current variable
+			unique_var=SparseFormula.get_unique_var(var,used_vars)
+
+			#Add the current variable to the given renaming map
+			var_map[var]=unique_var
+
+			#Add the variable to the unique and used variable collections
+			unique_vars.append(unique_var)
+			used_vars.add(unique_var)
+
 	#Adds new constraints from the cartesian product of the disjunctions of two given formulas
 	#Adds equality constraints for each pair of variables to each item in the cartesian product
 	#Converts any tuple variable columns to free variable columns to match this formula's free/tuple variables
 	#This utility method is used by the apply and compose operations
-	def _join(self,formula1,formula2,equality_var_pairs):
+	def _join(self,formula1,formula1_equality_vars,formula1_var_map,formula2,formula2_equality_vars,formula2_var_map,formula2_pos_map):
 		#Create a conjunction with equalities for the given variable pairs
 		#AND create a mapping from old tuple variable columns to new free variable columns
 		equality_conjunction=self.get_conjunction()
-		new_cols={}
-		for var1,var2 in equality_var_pairs:
+		formula1_new_cols={}
+		formula2_new_cols={}
+		for formula1_var,formula2_var in zip(formula1_equality_vars,formula2_equality_vars):
+			#Create/add the equality constraint for this variable pair
 			exp_coeff=defaultdict(int)
-			exp_coeff[self.get_column(var1)]+=1
-			exp_coeff[self.get_column(var2)]+=-1
+			exp_coeff[self.get_column(formula1_var_map[formula1_var])]+=1
+			exp_coeff[self.get_column(formula2_var_map[formula2_var])]+=-1
 			equality_conjunction.add_constraint(self.get_equality(exp_coeff))
 
-			if var1 not in self.tuple_vars:
-				new_cols[formula1.get_column(var1)]=self.get_column(var1)
-
-			if var2 not in self.tuple_vars:
-				new_cols[formula2.get_column(var2)]=self.get_column(var2)
+			#Add the column mapping from the old formulas to the new one (tuple -> free var columns)
+			formula1_new_cols[formula1.get_column(formula1_var)]=self.get_column(formula1_var_map[formula1_var])
+			formula2_new_cols[formula2.get_column(formula2_var)]=self.get_column(formula2_var_map[formula2_var])
 
 		#Create new collection of conjunctions (cartesian product of both sets of conjunctions)
-		for rel1_conjunction in formula1.disjunction.conjunctions:
-			for rel2_conjunction in formula2.disjunction.conjunctions:
-				#Merge the two conjunctions and add to the resulting relation being created
+		for formula1_conjunction in formula1.disjunction.conjunctions:
+			for formula2_conjunction in formula2.disjunction.conjunctions:
+				#Merge the two conjunctions and add to the resulting formula being created
 				merged_conjunction=self.get_conjunction()
-				merged_conjunction.add_conjunction(rel1_conjunction.copy(new_cols=new_cols))
-				merged_conjunction.add_conjunction(rel2_conjunction.copy(new_cols=new_cols))
+				merged_conjunction.add_conjunction(formula1_conjunction.copy(new_var_names=formula1_var_map,new_cols=formula1_new_cols))
+				merged_conjunction.add_conjunction(formula2_conjunction.copy(new_var_pos=formula2_pos_map,new_var_names=formula2_var_map,new_cols=formula2_new_cols))
 				merged_conjunction.add_conjunction(equality_conjunction.copy())
 				self.add_conjunction(merged_conjunction)
 
@@ -541,7 +575,7 @@ class SparseSet(SparseFormula):
 	#Returns a copy of this SparseSet
 	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
 		#Make a copy of this SparseSet
-		selfcopy=self._copy(new_var_pos,new_var_names,freeze,SparseSet)
+		selfcopy=self._copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze,FormulaClass=SparseSet)
 
 		return selfcopy
 
@@ -569,16 +603,35 @@ class SparseSet(SparseFormula):
 		if self.arity()!=other.arity_in():
 			raise ValueError('Apply failure: Input arity of relation (%d) does not match arity of set (%d)'%(other.arity_in(),self.arity()))
 
-		#Gather the new tuple variables, free variables, and symbolics
-		new_tuple_vars=other.tuple_out
-		new_free_vars=list(set(other.tuple_in+other.free_vars+self.tuple_set+self.free_vars))
+		#Collections for building the new set
+		new_tuple_vars=[]
+		new_free_vars=[]
+		other_var_map={}
+		self_var_map={}
+		used_vars=set()
+
+		#Determine the resutling set's tuple variable names
+		self.get_unique_vars(other.tuple_out,new_tuple_vars,used_vars,other_var_map)
+
+		#Determine the resulting set's free variable names
+		self.get_unique_vars(other.tuple_in,new_free_vars,used_vars,other_var_map)
+		self.get_unique_vars(self.tuple_set,new_free_vars,used_vars,self_var_map)
+		self.get_unique_vars(other.free_vars,new_free_vars,used_vars,other_var_map)
+		self.get_unique_vars(self.free_vars,new_free_vars,used_vars,self_var_map)
+
+		#Get the combined symbolics for the new set
 		new_symbolics=list(set(other.symbolics+self.symbolics))
+
+		#Reposition the relation's output tuple variables
+		new_var_pos={}
+		for i in xrange(other.arity_in(),other.arity_in()+other.arity_out()):
+			new_var_pos[i]=i-other.arity_in()
 
 		#Create a new set with no constraints, we will build the constraints
 		new_set=SparseSet(tuple_var_names=new_tuple_vars,free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
 
 		#Create the constraints: cartesian product of both disjunctions + free variable equalities
-		new_set._join(self,other,zip(self.tuple_set,other.tuple_in))
+		new_set._join(self,self.tuple_set,self_var_map,other,other.tuple_in,other_var_map,new_var_pos)
 
 		#Freeze the new resulting set now that we're done modifying it
 		new_set.freeze()
@@ -662,7 +715,7 @@ class SparseRelation(SparseFormula):
 	#Returns a copy of this SparseRelation
 	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
 		#Make a copy of this SparseRelation
-		selfcopy=self._copy(new_var_pos,new_var_names,freeze,SparseRelation)
+		selfcopy=self._copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze,FormulaClass=SparseRelation)
 
 		#Determine the input arity
 		selfcopy._arity_in=self.arity_in()
@@ -716,16 +769,36 @@ class SparseRelation(SparseFormula):
 		if other.arity_out()!=self.arity_in():
 			raise ValueError('Compose failure: Output arity of second relation (%d) does not match input arity of first relation (%d)'%(other.arity_out(),self.arity_in()))
 
-		#Gather the new tuple variables, free variables, and symbolics
-		new_tuple_vars=other.tuple_in+self.tuple_out
-		new_free_vars=list(set(other.tuple_out+other.free_vars+self.tuple_in+self.free_vars))
+		#Collections for building the new relation
+		new_tuple_vars=[]
+		new_free_vars=[]
+		other_var_map={}
+		self_var_map={}
+		used_vars=set()
+
+		#Determine the resutling relation's tuple variable names
+		self.get_unique_vars(other.tuple_in,new_tuple_vars,used_vars,other_var_map)
+		self.get_unique_vars(self.tuple_out,new_tuple_vars,used_vars,self_var_map)
+
+		#Determine the resulting relation's free variable names
+		self.get_unique_vars(other.tuple_out,new_free_vars,used_vars,other_var_map)
+		self.get_unique_vars(self.tuple_in,new_free_vars,used_vars,self_var_map)
+		self.get_unique_vars(other.free_vars,new_free_vars,used_vars,other_var_map)
+		self.get_unique_vars(self.free_vars,new_free_vars,used_vars,self_var_map)
+
+		#Get the combined symbolics for the new relation
 		new_symbolics=list(set(other.symbolics+self.symbolics))
+
+		#Reposition the relation's output tuple variables
+		new_var_pos={}
+		for i in xrange(self.arity_in(),self.arity_in()+self.arity_out()):
+			new_var_pos[i]=i+other.arity_in()-self.arity_in()
 
 		#Create a new relation with no constraints, we will build the constraints
 		new_relation=SparseRelation(tuple_var_names=new_tuple_vars,arity_in=other.arity_in(),free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
 
 		#Create the constraints: cartesian product of both disjunctions + free variable equalities
-		new_relation._join(other,self,zip(other.tuple_out,self.tuple_in))
+		new_relation._join(self,self.tuple_in,self_var_map,other,other.tuple_out,other_var_map,new_var_pos)
 
 		#Freeze the new resulting relation now that we're done modifying it
 		new_relation.freeze()
@@ -777,7 +850,13 @@ class FreeVarCol(SparseExpNameColumnType):
 		SparseExpNameColumnType.__init__(self,name)
 
 	def copy(self,new_var_pos=None,new_var_names=None):
-		return FreeVarCol(self.name)
+		name=self.name
+
+		#Change the name if necessary
+		if new_var_names is not None and name in new_var_names:
+			name=new_var_names[self.name]
+
+		return FreeVarCol(name)
 
 class ConstantCol(SparseExpNameColumnType):
 	def __init__(self):
@@ -804,12 +883,12 @@ class TupleVarCol(SparseExpColumnType):
 		name=self.name
 
 		#Change the column position if necessary
-		if new_var_pos is not None:
-			pos=new_var_pos[self.pos]
+		if new_var_pos is not None and pos in new_var_pos:
+			pos=new_var_pos[pos]
 
 		#Change the name if necessary
 		if new_var_names is not None:
-			name=new_var_names[self.name]
+			name=new_var_names[name]
 
 		return TupleVarCol(pos,name)
 
@@ -853,7 +932,7 @@ class UFCall(SparseExpColumnType):
 		return '%s(%s)'%(self.name,','.join(arg_strs))
 
 	def copy(self,new_var_pos=None,new_var_names=None):
-		return UFCall(self.name,[arg.copy(new_var_pos,new_var_names) for arg in self.args])
+		return UFCall(self.name,[arg.copy(new_var_pos=new_var_pos,new_var_names=new_var_names) for arg in self.args])
 
 	def exp_str(self):
 		return str(self)
@@ -916,9 +995,9 @@ class SparseExp(IEGenObject):
 
 		for sub_exp,coeff in self.exp.items():
 			if sub_exp in new_cols:
-				exp_copy[new_cols[sub_exp].copy(new_var_pos,new_var_names)]=coeff
+				exp_copy[new_cols[sub_exp].copy(new_var_pos=new_var_pos,new_var_names=new_var_names)]=coeff
 			else:
-				exp_copy[sub_exp.copy(new_var_pos,new_var_names)]=coeff
+				exp_copy[sub_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names)]=coeff
 
 		return SparseExp(exp_copy)
 
@@ -1032,7 +1111,7 @@ class SparseEquality(SparseConstraint):
 	hash_exp=property(_get_hash_exp)
 
 	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
-		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names,new_cols))
+		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
 
 #Class representing a sparse inequality constraint
 class SparseInequality(SparseConstraint):
@@ -1043,7 +1122,7 @@ class SparseInequality(SparseConstraint):
 	hash_exp=property(_get_hash_exp)
 
 	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
-		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos,new_var_names,new_cols))
+		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
 
 # End SparseConstraint classes
 #--------------------------------------------------
@@ -1125,7 +1204,7 @@ class SparseConjunction(IEGenObject):
 		selfcopy=SparseConjunction()
 
 		for constraint in self.constraints:
-			selfcopy.add_constraint(constraint.copy(new_var_pos,new_var_names,new_cols))
+			selfcopy.add_constraint(constraint.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
 
 		if self.frozen:
 			selfcopy.freeze()
@@ -1206,11 +1285,11 @@ class SparseDisjunction(IEGenObject):
 
 		self._frozen=True
 
-	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None,freeze=True):
 		selfcopy=SparseDisjunction()
 
 		for conjunction in self.conjunctions:
-			selfcopy.add_conjunction(conjunction.copy(new_var_pos,new_var_names))
+			selfcopy.add_conjunction(conjunction.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
 
 		if self.frozen and freeze:
 			selfcopy.freeze()
