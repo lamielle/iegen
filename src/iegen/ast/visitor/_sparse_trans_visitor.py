@@ -107,8 +107,8 @@ class SparseTransVisitor(DFVisitor):
 		#Grab the function context from the stack
 		curr_func_context=self.func_context.pop()
 
-		#Add the function to the formula
-		ufcall=self.sparse_formula.add_function(curr_func_context.name,curr_func_context.arg_exps)
+		#Get a function column from the formula
+		ufcall=self.sparse_formula.get_function(curr_func_context.name,curr_func_context.arg_exps)
 
 		#TODO: Set the corresponding function coefficient
 		#Check if we are in a function or not

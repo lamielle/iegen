@@ -3,7 +3,7 @@ from iegen.lib.nose.tools import raises
 
 #---------- Import Tests ----------
 #Test importing of iegen
-class ImportTestCase(object):
+class ImportTestCase(TestCase):
 
 	#Test simple importing of iegen
 	def testImport(self):
@@ -376,7 +376,7 @@ class SetTestCase(object):
 
 		applied=set.apply(relation)
 
-		applied_res=Set('{[b_out0,f]: b_out0=5 and f=12}')
+		applied_res=Set('{[b0,f]: b0=5 and f=12}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -403,7 +403,7 @@ class SetTestCase(object):
 
 		applied=set.apply(relation)
 
-		applied_res=Set('{[a_out0,b_out1]:1<=a_out0 and a_out0<=10 and -10<=a_out0 and a_out0<=0 and b_out1=6 and a_out0>5}')
+		applied_res=Set('{[a0,b0]:1<=a0 and a0<=10 and -10<=a0 and a0<=0 and b0=6 and a0>5}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -416,7 +416,7 @@ class SetTestCase(object):
 
 		I_0_applied=I_0.apply(iter_ssr)
 
-		I_0_res=Set('{ [ii_out0] : 0 <= ii_out0 and ii_out0 <= (n_atom-1) }')
+		I_0_res=Set('{ [ii0] : 0 <= ii0 and ii0 <= (n_atom-1) }')
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
@@ -436,7 +436,7 @@ class SetTestCase(object):
 
 		I_0_applied=I_0.apply(iter_ssr)
 
-		I_0_res=Set('{ [ii_out0] : 0 <= ii_out0 and ii_out0 <= (n_atom-1) }').union(Set('{ [ii_out0] : 0 <= ii_out0 and ii_out0 <= (n_atom-2) }')).union(Set('{ [ii_out0] : 0 <= ii_out0 and ii_out0 <= (n_atom-3) }'))
+		I_0_res=Set('{ [ii0] : 0 <= ii0 and ii0 <= (n_atom-1) }').union(Set('{ [ii0] : 0 <= ii0 and ii0 <= (n_atom-2) }')).union(Set('{ [ii0] : 0 <= ii0 and ii0 <= (n_atom-3) }'))
 
 		self.failUnless(I_0_applied==I_0_res,'%s!=%s'%(I_0_applied,I_0_res))
 
@@ -1016,9 +1016,9 @@ class RelationTestCase(object):
 
 		rel=Relation('{[a]->[a]}')
 		composed=rel.compose(rel)
-		
-		composed_res=Relation('{[a_in02]->[a_out01]: -1a_out01+a_in02=0}')
-		
+
+		composed_res=Relation('{[a2]->[a01]: a2=a01}')
+
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
 	#Tests the compose operation
@@ -1083,7 +1083,7 @@ class RelationTestCase(object):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=Relation('{[a_in0]->[j]: j=f(a_in0)}')
+		composed_res=Relation('{[a]->[j]: j=f(a)}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -1109,7 +1109,7 @@ class RelationTestCase(object):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=Relation('{[a_in0]->[b_out0]: -10<=a_in0 and a_in0<=0 and b_out0=5 and 1<=a_in0 and a_in0<=11 and 1<=b_out0 and b_out0<=10}')
+		composed_res=Relation('{[a2]->[b01]: a2+-1>=0 and -1a2>=0 and a2+10>=0 and -1a2+11>=0 and -1b01+5=0}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -1122,7 +1122,7 @@ class RelationTestCase(object):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=Relation('{[a_in02]->[a_out01]: -10<=a_in02 and a_in02<=0 and 1<=a_out01 and a_out01<=10 and a_in02=a_out01}')
+		composed_res=Relation('{[a2]->[a01]: a2<=10 and a2<=0 and a2>=1 and a2>=-10 and a2=a01}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
@@ -1168,7 +1168,7 @@ class RelationTestCase(object):
 		from iegen import Relation
 
 		r=Relation('{[x]->[x,i]}').compose(Relation('{[c42]->[c4]: c42=0 and -1c4+1=0}'))
-		r_res=Relation('{[c42]->[x_out0,i]: c42=0 and -1x_out0+1=0}')
+		r_res=Relation('{[c42]->[x0,i]: c42=0 and -1x0+1=0}')
 		self.failUnless(r==r_res,'%s!=%s'%(r,r_res))
 
 	#Tests the _get_prefix_rename_dict method of Relation
@@ -1343,15 +1343,15 @@ class SparseSetTestCase(TestCase):
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
-		set_string='{[a,b]: b=2n and a>=m and a=10}'
+		set_string='{[a,b]: a=10 and b=2n and a>=m}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: b=2n and a>=m and a=10 | m,n}'
+		res_string='{[a,b]: a=10 and b=2n and a>=m | m,n}'
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
-		set_string='{[a,b]: b=2n and a>=m and a=10 and a+b>=c}'
+		set_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: b=2n and a>=m and a=10 and a+b>=c | m,n}'
+		res_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
@@ -1381,17 +1381,17 @@ class SparseSetTestCase(TestCase):
 	def testRepr(self):
 		from iegen import SparseSet,Symbolic
 
-		set_string='{[a,b]: a>=m and b=2n and a=10}'
+		set_string='{[a,b]: a=10 and b=2n and a>=m}'
 		symbolics=[Symbolic('m'),Symbolic('n')]
 		set=SparseSet(set_string,symbolics)
-		res_string='{[a,b]: b=2n and a>=m and a=10 | m,n}'
+		res_string='{[a,b]: a=10 and b=2n and a>=m | m,n}'
 		res_string='SparseSet("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
 
-		set_string='{[a,b]: a+b>=c and b=2n and a=10 and a>=m}'
+		set_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c}'
 		set=SparseSet(set_string,symbolics)
-		res_string='{[a,b]: b=2n and a>=m and a=10 and a+b>=c | m,n}'
+		res_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
 		res_string='SparseSet("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
@@ -1483,15 +1483,6 @@ class SparseSetTestCase(TestCase):
 		set1=SparseSet('{[a]: a=10}')
 
 		set1.clear()
-
-	#Tests that one cannot add a new function to a frozen set
-	@raises(ValueError)
-	def testAddFunctionFrozen(self):
-		from iegen import SparseSet
-
-		set1=SparseSet('{[a]: a=10}')
-
-		set1.add_function('f',[{set1.get_column('a'):1}])
 
 	def testClear(self):
 		from iegen import SparseSet
@@ -1622,7 +1613,7 @@ class SparseSetTestCase(TestCase):
 		res_union.add_conjunction(res_union.get_conjunction([res_union.get_equality({res_union.get_column('a'):1,res_union.get_constant_column():-10}),res_union.get_equality({res_union.get_column('b'):1,res_union.get_constant_column():-10})]))
 		res_union.freeze()
 
-		self.failUnless(2==len(set_union.disjunction),'Unioned set should have exactly two conjunction')
+		self.failUnless(2==len(set_union.disjunction),'Unioned set should have exactly two conjunctions')
 		self.failUnless(set_union==res_union,'%s!=%s'%(set_union,res_union))
 
 		set1=SparseSet('{[a,b]: a=b}')
@@ -1813,15 +1804,15 @@ class SparseRelationTestCase(TestCase):
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
-		rel_string='{[a]->[b]: a>=m and b=2n and a=10 }'
+		rel_string='{[a]->[b]: a=10 and b=2n and a>=m}'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: b=2n and a>=m and a=10 | m,n}'
+		res_string='{[a]->[b]: a=10 and b=2n and a>=m | m,n}'
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
-		rel_string='{[a]->[b]: a+b>=c and a=10 and b=2n and a>=m}'
+		rel_string='{[a]->[b]: a=10 and b=2n and a>=m and a+b>=c}'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: b=2n and a>=m and a=10 and a+b>=c | m,n}'
+		res_string='{[a]->[b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
@@ -1851,17 +1842,17 @@ class SparseRelationTestCase(TestCase):
 	def testRepr(self):
 		from iegen import SparseRelation,Symbolic
 
-		rel_string='{[a]->[b]: a>=m and b=2n and a=10}'
+		rel_string='{[a]->[b]: a=10 and b=2n and a>=m}'
 		symbolics=[Symbolic('m'),Symbolic('n')]
 		rel=SparseRelation(rel_string,symbolics)
-		res_string='{[a]->[b]: b=2n and a>=m and a=10 | m,n}'
+		res_string='{[a]->[b]: a=10 and b=2n and a>=m | m,n}'
 		res_string='SparseRelation("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
 
-		rel_string='{[a]->[b]: a+b>=c and b=2n and a=10 and a>=m}'
+		rel_string='{[a]->[b]: a=10 and b=2n and a>=m and a+b>=c}'
 		rel=SparseRelation(rel_string,symbolics)
-		res_string='{[a]->[b]: b=2n and a>=m and a=10 and a+b>=c | m,n}'
+		res_string='{[a]->[b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
 		res_string='SparseRelation("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
@@ -1953,15 +1944,6 @@ class SparseRelationTestCase(TestCase):
 		rel=SparseRelation('{[a]->[b]: a=10}')
 
 		rel.clear()
-
-	#Tests that one cannot add a new function to a frozen relation
-	@raises(ValueError)
-	def testAddFunctionFrozen(self):
-		from iegen import SparseRelation
-
-		rel=SparseRelation('{[a]->[b]: a=10}')
-
-		rel.add_function('f',[{rel.get_column('a'):1}])
 
 	def testClear(self):
 		from iegen import SparseRelation
@@ -2092,7 +2074,7 @@ class SparseRelationTestCase(TestCase):
 		res_union.add_conjunction(res_union.get_conjunction([res_union.get_equality({res_union.get_column('a'):1,res_union.get_constant_column():-10}),res_union.get_equality({res_union.get_column('b'):1,res_union.get_constant_column():-10})]))
 		res_union.freeze()
 
-		self.failUnless(2==len(rel_union.disjunction),'Unioned relation should have exactly two conjunction')
+		self.failUnless(2==len(rel_union.disjunction),'Unioned relation should have exactly two conjunctions')
 		self.failUnless(rel_union==res_union,'%s!=%s'%(rel_union,res_union))
 
 		rel1=SparseRelation('{[a]->[b]: a=b}')
@@ -2284,7 +2266,7 @@ class SparseRelationTestCase(TestCase):
 
 		composed=relation1.compose(relation2)
 
-		composed_res=SparseRelation('{[c,d]->[b,c]}')
+		composed_res=SparseRelation('{[c,d]->[b,c0]}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 

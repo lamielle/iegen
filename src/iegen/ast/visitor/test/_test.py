@@ -3707,7 +3707,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(set).changed
 		simplify(set)
-		set_res=Set('{[a_0,a_1]:a_0=a_1}')
+		set_res=Set('{[a,a0]:a=a0}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(True==changed,'changed!=True')
@@ -3722,7 +3722,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(rel).changed
 		simplify(rel)
-		rel_res=Relation('{[a_in0,a_in1]->[]: a_in0=a_in1}')
+		rel_res=Relation('{[a,a0]->[]: a=a0}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
 		self.failUnless(True==changed,'changed!=True')
@@ -3737,7 +3737,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(rel).changed
 		simplify(rel)
-		rel_res=Relation('{[]->[a_out0,a_out1]: a_out0=a_out1}')
+		rel_res=Relation('{[]->[a,a0]: a=a0}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
 		self.failUnless(True==changed,'changed!=True')
@@ -3752,7 +3752,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(rel).changed
 		simplify(rel)
-		rel_res=Relation('{[a_in0]->[a_out0]: a_in0=a_out0}')
+		rel_res=Relation('{[a]->[a0]: a=a0}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
 		self.failUnless(True==changed,'changed!=True')
@@ -3767,7 +3767,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(set).changed
 		simplify(set)
-		set_res=Set('{[a,b_1,c,b_3]:b_1=b_3}')
+		set_res=Set('{[a,b,c,b0]:b=b0}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(True==changed,'changed!=True')
@@ -3782,7 +3782,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(rel).changed
 		simplify(rel)
-		rel_res=Relation('{[a,b,c_in2,d]->[e,f,g,c_out3]: c_in2=c_out3}')
+		rel_res=Relation('{[a,b,c,d]->[e,f,g,c0]: c=c0}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
 		self.failUnless(True==changed,'changed!=True')
@@ -3797,7 +3797,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(set).changed
 		simplify(set)
-		set_res=Set('{[a_0,b_1,c_2,d,c_4,a_5,b_6]: a_0=a_5 and b_1=b_6 and c_2=c_4}')
+		set_res=Set('{[a,b,c,d,c0,a0,b0]: a=a0 and b=b0 and c=c0}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(True==changed,'changed!=True')
@@ -3812,7 +3812,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(rel).changed
 		simplify(rel)
-		rel_res=Relation('{[a_in0,b,c_in2,c_in3]->[d_out0,e,a_out2,d_out3]: a_in0=a_out2 and c_in2=c_in3 and d_out0=d_out3}')
+		rel_res=Relation('{[a,b,c,c0]->[d,e,a0,d0]: a=a0 and c=c0 and d=d0}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
 		self.failUnless(True==changed,'changed!=True')
@@ -3827,7 +3827,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(set).changed
 		simplify(set)
-		set_res=Set('{[a_0,b,a_2]: a_0=a_2 and a=a_0 and b=f(a_2)}')
+		set_res=Set('{[a,b,a0]: a=a0 and b=f(a)}')
 
 		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
 		self.failUnless(True==changed,'changed!=True')
@@ -3842,7 +3842,7 @@ class UniqueTupleVarsVisitorTestCase(TestCase):
 
 		changed=UniqueTupleVarsVisitor().visit(rel).changed
 		simplify(rel)
-		rel_res=Relation('{[a_in0]->[b,a_out1]: a_in0=a_out1 and a_in0=a and b=f(a_out1)}')
+		rel_res=Relation('{[a]->[b,a0]: a=a0 and b=f(a)}')
 
 		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
 		self.failUnless(True==changed,'changed!=True')

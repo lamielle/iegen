@@ -142,7 +142,7 @@ def find_term(term,terms):
 #Returns True if so, False otherwise
 def like_type(obj,type):
 	if isinstance(obj,type):
-		return True    
+		return True
 	for attr in type.__slots__:
 		if not hasattr(obj,attr):
 			return False
@@ -157,6 +157,40 @@ def is_iterable(obj):
 	except:
 		iterable=False
 	return iterable
+
+#Creates a unique name for the given variable
+#The variable will be unique with respect to the given used variables
+#To make variables unique, successive integers are appended, starting at 0
+def get_unique_var(var,used_vars):
+	if var in used_vars:
+		counter=0
+		unique_var=var
+		while unique_var in used_vars:
+			unique_var=var+str(counter)
+			counter+=1
+	else:
+		unique_var=var
+
+	return unique_var
+
+#Creates unique variables for the given variables and adds each to the
+# given collection of unique variables
+#They created variables are unique with respect to the given used variables
+#The given variable map will contain a mapping from each given variable to
+# each new variable (even if no change was made)
+#The variable map is undefined if vars contains duplicates
+def get_unique_vars(vars,unique_vars,used_vars,var_map):
+	#Get unique varables for each of the given variables
+	for var in vars:
+		#Get a unique variable for the current variable
+		unique_var=get_unique_var(var,used_vars)
+
+		#Add the current variable to the given renaming map
+		var_map[var]=unique_var
+
+		#Add the variable to the unique and used variable collections
+		unique_vars.append(unique_var)
+		used_vars.add(unique_var)
 
 #Raises a ValueError if the any of the given objects are not like any of the given types
 #If either of objs of types are not iterable, they will be added as the lone element to a new list

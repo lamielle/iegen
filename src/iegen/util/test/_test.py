@@ -16,7 +16,7 @@ class ImportTestCase(TestCase):
 	def testNameImport(self):
 		try:
 			#_util.py
-			from iegen.util import run_tests,iter_islast,sign,invert_dict,equality_sets,define_properties,get_basic_term,find_term,like_type,is_iterable,raise_objs_not_like_types,DimensionalityError,biject,normalize_self,normalize_result,check,one_time_normalize
+			from iegen.util import run_tests,iter_islast,sign,invert_dict,equality_sets,define_properties,get_basic_term,find_term,like_type,is_iterable,raise_objs_not_like_types,DimensionalityError,biject,normalize_self,normalize_result,check,one_time_normalize,get_unique_var,get_unique_vars
 			#_test_util.py
 			from iegen.util import tuple_gen,lower_gen,upper_gen,parse_test,ast_equality_test,var_exp_strings,func_exp_strings,norm_exp_strings,test_sets,test_set_strings,test_relations,test_relation_strings
 		except Exception,e:
@@ -269,3 +269,74 @@ class EqualitySestsTestCase(TestCase):
 		self.failUnless(0==len(b1),'len(%s)!=0'%(b1))
 		self.failUnless(0==len(b2),'len(%s)!=0'%(b2))
 #-------------------------------------
+
+#---------- Unique Vars Tests ----------
+class UniqueVarsTestCase(TestCase):
+
+	def testUniqueVar(self):
+		from iegen.util import get_unique_var
+
+		self.failUnless('a'==get_unique_var('a',set()))
+		self.failUnless('a'==get_unique_var('a',set(['b'])))
+		self.failUnless('a'==get_unique_var('a',set(['b','c'])))
+		self.failUnless('a0'==get_unique_var('a',set(['a'])))
+		self.failUnless('a0'==get_unique_var('a',set(['a','b','c'])))
+
+	def testUniqueVarsAll(self):
+		from iegen.util import get_unique_vars
+
+		vars=['a','b','c']
+		unique_vars=[]
+		used_vars=set()
+		var_map={}
+
+		get_unique_vars(vars,unique_vars,used_vars,var_map)
+
+		self.failUnless(vars==['a','b','c'])
+		self.failUnless(unique_vars==['a','b','c'])
+		self.failUnless(used_vars==set(['a','b','c']))
+		self.failUnless(var_map=={'a':'a','b':'b','c':'c'})
+
+	def testUniqueVarsNone(self):
+		from iegen.util import get_unique_vars
+
+		vars=['a','a','a']
+		unique_vars=[]
+		used_vars=set()
+		var_map={}
+
+		get_unique_vars(vars,unique_vars,used_vars,var_map)
+
+		self.failUnless(vars==['a','a','a'])
+		self.failUnless(unique_vars==['a','a0','a1'])
+		self.failUnless(used_vars==set(['a','a0','a1']))
+
+	def testUniqueVarsSome(self):
+		from iegen.util import get_unique_vars
+
+		vars=['a','b','c']
+		unique_vars=[]
+		used_vars=set(['a','b','c'])
+		var_map={}
+
+		get_unique_vars(vars,unique_vars,used_vars,var_map)
+
+		self.failUnless(vars==['a','b','c'])
+		self.failUnless(unique_vars==['a0','b0','c0'])
+		self.failUnless(used_vars==set(['a','b','c','a0','b0','c0']))
+		self.failUnless(var_map=={'a':'a0','b':'b0','c':'c0'})
+
+	def testUniqueVarsTwo(self):
+		from iegen.util import get_unique_vars
+
+		vars=['a','a']
+		unique_vars=[]
+		used_vars=set(['a'])
+		var_map={}
+
+		get_unique_vars(vars,unique_vars,used_vars,var_map)
+
+		self.failUnless(vars==['a','a'])
+		self.failUnless(unique_vars==['a0','a1'])
+		self.failUnless(used_vars==set(['a','a0','a1']))
+#---------------------------------------
