@@ -883,6 +883,19 @@ class UFCall(SparseExpColumnType):
 		arg_strs=[str(arg) for arg in self.args]
 		return '%s(%s)'%(self.name,','.join(arg_strs))
 
+	def var_is_function_input(self,var_col):
+		for arg in self.args:
+			for term in arg.exp:
+				#Check if this term is the variable we're looking for
+				#'These are not the droids you're looking for...'
+				if var_col==term:
+					return True
+				#Check if this term is a UFCall
+				elif hasattr(term,'name') and hasattr(term,'args'):
+					if term.var_is_function_input(var_col):
+						return True
+		return False
+
 	def copy(self,new_var_pos=None,new_var_names=None):
 		return UFCall(self.name,[arg.copy(new_var_pos=new_var_pos,new_var_names=new_var_names) for arg in self.args])
 
@@ -936,7 +949,7 @@ class SparseExp(IEGenObject):
 		return self._exp
 	exp=property(_get_exp)
 
-	def remove_col(self,var_col):
+	def remove_term(self,var_col):
 		if var_col in self.exp:
 			del self.exp[var_col]
 		else:
@@ -950,11 +963,33 @@ class SparseExp(IEGenObject):
 		for term,coeff in other_exp.exp.items():
 			self.exp[term]+=coeff
 
+	def replace_var(self,var_col,equal_coeff,equal_exp):
+		print 'Replace var',var_col,'with',equal_coeff,equal_exp
+		print 'in',self
+		#Determine if the given variable is present in this expression
+		if var_col in self.exp:
+			#Get the coefficient of the variable in this expression
+			var_coeff=self.exp[var_col]
+
+			#Remove the variable from this expression
+			self.remove_term(var_col)
+
+			#Multiply all other terms by the coefficient of the variable
+			# in the original equality
+			self.multiply(equal_coeff)
+
+			#Multiply the equal expression by the coefficient
+			# of the variable in this expression
+			equal_exp.multiply(var_coeff)
+
+			#Add the equal expression to this expression
+			self.add_exp(equal_exp)
+
 	def simplify(self):
 		#Remove all terms with a coefficient of 0
 		for term,coeff in self.exp.items():
 			if 0==coeff:
-				self.remove_col(term)
+				self.remove_term(term)
 
 	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		new_cols={} if new_cols is None else new_cols
@@ -1052,27 +1087,8 @@ class SparseConstraint(IEGenObject):
 		return self._op
 	op=property(_get_op)
 
-	def _replace_var(self,var_col,equal_coeff,equal_exp):
-		#Determine if the given variable is present in this constraint
-		if var_col in self.sparse_exp.exp:
-			#Get the coefficient of the variable in this constraint
-			var_coeff=self.sparse_exp.exp[var_col]
-			var_sign=sign(var_coeff)
-
-			#Remove the variable from this constraint
-			self.sparse_exp.remove_col(var_col)
-
-			#Multiply each term on the opposite side of the varible
-			# by the equal coefficient
-			for term,coeff in self.sparse_exp.exp.items():
-				if sign(coeff)!=var_sign:
-					self.sparse_exp.exp[term]*=equal_coeff
-
-			#Multiply the equal expression by the variable's coefficient
-			equal_exp.multiply(var_coeff)
-
-			#Add the equal expression to this constraint
-			self.sparse_exp.add_exp(equal_exp)
+	def replace_var(self,var_col,equal_coeff,equal_exp):
+		self.sparse_exp.replace_var(var_col,equal_coeff,equal_exp)
 
 	def simplify(self):
 		self.sparse_exp.simplify()
@@ -1096,9 +1112,6 @@ class SparseEquality(SparseConstraint):
 		return frozenset([self.sparse_exp,complement])
 	hash_exp=property(_get_hash_exp)
 
-	def replace_var(self,var_col,equal_coeff,equal_exp):
-		self._replace_var(var_col,equal_coeff,equal_exp)
-
 	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
 
@@ -1109,14 +1122,6 @@ class SparseInequality(SparseConstraint):
 	def _get_hash_exp(self):
 		return self.sparse_exp
 	hash_exp=property(_get_hash_exp)
-
-	def replace_var(self,var_col,equal_coeff,equal_exp):
-		self._replace_var(var_col,equal_coeff,equal_exp)
-
-		#If the equal_coeff is negative, we need to change the direction of the inequality
-		#This can be done by negating all signs
-		#Rather than a conditional here, we just multiply by the sign of the coefficient every time
-		self.sparse_exp.multiply(sign(equal_coeff))
 
 	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
@@ -1215,32 +1220,56 @@ class SparseConjunction(IEGenObject):
 
 		return equality_constraint
 
+	#Searches for all constraints with UFSs and determines
+	# if any of these have the given variable as an input
+	#This includes direct arguments and nested function arguments
+	def var_is_function_input(self,var_col):
+		for constraint in self.constraints:
+			for term in constraint.sparse_exp.exp:
+				#Check if this term is a UFCall
+				if hasattr(term,'name') and hasattr(term,'args'):
+					if term.var_is_function_input(var_col):
+						return True
+		return False
+
 	def project_out(self,var_col):
 		self._check_mutate()
 
 		#Search for an equality constraint with the given variable column
 		equality_constraint=self.find_equality_with_var(var_col)
 
-		#If we found an equality constraint, replace all uses of the variable
-		# with the expression it is equal to
-		if equality_constraint is not None:
+		#If we found an equality constraint AND that variable isn't an input to a UFS
+		# THEN replace all uses of the variable with the expression it is equal to
+		if equality_constraint is not None and not self.var_is_function_input(var_col):
+			#Grab the coefficient of the variable
 			equal_coeff=equality_constraint.sparse_exp.exp[var_col]
+
+			#Grab a copy of the expression that represents the constraint the
+			# variable is in
 			equal_exp=equality_constraint.sparse_exp.copy()
-			equal_exp.remove_col(var_col)
+
+			#Remove the variable from the expression
+			equal_exp.remove_term(var_col)
+
+			#Multiply all of the terms by the opposite of the sign
+			# of the variable's coefficient
+			equal_exp.multiply(-1*sign(equal_coeff))
+
+			#Make the coefficient positive
+			equal_coeff=sign(equal_coeff)*equal_coeff
 
 			#Remove the equality constraint from this conjunction
 			self.remove_constraint(equality_constraint)
 
 			#Replace all uses of the variable in the remaining constraints
 			for constraint in self.constraints:
-				constraint.replace_var(var_col,equal_coeff,equal_exp)
+				constraint.replace_var(var_col,equal_coeff,equal_exp.copy())
 
 			res=True
 
 		#No equality constraints contained the variable, run standard FM
 		else:
 			res=False
-
 
 		return res
 

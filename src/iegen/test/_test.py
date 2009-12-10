@@ -1525,6 +1525,66 @@ class SparseSetTestCase(TestCase):
 		self.failUnless(set1==set_res,'%s!=%s'%(set1,set_res))
 
 	#----------------------------------------
+	# Start simplification tests
+
+	def testSimplifyEqualityFree(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b]: a=c and c=b}')
+
+		set_res=SparseSet('{[a,b]: a=b}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyEqualityFunction(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b]: b=c and c=f(a)}')
+
+		set_res=SparseSet('{[a,b]: b=f(a)}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyInequality(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b]: a>=b and a<=b}')
+
+		set_res=SparseSet('{[a,b]: a=b}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyInequalitySub(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b]: a>=c and c>=b}')
+
+		set_res=SparseSet('{[a,b]: a>=b}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyMixed1(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b,c,d]: 2e+3a=5b and 7c>=11d+13e}')
+
+		set_res=SparseSet('{[a,b,c,d]: 14c>=22d+65b-39a}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyMixed2(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b,c,d]: -2e+3a=5b and 7c>=11d+13e}')
+
+		set_res=SparseSet('{[a,b,c,d]: -14c<=-22d+65b-39a}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	# End simplification tests
+	#----------------------------------------
+
+	#----------------------------------------
 	# Start operation tests
 
 	#Tests that hash doesn't work on an unfrozen set
@@ -1689,12 +1749,12 @@ class SparseSetTestCase(TestCase):
 	def testApply(self):
 		from iegen import SparseSet,SparseRelation
 
-		set=SparseSet('{[a]:1<=a and a<=10}')
-		relation=SparseRelation('{[d]->[e,f]:e=d && -10<=f and f<=0}')
+		set=SparseSet('{[a,b]:1<=a and a<=10}')
+		relation=SparseRelation('{[d,e]->[f,g,h]:d=f && e<=h and h<=e+1 and 11<=e and e<=13 and -10<=g and g<=0}')
 
 		applied=set.apply(relation)
 
-		applied_res=SparseSet('{[e,f]: 1<=e and e<=10 && -10<=f and f<=0}')
+		applied_res=SparseSet('{[f,g]: 1<=f and f<=10 && -10<=g and g<=0 and 11<=h and h<=14}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -1984,6 +2044,67 @@ class SparseRelationTestCase(TestCase):
 		rel_res=SparseRelation('{[a]->[b,c]: a=b and b>=c}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	#----------------------------------------
+	# Start simplification tests
+
+	def testSimplifyEqualityFree(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b]: a=c and c=b}')
+
+		rel_res=SparseRelation('{[a]->[b]: a=b}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyEqualityFunction(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b]: b=c and c=f(a)}')
+
+		rel_res=SparseRelation('{[a]->[b]: b=f(a)}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyInequality(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b]: a>=b and a<=b}')
+
+		rel_res=SparseRelation('{[a]->[b]: a=b}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyInequalitySub(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b]: a>=c and c>=b}')
+
+		rel_res=SparseRelation('{[a]->[b]: a>=b}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyMixed1(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a,b]->[c,d]: 2e+3a=5b and 7c>=11d+13e}')
+
+		rel_res=SparseRelation('{[a,b]->[c,d]: 14c>=22d+65b-39a}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyMixed2(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a,b]->[c,d]: -2e+3a=5b and 7c>=11d+13e}')
+
+		rel_res=SparseRelation('{[a,b]->[c,d]: -14c<=-22d+65b-39a}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	# End simplification tests
+	#----------------------------------------
+
 
 	#----------------------------------------
 	# Start operation tests
