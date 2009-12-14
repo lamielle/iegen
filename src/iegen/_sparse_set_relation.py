@@ -1285,6 +1285,28 @@ class SparseConjunction(IEGenObject):
 
 		return res
 
+	def discover_equalities(self):
+		remove_constraints=set()
+		add_equalities=set()
+
+		#Look at all pairs of constraints
+		for constraint1 in self.constraints:
+			if constraint1 not in remove_constraints:
+				for constraint2 in self.constraints:
+					if constraint2 not in remove_constraints:
+						if constraint1.sparse_exp==constraint2.sparse_exp.complement():
+							remove_constraints.add(constraint1)
+							remove_constraints.add(constraint2)
+							add_equalities.add(SparseEquality(sparse_exp=constraint1.sparse_exp.copy()))
+
+		#Remove all necessary constraints
+		for constraint in remove_constraints:
+			self.remove_constraint(constraint)
+
+		#Add all new equalities
+		for constraint in add_equalities:
+			self.add_constraint(constraint)
+
 	def simplify(self):
 		self._check_mutate()
 
@@ -1294,6 +1316,9 @@ class SparseConjunction(IEGenObject):
 
 		#Remove all empty constraints
 		self._constraints=[constraint for constraint in self.constraints if len(constraint.sparse_exp.exp)>0]
+
+		#Discover equalities
+		self.discover_equalities()
 
 	def bounds(self,var_col):
 		lower_bounds=set()
