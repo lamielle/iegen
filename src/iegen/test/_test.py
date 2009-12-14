@@ -1524,6 +1524,130 @@ class SparseSetTestCase(TestCase):
 
 		self.failUnless(set1==set_res,'%s!=%s'%(set1,set_res))
 
+	#Tests that the bounds method fails when given variable names that aren't part of the tuple
+	@raises(ValueError)
+	def testBoundsNonTupleVarFail(self):
+		from iegen import SparseSet
+		set=SparseSet('{[a,b]: 1<=a and a<=10 and 1<=b and b<=10}')
+		set.bounds('c')
+
+	#Tests that the bounds method fails with a non 1 and non -1 coefficient
+	@raises(ValueError)
+	def testBoundsNonOneCoeffFail1(self):
+		from iegen import SparseSet
+		set=SparseSet('{[a]: 3a>=10}')
+		set.bounds('a')
+
+	@raises(ValueError)
+	def testBoundsNonOneCoeffFail2(self):
+		from iegen import SparseSet
+		set=SparseSet('{[a]: -3a>=10}')
+		set.bounds('a')
+
+	#Tests that the proper upper and lower bounds are calculated for a 1d set
+	def testBounds1D(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a]: 1<=a and a<=10}')
+
+		lbs=set([set1.get_expression({set1.get_constant_column():1})])
+		ubs=set([set1.get_expression({set1.get_constant_column():10})])
+		b_res=((lbs,ubs),)
+		lb_res=(lbs,)
+		ub_res=(ubs,)
+		self.failUnless(set1.lower_bounds('a')==lb_res,"The lower bound of 'a' is not 1")
+		self.failUnless(set1.upper_bounds('a')==ub_res,"The upper bound of 'a' is not 10")
+		self.failUnless(set1.bounds('a')==b_res,"The bounds of 'a' are not (1,10)")
+
+	#Tests that the proper upper and lower bounds are calculated for a 2d set
+	def testBounds2D(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b]: 5<=a and a<=20 and -10<=b and b<=0}')
+
+		lbs=set([set1.get_expression({set1.get_constant_column():5})])
+		ubs=set([set1.get_expression({set1.get_constant_column():20})])
+		b_res=((lbs,ubs),)
+		lb_res=(lbs,)
+		ub_res=(ubs,)
+		self.failUnless(set1.lower_bounds('a')==lb_res,"The lower bound of 'a' is not 5 in set %s"%set1)
+		self.failUnless(set1.upper_bounds('a')==ub_res,"The upper bound of 'a' is not 20")
+		self.failUnless(set1.bounds('a')==b_res,"The bounds of 'a' are not (5,20)")
+
+		lbs=set([set1.get_expression({set1.get_constant_column():-10})])
+		ubs=set([set1.get_expression({set1.get_constant_column():0})])
+		b_res=((lbs,ubs),)
+		lb_res=(lbs,)
+		ub_res=(ubs,)
+		self.failUnless(set1.lower_bounds('b')==lb_res,"The lower bound of 'b' is not -10")
+		self.failUnless(set1.upper_bounds('b')==ub_res,"The upper bound of 'b' is not 0")
+		self.failUnless(set1.bounds('b')==b_res,"The bounds of 'b' are not (-10,0)")
+
+	#Tests that the proper upper and lower bounds are calculated for a 2d set with symbolics
+	def testBoundsSymbolic(self):
+		from iegen import SparseSet,Symbolic
+
+		set1=SparseSet('{[a,b]: 5<=a and a<=n and m<=b and b<=0}',[Symbolic('n'),Symbolic('m')])
+
+		lbs=set([set1.get_expression({set1.get_constant_column():5})])
+		ubs=set([set1.get_expression({set1.get_column('n'):1})])
+		b_res=((lbs,ubs),)
+		lb_res=(lbs,)
+		ub_res=(ubs,)
+		self.failUnless(set1.lower_bounds('a')==lb_res,"The lower bound of 'a' is not 5")
+		self.failUnless(set1.upper_bounds('a')==ub_res,"The upper bound of 'a' is not n")
+		self.failUnless(set1.bounds('a')==b_res,"The bounds of 'a' are not (5,n)")
+
+		lbs=set([set1.get_expression({set1.get_column('m'):1})])
+		ubs=set([set1.get_expression({set1.get_constant_column():0})])
+		b_res=((lbs,ubs),)
+		lb_res=(lbs,)
+		ub_res=(ubs,)
+		self.failUnless(set1.lower_bounds('b')==lb_res,"The lower bound of 'b' is not m")
+		self.failUnless(set1.upper_bounds('b')==ub_res,"The upper bound of 'b' is not 0")
+		self.failUnless(set1.bounds('b')==b_res,"The bounds of 'b' are not (m,0)")
+
+	#Tests that the proper upper and lower bounds are calculated for a 2d set with symbolics
+	def testBoundsSymbolicMuliTerm(self):
+		from iegen import SparseSet,Symbolic
+
+		set1=SparseSet('{[a,b]: 5<=a and a<=n+m+10 and m-6<=b and b<=0}',[Symbolic('n'),Symbolic('m')])
+
+		lbs=set([set1.get_expression({set1.get_constant_column():5})])
+		ubs=set([set1.get_expression({set1.get_column('n'):1,set1.get_column('m'):1,set1.get_constant_column():10})])
+		b_res=((lbs,ubs),)
+		lb_res=(lbs,)
+		ub_res=(ubs,)
+		self.failUnless(set1.lower_bounds('a')==lb_res,"The lower bound of 'a' is not 5")
+		self.failUnless(set1.upper_bounds('a')==ub_res,"The upper bound of 'a' is not n+m+10")
+		self.failUnless(set1.bounds('a')==b_res,"The bounds of 'a' are not (5,n+m+10)")
+
+		lbs=set([set1.get_expression({set1.get_column('m'):1,set1.get_constant_column():-6})])
+		ubs=set([set1.get_expression({set1.get_constant_column():0})])
+		b_res=((lbs,ubs),)
+		lb_res=(lbs,)
+		ub_res=(ubs,)
+		self.failUnless(set1.lower_bounds('b')==lb_res,"The lower bound of 'b' is not m-6")
+		self.failUnless(set1.upper_bounds('b')==ub_res,"The upper bound of 'b' is not 0")
+		self.failUnless(set1.bounds('b')==b_res,"The bounds of 'b' are not (m-6,0)")
+
+	#Tests that the proper upper and lower bounds are calculated for a 2d set with mutiple conjunctions and multiple upper and lower bounds
+	def testBoundsMultiConjunction(self):
+		from iegen import SparseSet
+
+		set1=SparseSet('{[a,b]: 5<=a and 10<=a and a<=b and a<=20}').union(SparseSet('{[a,b]: -5<=a and -10<=a and a<=-b and a<=-20}'))
+
+		lbs1=set([set1.get_expression({set1.get_constant_column():5}),set1.get_expression({set1.get_constant_column():10})])
+		ubs1=set([set1.get_expression({set1.get_column('b'):1}),set1.get_expression({set1.get_constant_column():20})])
+		lbs2=set([set1.get_expression({set1.get_constant_column():-5}),set1.get_expression({set1.get_constant_column():-10})])
+		ubs2=set([set1.get_expression({set1.get_column('b'):-1}),set1.get_expression({set1.get_constant_column():-20})])
+		b_res=((lbs1,ubs1),(lbs2,ubs2))
+		lb_res=(lbs1,lbs2)
+		ub_res=(ubs1,ubs2)
+		self.failUnless(set1.lower_bounds('a')==lb_res,"The lower bound of 'a' is not ((5,10),(-5,-10))")
+		self.failUnless(set1.upper_bounds('a')==ub_res,"The upper bound of 'a' is not ((b,20),(-b,-20))")
+		self.failUnless(set1.bounds('a')==b_res,"The bounds of 'a' are not (((5,10),(b,20)),((-5,-10),(-b,-20)))")
+
 	#----------------------------------------
 	# Start simplification tests
 

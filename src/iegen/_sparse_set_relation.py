@@ -265,10 +265,6 @@ class SparseFormula(IEGenObject):
 		#Make sure this sparse formula can be modified
 		self._check_mutate()
 
-		#Ensure that a constant column is specificed in the expression
-		if self.get_constant_column() not in exp_coeff:
-			exp_coeff[self.get_constant_column()]=0
-
 		#Return a new constraint
 		return ConstraintType(exp_coeff)
 
@@ -410,6 +406,10 @@ class SparseFormula(IEGenObject):
 	def get_constant_column(self):
 		return ConstantCol()
 
+	#Returns an expression object for the given column->coeff mapping
+	def get_expression(self,exp_coeff):
+		return SparseExp(exp_coeff)
+
 	#Get an equality constraint with the given expression coefficients
 	def get_equality(self,exp_coeff):
 		return self._get_constraint(exp_coeff,SparseEquality)
@@ -449,16 +449,20 @@ class SparseFormula(IEGenObject):
 		ufcall=UFCall(name,args)
 		return ufcall
 
-	#Returns the lower bound of the given tuple variable
-	def lower_bound(self,tuple_var_name):
-		return self.bounds(tuple_var_name)[0]
-	#Returns the upper bound of the given tuple variable
-	def upper_bound(self,tuple_var_name):
-		return self.bounds(tuple_var_name)[1]
+	#Returns all of the lower bound expressions of each conjunction for the given variable
+	#The format is: (set(lb_conj1),...,set(lb_conjn))
+	def lower_bounds(self,tuple_var_name):
+		return tuple([bounds[0] for bounds in self.bounds(tuple_var_name)])
 
-	#TODO: implement
+	#Returns all of the upper bound expressions of each conjunction for the given variable
+	#The format is: (set(ub_conj1),...,set(ub_conjn))
+	def upper_bounds(self,tuple_var_name):
+		return tuple([bounds[1] for bounds in self.bounds(tuple_var_name)])
+
+	#Returns all of the lower and upper bound expressions of each conjunction for the given variable
+	#The format is: ((set(lb_conj1),set(ub_conj1)),...,(set(lb_conjn),set(ub_conjn)))
 	def bounds(self,tuple_var_name):
-		pass
+		return self.disjunction.bounds(self.get_column(tuple_var_name))
 
 	# End public methods/properties
 	#--------------------------------------------------
@@ -914,6 +918,7 @@ class SparseExp(IEGenObject):
 
 	def __init__(self,exp_coeff):
 		self._exp=defaultdict(int,exp_coeff)
+		self.simplify()
 
 	def __hash__(self):
 		return hash(frozenset(self.exp.items()))
@@ -930,20 +935,24 @@ class SparseExp(IEGenObject):
 	def __str__(self):
 		term_strs=[]
 
-		#Look at each term
-		for term,coeff in self.exp.items():
-			#Handle the constant
-			if ConstantCol()==term:
-				term_strs.append('%s'%(coeff))
-			else:
-				#If the coefficient is not 0, add it to the list of expression strings
-				if 1==coeff:
-					term_strs.append('%s'%(term.exp_str()))
+		#If there are no terms, just return '0'
+		if 0==len(self.exp):
+			return '0'
+		else:
+			#Look at each term
+			for term,coeff in self.exp.items():
+				#Handle the constant
+				if ConstantCol()==term:
+					term_strs.append('%s'%(coeff))
 				else:
-					term_strs.append('%s*%s'%(coeff,term.exp_str()))
+					#If the coefficient is not 0, add it to the list of expression strings
+					if 1==coeff:
+						term_strs.append('%s'%(term.exp_str()))
+					else:
+						term_strs.append('%s*%s'%(coeff,term.exp_str()))
 
-		#Return a string for the sum of all expression strings
-		return '+'.join(term_strs)
+			#Return a string for the sum of all expression strings
+			return '+'.join(term_strs)
 
 	def _get_exp(self):
 		return self._exp
@@ -963,9 +972,26 @@ class SparseExp(IEGenObject):
 		for term,coeff in other_exp.exp.items():
 			self.exp[term]+=coeff
 
+	def get_equality_pair(self,var_col):
+		#Grab the coefficient of the variable
+		equal_coeff=self.exp[var_col]
+
+		#Grab a copy of thise expression
+		equal_exp=self.copy()
+
+		#Remove the variable from the expression
+		equal_exp.remove_term(var_col)
+
+		#Multiply all of the terms by the opposite of the sign
+		# of the variable's coefficient
+		equal_exp.multiply(-1*sign(equal_coeff))
+
+		#Make the coefficient positive
+		equal_coeff=sign(equal_coeff)*equal_coeff
+
+		return (equal_coeff,equal_exp)
+
 	def replace_var(self,var_col,equal_coeff,equal_exp):
-		print 'Replace var',var_col,'with',equal_coeff,equal_exp
-		print 'in',self
 		#Determine if the given variable is present in this expression
 		if var_col in self.exp:
 			#Get the coefficient of the variable in this expression
@@ -1241,22 +1267,8 @@ class SparseConjunction(IEGenObject):
 		#If we found an equality constraint AND that variable isn't an input to a UFS
 		# THEN replace all uses of the variable with the expression it is equal to
 		if equality_constraint is not None and not self.var_is_function_input(var_col):
-			#Grab the coefficient of the variable
-			equal_coeff=equality_constraint.sparse_exp.exp[var_col]
-
-			#Grab a copy of the expression that represents the constraint the
-			# variable is in
-			equal_exp=equality_constraint.sparse_exp.copy()
-
-			#Remove the variable from the expression
-			equal_exp.remove_term(var_col)
-
-			#Multiply all of the terms by the opposite of the sign
-			# of the variable's coefficient
-			equal_exp.multiply(-1*sign(equal_coeff))
-
-			#Make the coefficient positive
-			equal_coeff=sign(equal_coeff)*equal_coeff
+			#Get the coefficient/expression pair the variable is equal to
+			equal_coeff,equal_exp=equality_constraint.sparse_exp.get_equality_pair(var_col)
 
 			#Remove the equality constraint from this conjunction
 			self.remove_constraint(equality_constraint)
@@ -1282,6 +1294,39 @@ class SparseConjunction(IEGenObject):
 
 		#Remove all empty constraints
 		self._constraints=[constraint for constraint in self.constraints if len(constraint.sparse_exp.exp)>0]
+
+	def bounds(self,var_col):
+		lower_bounds=set()
+		upper_bounds=set()
+
+		#Look at each constraint in the conjunction
+		for constraint in self.constraints:
+			#See if the given variable is present in the constraint
+			if var_col in constraint.sparse_exp.exp:
+				#Get the coefficient of the variable in the constraint
+				var_coeff=constraint.sparse_exp.exp[var_col]
+
+				#Get the coefficient/expression pair the variable is equal to
+				equal_coeff,equal_exp=constraint.sparse_exp.get_equality_pair(var_col)
+
+				#Cannot handle cases where the abs(var_coeff) != 1
+				if 1!=abs(var_coeff):
+					raise ValueError("Coefficient of variable '%s' is not 1 or -1"%(var_col))
+
+				#Equality constraint: lower and upper bounds
+				if '='==constraint.op:
+					lower_bounds.add(equal_exp)
+					upper_bounds.add(equal_exp)
+				#Inequality constraint: lower or upper bound
+				else:
+					#Lower bound
+					if var_coeff>0:
+						lower_bounds.add(equal_exp)
+					#Upper bound
+					else:
+						upper_bounds.add(equal_exp)
+
+		return (lower_bounds,upper_bounds)
 
 	def freeze(self):
 		if not self.frozen:
@@ -1372,6 +1417,9 @@ class SparseDisjunction(IEGenObject):
 			projected_out=conjunction.project_out(var_col) and projected_out
 
 		return projected_out
+
+	def bounds(self,var_col):
+		return tuple([conjunction.bounds(var_col) for conjunction in self.conjunctions])
 
 	def freeze(self):
 		#Only freeze this disjunction if it isn't yet frozen
