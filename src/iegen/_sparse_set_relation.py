@@ -1279,9 +1279,49 @@ class SparseConjunction(IEGenObject):
 
 			res=True
 
-		#No equality constraints contained the variable, run standard FM
+		#No equality constraints contained the variable, run standard Fourier-Motzkin
 		else:
-			res=False
+			#Get the lower and upper bounds for the variable we are projecting out
+			lower_bounds,upper_bounds=self.bounds(var_col,extra_info=True)
+
+			#New constraints to be added
+			add_constraints=[]
+
+			#Constraint to be removed
+			remove_constraints=set()
+
+			#Look at each pair of lower/upper bounds
+			for lb_coeff,lower_bound,lb_constraint in lower_bounds:
+				for ub_coeff,upper_bound,ub_constraint in upper_bounds:
+					lower_bound=lower_bound.copy()
+					upper_bound=upper_bound.copy()
+
+					#Create the new constraint:
+					#ub_coeff*lower_bound <= lb_coeff*upper_bound
+					lower_bound.multiply(ub_coeff)
+					upper_bound.multiply(lb_coeff)
+					upper_bound.multiply(-1)
+
+					new_exp=SparseExp({})
+					new_exp.add_exp(lower_bound)
+					new_exp.add_exp(upper_bound)
+					new_exp=new_exp.complement()
+
+					new_constraint=SparseInequality(sparse_exp=new_exp)
+					add_constraints.append(new_constraint)
+
+					remove_constraints.add(lb_constraint)
+					remove_constraints.add(ub_constraint)
+
+			#Remove all necessary constraints
+			for constraint in remove_constraints:
+				self.remove_constraint(constraint)
+
+			#Add all new constraints
+			for constraint in add_constraints:
+				self.add_constraint(constraint)
+
+			res=True
 
 		return res
 
@@ -1307,6 +1347,16 @@ class SparseConjunction(IEGenObject):
 		for constraint in add_equalities:
 			self.add_constraint(constraint)
 
+	def remove_empty_constraints(self):
+		self._constraints=[constraint for constraint in self.constraints if len(constraint.sparse_exp.exp)>0]
+
+	def remove_true_constraints(self):
+		constraints=list(self.constraints)
+		for constraint in constraints:
+			if 1==len(constraint.sparse_exp.exp) and ConstantCol() in constraint.sparse_exp.exp:
+				if constraint.sparse_exp.exp[ConstantCol()]>=0:
+					self.remove_constraint(constraint)
+
 	def simplify(self):
 		self._check_mutate()
 
@@ -1314,18 +1364,25 @@ class SparseConjunction(IEGenObject):
 		for constraint in self.constraints:
 			constraint.simplify()
 
-		#Remove all empty constraints
-		self._constraints=[constraint for constraint in self.constraints if len(constraint.sparse_exp.exp)>0]
+		#Remove empty constraints
+		self.remove_empty_constraints()
+
+		#Remove 'true' constraints: these have the form:
+		# constant >=0
+		# where constant is >=0 itself
+		self.remove_true_constraints()
 
 		#Discover equalities
 		self.discover_equalities()
 
-	def bounds(self,var_col):
+	def bounds(self,var_col,extra_info=False):
 		lower_bounds=set()
 		upper_bounds=set()
 
 		#Look at each constraint in the conjunction
 		for constraint in self.constraints:
+			constraint=constraint.copy()
+
 			#See if the given variable is present in the constraint
 			if var_col in constraint.sparse_exp.exp:
 				#Get the coefficient of the variable in the constraint
@@ -1334,22 +1391,32 @@ class SparseConjunction(IEGenObject):
 				#Get the coefficient/expression pair the variable is equal to
 				equal_coeff,equal_exp=constraint.sparse_exp.get_equality_pair(var_col)
 
-				#Cannot handle cases where the abs(var_coeff) != 1
-				if 1!=abs(var_coeff):
+				#Cannot handle cases where the equal_coeff!=1
+				if not extra_info and 1!=equal_coeff:
 					raise ValueError("Coefficient of variable '%s' is not 1 or -1"%(var_col))
 
 				#Equality constraint: lower and upper bounds
 				if '='==constraint.op:
-					lower_bounds.add(equal_exp)
-					upper_bounds.add(equal_exp)
+					if extra_info:
+						lower_bounds.add((equal_coeff,equal_exp,constraint))
+						upper_bounds.add((equal_coeff,equal_exp,constraint))
+					else:
+						lower_bounds.add(equal_exp)
+						upper_bounds.add(equal_exp)
 				#Inequality constraint: lower or upper bound
 				else:
 					#Lower bound
 					if var_coeff>0:
-						lower_bounds.add(equal_exp)
+						if extra_info:
+							lower_bounds.add((equal_coeff,equal_exp,constraint))
+						else:
+							lower_bounds.add(equal_exp)
 					#Upper bound
 					else:
-						upper_bounds.add(equal_exp)
+						if extra_info:
+							upper_bounds.add((equal_coeff,equal_exp,constraint))
+						else:
+							upper_bounds.add(equal_exp)
 
 		return (lower_bounds,upper_bounds)
 

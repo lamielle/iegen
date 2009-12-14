@@ -1705,6 +1705,15 @@ class SparseSetTestCase(TestCase):
 
 		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
 
+	def testSimplifyRemoveTrue(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a]: 10>=0}')
+
+		set_res=SparseSet('{[a]}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
 	# End simplification tests
 	#----------------------------------------
 
@@ -1874,11 +1883,11 @@ class SparseSetTestCase(TestCase):
 		from iegen import SparseSet,SparseRelation
 
 		set=SparseSet('{[a,b]:1<=a and a<=10}')
-		relation=SparseRelation('{[d,e]->[f,g,h]:d=f && e<=h and h<=e+1 and 11<=e and e<=13 and -10<=g and g<=0}')
+		relation=SparseRelation('{[d,e]->[f,g,h]:d=f && 3e<=2h and h<=2e+1 and 11<=e and e<=13 and -10<=g and g<=0}')
 
 		applied=set.apply(relation)
 
-		applied_res=SparseSet('{[f,g]: 1<=f and f<=10 && -10<=g and g<=0 and 11<=h and h<=14}')
+		applied_res=SparseSet('{[f,g,h]: 1<=f and f<=10 && -10<=g and g<=0 and 33<=2h and -3<=h and h<=27}')
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
@@ -2223,6 +2232,15 @@ class SparseRelationTestCase(TestCase):
 		rel=SparseRelation('{[a,b]->[c,d]: -2e+3a=5b and 7c>=11d+13e}')
 
 		rel_res=SparseRelation('{[a,b]->[c,d]: -14c<=-22d+65b-39a}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyRemoveTrue(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b]: 10>=0}')
+
+		rel_res=SparseRelation('{[a]->[b]}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
 
