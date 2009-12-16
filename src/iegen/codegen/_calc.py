@@ -200,7 +200,7 @@ def calc_access_relation_rename(access_relation,iter_space):
 #-----------------------------------------------------------
 
 #---------- IDG Node calculation functions ----------
-def calc_reorder_call(trans_name,data_array,reordering_name):
+def calc_reorder_call(trans_name,data_array,reordering_name,mapir):
 	from iegen import FunctionCallSpec
 
 	func_name='reorderArray'
@@ -209,7 +209,7 @@ def calc_reorder_call(trans_name,data_array,reordering_name):
 	      '(unsigned char*)%s'%(data_array.name),
 	      data_array.elem_size,
 	      calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),
-	      '%s_ER'%(reordering_name)
+	      mapir.er_specs[reordering_name].get_var_name()
 	     ]
 
 	return FunctionCallSpec(name,func_name,args)
@@ -218,7 +218,7 @@ def calc_erg_call(trans_name,erg_func_name,inputs,outputs):
 	from iegen import FunctionCallSpec
 	name=trans_name+'_'+erg_func_name
 
-	args=[er.name+'_ER' for er in inputs+outputs]
+	args=[er.get_var_name() for er in inputs+outputs]
 
 	return FunctionCallSpec(name,erg_func_name,args)
 #----------------------------------------------------
@@ -263,7 +263,7 @@ def calc_size_string(set,var_name):
 
 #Returns the value that the given variable is equal to in the given formula
 #If raw_array is True, accesses to arrays (functions) will not be treated as explicit relation lookups
-def calc_equality_value(var_name,formula,raw_array=False):
+def calc_equality_value(var_name,formula,mapir,raw_array=False):
 	import iegen
 	from iegen.ast.visitor import FindConstraintVisitor,ValueStringVisitor
 	from iegen.ast import Equality,NormExp
@@ -288,5 +288,5 @@ def calc_equality_value(var_name,formula,raw_array=False):
 
 	value=exp-var
 
-	return ValueStringVisitor(raw_array).visit(value).value
+	return ValueStringVisitor(mapir,raw_array).visit(value).value
 #---------------------------------------------------

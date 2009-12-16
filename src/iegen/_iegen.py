@@ -167,6 +167,35 @@ class ERSpec(IEGenObject):
 	#Returns the names of all functions in the constraints of each Set/Relation that this ERSpec contains
 	def functions(self):
 		return list(set(self.input_bounds.functions()+self.output_bounds.functions()+self.relation.functions()))
+
+	#Returns true if this ERSpec can be represented as a union of explicit 1D functions
+	def is_union_1d(self):
+		return (1,1)==self.relation.arity() and self.is_function and len(self.relation.relations)>1
+
+	#Returns the variable type string for this ERSpec
+	def get_type(self):
+		if self.is_union_1d():
+			return 'ER_U1D *'
+		else:
+			return 'ExplicitFunction *'
+
+	#Returns the variable name for this ERSpec
+	def get_var_name(self):
+		if self.is_union_1d():
+			return self.name+'_ER_U1D'
+		else:
+			return self.name+'_EF'
+
+	#Returns the parameter type string for this ERSpec
+	def get_param_type(self):
+		if self.is_union_1d():
+			return 'ER_U1D **'
+		else:
+			return 'ExplicitFunction **'
+
+	#Returns the parameter name for this ERSpec
+	def get_param_name(self):
+		return self.name
 #----------------------------------
 
 #---------- IndexArray class ----------
@@ -198,6 +227,18 @@ class IndexArray(ERSpec):
 %s|-input_bounds: %s
 %s|-output_bounds: %s
 %s|-relation: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation)
+
+	#Returns the variable type string for this index array
+	def get_type(self):
+		return 'ExplicitFunction *'
+
+	#Returns the variable name for this index array
+	def get_var_name(self):
+		return self.name+'_EF'
+
+	#Returns the parameter name for this index array
+	def get_param_name(self):
+		return self.name
 #--------------------------------------
 
 #---------- Statement class ----------

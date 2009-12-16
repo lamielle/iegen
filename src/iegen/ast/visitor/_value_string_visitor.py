@@ -7,8 +7,9 @@ from iegen.ast.visitor import DFVisitor
 #
 #The resulting string is placed in the 'value' field
 class ValueStringVisitor(DFVisitor):
-	def __init__(self,raw_array=False):
+	def __init__(self,mapir,raw_array=False):
 		from cStringIO import StringIO
+		self.mapir=mapir
 		self._value=StringIO()
 
 		#True if raw array accesses should be used, otherwise ER accesses will be used
@@ -29,7 +30,8 @@ class ValueStringVisitor(DFVisitor):
 		if self.raw_array:
 			self._value.write('%s['%(node.name))
 		else:
-			self._value.write('ER_out_given_in(%s_ER,'%(node.name))
+			er_spec=self.mapir.er_specs[node.name]
+			self._value.write('EF_get(%s,'%(er_spec.get_var_name()))
 	def outFuncExp(self,node):
 		if self.raw_array:
 			self._value.write(']')

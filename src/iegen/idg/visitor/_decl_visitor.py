@@ -28,17 +28,17 @@ class DeclVisitor(TopoVisitor):
 	def atIDGDataArray(self,node): pass
 
 	def atIDGERSpec(self,node):
-		self.decls[node.data.name]=VarDecl('ExplicitRelation *',[node.data.name+'_ER'])
+		self.decls[node.data.name]=VarDecl(node.data.get_type(),[node.data.get_var_name()])
 		for var_decl in gen_tuple_vars_decl(node.data.input_bounds):
 			self.add_int_vars(var_decl.var_names)
 
 	def atIDGIndexArray(self,node):
-		self.decls[node.data.name]=VarDecl('ExplicitRelation *',[node.data.name+'_ER'])
+		self.decls[node.data.name]=VarDecl(node.data.get_type(),[node.data.get_var_name()])
 
-	#OutputERSpecs will be passed in with type 'ExplicitRelation **var'.
-	#For convenience, we declare another variable 'ExplicitRelation *var_ER'
+	#OutputERSpecs will be passed in as '**var'.
+	#For convenience, we declare another variable '*var_ER'
 	def atIDGOutputERSpec(self,node):
-		self.decls[node.data.name]=VarDecl('ExplicitRelation *',[node.data.name+'_ER'])
+		self.decls[node.data.name]=VarDecl(node.data.get_type(),[node.data.get_var_name()])
 		for var_decl in gen_tuple_vars_decl(node.data.input_bounds):
 			self.add_int_vars(var_decl.var_names)
 

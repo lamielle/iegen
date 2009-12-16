@@ -19,10 +19,10 @@ class OutputERVisitor(TopoVisitor):
 
 	def atIDGIndexArray(self,node): pass
 
-	#OutputERSpecs will be passed in with type 'ExplicitRelation **var'.
-	#Here we assign the var_ER variable *var
+	#OutputERSpecs will be passed in as '**var'.
+	#Here we assign the local ER variable *var
 	def atIDGOutputERSpec(self,node):
-		self.assigns.append(Statement('%s_ER=*%s;'%(node.data.name,node.data.name)))
+		self.assigns.append(Statement('%s=*%s;'%(node.data.get_var_name(),node.data.get_param_name())))
 
 	def atIDGGenERSpec(self,node): pass
 

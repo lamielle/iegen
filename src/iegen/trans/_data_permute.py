@@ -110,7 +110,8 @@ class DataPermuteTrans(Transformation):
 		    name='%s_input'%(self.name),
 		    input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation),
 		    output_bounds=self.target_data_arrays[0].bounds.copy(),
-		    relation=iter_to_data))
+		    relation=iter_to_data,
+		    is_function=True))
 
 		#Add the ERSpec to the MapIR
 		mapir.add_er_spec(self.inputs[0])
@@ -177,7 +178,7 @@ class DataPermuteTrans(Transformation):
 			for data_array in self.data_arrays:
 				#Build the list of arguments to the function call
 				#Add the reorder call node for this data array to the IDG
-				reorder_call_node=mapir.idg.get_node(IDGCall,calc_reorder_call(self.name,data_array,self.reordering_name))
+				reorder_call_node=mapir.idg.get_node(IDGCall,calc_reorder_call(self.name,data_array,self.reordering_name,mapir))
 
 				#Add the reorder call node to the collection of reorder call nodes
 				reorder_call_nodes.append(reorder_call_node)

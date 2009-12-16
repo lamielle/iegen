@@ -34,7 +34,7 @@ class ParamVisitor(TopoVisitor):
 
 		#Add each output ERSpec parameter
 		for output_er_spec in self.output_er_specs:
-			params.append(Parameter('ExplicitRelation **',output_er_spec))
+			params.append(Parameter(output_er_spec.get_param_type(),output_er_spec.get_param_name()))
 
 		return params
 
@@ -48,7 +48,7 @@ class ParamVisitor(TopoVisitor):
 
 	def atIDGIndexArray(self,node): self.index_arrays.append(node.data)
 
-	def atIDGOutputERSpec(self,node): self.output_er_specs.append(node.data.name)
+	def atIDGOutputERSpec(self,node): self.output_er_specs.append(node.data)
 
 	def atIDGGenERSpec(self,node): pass
 

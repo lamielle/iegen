@@ -27,14 +27,14 @@ class PointerUpdate(InterTransOpt):
 
 
 	def apply(self,mapir):
-		self.print_detail("PointerUpdate.apply looking for nest patterns")
+		self.print_progress("PointerUpdate.apply looking for nest patterns")
 
 		#Look for each of the nest patterns in each of the ERSpecs.
 		for nest in self.nests:
 			#Look for a single nest pattern.
 			(nestrefs, affected_er_specs) = self.find_nestrefs(nest,mapir)
 			self.print_detail("\tnestrefs = %s\n"%nestrefs)
-					
+
 			#For this particular nest, if there are any nestdefs found
 			#then create an ERSpec for nested function symbol.
 			if len(nestrefs)>0:
@@ -55,11 +55,11 @@ class PointerUpdate(InterTransOpt):
 			#now used, and putting dependences between the individual
 			#functions and the new function ERSpec.
 			self.update_IDG_for_newfunc(mapir,newfunc_ERSpec,affected_er_specs,nest)
-					
+
 	#Look for a nest patterns in each of the ERSpecs in mapir.
 	#Input: list of function name strings that specify nest, ["f","g"]
-	#Output: tuple with a list of FuncNest references for function nests 
-    # that fit pattern and the list of ERSpecs in IDG where those patterns 
+	#Output: tuple with a list of FuncNest references for function nests
+    # that fit pattern and the list of ERSpecs in IDG where those patterns
     # were found.
 	def find_nestrefs(self,nest,mapir):
 		nestrefs = []
@@ -78,13 +78,13 @@ class PointerUpdate(InterTransOpt):
 		#The scattering functions and access relations.
 		for stmt in mapir.statements.values():
 			self.print_detail("\tstmt.scatter = %s"%(stmt.scatter))
-			nestrefs.extend( 
+			nestrefs.extend(
 				FindFuncNestVisitor(nest).visit(stmt.scatter).nestrefs)
 			self.print_detail("\tnestrefs = %s\n"%nestrefs)
 
 			for ar in stmt.access_relations.values():
 				self.print_detail("\tar = %s"%ar)
-				nestrefs.extend( 
+				nestrefs.extend(
 					FindFuncNestVisitor(nest).visit(ar.iter_to_data).nestrefs)
 				self.print_detail("\tnestrefs = %s\n"%nestrefs)
 
@@ -107,7 +107,7 @@ class PointerUpdate(InterTransOpt):
 		# use range of outermost function symbol as range
 		outer_ERSpec = mapir.er_specs[nestref.outer_node.name]
 		outer_range = outer_ERSpec.output_bounds.copy()
-	
+
 		#Create ERSpec
 		#Explicit relation is a function because it is
 		#the composition of two uninterpreted functions.
@@ -117,21 +117,22 @@ class PointerUpdate(InterTransOpt):
 		#FIXME: Alan, how do I "assert" that the above is
 		#true?  Also need to assert that inner function
 		#calls have coefficients  of 1.
-		return ERSpec(
-			name=newfunc,
-			input_bounds=inner_domain,
-			output_bounds=outer_range,
-			is_function=True,
-			relation=Relation('{[i] -> [j] : j=%s(%s(i))}'%tuple(nest))
-		)
+		new_ERSpec=ERSpec(
+		     name=newfunc,
+		     input_bounds=inner_domain,
+		     output_bounds=outer_range,
+		     is_function=True,
+		     relation=Relation('{[i] -> [j] : j=%s(%s(i))}'%tuple(nest))
+		     )
+		mapir.add_er_spec(new_ERSpec)
 
-	#Input: 
+		return new_ERSpec
+
+	#Input:
 	#   mapir: The MapIR data structure.
 	#   newfunc_ERSpec: ERSpec for new function
 	#   affected_er_specs: ERSpecs that had nest, which will be replaced with
-	#       new function.
-	#   nest: list of function name strings that specify nest, ["f","g"]
-	#
+	#       new function.  #   nest: list of function name strings that specify nest, ["f","g"] #
 	#SideEffect:
 	#   Modifies the IDG by removing old dependences coming
 	#   from individual functions, putting in a new dependences
@@ -156,7 +157,7 @@ class PointerUpdate(InterTransOpt):
 
 			#Remove dependence on old functions.
 			for func_name in nest:
-				func_node = mapir.idg.get_node(IDGERSpec, 
+				func_node = mapir.idg.get_node(IDGERSpec,
 					mapir.er_specs[func_name])
 				er_node.remove_dep(func_node)
 
@@ -165,7 +166,7 @@ class PointerUpdate(InterTransOpt):
 
 		#Have new function node depend on old functions.
 		for func_name in nest:
-			func_node = mapir.idg.get_node(IDGERSpec, 
+			func_node = mapir.idg.get_node(IDGERSpec,
 				mapir.er_specs[func_name])
 			gen_newfunc_node.add_dep(func_node)
 

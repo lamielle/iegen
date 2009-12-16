@@ -49,7 +49,7 @@ def gen_preamble():
 #However, we need the index array to look like an Explicit Relation
 #Therefore, for all index arrays, we create a wrapper ER
 def gen_index_array(index_array):
-	from iegen.codegen import Statement,calc_size_string
+	from iegen.codegen import Statement,Comment,calc_size_string
 
 	input_bounds=index_array.input_bounds
 
@@ -65,8 +65,12 @@ def gen_index_array(index_array):
 	#Get the string that calculates the size of the ER at runtime
 	size_string=calc_size_string(input_bounds,var_name)
 
-	#Append the construction of the wrapper the the collection of statements
-	return [Statement('%s_ER=ER_ctor(%s,%s);'%(index_array.name,index_array.name,size_string))]
+	stmts=[]
+	stmts.append(Comment('Wrapping index array %s'%(index_array.name)))
+	stmts.append(Statement('%s=EF_ctor(%s,%s);'%(index_array.get_var_name(),index_array.get_param_name(),size_string)))
+	stmts.append(Statement())
+
+	return stmts
 
 def gen_tuple_vars_decl(set):
 	from iegen.codegen import VarDecl
