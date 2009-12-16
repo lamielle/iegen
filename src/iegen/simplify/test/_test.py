@@ -16,7 +16,7 @@ class ImportTestCase(TestCase):
 	def testNameImport(self):
 		try:
 			#_simplify.py
-			from iegen.simplify import simplify,register_rule,register_inverse_pair,inverse_pairs
+			from iegen.simplify import simplify,register_rule,register_inverse_pair,unregister_inverse_pair,inverse_pairs
 			#_rules.py
 			from iegen.simplify import register_inverse_simplify_listener
 		except Exception,e:

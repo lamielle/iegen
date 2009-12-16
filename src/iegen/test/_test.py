@@ -1714,6 +1714,60 @@ class SparseSetTestCase(TestCase):
 
 		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
 
+	def testSimplifyReplaceInFunction1(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b]: b=f(c) and c=g(a)}')
+
+		set_res=SparseSet('{[a,b]: b=f(g(a))}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyReplaceInFunction2(self):
+		from iegen import SparseSet
+
+		set=SparseSet('{[a,b]: 2b=3f(7c) and c=2g(5a)}')
+
+		set_res=SparseSet('{[a,b]: 2b=3f(14g(5a))}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyInverseFunction1(self):
+		from iegen import SparseSet
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('g')
+		set=SparseSet('{[a,b]: a=g(c) and b=f(c)}')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		set_res=SparseSet('{[a,b]: b=f(g_inv(a))}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyInverseFunction2(self):
+		from iegen import SparseSet
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('g')
+		set=SparseSet('{[a,b,c,d]: a+b=g(e)+c and b=f(e)}')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		set_res=SparseSet('{[a,b,c,d]: b=f(g_inv(a+b-c))}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyInverseFunction3(self):
+		from iegen import SparseSet
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('g')
+		set=SparseSet('{[a,b,c,d]: 2a+3b=g(e)+7c and 11b=13f(17e)}')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		set_res=SparseSet('{[a,b,c,d]: 11b=13f(17g_inv(2a+3b-7c))}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
 	# End simplification tests
 	#----------------------------------------
 
@@ -2241,6 +2295,60 @@ class SparseRelationTestCase(TestCase):
 		rel=SparseRelation('{[a]->[b]: 10>=0}')
 
 		rel_res=SparseRelation('{[a]->[b]}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyReplaceInFunction1(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b]: b=f(c) and c=g(a)}')
+
+		rel_res=SparseRelation('{[a]->[b]: b=f(g(a))}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyReplaceInFunction2(self):
+		from iegen import SparseRelation
+
+		rel=SparseRelation('{[a]->[b]: b=3f(7c) and c=2g(5a)}')
+
+		rel_res=SparseRelation('{[a]->[b]: b=3f(14g(5a))}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyInverseFunction1(self):
+		from iegen import SparseRelation
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('g')
+		rel=SparseRelation('{[a]->[b]: a=g(c) and b=f(c)}')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		rel_res=SparseRelation('{[a]->[b]: b=f(g_inv(a))}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyInverseFunction2(self):
+		from iegen import SparseRelation
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('g')
+		rel=SparseRelation('{[a,b]->[c,d]: a+b=g(e)+c and b=f(e)}')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		rel_res=SparseRelation('{[a,b]->[c,d]: b=f(g_inv(a+b-c))}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyInverseFunction3(self):
+		from iegen import SparseRelation
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('g')
+		rel=SparseRelation('{[a,b]->[c,d]: 2a+3b=g(e)+7c and 11b=13f(17e)}')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		rel_res=SparseRelation('{[a,b]->[c,d]: 11b=13f(17g_inv(2a+3b-7c))}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
 

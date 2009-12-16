@@ -50,6 +50,17 @@ def register_inverse_pair(function_name,inverse_function_name=None):
 	#Register the names in the dictionary of function name pairs
 	_inverse_pairs[function_name]=inverse_function_name
 	_inverse_pairs[inverse_function_name]=function_name
+
+def unregister_inverse_pair(function_name,inverse_function_name=None):
+	#Build the inverse_function_name if it was not given
+	if inverse_function_name is None:
+		inverse_function_name=function_name+inverse_suffix()
+
+	iegen.print_detail('Unregistering inverse function pair (%s,%s)...'%(function_name,inverse_function_name))
+
+	#Unregister the names in the dictionary of function name pairs
+	del _inverse_pairs[function_name]
+	del _inverse_pairs[inverse_function_name]
 #-----------------------------------------------
 
 #Given an object of the following types:

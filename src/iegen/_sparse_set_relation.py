@@ -784,6 +784,9 @@ class SparseExpColumnType(IEGenObject):
 	def __str__(self):
 		return repr(self)
 
+	def is_function(self):
+		return False
+
 class SparseExpNameColumnType(SparseExpColumnType):
 	__slots__=('name',)
 
@@ -887,18 +890,15 @@ class UFCall(SparseExpColumnType):
 		arg_strs=[str(arg) for arg in self.args]
 		return '%s(%s)'%(self.name,','.join(arg_strs))
 
+	def is_function(self):
+		return True
+
 	def var_is_function_input(self,var_col):
+		return any((arg.contains_term(var_col) or arg.var_is_function_input(var_col) for arg in self.args))
+
+	def replace_var(self,var_col,equal_coeff,equal_exp):
 		for arg in self.args:
-			for term in arg.exp:
-				#Check if this term is the variable we're looking for
-				#'These are not the droids you're looking for...'
-				if var_col==term:
-					return True
-				#Check if this term is a UFCall
-				elif hasattr(term,'name') and hasattr(term,'args'):
-					if term.var_is_function_input(var_col):
-						return True
-		return False
+			arg.replace_var(var_col,equal_coeff,equal_exp.copy())
 
 	def copy(self,new_var_pos=None,new_var_names=None):
 		return UFCall(self.name,[arg.copy(new_var_pos=new_var_pos,new_var_names=new_var_names) for arg in self.args])
@@ -916,7 +916,7 @@ class UFCall(SparseExpColumnType):
 class SparseExp(IEGenObject):
 	__slots__=('_exp',)
 
-	def __init__(self,exp_coeff):
+	def __init__(self,exp_coeff={}):
 		self._exp=defaultdict(int,exp_coeff)
 		self.simplify()
 
@@ -949,7 +949,7 @@ class SparseExp(IEGenObject):
 					if 1==coeff:
 						term_strs.append('%s'%(term.exp_str()))
 					else:
-						term_strs.append('%s*%s'%(coeff,term.exp_str()))
+						term_strs.append('%s%s'%(coeff,term.exp_str()))
 
 			#Return a string for the sum of all expression strings
 			return '+'.join(term_strs)
@@ -958,14 +958,23 @@ class SparseExp(IEGenObject):
 		return self._exp
 	exp=property(_get_exp)
 
+	def contains_term(self,term):
+		return term in self.exp
+
+	def var_is_function_input(self,var_col):
+		return any((term.is_function() and term.var_is_function_input(var_col) for term in self.exp))
+
+	def function_terms(self):
+		return ((term,coeff) for term,coeff in self.exp.items() if term.is_function())
+
 	def remove_term(self,var_col):
-		if var_col in self.exp:
+		if self.contains_term(var_col):
 			del self.exp[var_col]
 		else:
 			raise ValueError("Column '%s' is not present in this expression (%s)"%(var_col,self))
 
 	def multiply(self,factor):
-		for term,coeff in self.exp.items():
+		for term in self.exp:
 			self.exp[term]*=factor
 
 	def add_exp(self,other_exp):
@@ -992,8 +1001,23 @@ class SparseExp(IEGenObject):
 		return (equal_coeff,equal_exp)
 
 	def replace_var(self,var_col,equal_coeff,equal_exp):
+		#Replace the variable within any function terms of this expression
+		for term in self.exp.keys():
+			if term.is_function():
+				#Grab the current coefficient for the function term
+				coeff=self.exp[term]
+
+				#Remove the term from the expression
+				del self.exp[term]
+
+				#Replace the variable within the function's arguments
+				term.replace_var(var_col,equal_coeff,equal_exp)
+
+				#Add the term back to the expression
+				self.exp[term]+=coeff
+
 		#Determine if the given variable is present in this expression
-		if var_col in self.exp:
+		if self.contains_term(var_col):
 			#Get the coefficient of the variable in this expression
 			var_coeff=self.exp[var_col]
 
@@ -1113,11 +1137,56 @@ class SparseConstraint(IEGenObject):
 		return self._op
 	op=property(_get_op)
 
+	def is_equality(self):
+		return False
+
+	def contains_term(self,term):
+		return self.sparse_exp.contains_term(term)
+
+	def var_is_function_input(self,var_col):
+		return self.sparse_exp.var_is_function_input(var_col)
+
+	def function_terms(self):
+		return self.sparse_exp.function_terms()
+
 	def replace_var(self,var_col,equal_coeff,equal_exp):
 		self.sparse_exp.replace_var(var_col,equal_coeff,equal_exp)
 
 	def simplify(self):
 		self.sparse_exp.simplify()
+		self.inverse_simplify()
+
+	#Inverse simplification
+	def inverse_simplify(self):
+		#Only consider equality constraints
+		if self.is_equality():
+			#Look at each function term in this constraint
+			for function_term,function_coeff in self.function_terms():
+				#Only consider function terms that:
+				#-Have a coefficient of 1
+				#-Have an inverse
+				#-Have a single argument
+				if 1==abs(function_coeff) and function_term.name in iegen.simplify.inverse_pairs() and 1==len(function_term.args):
+					new_exp=SparseExp()
+					new_arg=SparseExp()
+
+					#Create the argument to the new function
+					for term,coeff in self.sparse_exp.exp.items():
+						#Exclude the function itself
+						if term!=function_term:
+							new_arg.exp[term.copy()]=coeff
+
+					#Create the new function
+					new_func=UFCall(iegen.simplify.inverse_pairs()[function_term.name],[new_arg])
+
+					#Add the new function to the new expression
+					new_exp.add_exp(SparseExp({new_func:-1}))
+
+					#Add the argument from the function to the new expression
+					new_exp.add_exp(function_term.args[0].copy())
+
+					#Set the new expression for this constraint to the new expression
+					self.sparse_exp=new_exp
 
 #Class representing a sparse equality constraint
 class SparseEquality(SparseConstraint):
@@ -1137,6 +1206,9 @@ class SparseEquality(SparseConstraint):
 		complement=self.sparse_exp.complement()
 		return frozenset([self.sparse_exp,complement])
 	hash_exp=property(_get_hash_exp)
+
+	def is_equality(self):
+		return True
 
 	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
@@ -1211,6 +1283,12 @@ class SparseConjunction(IEGenObject):
 	constraints=property(_get_constraints)
 	frozen=property(_get_frozen)
 
+	def contains_constraint(self,constraint):
+		return constraint in self.constraints
+
+	def contains_term(self,term):
+		return any((constraint.contains_term(term) for constraint in self.constraints))
+
 	def add_constraint(self,constraint):
 		self._check_mutate()
 
@@ -1219,7 +1297,7 @@ class SparseConjunction(IEGenObject):
 	def remove_constraint(self,constraint):
 		self._check_mutate()
 
-		if constraint in self._constraints:
+		if self.contains_constraint(constraint):
 			self._constraints.remove(constraint)
 		else:
 			raise ValueError("Cannot remove constraint '%s': constraint not present in conjunction"%(constraint))
@@ -1233,54 +1311,54 @@ class SparseConjunction(IEGenObject):
 		#Make the collection of constraints unique
 		self._constraints=list(set(self._constraints))
 
-	def find_equality_with_var(self,var_col):
-		equality_constraint=None
+	def find_equalities_with_var(self,var_col):
+		equality_constraints=[]
 
 		#Search through all constraints
 		for constraint in self.constraints:
 			#Make sure this constraint is an equality constraint
 			if '='==constraint.op:
-				if var_col in constraint.sparse_exp.exp:
-					equality_constraint=constraint
-					break
+				if constraint.contains_term(var_col):
+					equality_constraints.append(constraint)
 
-		return equality_constraint
+		return equality_constraints
 
 	#Searches for all constraints with UFSs and determines
 	# if any of these have the given variable as an input
 	#This includes direct arguments and nested function arguments
 	def var_is_function_input(self,var_col):
-		for constraint in self.constraints:
-			for term in constraint.sparse_exp.exp:
-				#Check if this term is a UFCall
-				if hasattr(term,'name') and hasattr(term,'args'):
-					if term.var_is_function_input(var_col):
-						return True
-		return False
+		return any((constraint.var_is_function_input(var_col) for constraint in self.constraints))
 
 	def project_out(self,var_col):
 		self._check_mutate()
 
-		#Search for an equality constraint with the given variable column
-		equality_constraint=self.find_equality_with_var(var_col)
+		res=False
 
-		#If we found an equality constraint AND that variable isn't an input to a UFS
-		# THEN replace all uses of the variable with the expression it is equal to
-		if equality_constraint is not None and not self.var_is_function_input(var_col):
+		#Search for equality constraints with the given variable column
+		equality_constraints=self.find_equalities_with_var(var_col)
+
+		#Attempt replacement using each equality constraint containing
+		# the given variable column
+		for equality_constraint in equality_constraints:
 			#Get the coefficient/expression pair the variable is equal to
 			equal_coeff,equal_exp=equality_constraint.sparse_exp.get_equality_pair(var_col)
 
-			#Remove the equality constraint from this conjunction
-			self.remove_constraint(equality_constraint)
+			#Replace all uses of the variable with the expression it is equal to if either:
+			#-The variable we are replacing is not an input to a UFS
+			#-The coefficient of the variable we are replacing is 1
+			if not self.var_is_function_input(var_col) or equal_coeff==1:
+				#Remove the equality constraint from this conjunction
+				self.remove_constraint(equality_constraint)
 
-			#Replace all uses of the variable in the remaining constraints
-			for constraint in self.constraints:
-				constraint.replace_var(var_col,equal_coeff,equal_exp.copy())
+				#Replace all uses of the variable in the remaining constraints
+				for constraint in self.constraints:
+					constraint.replace_var(var_col,equal_coeff,equal_exp.copy())
 
-			res=True
+				res=True
+				break
 
-		#No equality constraints contained the variable, run standard Fourier-Motzkin
-		else:
+		#If equality replacement couldn't be performed, run standard Fourier-Motzkin
+		if not res and not self.var_is_function_input(var_col):
 			#Get the lower and upper bounds for the variable we are projecting out
 			lower_bounds,upper_bounds=self.bounds(var_col,extra_info=True)
 
@@ -1302,7 +1380,7 @@ class SparseConjunction(IEGenObject):
 					upper_bound.multiply(lb_coeff)
 					upper_bound.multiply(-1)
 
-					new_exp=SparseExp({})
+					new_exp=SparseExp()
 					new_exp.add_exp(lower_bound)
 					new_exp.add_exp(upper_bound)
 					new_exp=new_exp.complement()
@@ -1353,7 +1431,7 @@ class SparseConjunction(IEGenObject):
 	def remove_true_constraints(self):
 		constraints=list(self.constraints)
 		for constraint in constraints:
-			if 1==len(constraint.sparse_exp.exp) and ConstantCol() in constraint.sparse_exp.exp:
+			if 1==len(constraint.sparse_exp.exp) and constraint.contains_term(ConstantCol()):
 				if constraint.sparse_exp.exp[ConstantCol()]>=0:
 					self.remove_constraint(constraint)
 
@@ -1384,7 +1462,7 @@ class SparseConjunction(IEGenObject):
 			constraint=constraint.copy()
 
 			#See if the given variable is present in the constraint
-			if var_col in constraint.sparse_exp.exp:
+			if constraint.contains_term(var_col):
 				#Get the coefficient of the variable in the constraint
 				var_coeff=constraint.sparse_exp.exp[var_col]
 
@@ -1396,7 +1474,7 @@ class SparseConjunction(IEGenObject):
 					raise ValueError("Coefficient of variable '%s' is not 1 or -1"%(var_col))
 
 				#Equality constraint: lower and upper bounds
-				if '='==constraint.op:
+				if constraint.is_equality():
 					if extra_info:
 						lower_bounds.add((equal_coeff,equal_exp,constraint))
 						upper_bounds.add((equal_coeff,equal_exp,constraint))
@@ -1506,6 +1584,7 @@ class SparseDisjunction(IEGenObject):
 
 		projected_out=True
 		for conjunction in self.conjunctions:
+			conjunction.simplify()
 			projected_out=conjunction.project_out(var_col) and projected_out
 
 		return projected_out
