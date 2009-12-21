@@ -1343,15 +1343,15 @@ class SparseSetTestCase(TestCase):
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
-		set_string='{[a,b]: a=10 and b=2n and a>=m}'
+		set_string='{[a,b]: b=2n and a=10 and a>=m}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: a=10 and b=2n and a>=m | m,n}'
+		res_string='{[a,b]: b=2n and a=10 and a>=m | m,n}'
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
-		set_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c}'
+		set_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m}'
 		set=SparseSet(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
+		res_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m | m,n}'
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
@@ -1381,17 +1381,17 @@ class SparseSetTestCase(TestCase):
 	def testRepr(self):
 		from iegen import SparseSet,Symbolic
 
-		set_string='{[a,b]: a=10 and b=2n and a>=m}'
+		set_string='{[a,b]: b=2n and a=10 and a>=m}'
 		symbolics=[Symbolic('m'),Symbolic('n')]
 		set=SparseSet(set_string,symbolics)
-		res_string='{[a,b]: a=10 and b=2n and a>=m | m,n}'
+		res_string='{[a,b]: b=2n and a=10 and a>=m | m,n}'
 		res_string='SparseSet("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
 
-		set_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c}'
+		set_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m}'
 		set=SparseSet(set_string,symbolics)
-		res_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
+		res_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m | m,n}'
 		res_string='SparseSet("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
@@ -2051,15 +2051,15 @@ class SparseRelationTestCase(TestCase):
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
-		rel_string='{[a]->[b]: a=10 and b=2n and a>=m}'
+		rel_string='{[a]->[b]: b=2n and a=10 and a>=m}'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: a=10 and b=2n and a>=m | m,n}'
+		res_string='{[a]->[b]: b=2n and a=10 and a>=m | m,n}'
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
-		rel_string='{[a]->[b]: a=10 and b=2n and a>=m and a+b>=c}'
+		rel_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m}'
 		rel=SparseRelation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
+		res_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m | m,n}'
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
@@ -2089,17 +2089,17 @@ class SparseRelationTestCase(TestCase):
 	def testRepr(self):
 		from iegen import SparseRelation,Symbolic
 
-		rel_string='{[a]->[b]: a=10 and b=2n and a>=m}'
+		rel_string='{[a]->[b]: b=2n and a=10 and a>=m}'
 		symbolics=[Symbolic('m'),Symbolic('n')]
 		rel=SparseRelation(rel_string,symbolics)
-		res_string='{[a]->[b]: a=10 and b=2n and a>=m | m,n}'
+		res_string='{[a]->[b]: b=2n and a=10 and a>=m | m,n}'
 		res_string='SparseRelation("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
 
-		rel_string='{[a]->[b]: a=10 and b=2n and a>=m and a+b>=c}'
+		rel_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m}'
 		rel=SparseRelation(rel_string,symbolics)
-		res_string='{[a]->[b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
+		res_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m | m,n}'
 		res_string='SparseRelation("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
@@ -2469,7 +2469,7 @@ class SparseRelationTestCase(TestCase):
 
 		rel_union=rel1.union(rel2)
 
-		res_str='{[a]->[b]: a=b} union {[a]->[b]: a=10}'
+		res_str='{[a]->[b]: a=10} union {[a]->[b]: a=b}'
 
 		self.failUnless(res_str==str(rel_union),'%s!=%s'%(str(rel_union),res_str))
 

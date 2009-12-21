@@ -773,7 +773,7 @@ class SparseRelation(SparseFormula):
 #Parent class of the various sparse expression column type classes
 class SparseExpColumnType(IEGenObject):
 	def __hash__(self):
-		return hash(str(self))
+		raise ValueError('This __hash__ implementation should never be called')
 
 	def __eq__(self,other):
 		return hash(self)==hash(other)
@@ -788,10 +788,14 @@ class SparseExpColumnType(IEGenObject):
 		return False
 
 class SparseExpNameColumnType(SparseExpColumnType):
-	__slots__=('name',)
+	__slots__=('name','_mem_hash')
 
 	def __init__(self,name):
 		self.name=name
+		self._mem_hash=hash((self.__class__.__name__,self.name))
+
+	def __hash__(self):
+		return self._mem_hash
 
 	def __repr__(self):
 		return "%s(%s)"%(self.__class__.__name__,repr(self.name))
@@ -825,6 +829,10 @@ class TupleVarCol(SparseExpColumnType):
 	def __init__(self,pos,name=None):
 		self.pos=pos
 		self.name=name
+		self._mem_hash=hash((self.__class__.__name__,self.pos))
+
+	def __hash__(self):
+		return self._mem_hash
 
 	def __repr__(self):
 		return '%s(%s,%s)'%(self.__class__.__name__,repr(self.pos),repr(self.name))
@@ -841,7 +849,7 @@ class TupleVarCol(SparseExpColumnType):
 			pos=new_var_pos[pos]
 
 		#Change the name if necessary
-		if new_var_names is not None:
+		if new_var_names is not None and name in new_var_names:
 			name=new_var_names[name]
 
 		return TupleVarCol(pos,name)
@@ -854,6 +862,9 @@ class SymbolicCol(SparseExpColumnType):
 
 	def __init__(self,sym):
 		self.sym=sym
+
+	def __hash__(self):
+		return hash(self.sym)
 
 	def __repr__(self):
 		return '%s(%s)'%(self.__class__.__name__,repr(self.sym))
@@ -914,14 +925,20 @@ class UFCall(SparseExpColumnType):
 
 #Represents a sparse expression (an affine expression plus uninterpreted function symbols)
 class SparseExp(IEGenObject):
-	__slots__=('_exp',)
+	__slots__=('_exp','_mem_hash')
 
 	def __init__(self,exp_coeff={}):
+		self._mem_hash=None
 		self._exp=defaultdict(int,exp_coeff)
 		self.simplify()
 
 	def __hash__(self):
-		return hash(frozenset(self.exp.items()))
+		if self._mem_hash is None:
+			self._update_hash()
+		return self._mem_hash
+
+	def _update_hash(self):
+		self._mem_hash=hash(frozenset(sorted(self.exp.iteritems())))
 
 	def __eq__(self,other):
 		return hash(self)==hash(other)
@@ -970,16 +987,19 @@ class SparseExp(IEGenObject):
 	def remove_term(self,var_col):
 		if self.contains_term(var_col):
 			del self.exp[var_col]
+			self._update_hash()
 		else:
 			raise ValueError("Column '%s' is not present in this expression (%s)"%(var_col,self))
 
 	def multiply(self,factor):
 		for term in self.exp:
 			self.exp[term]*=factor
+		self._update_hash()
 
 	def add_exp(self,other_exp):
 		for term,coeff in other_exp.exp.items():
 			self.exp[term]+=coeff
+		self._update_hash()
 
 	def get_equality_pair(self,var_col):
 		#Grab the coefficient of the variable
@@ -1035,17 +1055,20 @@ class SparseExp(IEGenObject):
 			#Add the equal expression to this expression
 			self.add_exp(equal_exp)
 
+		self._update_hash()
+
 	def simplify(self):
 		#Remove all terms with a coefficient of 0
 		for term,coeff in self.exp.items():
 			if 0==coeff:
 				self.remove_term(term)
+		self._update_hash()
 
 	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		new_cols={} if new_cols is None else new_cols
 		exp_copy={}
 
-		for term,coeff in self.exp.items():
+		for term,coeff in self.exp.iteritems():
 			if term in new_cols:
 				exp_copy[new_cols[term].copy(new_var_pos=new_var_pos,new_var_names=new_var_names)]=coeff
 			else:
