@@ -63,6 +63,36 @@ class SetTestCase(TestCase):
 		self.failUnless('m'==set.symbolic_names[0],"First symbolic is not 'm'")
 		self.failUnless('n'==set.symbolic_names[1],"Second symbolic is not 'n'")
 
+	def testFunctionNamesSimple(self):
+		from iegen import Set
+
+		set=Set('{[a,b]: b=f(a)}')
+
+		function_names=set.function_names
+		self.failUnless(1==len(function_names))
+		self.failUnless('f' in function_names)
+
+	def testFunctionNamesMultiple(self):
+		from iegen import Set
+
+		set=Set('{[a,b,c,d]: b=f(a) and c=g(a) and d=h(a)}')
+
+		function_names=set.function_names
+		self.failUnless(3==len(function_names))
+		self.failUnless('f' in function_names)
+		self.failUnless('g' in function_names)
+		self.failUnless('h' in function_names)
+
+	def testFunctionNamesNested(self):
+		from iegen import Set
+
+		set=Set('{[a,b]: b=f(g(a))}')
+
+		function_names=set.function_names
+		self.failUnless(2==len(function_names))
+		self.failUnless('f' in function_names)
+		self.failUnless('g' in function_names)
+
 	#Tests that we can get the symbolic names
 	def testArity(self):
 		from iegen import Set,Symbolic
@@ -778,6 +808,36 @@ class RelationTestCase(TestCase):
 
 		self.failUnless('m'==rel.symbolic_names[0],"First symbolic is not 'm'")
 		self.failUnless('n'==rel.symbolic_names[1],"Second symbolic is not 'n'")
+
+	def testFunctionNamesSimple(self):
+		from iegen import Relation
+
+		set=Relation('{[a]->[b]: b=f(a)}')
+
+		function_names=set.function_names
+		self.failUnless(1==len(function_names))
+		self.failUnless('f' in function_names)
+
+	def testFunctionNamesMultiple(self):
+		from iegen import Relation
+
+		set=Relation('{[a]->[b,c,d]: b=f(a) and c=g(a) and d=h(a)}')
+
+		function_names=set.function_names
+		self.failUnless(3==len(function_names))
+		self.failUnless('f' in function_names)
+		self.failUnless('g' in function_names)
+		self.failUnless('h' in function_names)
+
+	def testFunctionNamesNested(self):
+		from iegen import Relation
+
+		set=Relation('{[a]->[b]: b=f(g(a))}')
+
+		function_names=set.function_names
+		self.failUnless(2==len(function_names))
+		self.failUnless('f' in function_names)
+		self.failUnless('g' in function_names)
 
 	#Tests that we can get the symbolic names
 	def testArity(self):

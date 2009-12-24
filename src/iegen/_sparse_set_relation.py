@@ -199,6 +199,10 @@ class SparseFormula(IEGenObject):
 	def _get_symbolic_names(self):
 		return [symbolic_col.sym.name for symbolic_col in self._symbolic_cols]
 
+	#Get the names of all functions
+	def _get_function_names(self):
+		return self.disjunction.get_function_names()
+
 	#Get the names of all free variables in the formula
 	def _get_free_vars(self):
 		return [free_var_col.name for free_var_col in self._free_var_cols]
@@ -356,6 +360,7 @@ class SparseFormula(IEGenObject):
 	symbolics=property(_get_symbolics)
 	symbolic_names=property(_get_symbolic_names)
 	free_vars=property(_get_free_vars)
+	function_names=property(_get_function_names)
 	disjunction=property(_get_disjunction)
 	frozen=property(_get_frozen)
 
@@ -785,6 +790,9 @@ class SparseExpColumnType(IEGenObject):
 	def __str__(self):
 		return repr(self)
 
+	def get_function_names(self):
+		return []
+
 	def is_function(self):
 		return False
 
@@ -902,6 +910,11 @@ class UFCall(SparseExpColumnType):
 		arg_strs=[str(arg) for arg in self.args]
 		return '%s(%s)'%(self.name,','.join(arg_strs))
 
+	def get_function_names(self):
+		function_names=[function_name for arg in self.args for function_name in arg.get_function_names()]
+		function_names.append(self.name)
+		return list(set(function_names))
+
 	def is_function(self):
 		return True
 
@@ -975,6 +988,9 @@ class SparseExp(IEGenObject):
 	def _get_exp(self):
 		return self._exp
 	exp=property(_get_exp)
+
+	def get_function_names(self):
+		return list(set([function_name for term in self.exp for function_name in term.get_function_names()]))
 
 	def contains_term(self,term):
 		return term in self.exp
@@ -1164,6 +1180,9 @@ class SparseConstraint(IEGenObject):
 	def is_equality(self):
 		return False
 
+	def get_function_names(self):
+		return self.sparse_exp.get_function_names()
+
 	def contains_term(self,term):
 		return self.sparse_exp.contains_term(term)
 
@@ -1306,6 +1325,9 @@ class SparseConjunction(IEGenObject):
 
 	constraints=property(_get_constraints)
 	frozen=property(_get_frozen)
+
+	def get_function_names(self):
+		return list(set([function_name for constraint in self.constraints for function_name in constraint.get_function_names()]))
 
 	def contains_constraint(self,constraint):
 		return constraint in self.constraints
@@ -1590,6 +1612,9 @@ class SparseDisjunction(IEGenObject):
 
 	conjunctions=property(_get_conjunctions)
 	frozen=property(_get_frozen)
+
+	def get_function_names(self):
+		return list(set([function_name for conjunction in self.conjunctions for function_name in conjunction.get_function_names()]))
 
 	def add_conjunction(self,conjunction):
 		self._check_mutate()
