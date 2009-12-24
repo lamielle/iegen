@@ -6,6 +6,20 @@ def run_tests(subdir=''):
 	import iegen.lib.nose
 	iegen.lib.nose.run(argv=['','-v','-s','-w%s'%iegen.base_dir+os.sep+subdir])
 
+#Profiles all of the IEGen tests
+def run_tests_profile(subdir=''):
+	import iegen.lib.nose
+	import cProfile
+	import pstats
+
+	arg="-w%s"%iegen.base_dir+os.sep+subdir
+	cProfile.run("iegen.lib.nose.run(argv=['','-v','-s','%s'])"%(arg),'prof')
+	p = pstats.Stats('prof')
+	p.strip_dirs()
+	p.sort_stats('cumulative').print_stats(20)
+	p.sort_stats('time').print_stats(20)
+	p.print_callers(20)
+
 #Runs all of the IEGen tests with coverage turned on
 def run_coverage():
 	import sys

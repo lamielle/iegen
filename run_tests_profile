@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+
+from sys import argv
+import iegen.util
+
+if len(argv)>1:
+	iegen.util.run_tests_profile(argv[1])
+else:
+	iegen.util.run_tests_profile()
