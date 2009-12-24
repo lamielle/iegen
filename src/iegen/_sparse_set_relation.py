@@ -1,4 +1,4 @@
-#Classes related to the SparseSet and SparseRelation classes that use the new data structure rather than an AST as a representation
+#Classes related to the Set and Relation classes that use the new data structure rather than an AST as a representation
 
 from collections import defaultdict
 import iegen
@@ -102,9 +102,7 @@ class SparseFormula(IEGenObject):
 	#Parses the given formula string using the given parsing function
 	@staticmethod
 	def _parse_formula_string(formula_string,symbolics,parse_func):
-		iegen.settings.enable_processing=False
 		pres_formulas=[parse_func(formula_string,symbolics)]
-		iegen.settings.enable_processing=True
 
 		return pres_formulas
 
@@ -159,7 +157,7 @@ class SparseFormula(IEGenObject):
 	#--------------------------------------------------
 
 	#--------------------------------------------------
-	# Hash and equality methods
+	# Hash, equality, and length methods
 	def __hash__(self):
 		self._check_frozen()
 		return hash(self._disjunction)
@@ -169,6 +167,9 @@ class SparseFormula(IEGenObject):
 
 	def __ne__(self,other):
 		return not self==other
+
+	def __len__(self):
+		return len(self.disjunction)
 	#--------------------------------------------------
 
 	#--------------------------------------------------
@@ -234,7 +235,7 @@ class SparseFormula(IEGenObject):
 
 		#Create strings for each conjunction
 		conjunction_strings=[]
-		for conjunction in self.disjunction.conjunctions:
+		for conjunction in sorted(self.disjunction.conjunctions,key=lambda conj: hash(conj)):
 			#Get a string for the current conjunction
 			constraints_string=str(conjunction)
 
@@ -471,13 +472,13 @@ class SparseFormula(IEGenObject):
 #--------------------------------------------------
 
 #--------------------------------------------------
-# Start SparseSet class
+# Start Set class
 
 #Represents a sparse set
-class SparseSet(SparseFormula):
+class Set(SparseFormula):
 
 	#--------------------------------------------------
-	# Start SparseSet constructor
+	# Start Set constructor
 
 	#Takes a set string, ex {[a]: a>10}
 	#Also, an optional parameter, 'symbolics', is a collection
@@ -494,7 +495,7 @@ class SparseSet(SparseFormula):
 			#Construct this set using the construction utility method
 			self._construct(pres_formulas=pres_formulas,symbolics=symbolics,freeze=freeze)
 
-	# End SparseSet constructor
+	# End Set constructor
 	#--------------------------------------------------
 
 	#--------------------------------------------------
@@ -517,16 +518,16 @@ class SparseSet(SparseFormula):
 	def arity(self):
 		return self._arity()
 
-	#Returns a copy of this SparseSet
+	#Returns a copy of this Set
 	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
-		#Make a copy of this SparseSet
-		selfcopy=self._copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze,FormulaClass=SparseSet)
+		#Make a copy of this Set
+		selfcopy=self._copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze,FormulaClass=Set)
 
 		return selfcopy
 
 	#The union operation
 	def union(self,other):
-		res=self._union(other,SparseSet)
+		res=self._union(other,Set)
 		res.freeze()
 		self.print_debug('Set Union: %s.union(%s)=%s'%(self,other,res))
 		return res
@@ -574,7 +575,7 @@ class SparseSet(SparseFormula):
 			new_var_pos[i]=i-other.arity_in()
 
 		#Create a new set with no constraints, we will build the constraints
-		new_set=SparseSet(tuple_var_names=new_tuple_vars,free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
+		new_set=Set(tuple_var_names=new_tuple_vars,free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
 
 		#Create the constraints: cartesian product of both disjunctions + free variable equalities
 		new_set._join(self,self.tuple_set,self_var_map,other,other.tuple_in,other_var_map,new_var_pos)
@@ -589,18 +590,18 @@ class SparseSet(SparseFormula):
 	# End public methods
 	#--------------------------------------------------
 
-# End SparseSet class
+# End Set class
 #--------------------------------------------------
 
 #--------------------------------------------------
-# Start SparseRelation class
+# Start Relation class
 
 #Represents a sparse relation
-class SparseRelation(SparseFormula):
+class Relation(SparseFormula):
 	__slots__=('_arity_in',)
 
 	#--------------------------------------------------
-	# Start SparseRelation constructor
+	# Start Relation constructor
 
 	#Takes a relation string, ex {[a]->[a']: a>10}
 	#Also, an optional parameter, 'symbolics', is a collection
@@ -622,7 +623,7 @@ class SparseRelation(SparseFormula):
 			#Determine the input arity
 			self._arity_in=pres_formulas[0].arity_in()
 
-	# End SparseRelation constructor
+	# End Relation constructor
 	#--------------------------------------------------
 
 	#--------------------------------------------------
@@ -658,10 +659,10 @@ class SparseRelation(SparseFormula):
 	def arity_out(self):
 		return self._arity()-self._arity_in
 
-	#Returns a copy of this SparseRelation
+	#Returns a copy of this Relation
 	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
-		#Make a copy of this SparseRelation
-		selfcopy=self._copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze,FormulaClass=SparseRelation)
+		#Make a copy of this Relation
+		selfcopy=self._copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze,FormulaClass=Relation)
 
 		#Determine the input arity
 		selfcopy._arity_in=self.arity_in()
@@ -669,7 +670,7 @@ class SparseRelation(SparseFormula):
 		return selfcopy
 
 	def union(self,other):
-		res=self._union(other,SparseRelation)
+		res=self._union(other,Relation)
 		res._arity_in=self.arity_in()
 		res.freeze()
 		self.print_debug('Relation Union: %s.union(%s)=%s'%(self,other,res))
@@ -746,7 +747,7 @@ class SparseRelation(SparseFormula):
 			new_var_pos[i]=i+other.arity_in()-self.arity_in()
 
 		#Create a new relation with no constraints, we will build the constraints
-		new_relation=SparseRelation(tuple_var_names=new_tuple_vars,arity_in=other.arity_in(),free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
+		new_relation=Relation(tuple_var_names=new_tuple_vars,arity_in=other.arity_in(),free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
 
 		#Create the constraints: cartesian product of both disjunctions + free variable equalities
 		new_relation._join(other,other.tuple_out,other_var_map,self,self.tuple_in,self_var_map,new_var_pos)
@@ -764,7 +765,7 @@ class SparseRelation(SparseFormula):
 	# End public methods/properties
 	#--------------------------------------------------
 
-# End SparseRelation class
+# End Relation class
 #--------------------------------------------------
 
 #--------------------------------------------------

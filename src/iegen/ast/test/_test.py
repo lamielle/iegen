@@ -32,14 +32,15 @@ class SetTestCase(TestCase):
 		set=PresSet(VarTuple([]),Conjunction([]),[Symbolic('n')])
 		set=PresSet(VarTuple([]),Conjunction([]),symbolics=[Symbolic('n')])
 
-	#Tests that all objects in the symbolics collection must 'look like' Symbolics
-	@raises(ValueError)
-	def testNonSymbolicFail(self):
-		from iegen import Symbolic
-		from iegen.ast import PresSet,VarTuple,Conjunction
-		from iegen.parser import PresParser
-
-		PresSet(VarTuple([]),Conjunction([]),[Symbolic('n'),'m'])
+#DISABLED: checking isn't being performed anymore
+#	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+#	@raises(ValueError)
+#	def testNonSymbolicFail(self):
+#		from iegen import Symbolic
+#		from iegen.ast import PresSet,VarTuple,Conjunction
+#		from iegen.parser import PresParser
+#
+#		PresSet(VarTuple([]),Conjunction([]),[Symbolic('n'),'m'])
 
 	#Tests that all objects in the symbolics collection must 'look like' Symbolics
 	def testLikeSymbolic(self):
@@ -253,13 +254,14 @@ class RelationTestCase(TestCase):
 		set=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n')])
 		set=PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),symbolics=[Symbolic('n')])
 
-	#Tests that all objects in the symbolics collection must 'look like' Symbolics
-	@raises(ValueError)
-	def testNonSymbolicFail(self):
-		from iegen import Symbolic
-		from iegen.ast import PresRelation,VarTuple,Conjunction
-
-		PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n'),'m'])
+#DISABLED: checking isn't being performed anymore
+#	#Tests that all objects in the symbolics collection must 'look like' Symbolics
+#	@raises(ValueError)
+#	def testNonSymbolicFail(self):
+#		from iegen import Symbolic
+#		from iegen.ast import PresRelation,VarTuple,Conjunction
+#
+#		PresRelation(VarTuple([]),VarTuple([]),Conjunction([]),[Symbolic('n'),'m'])
 
 	#Tests that all objects in the symbolics collection must 'look like' Symbolics
 	def testLikeSymbolic(self):
@@ -482,30 +484,31 @@ class VarTupleTestCase(TestCase):
 		self.failUnless(2==len(v2),'len(%s)!=2'%v2)
 		self.failUnless(3==len(v3),'len(%s)!=3'%v3)
 
-	#Tests that an object does not 'look like' a VarExp is invalid
-	@raises(ValueError)
-	def testNormExpInvalid(self):
-		from iegen.ast import VarTuple,NormExp
-		VarTuple([NormExp([],0)])
-	@raises(ValueError)
-	def testFuncExpInvalid(self):
-		from iegen.ast import VarTuple,FuncExp
-		VarTuple([FuncExp(1,'f',[])])
-	@raises(ValueError)
-	def testIntInvalid(self):
-		from iegen.ast import VarTuple
-		VarTuple([10])
-	@raises(ValueError)
-	def testStrInvalid(self):
-		from iegen.ast import VarTuple
-		VarTuple(['hello'])
-
-	#Tests that only VarExps with coefficient 1 are allowed in a VarTuple
-	@raises(ValueError)
-	def testCoeffNotOneFail(self):
-		from iegen.ast import VarTuple,VarExp
-
-		VarTuple([VarExp(2,'a')])
+#DISABLED: checking isn't being performed anymore
+#	#Tests that an object does not 'look like' a VarExp is invalid
+#	@raises(ValueError)
+#	def testNormExpInvalid(self):
+#		from iegen.ast import VarTuple,NormExp
+#		VarTuple([NormExp([],0)])
+#	@raises(ValueError)
+#	def testFuncExpInvalid(self):
+#		from iegen.ast import VarTuple,FuncExp
+#		VarTuple([FuncExp(1,'f',[])])
+#	@raises(ValueError)
+#	def testIntInvalid(self):
+#		from iegen.ast import VarTuple
+#		VarTuple([10])
+#	@raises(ValueError)
+#	def testStrInvalid(self):
+#		from iegen.ast import VarTuple
+#		VarTuple(['hello'])
+#
+#	#Tests that only VarExps with coefficient 1 are allowed in a VarTuple
+#	@raises(ValueError)
+#	def testCoeffNotOneFail(self):
+#		from iegen.ast import VarTuple,VarExp
+#
+#		VarTuple([VarExp(2,'a')])
 #------------------------------------
 
 #---------- Conjunction Tests ----------
@@ -685,39 +688,40 @@ class EqualityTestCase(TestCase):
 		self.failUnless(e>i,'%s<=%s'%(e,i))
 		self.failUnless(i<e,'%s>=%s'%(i,e))
 
-	#Tests that a=b and b=a are considered equal
-	def testEqualityReflexive(self):
-		from iegen.ast import Equality,VarExp,NormExp
-
-		e1=Equality(NormExp([VarExp(1,'a')],-10))
-		e2=Equality(NormExp([VarExp(-1,'a')],10))
-
-		self.failUnless(e1==e2,'%s!=%s'%(e1,e2))
-
-		e1=Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],-10))
-		e2=Equality(NormExp([VarExp(-1,'a'),VarExp(1,'b')],10))
-
-		self.failUnless(e1==e2,'%s!=%s'%(e1,e2))
-
-	#Tests that Equality uses the 'larger' expression of exp vs. -exp
-	def testEqualityGreaterExp(self):
-		from iegen.ast import Equality,VarExp,FuncExp,NormExp
-
-		l1=[Equality(NormExp([VarExp(1,'b')],-10)),Equality(NormExp([VarExp(-1,'a')],10))]
-		l2=[Equality(NormExp([VarExp(-1,'b')],10)),Equality(NormExp([VarExp(-1,'a')],10))]
-
-		l1.sort()
-		l2.sort()
-
-		self.failUnless(l1==l2,'%s!=%s'%(l1,l2))
-
-		l1=[Equality(NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'b')],0)])],-10)),Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'a')],0)])],10))]
-		l2=[Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'b')],0)])],10)),Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'a')],0)])],10))]
-
-		l1.sort()
-		l2.sort()
-
-		self.failUnless(l1==l2,'%s!=%s'%(l1,l2))
+#DISABLED: sorting isn't being performed anymore
+#	#Tests that a=b and b=a are considered equal
+#	def testEqualityReflexive(self):
+#		from iegen.ast import Equality,VarExp,NormExp
+#
+#		e1=Equality(NormExp([VarExp(1,'a')],-10))
+#		e2=Equality(NormExp([VarExp(-1,'a')],10))
+#
+#		self.failUnless(e1==e2,'%s!=%s'%(e1,e2))
+#
+#		e1=Equality(NormExp([VarExp(1,'a'),VarExp(-1,'b')],-10))
+#		e2=Equality(NormExp([VarExp(-1,'a'),VarExp(1,'b')],10))
+#
+#		self.failUnless(e1==e2,'%s!=%s'%(e1,e2))
+#
+#	#Tests that Equality uses the 'larger' expression of exp vs. -exp
+#	def testEqualityGreaterExp(self):
+#		from iegen.ast import Equality,VarExp,FuncExp,NormExp
+#
+#		l1=[Equality(NormExp([VarExp(1,'b')],-10)),Equality(NormExp([VarExp(-1,'a')],10))]
+#		l2=[Equality(NormExp([VarExp(-1,'b')],10)),Equality(NormExp([VarExp(-1,'a')],10))]
+#
+#		l1.sort()
+#		l2.sort()
+#
+#		self.failUnless(l1==l2,'%s!=%s'%(l1,l2))
+#
+#		l1=[Equality(NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'b')],0)])],-10)),Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'a')],0)])],10))]
+#		l2=[Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'b')],0)])],10)),Equality(NormExp([FuncExp(-1,'f',[NormExp([VarExp(1,'a')],0)])],10))]
+#
+#		l1.sort()
+#		l2.sort()
+#
+#		self.failUnless(l1==l2,'%s!=%s'%(l1,l2))
 
 	#Tests that the Equality.empty method works
 	def testEmpty(self):
@@ -966,29 +970,30 @@ class VarExpTestCase(TestCase):
 				else:
 					self.failUnless(v2<v,'%s>%s'%(v2,v))
 
-	#Tests that using something other than a string for the name fails
-	@raises(ValueError)
-	def testNonStringNameFail1(self):
-		from iegen.ast import VarExp
-
-		VarExp(1,10)
-	@raises(ValueError)
-	def testNonStringNameFail2(self):
-		from iegen.ast import VarExp
-
-		VarExp(1,['a'])
-
-	#Tests that using something other than an integer for the coefficient fails
-	@raises(ValueError)
-	def testNonIntCoeffFail1(self):
-		from iegen.ast import VarExp
-
-		VarExp('a','a')
-	@raises(ValueError)
-	def testNonIntCoeffFail2(self):
-		from iegen.ast import VarExp
-
-		VarExp([1],'a')
+#DISABLED: checking isn't being performed anymore
+#	#Tests that using something other than a string for the name fails
+#	@raises(ValueError)
+#	def testNonStringNameFail1(self):
+#		from iegen.ast import VarExp
+#
+#		VarExp(1,10)
+#	@raises(ValueError)
+#	def testNonStringNameFail2(self):
+#		from iegen.ast import VarExp
+#
+#		VarExp(1,['a'])
+#
+#	#Tests that using something other than an integer for the coefficient fails
+#	@raises(ValueError)
+#	def testNonIntCoeffFail1(self):
+#		from iegen.ast import VarExp
+#
+#		VarExp('a','a')
+#	@raises(ValueError)
+#	def testNonIntCoeffFail2(self):
+#		from iegen.ast import VarExp
+#
+#		VarExp([1],'a')
 
 	#Tests the __mul__ method
 	def testMul(self):
@@ -1088,29 +1093,30 @@ class FuncExpTestCase(TestCase):
 				else:
 					self.failUnless(f2<f,'%s>%s'%(f2,f))
 
-	#Tests that using something other than a string for the name fails
-	@raises(ValueError)
-	def testNonStringNameFail1(self):
-		from iegen.ast import FuncExp
-
-		FuncExp(1,10,[])
-	@raises(ValueError)
-	def testNonStringNameFail2(self):
-		from iegen.ast import FuncExp
-
-		FuncExp(1,['a'],[])
-
-	#Tests that using something other than an integer for the coefficient fails
-	@raises(ValueError)
-	def testNonIntCoeffFail1(self):
-		from iegen.ast import FuncExp
-
-		FuncExp('a','a',[])
-	@raises(ValueError)
-	def testNonIntCoeffFail2(self):
-		from iegen.ast import FuncExp
-
-		FuncExp([1],'a',[])
+#DISABLED: checking isn't being performed anymore
+#	#Tests that using something other than a string for the name fails
+#	@raises(ValueError)
+#	def testNonStringNameFail1(self):
+#		from iegen.ast import FuncExp
+#
+#		FuncExp(1,10,[])
+#	@raises(ValueError)
+#	def testNonStringNameFail2(self):
+#		from iegen.ast import FuncExp
+#
+#		FuncExp(1,['a'],[])
+#
+#	#Tests that using something other than an integer for the coefficient fails
+#	@raises(ValueError)
+#	def testNonIntCoeffFail1(self):
+#		from iegen.ast import FuncExp
+#
+#		FuncExp('a','a',[])
+#	@raises(ValueError)
+#	def testNonIntCoeffFail2(self):
+#		from iegen.ast import FuncExp
+#
+#		FuncExp([1],'a',[])
 
 	#Tests the __mul__ method
 	def testMul(self):
@@ -1207,17 +1213,18 @@ class NormExpTestCase(TestCase):
 				else:
 					self.failUnless(n2<n,'%s>%s'%(n2,n))
 
-	#Tests that using something other than an integer for the constant fails
-	@raises(ValueError)
-	def testNonIntConstFail1(self):
-		from iegen.ast import NormExp
-
-		NormExp([],'a')
-	@raises(ValueError)
-	def testNonIntConstFail2(self):
-		from iegen.ast import NormExp
-
-		NormExp([],['a'])
+#DISABLED: checking isn't being performed anymore
+#	#Tests that using something other than an integer for the constant fails
+#	@raises(ValueError)
+#	def testNonIntConstFail1(self):
+#		from iegen.ast import NormExp
+#
+#		NormExp([],'a')
+#	@raises(ValueError)
+#	def testNonIntConstFail2(self):
+#		from iegen.ast import NormExp
+#
+#		NormExp([],['a'])
 
 	#Tests that objects that 'look like' VarExps are valid terms for a NormExp
 	def testVarExpValid(self):
@@ -1243,19 +1250,20 @@ class NormExpTestCase(TestCase):
 				visitor.visitFuncExp(self)
 		NormExp([DummyFuncExp()],0)
 
-	#Tests that an object that 'looks like' neither a VarExp nor a FuncExp is not a valid term for a NormExp
-	@raises(ValueError)
-	def testNormExpInvalid(self):
-		from iegen.ast import NormExp
-		NormExp([NormExp([],0)],0)
-	@raises(ValueError)
-	def testIntInvalid(self):
-		from iegen.ast import NormExp
-		NormExp([10],0)
-	@raises(ValueError)
-	def testStrInvalid(self):
-		from iegen.ast import NormExp
-		NormExp(['hello'],0)
+#DISABLED: checking isn't being performed anymore
+#	#Tests that an object that 'looks like' neither a VarExp nor a FuncExp is not a valid term for a NormExp
+#	@raises(ValueError)
+#	def testNormExpInvalid(self):
+#		from iegen.ast import NormExp
+#		NormExp([NormExp([],0)],0)
+#	@raises(ValueError)
+#	def testIntInvalid(self):
+#		from iegen.ast import NormExp
+#		NormExp([10],0)
+#	@raises(ValueError)
+#	def testStrInvalid(self):
+#		from iegen.ast import NormExp
+#		NormExp(['hello'],0)
 
 	#Tests the empty method
 	def testEmpty(self):
@@ -1377,196 +1385,199 @@ class NormExpTestCase(TestCase):
 				self.failUnless(n_i==new_n,'%s!=%s'%(n_i,new_n))
 				self.failUnless(i_n==new_n,'%s!=%s'%(i_n,new_n))
 
-	#Tests adding constants using the __add__ method
-	def testAddConst(self):
-		from iegen.ast import NormExp,FuncExp,VarExp
+#DISABLED: AST addition is no longer supported
+#	#Tests adding constants using the __add__ method
+#	def testAddConst(self):
+#		from iegen.ast import NormExp,FuncExp,VarExp
+#
+#		for norm_exp in iegen.util.norm_exp_strings:
+#			exec('n='+norm_exp)
+#
+#			#Test NormExp's addition operator
+#			const=n.const
+#			terms=n.terms
+#
+#			#Test adding constants from -5 to 9
+#			for i in xrange(-5,10):
+#				ni=NormExp([],i)
+#				n_i=n+ni
+#				i_n=ni+n
+#
+#				#Calculate what we should have
+#				new_const=const+i
+#				new_terms=[1*term for term in terms]
+#				new_n=NormExp(new_terms,new_const)
+#
+#				#Make sure addition returns a new object
+#				self.failIf(n is n_i,'%s is %s'%(n,n_i))
+#				self.failIf(n is i_n,'%s is %s'%(n,i_n))
+#
+#				#Make sure addition works correctly
+#				self.failUnless(n_i==new_n,'%s!=%s'%(n_i,new_n))
+#				self.failUnless(i_n==new_n,'%s!=%s'%(i_n,new_n))
+#
+#	#Tests adding constants and terms using the __add__ method
+#	def testAddTermConst(self):
+#		from iegen.ast import NormExp,FuncExp,VarExp
+#
+#		for norm_exp in iegen.util.norm_exp_strings:
+#			exec('n='+norm_exp)
+#
+#			#Test adding terms and constants
+#			for norm_exp2 in [n2 for n2 in iegen.util.norm_exp_strings if n2!=norm_exp]:
+#				exec('n2='+norm_exp2)
+#				n_n2=n+n2
+#				n2_n=n2+n
+#
+#				const=n.const
+#				terms=n.terms
+#				const2=n2.const
+#				terms2=n2.terms
+#
+#				#Calculate what we should have
+#				new_const=const+const2
+#				new_terms=[1*term for term in terms]
+#				for term in terms2:
+#					if term in new_terms:
+#						index=terms.index(term)
+#						new_terms[index].coeff+=term.coeff
+#					else:
+#						new_terms.append(term)
+#				new_terms.sort()
+#				new_n=NormExp(new_terms,new_const)
+#
+#				#Make sure addition returns a new object
+#				self.failIf(n is n_n2,'%s is %s'%(n,n_n2))
+#				self.failIf(n is n2_n,'%s is %s'%(n,n_n2))
+#
+#				#Make sure addition works correctly
+#				self.failUnless(n_n2==new_n,'%s!=%s'%(n_n2,new_n))
+#				self.failUnless(n2_n==new_n,'%s!=%s'%(n2_n,new_n))
+#
+#	#Tests the __add__ method by adding a single variable
+#	def testAddVar(self):
+#		from iegen.ast import NormExp,VarExp,FuncExp
+#
+#		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#		n=n+NormExp([VarExp(4,'a')],0)
+#
+#		n_res=NormExp([VarExp(8,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#
+#		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+#
+#	#Tests the __add__ method by adding a single function
+#	def testAddFunc(self):
+#		from iegen.ast import NormExp,VarExp,FuncExp
+#
+#		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#		n=n+NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],0)
+#
+#		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)]),FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],2)
+#
+#		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+#
+#	#Tests the __add__ method by adding a variable and a function
+#	def testAddVarFunc(self):
+#		from iegen.ast import NormExp,VarExp,FuncExp
+#
+#		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#		n=n+NormExp([VarExp(4,'a'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],0)
+#
+#		n_res=NormExp([VarExp(8,'a'),VarExp(6,'b'),FuncExp(4,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#
+#		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
 
-		for norm_exp in iegen.util.norm_exp_strings:
-			exec('n='+norm_exp)
+#DISABLED: AST subtraction is no longer supported
+#	#Tests the __sub__ method by subtracting a single variable
+#	def testSubVar(self):
+#		from iegen.ast import NormExp,VarExp,FuncExp
+#
+#		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#		n=n-NormExp([VarExp(4,'a')],0)
+#
+#		n_res=NormExp([VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#
+#		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+#
+#	#Tests the __sub__ method by subtracting multiple variables
+#	def testSubMultipleVars(self):
+#		from iegen.ast import NormExp,VarExp,FuncExp
+#
+#		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#		n=n-NormExp([VarExp(4,'a'),VarExp(6,'b')],0)
+#
+#		n_res=NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#
+#		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+#
+#	#Tests the __sub__ method by subtracting a function
+#	def testSubFunc1(self):
+#		from iegen.ast import NormExp,VarExp,FuncExp
+#
+#		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#		n=n-NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],0)
+#
+#		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b')],2)
+#
+#		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+#
+#	#Tests the __sub__ method by subtracting a function
+#	def testSubFunc2(self):
+#		from iegen.ast import NormExp,VarExp,FuncExp
+#
+#		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#		n=n-NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],0)
+#
+#		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)]),FuncExp(-2,'f',[NormExp([VarExp(1,'y')],0)])],2)
+#		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
+#
+#	#Tests the __sub__ method by subtracting all terms from the expression
+#	def testSubAll(self):
+#		from iegen.ast import NormExp,VarExp,FuncExp
+#
+#		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#		n=n-NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
+#
+#		n_res=NormExp([],0)
+#
+#		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
 
-			#Test NormExp's addition operator
-			const=n.const
-			terms=n.terms
-
-			#Test adding constants from -5 to 9
-			for i in xrange(-5,10):
-				ni=NormExp([],i)
-				n_i=n+ni
-				i_n=ni+n
-
-				#Calculate what we should have
-				new_const=const+i
-				new_terms=[1*term for term in terms]
-				new_n=NormExp(new_terms,new_const)
-
-				#Make sure addition returns a new object
-				self.failIf(n is n_i,'%s is %s'%(n,n_i))
-				self.failIf(n is i_n,'%s is %s'%(n,i_n))
-
-				#Make sure addition works correctly
-				self.failUnless(n_i==new_n,'%s!=%s'%(n_i,new_n))
-				self.failUnless(i_n==new_n,'%s!=%s'%(i_n,new_n))
-
-	#Tests adding constants and terms using the __add__ method
-	def testAddTermConst(self):
-		from iegen.ast import NormExp,FuncExp,VarExp
-
-		for norm_exp in iegen.util.norm_exp_strings:
-			exec('n='+norm_exp)
-
-			#Test adding terms and constants
-			for norm_exp2 in [n2 for n2 in iegen.util.norm_exp_strings if n2!=norm_exp]:
-				exec('n2='+norm_exp2)
-				n_n2=n+n2
-				n2_n=n2+n
-
-				const=n.const
-				terms=n.terms
-				const2=n2.const
-				terms2=n2.terms
-
-				#Calculate what we should have
-				new_const=const+const2
-				new_terms=[1*term for term in terms]
-				for term in terms2:
-					if term in new_terms:
-						index=terms.index(term)
-						new_terms[index].coeff+=term.coeff
-					else:
-						new_terms.append(term)
-				new_terms.sort()
-				new_n=NormExp(new_terms,new_const)
-
-				#Make sure addition returns a new object
-				self.failIf(n is n_n2,'%s is %s'%(n,n_n2))
-				self.failIf(n is n2_n,'%s is %s'%(n,n_n2))
-
-				#Make sure addition works correctly
-				self.failUnless(n_n2==new_n,'%s!=%s'%(n_n2,new_n))
-				self.failUnless(n2_n==new_n,'%s!=%s'%(n2_n,new_n))
-
-	#Tests the __add__ method by adding a single variable
-	def testAddVar(self):
-		from iegen.ast import NormExp,VarExp,FuncExp
-
-		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-		n=n+NormExp([VarExp(4,'a')],0)
-
-		n_res=NormExp([VarExp(8,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-
-		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
-
-	#Tests the __add__ method by adding a single function
-	def testAddFunc(self):
-		from iegen.ast import NormExp,VarExp,FuncExp
-
-		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-		n=n+NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],0)
-
-		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)]),FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],2)
-
-		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
-
-	#Tests the __add__ method by adding a variable and a function
-	def testAddVarFunc(self):
-		from iegen.ast import NormExp,VarExp,FuncExp
-
-		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-		n=n+NormExp([VarExp(4,'a'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],0)
-
-		n_res=NormExp([VarExp(8,'a'),VarExp(6,'b'),FuncExp(4,'f',[NormExp([VarExp(1,'x')],0)])],2)
-
-		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
-
-	#Tests the __sub__ method by subtracting a single variable
-	def testSubVar(self):
-		from iegen.ast import NormExp,VarExp,FuncExp
-
-		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-		n=n-NormExp([VarExp(4,'a')],0)
-
-		n_res=NormExp([VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-
-		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
-
-	#Tests the __sub__ method by subtracting multiple variables
-	def testSubMultipleVars(self):
-		from iegen.ast import NormExp,VarExp,FuncExp
-
-		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-		n=n-NormExp([VarExp(4,'a'),VarExp(6,'b')],0)
-
-		n_res=NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-
-		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
-
-	#Tests the __sub__ method by subtracting a function
-	def testSubFunc1(self):
-		from iegen.ast import NormExp,VarExp,FuncExp
-
-		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-		n=n-NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],0)
-
-		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b')],2)
-
-		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
-
-	#Tests the __sub__ method by subtracting a function
-	def testSubFunc2(self):
-		from iegen.ast import NormExp,VarExp,FuncExp
-
-		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-		n=n-NormExp([FuncExp(2,'f',[NormExp([VarExp(1,'y')],0)])],0)
-
-		n_res=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)]),FuncExp(-2,'f',[NormExp([VarExp(1,'y')],0)])],2)
-		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
-
-	#Tests the __sub__ method by subtracting all terms from the expression
-	def testSubAll(self):
-		from iegen.ast import NormExp,VarExp,FuncExp
-
-		n=NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-		n=n-NormExp([VarExp(4,'a'),VarExp(6,'b'),FuncExp(2,'f',[NormExp([VarExp(1,'x')],0)])],2)
-
-		n_res=NormExp([],0)
-
-		self.failUnless(n_res==n,'%s!=%s'%(n_res,n))
-
-	#Tests the __cmp__ by making sure the NormExp terms are sorted properly
-	def testSort(self):
-		from iegen.ast import NormExp,FuncExp,VarExp
-
-		n1=NormExp([VarExp(1,'a'),
-		            VarExp(2,'a'),
-		            VarExp(2,'b'),
-		            VarExp(2,'c'),
-		            VarExp(3,'c'),
-		            FuncExp(1,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(2,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(3,'g',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(3,'h',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(4,'i',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(4,'i',[NormExp([VarExp(2,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(2,'f',[])],0)])],
-		            6)
-
-		n2=NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(3,'g',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(2,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            VarExp(2,'b'),
-		            FuncExp(3,'h',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(2,'f',[])],0)]),
-		            VarExp(2,'c'),
-		            FuncExp(4,'i',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            FuncExp(4,'i',[NormExp([VarExp(2,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            VarExp(3,'c'),
-		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
-		            VarExp(2,'a'),
-		            VarExp(1,'a')],
-		            6)
-
-		self.failUnless(n1==n2,'%s!=%s'%(n1,n2))
+#DISABLED: sorting isn't being performed anymore
+#	#Tests the __cmp__ by making sure the NormExp terms are sorted properly
+#	def testSort(self):
+#		from iegen.ast import NormExp,FuncExp,VarExp
+#
+#		n1=NormExp([VarExp(1,'a'),
+#		            VarExp(2,'a'),
+#		            VarExp(2,'b'),
+#		            VarExp(2,'c'),
+#		            VarExp(3,'c'),
+#		            FuncExp(1,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(2,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(3,'g',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(3,'h',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(4,'i',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(4,'i',[NormExp([VarExp(2,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(2,'f',[])],0)])],
+#		            6)
+#
+#		n2=NormExp([FuncExp(1,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(3,'g',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(2,'f',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            VarExp(2,'b'),
+#		            FuncExp(3,'h',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(2,'f',[])],0)]),
+#		            VarExp(2,'c'),
+#		            FuncExp(4,'i',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            FuncExp(4,'i',[NormExp([VarExp(2,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            VarExp(3,'c'),
+#		            FuncExp(5,'j',[NormExp([VarExp(1,'a')],0),NormExp([FuncExp(1,'f',[])],0)]),
+#		            VarExp(2,'a'),
+#		            VarExp(1,'a')],
+#		            6)
+#
+#		self.failUnless(n1==n2,'%s!=%s'%(n1,n2))
 #-----------------------------------
 
 #---------- Hash Test Case ----------
@@ -1603,7 +1614,7 @@ class HashTestCase(TestCase):
 
 	#Tests that AST nodes can be used properly with dictionaries
 	def testHashDictionary(self):
-		from iegen import VarExp
+		from iegen.ast import VarExp
 
 		d={}
 		v1=VarExp(1,'a')

@@ -1,7 +1,7 @@
 from iegen.ast.visitor import DFVisitor
 
-#Sparse Translation Visitor: Translate the visited Set or Relation into
-# a SparseSet or SparseRelation.
+#Sparse Translation Visitor: Translate the visited PresSet or PresRelation into
+# a Set or Relation.
 class SparseTransVisitor(DFVisitor):
 	def __init__(self,sparse_formula):
 

@@ -24,15 +24,15 @@ class CollectVarsVisitor(DFVisitor):
 	def _inFormula(self,node):
 		self.vars=set(self.vars)
 
-	def inSet(self,node):
+	def inPresSet(self,node):
 		self._inFormula(node)
-	def inRelation(self,node):
+	def inPresRelation(self,node):
 		self._inFormula(node)
 
 	def _outFormula(self,node):
 		self.vars=sorted(list(self.vars))
 
-	def outSet(self,node):
+	def outPresSet(self,node):
 		self._outFormula(node)
-	def outRelation(self,node):
+	def outPresRelation(self,node):
 		self._outFormula(node)

@@ -25,15 +25,15 @@ class ImportTestCase(TestCase):
 
 #---------- Simplify Tests ----------
 #Test simplification rules
-class SimplifyTestCase(TestCase):
-
-	#Test that simplify does not accept arguments other than Sets and Relations
-	@raises(ValueError)
-	def testNonFormulaFail1(self):
-		from iegen.simplify import simplify
-		simplify(1)
-	@raises(ValueError)
-	def testNonFormulaFail2(self):
-		from iegen.simplify import simplify
-		simplify('a')
+#class SimplifyTestCase(TestCase):
+#DISABLED: simplify no longer supported
+#	#Test that simplify does not accept arguments other than Sets and Relations
+#	@raises(ValueError)
+#	def testNonFormulaFail1(self):
+#		from iegen.simplify import simplify
+#		simplify(1)
+#	@raises(ValueError)
+#	def testNonFormulaFail2(self):
+#		from iegen.simplify import simplify
+#		simplify('a')
 #------------------------------------

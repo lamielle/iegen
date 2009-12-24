@@ -25,7 +25,7 @@ class DataPermuteTrans(Transformation):
 		#We do this by unioning all bounds and simply checking that there is a single conjunction in the disjunction
 		target_bounds=[data_array.bounds for data_array in self.target_data_arrays]
 		unioned_bounds=reduce(lambda da1,da2: da1.union(da2),target_bounds)
-		if len(unioned_bounds.sets)!=1:
+		if len(unioned_bounds)!=1:
 			raise ValueError('All target data arrays must have the same bounds')
 
 	def __repr__(self):

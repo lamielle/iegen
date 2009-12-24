@@ -32,8 +32,8 @@ iegen.settings.outputs=outputs
 #Debug is False by default
 iegen.settings.debug=False
 
-#Processing (simplification and checking) is enabled by default
-iegen.settings.enable_processing=True
+#Processing (simplification and checking) is disabled by default
+iegen.settings.enable_processing=False
 
 #---------- Printing methods -----
 def print_gen(type,output=None):

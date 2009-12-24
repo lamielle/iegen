@@ -42,6 +42,9 @@ class TransVisitor(DFVisitor):
 
 		self.at_var_tuple=False
 
+		#init the result list
+		self.mats=[]
+
 		#---------- Visiting state variables ----------
 		#Are we within a Set?
 		self.in_set=False
@@ -68,10 +71,6 @@ class TransVisitor(DFVisitor):
 		#len(self.name_dict) columns
 		#1 column for the constant column
 		return 1+len(self.name_dict)+1
-
-	def inSet(self,node):
-		#Starting to visit a Set, init the result list
-		self.mats=[]
 
 	def inPresSet(self,node):
 		#Starting to translate a PresSet to a matrix, init the result matrix
