@@ -273,6 +273,9 @@ class SparseFormula(IEGenObject):
 		#Return a new constraint
 		return ConstraintType(exp_coeff)
 
+	def _get_mat(self,pos_map,make_positive,make_negative):
+		return self.disjunction.get_mat(pos_map,make_positive,make_negative)
+
 	#End misc utility methods
 	#--------------------------------------------------
 
@@ -592,6 +595,20 @@ class Set(SparseFormula):
 
 		return new_set
 
+	#Returns the constraint matrix for this set
+	def get_constraint_mat(self):
+		pos_map={}
+		pos_count=1
+
+		#Assign positions for variable names:
+		# out tuple vars - in tuple vars - symbolics - constant column
+		for var_name in self.tuple_vars+self.symbolic_names:
+			pos_map[self.get_column(var_name)]=pos_count
+			pos_count+=1
+		pos_map[self.get_constant_column()]=pos_count
+
+		return self._get_mat(pos_map,True,False)
+
 	# End public methods
 	#--------------------------------------------------
 
@@ -766,6 +783,20 @@ class Relation(SparseFormula):
 		return new_relation
 
 		return self
+
+	#Returns the constraint matrix for the scattering function for this relation
+	def get_scatter_mat(self):
+		pos_map={}
+		pos_count=1
+
+		#Assign positions for variable names:
+		# out tuple vars - in tuple vars - symbolics - constant column
+		for var_name in self.tuple_out+self.tuple_in+self.symbolic_names:
+			pos_map[self.get_column(var_name)]=pos_count
+			pos_count+=1
+		pos_map[self.get_constant_column()]=pos_count
+
+		return self._get_mat(pos_map,False,True)
 
 	# End public methods/properties
 	#--------------------------------------------------
@@ -1037,6 +1068,31 @@ class SparseExp(IEGenObject):
 
 		return (equal_coeff,equal_exp)
 
+	def get_mat(self,pos_map,make_positive,make_negative):
+		mat=[0]*(len(pos_map)+1)
+
+		for col,pos in pos_map.iteritems():
+			mat[pos]=self.exp[col]
+
+		#Make sure the first non-zero coefficient is either
+		# positive or negative, depending on the given parameter
+		negate_terms=False
+		found_nonzero=False
+		for pos in xrange(len(mat)):
+			if 0!=mat[pos] and not found_nonzero:
+				found_nonzero=True
+				if make_positive and mat[pos]<0:
+					negate_terms=True
+				elif make_negative and mat[pos]>0:
+					negate_terms=True
+				else:
+					break
+
+			if negate_terms:
+				mat[pos]*=-1
+
+		return mat
+
 	def replace_var(self,var_col,equal_coeff,equal_exp):
 		#Replace the variable within any function terms of this expression
 		for term in self.exp.keys():
@@ -1177,6 +1233,10 @@ class SparseConstraint(IEGenObject):
 		return self._op
 	op=property(_get_op)
 
+	def _get_mat_id(self):
+		return self._mat_id
+	mat_id=property(_get_mat_id)
+
 	def is_equality(self):
 		return False
 
@@ -1191,6 +1251,15 @@ class SparseConstraint(IEGenObject):
 
 	def function_terms(self):
 		return self.sparse_exp.function_terms()
+
+	def get_mat(self,pos_map,make_positive,make_negative):
+		if not self.is_equality():
+			make_positive=False
+			make_negative=False
+
+		mat=self.sparse_exp.get_mat(pos_map,make_positive,make_negative)
+		mat[0]=self.mat_id
+		return tuple(mat)
 
 	def replace_var(self,var_col,equal_coeff,equal_exp):
 		self.sparse_exp.replace_var(var_col,equal_coeff,equal_exp)
@@ -1235,6 +1304,7 @@ class SparseConstraint(IEGenObject):
 class SparseEquality(SparseConstraint):
 	__slots__=('_comp_sparse_exp',)
 	_op='='
+	_mat_id=0
 
 	def __init__(self,exp_coeff=None,sparse_exp=None):
 		SparseConstraint.__init__(self,exp_coeff=exp_coeff,sparse_exp=sparse_exp)
@@ -1259,6 +1329,7 @@ class SparseEquality(SparseConstraint):
 #Class representing a sparse inequality constraint
 class SparseInequality(SparseConstraint):
 	_op='>='
+	_mat_id=1
 
 	def _get_hash_exp(self):
 		return self.sparse_exp
@@ -1544,6 +1615,9 @@ class SparseConjunction(IEGenObject):
 
 		return (lower_bounds,upper_bounds)
 
+	def get_mat(self,pos_map,make_positive,make_negative):
+		return tuple([constraint.get_mat(pos_map,make_positive,make_negative) for constraint in self.constraints])
+
 	def freeze(self):
 		if not self.frozen:
 			self.simplify()
@@ -1640,6 +1714,9 @@ class SparseDisjunction(IEGenObject):
 
 	def bounds(self,var_col):
 		return tuple([conjunction.bounds(var_col) for conjunction in self.conjunctions])
+
+	def get_mat(self,pos_map,make_positive,make_negative):
+		return tuple([conjunction.get_mat(pos_map,make_positive,make_negative) for conjunction in self.conjunctions])
 
 	def freeze(self):
 		#Only freeze this disjunction if it isn't yet frozen

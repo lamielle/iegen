@@ -763,6 +763,104 @@ class SetTestCase(TestCase):
 
 	# End operation tests
 	#----------------------------------------
+
+	#----------------------------------------
+	# Start matrix translation tests
+
+	set_tests=(
+
+	  (('{[a]: a=n}',),
+	  (((0,1,-1,0),),),['n']),
+
+	  (('{[a,b]: a=n && b=m}',),
+	  (((0,1,0,0,-1,0),
+	    (0,0,1,-1,0,0)),),['n','m']),
+
+	  (('{[a]: 0<a && a<n+1}',),
+	  (((1,1,0,-1),
+	    (1,-1,1,0)),),['n']),
+
+	  (('{[a]: 1<=a && a<=n}',),
+	  (((1, 1,0,-1),
+	    (1,-1,1, 0)),),['n']),
+
+	  (('{[a,b]: 0<a && a<n+1 && 0<b && b<n+1}',),
+	  (((1, 1, 0,0,-1),
+	    (1,-1, 0,1, 0),
+	    (1, 0, 1,0,-1),
+	    (1, 0,-1,1, 0)),),['n']),
+
+	  (('{[a,b]: 1<=a && a<=n && 1<=b && b<=n}',),
+	  (((1, 1, 0,0,-1),
+	    (1,-1, 0,1, 0),
+	    (1, 0, 1,0,-1),
+	    (1, 0,-1,1, 0)),),['n']),
+
+	  (('{[a,b]: 0<a && a<n+1 && 0<b && b<m+1}',),
+	  (((1, 1, 0,0,0,-1),
+	    (1,-1, 0,0,1, 0),
+	    (1, 0, 1,0,0,-1),
+	    (1, 0,-1,1,0, 0)),),['n','m']),
+
+	  (('{[a,b]: 1<=a && a<=n && 1<=b && b<=m}',),
+	  (((1, 1, 0,0,0,-1),
+	    (1,-1, 0,0,1, 0),
+	    (1, 0, 1,0,0,-1),
+	    (1, 0,-1,1,0, 0)),),['n','m']),
+
+	  (('{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}',),
+	  (((1, 1, 0,0,0, 0),
+	    (1,-1, 0,1,0,-1),
+	    (1, 0, 1,0,0, 0),
+	    (1, 0,-1,0,1,-1)),),['T','n_inter']),
+
+	  (('{[s,i]: 0<=s && s<T && 0<=i && i<n_inter}',),
+	  (((1, 1, 0,0,0,0, 0),
+	    (1,-1, 0,0,1,0,-1),
+	    (1, 0, 1,0,0,0, 0),
+	    (1, 0,-1,0,0,1,-1)),),['T','N','n_inter']),
+
+	  (('{[a,b]: a=n && b=m}','{[a,b]: a=m && b=n}'),
+	  (((0,1,0,-1, 0, 0),
+	    (0,0,1, 0,-1, 0)),
+	  ((0,1, 0, 0,-1,0),
+	    (0,0,1,-1, 0, 0))),['n','m']),
+
+	  )
+
+	#Test that the sets in set_tests are translated properly
+	def testTransSet(self):
+		from iegen import Set,Symbolic
+
+		for set_strings,disjunction_mats,params in self.set_tests:
+			#Create a set of sets for the result constraints
+			#This avoids imposing a specific order on the constraints
+			res_disjunction=[]
+			for conjunction_mat in disjunction_mats:
+				res_disjunction.append(frozenset(conjunction_mat))
+			res_disjunction=frozenset(res_disjunction)
+
+			#Create a list of symbolics for the set
+			symbolics=[Symbolic(param) for param in params]
+
+			#Create the unioned sets and get the constraint matrix from it
+			sets=map(lambda set_string: Set(set_string,symbolics),set_strings)
+			unioned_set=reduce(lambda set1,set2: set1.union(set2),sets)
+			disjunction_mats=unioned_set.get_constraint_mat()
+
+			#Create a set of sets for the constraints
+			#This avoids imposing a specific order on the constraints
+			disjunction=[]
+			for conjunction_mat in disjunction_mats:
+				disjunction.append(frozenset(conjunction_mat))
+			disjunction=frozenset(disjunction)
+
+			#Make sure the translated matrix matches the result matrix
+			self.failUnless(disjunction==res_disjunction,'%s!=%s'%(disjunction,res_disjunction))
+
+	# End matrix translation tests
+	#----------------------------------------
+
 #-------------------------------------
 
 #---------- Relation Tests ----------
@@ -1460,5 +1558,77 @@ class RelationTestCase(TestCase):
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
 	# End operation tests
+	#----------------------------------------
+
+	#----------------------------------------
+	# Start matrix translation tests
+
+	rel_tests=(
+
+	  (('{[i]->[c0,i,c1]: c0=1 and c1=2}',),
+	  (((0,-1,0,0,0,0,1),
+	    (0,0,-1,0,1,0,0),
+	    (0,0,0,-1,0,0,2)),),['n']),
+
+	  (('{[i]->[c0,i,c1]: c0=1 and c1=2}',),
+	  (((0,-1,0,0,0,0,0,1),
+	    (0,0,-1,0,1,0,0,0),
+	    (0,0,0,-1,0,0,0,2)),),['n','m']),
+
+	  (('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=2}',),
+	  (((0,-1,0,0,0,0,0,0,0,0),
+	    (0,0,-1,0,0,0,1,0,0,0),
+	    (0,0,0,-1,0,0,0,0,0,1),
+	    (0,0,0,0,-1,0,0,1,0,0),
+	    (0,0,0,0,0,-1,0,0,0,2)),),['T']),
+
+	  (('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=2}',),
+	  (((0,-1,0,0,0,0,0,0,0,0,0,0),
+	    (0,0,-1,0,0,0,1,0,0,0,0,0),
+	    (0,0,0,-1,0,0,0,0,0,0,0,1),
+	    (0,0,0,0,-1,0,0,1,0,0,0,0),
+	    (0,0,0,0,0,-1,0,0,0,0,0,2)),),['T','N','n_inter']),
+
+	  (('{[i]->[c0,i,c1]: c0=1 and c1=2}','{[i]->[c0,i,c1]: c0=3 and c1=4}'),
+	  (((0,-1,0,0,0,0,1),
+	    (0,0,-1,0,1,0,0),
+	    (0,0,0,-1,0,0,2)),
+	   ((0,-1,0,0,0,0,3),
+	    (0,0,-1,0,1,0,0),
+	    (0,0,0,-1,0,0,4)),),['n']),
+
+	)
+
+	#Test that the relations in rel_tests are translated properly
+	def testTransRel(self):
+		from iegen import Relation,Symbolic
+
+		for rel_strings,disjunction_mats,params in self.rel_tests:
+			#Create a set of sets for the result constraints
+			#This avoids imposing a specific order on the constraints
+			res_disjunction=[]
+			for conjunction_mat in disjunction_mats:
+				res_disjunction.append(frozenset(conjunction_mat))
+			res_disjunction=frozenset(res_disjunction)
+
+			#Create a list of symbolics for the set
+			symbolics=[Symbolic(param) for param in params]
+
+			#Create the unioned relations and get the constraint matrix from it
+			relations=map(lambda rel_string: Relation(rel_string,symbolics),rel_strings)
+			unioned_relation=reduce(lambda rel1,rel2: rel1.union(rel2),relations)
+			disjunction_mats=unioned_relation.get_scatter_mat()
+
+			#Create a set of sets for the constraints
+			#This avoids imposing a specific order on the constraints
+			disjunction=[]
+			for conjunction_mat in disjunction_mats:
+				disjunction.append(frozenset(conjunction_mat))
+			disjunction=frozenset(disjunction)
+
+			#Make sure the translated matrix matches the result matrix
+			self.failUnless(disjunction==res_disjunction,'%s!=%s'%(disjunction,res_disjunction))
+
+	# End matrix translation tests
 	#----------------------------------------
 #------------------------------------------
