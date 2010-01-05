@@ -208,7 +208,7 @@ def calc_reorder_call(trans_name,data_array,reordering_name,mapir):
 	args=[
 	      '(unsigned char*)%s'%(data_array.name),
 	      data_array.elem_size,
-	      calc_size_string(data_array.bounds,data_array.bounds.sets[0].tuple_set.vars[0].id),
+	      calc_size_string(data_array.bounds,data_array.bounds.tuple_vars[0]),
 	      mapir.er_specs[reordering_name].get_var_name()
 	     ]
 
@@ -255,8 +255,8 @@ def calc_upper_bound_string(bounds):
 #Calculates the difference of the upper and lower bounds of the given variable in the given set
 def calc_size_string(set,var_name):
 	#Get the upper/lower bounds for the variable
-	upper_bounds=set.upper_bound(var_name)
-	lower_bounds=set.lower_bound(var_name)
+	upper_bounds=set.upper_bounds(var_name)[0]
+	lower_bounds=set.lower_bounds(var_name)[0]
 
 	#Get the string that calculates the size of the ER at runtime
 	return '%s-%s+1'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))

@@ -59,8 +59,8 @@ class PointerUpdate(InterTransOpt):
 	#Look for a nest patterns in each of the ERSpecs in mapir.
 	#Input: list of function name strings that specify nest, ["f","g"]
 	#Output: tuple with a list of FuncNest references for function nests
-    # that fit pattern and the list of ERSpecs in IDG where those patterns
-    # were found.
+	# that fit pattern and the list of ERSpecs in IDG where those patterns
+	# were found.
 	def find_nestrefs(self,nest,mapir):
 		nestrefs = []
 		affected_er_specs = []

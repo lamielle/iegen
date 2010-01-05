@@ -110,7 +110,7 @@ def gen_explicit_er_union_1d(er_spec,mapir):
 	# {[in]->[out]: out=f1(in)} union ... union {[in]->[out]: out=fn(in)}
 	#Because we assume this here, we can just iterate over the functions
 	# that the relation contains
-	for function_name in er_spec.relation.functions():
+	for function_name in er_spec.relation.function_names:
 		#Get the er_spec for the current function
 		function_er_spec=mapir.er_specs[function_name]
 

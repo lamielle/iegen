@@ -162,15 +162,15 @@ class ERSpec(IEGenObject):
 
 	#Returns all symbolics in each Set/Relation that this ERSpec contains
 	def symbolics(self):
-		return list(set(self.input_bounds.symbolics()+self.output_bounds.symbolics()+self.relation.symbolics()))
+		return list(set(self.input_bounds.symbolic_names+self.output_bounds.symbolic_names+self.relation.symbolic_names))
 
 	#Returns the names of all functions in the constraints of each Set/Relation that this ERSpec contains
 	def functions(self):
-		return list(set(self.input_bounds.functions()+self.output_bounds.functions()+self.relation.functions()))
+		return list(set(self.input_bounds.function_names+self.output_bounds.function_names+self.relation.function_names))
 
 	#Returns true if this ERSpec can be represented as a union of explicit 1D functions
 	def is_union_1d(self):
-		return (1,1)==self.relation.arity() and self.is_function and len(self.relation.relations)>1
+		return (1,1)==self.relation.arity() and self.is_function and len(self.relation)>1
 
 	#Returns the variable type string for this ERSpec
 	def get_type(self):
