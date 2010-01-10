@@ -841,12 +841,12 @@ class SetTestCase(TestCase):
 			res_disjunction=frozenset(res_disjunction)
 
 			#Create a list of symbolics for the set
-			symbolics=[Symbolic(param) for param in params]
+			symbolics=[Symbolic(param) for param in sorted(params)]
 
 			#Create the unioned sets and get the constraint matrix from it
 			sets=map(lambda set_string: Set(set_string,symbolics),set_strings)
 			unioned_set=reduce(lambda set1,set2: set1.union(set2),sets)
-			disjunction_mats=unioned_set.get_constraint_mat()
+			disjunction_mats=unioned_set.get_constraint_mat(symbolics)
 
 			#Create a set of sets for the constraints
 			#This avoids imposing a specific order on the constraints
@@ -1576,14 +1576,14 @@ class RelationTestCase(TestCase):
 	    (0,0,0,-1,0,0,0,2)),),['n','m']),
 
 	  (('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=2}',),
-	  (((0,-1,0,0,0,0,0,0,0,0),
+	  (((0, 1,0,0,0,0,0,0,0,0),
 	    (0,0,-1,0,0,0,1,0,0,0),
 	    (0,0,0,-1,0,0,0,0,0,1),
 	    (0,0,0,0,-1,0,0,1,0,0),
 	    (0,0,0,0,0,-1,0,0,0,2)),),['T']),
 
 	  (('{[s,i]->[c0,s,c1,i,c2]: c0=0 && c1=1 && c2=2}',),
-	  (((0,-1,0,0,0,0,0,0,0,0,0,0),
+	  (((0, 1,0,0,0,0,0,0,0,0,0,0),
 	    (0,0,-1,0,0,0,1,0,0,0,0,0),
 	    (0,0,0,-1,0,0,0,0,0,0,0,1),
 	    (0,0,0,0,-1,0,0,1,0,0,0,0),
@@ -1612,12 +1612,12 @@ class RelationTestCase(TestCase):
 			res_disjunction=frozenset(res_disjunction)
 
 			#Create a list of symbolics for the set
-			symbolics=[Symbolic(param) for param in params]
+			symbolics=[Symbolic(param) for param in sorted(params)]
 
 			#Create the unioned relations and get the constraint matrix from it
 			relations=map(lambda rel_string: Relation(rel_string,symbolics),rel_strings)
 			unioned_relation=reduce(lambda rel1,rel2: rel1.union(rel2),relations)
-			disjunction_mats=unioned_relation.get_scatter_mat()
+			disjunction_mats=unioned_relation.get_scatter_mat(symbolics)
 
 			#Create a set of sets for the constraints
 			#This avoids imposing a specific order on the constraints

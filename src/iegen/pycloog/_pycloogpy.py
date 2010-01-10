@@ -188,31 +188,15 @@ class Statement(object):
 #Uses CLooG to generate code based on the given
 #Statement objects
 def codegen(statements):
-	from iegen.ast.visitor import TransVisitor
-
 	#Process the statements
-	iters=None
-	for statement in statements:
-		#Ensure that the iterators of every statement are the same
-		if iters is None:
-			iters=[var.id for var in statement.domain.sets[0].tuple_set.vars]
-		else:
-			curr_iters=[var.id for var in statement.domain.sets[0].tuple_set.vars]
-
-			#if curr_iters!=iters:
-			#	raise ValueError("Statements's domains do not have the same iterator names: %s!=%s"%(curr_iters,iters))
+	iters=statements[0].domain.tuple_vars
+	for statement in statements[1:]:
+		if statement.domain.tuple_vars!=iters:
+			raise ValueError("Statements's domains do not have the same iterator names: %s!=%s"%(curr_iters,iters))
 
 	#Collect the params from all domain/scatter fields in all statements
-	params=[]
-	for statement in statements:
-		#Collect all params from each statement domain
-		for pres_set in statement.domain.sets:
-			params=params+list(pres_set.symbolics)
-
-		#Collect all params from each scattering relation
-		if statement.scatter is not None:
-			for pres_relation in statement.scatter.relations:
-				params=params+list(pres_relation.symbolics)
+	params=[symbolic for statement in statements for symbolic in statement.domain.symbolics]
+	params+=[symbolic for statement in statements if statement.scatter is not None for symbolic in statement.scatter.symbolics]
 
 	#Reduce the collected parameters to a unique set
 	params=list(set(params))
@@ -222,9 +206,15 @@ def codegen(statements):
 
 	#Convert the domain/scatter fields into the CLooG matrix format
 	for statement in statements:
-		statement.domain=TransVisitor(param_names).visit(statement.domain).mats
+		statement.domain=statement.domain.get_constraint_mat(params)
 		if statement.scatter is not None:
-			statement.scatter=TransVisitor(param_names).visit(statement.scatter).mat
+			statement.scatter=statement.scatter.get_scatter_mat(params)
+
+		#Make sure there is a single conjunction for the scattering function
+		if statement.scatter is not None:
+			if len(statement.scatter)>1:
+				raise ValueError('Scattering functions with unions are not supported')
+			statement.scatter=statement.scatter[0]
 
 	#Convert the parmeters to ctypes
 	names=byref(_get_pycloog_names(iters,params,param_names))

@@ -596,15 +596,24 @@ class Set(SparseFormula):
 		return new_set
 
 	#Returns the constraint matrix for this set
-	def get_constraint_mat(self):
+	def get_constraint_mat(self,symbolics=None):
 		pos_map={}
 		pos_count=1
 
 		#Assign positions for variable names:
-		# out tuple vars - in tuple vars - symbolics - constant column
-		for var_name in self.tuple_vars+self.symbolic_names:
+		# tuple vars - symbolics - constant column
+		#Tuple vars
+		for var_name in self.tuple_vars:
 			pos_map[self.get_column(var_name)]=pos_count
 			pos_count+=1
+
+		#The given symbolics
+		if symbolics is not None:
+			for symbolic in symbolics:
+				pos_map[SymbolicCol(symbolic)]=pos_count
+				pos_count+=1
+
+		#Constaint column
 		pos_map[self.get_constant_column()]=pos_count
 
 		return self._get_mat(pos_map,True,False)
@@ -785,15 +794,24 @@ class Relation(SparseFormula):
 		return self
 
 	#Returns the constraint matrix for the scattering function for this relation
-	def get_scatter_mat(self):
+	def get_scatter_mat(self,symbolics=None):
 		pos_map={}
 		pos_count=1
 
 		#Assign positions for variable names:
-		# out tuple vars - in tuple vars - symbolics - constant column
-		for var_name in self.tuple_out+self.tuple_in+self.symbolic_names:
+		# out tuple vars - in tuple vars - given symbolics - constant column
+		#Output tuple variables and input tuple variables
+		for var_name in self.tuple_out+self.tuple_in:
 			pos_map[self.get_column(var_name)]=pos_count
 			pos_count+=1
+
+		#The given symbolics
+		if symbolics is not None:
+			for symbolic in symbolics:
+				pos_map[SymbolicCol(symbolic)]=pos_count
+				pos_count+=1
+
+		#Constant column
 		pos_map[self.get_constant_column()]=pos_count
 
 		return self._get_mat(pos_map,False,True)
@@ -1090,6 +1108,13 @@ class SparseExp(IEGenObject):
 
 			if negate_terms:
 				mat[pos]*=-1
+
+		#If there is only one non-zero coefficient AND
+		# make_negative is true, make the single coefficient positive
+		if 1==sum(map(lambda x: 0 if x==0 else 1,mat)):
+			for pos in xrange(len(mat)):
+				if 0!=mat[pos]:
+					mat[pos]=abs(mat[pos])
 
 		return mat
 
