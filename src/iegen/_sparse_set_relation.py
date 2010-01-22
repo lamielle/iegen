@@ -73,10 +73,9 @@ class SparseFormula(IEGenObject):
 			self.freeze()
 
 	#Makes a copy of a sparse formula of type FormulaClass
-	#The constraints are copied if copy_constraints is True
-	def _copy(self,new_var_pos,new_var_names,freeze,FormulaClass):
+	def _copy(self,FormulaClass,new_var_pos=None,new_var_names=None,**kwargs):
 		#Copy the constraints of the formula
-		disjunction_copy=self.disjunction.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze)
+		disjunction_copy=self.disjunction.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,**kwargs)
 
 		#Reorder the tuple variables if needed
 		if new_var_pos is None:
@@ -95,7 +94,7 @@ class SparseFormula(IEGenObject):
 					tuple_var_names[pos]=new_var_names[tuple_var_names[pos]]
 
 		#Copy the structure of the formula
-		selfcopy=FormulaClass(tuple_var_names=tuple_var_names,free_var_names=self.free_vars,symbolics=self.symbolics,disjunction=disjunction_copy,freeze=freeze)
+		selfcopy=FormulaClass(tuple_var_names=tuple_var_names,free_var_names=self.free_vars,symbolics=self.symbolics,disjunction=disjunction_copy,**kwargs)
 
 		return selfcopy
 
@@ -527,9 +526,9 @@ class Set(SparseFormula):
 		return self._arity()
 
 	#Returns a copy of this Set
-	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
+	def copy(self,**kwargs):
 		#Make a copy of this Set
-		selfcopy=self._copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze,FormulaClass=Set)
+		selfcopy=self._copy(FormulaClass=Set,**kwargs)
 
 		return selfcopy
 
@@ -691,9 +690,9 @@ class Relation(SparseFormula):
 		return self._arity()-self._arity_in
 
 	#Returns a copy of this Relation
-	def copy(self,new_var_pos=None,new_var_names=None,freeze=True):
+	def copy(self,**kwargs):
 		#Make a copy of this Relation
-		selfcopy=self._copy(new_var_pos=new_var_pos,new_var_names=new_var_names,freeze=freeze,FormulaClass=Relation)
+		selfcopy=self._copy(FormulaClass=Relation,**kwargs)
 
 		#Determine the input arity
 		selfcopy._arity_in=self.arity_in()
@@ -865,7 +864,7 @@ class FreeVarCol(SparseExpNameColumnType):
 	def __init__(self,name):
 		SparseExpNameColumnType.__init__(self,name)
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+	def copy(self,new_var_names=None,**kwargs):
 		name=self.name
 
 		#Change the name if necessary
@@ -878,7 +877,7 @@ class ConstantCol(SparseExpNameColumnType):
 	def __init__(self):
 		SparseExpNameColumnType.__init__(self,'')
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+	def copy(self,**kwargs):
 		return ConstantCol()
 
 class TupleVarCol(SparseExpColumnType):
@@ -898,7 +897,7 @@ class TupleVarCol(SparseExpColumnType):
 	def __str__(self):
 		return '%s(%s)'%(self.__class__.__name__,repr(self.pos))
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+	def copy(self,new_var_pos=None,new_var_names=None,**kwargs):
 		pos=self.pos
 		name=self.name
 
@@ -930,7 +929,7 @@ class SymbolicCol(SparseExpColumnType):
 	def __str__(self):
 		return '%s(%s)'%(self.__class__.__name__,self.sym.name)
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+	def copy(self,**kwargs):
 		return SymbolicCol(self.sym)
 
 	def exp_str(self):
@@ -974,8 +973,8 @@ class UFCall(SparseExpColumnType):
 		for arg in self.args:
 			arg.replace_var(var_col,equal_coeff,equal_exp.copy())
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
-		return UFCall(self.name,[arg.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols) for arg in self.args])
+	def copy(self,**kwargs):
+		return UFCall(self.name,[arg.copy(**kwargs) for arg in self.args])
 
 	def exp_str(self):
 		return str(self)
@@ -1165,15 +1164,15 @@ class SparseExp(IEGenObject):
 				self.remove_term(term)
 		self._update_hash()
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+	def copy(self,new_cols=None,**kwargs):
 		new_cols={} if new_cols is None else new_cols
 		exp_copy={}
 
 		for term,coeff in self.exp.iteritems():
 			if term in new_cols:
-				exp_copy[new_cols[term].copy(new_var_pos=new_var_pos,new_var_names=new_var_names)]=coeff
+				exp_copy[new_cols[term].copy(new_cols=new_cols,**kwargs)]=coeff
 			else:
-				exp_copy[term.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols)]=coeff
+				exp_copy[term.copy(new_cols=new_cols,**kwargs)]=coeff
 
 		return SparseExp(exp_copy)
 
@@ -1362,8 +1361,8 @@ class SparseEquality(SparseConstraint):
 
 		return res
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
-		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
+	def copy(self,**kwargs):
+		return SparseEquality(sparse_exp=self.sparse_exp.copy(**kwargs))
 
 #Class representing a sparse inequality constraint
 class SparseInequality(SparseConstraint):
@@ -1374,8 +1373,8 @@ class SparseInequality(SparseConstraint):
 		return self.sparse_exp
 	hash_exp=property(_get_hash_exp)
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
-		return SparseInequality(sparse_exp=self.sparse_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
+	def copy(self,**kwargs):
+		return SparseInequality(sparse_exp=self.sparse_exp.copy(**kwargs))
 
 # End SparseConstraint classes
 #--------------------------------------------------
@@ -1677,11 +1676,11 @@ class SparseConjunction(IEGenObject):
 
 			self._frozen=True
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None,freeze=True):
+	def copy(self,freeze=True,**kwargs):
 		selfcopy=SparseConjunction()
 
 		for constraint in self.constraints:
-			selfcopy.add_constraint(constraint.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
+			selfcopy.add_constraint(constraint.copy(**kwargs))
 
 		if self.frozen and freeze:
 			selfcopy.freeze()
@@ -1796,11 +1795,11 @@ class SparseDisjunction(IEGenObject):
 
 			self._frozen=True
 
-	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None,freeze=True):
+	def copy(self,freeze=True,**kwargs):
 		selfcopy=SparseDisjunction()
 
 		for conjunction in self.conjunctions:
-			selfcopy.add_conjunction(conjunction.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols,freeze=freeze))
+			selfcopy.add_conjunction(conjunction.copy(freeze=freeze,**kwargs))
 
 		if self.frozen and freeze:
 			selfcopy.freeze()
