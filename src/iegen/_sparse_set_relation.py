@@ -865,7 +865,7 @@ class FreeVarCol(SparseExpNameColumnType):
 	def __init__(self,name):
 		SparseExpNameColumnType.__init__(self,name)
 
-	def copy(self,new_var_pos=None,new_var_names=None):
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		name=self.name
 
 		#Change the name if necessary
@@ -878,7 +878,7 @@ class ConstantCol(SparseExpNameColumnType):
 	def __init__(self):
 		SparseExpNameColumnType.__init__(self,'')
 
-	def copy(self,new_var_pos=None,new_var_names=None):
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		return ConstantCol()
 
 class TupleVarCol(SparseExpColumnType):
@@ -898,7 +898,7 @@ class TupleVarCol(SparseExpColumnType):
 	def __str__(self):
 		return '%s(%s)'%(self.__class__.__name__,repr(self.pos))
 
-	def copy(self,new_var_pos=None,new_var_names=None):
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		pos=self.pos
 		name=self.name
 
@@ -930,7 +930,7 @@ class SymbolicCol(SparseExpColumnType):
 	def __str__(self):
 		return '%s(%s)'%(self.__class__.__name__,self.sym.name)
 
-	def copy(self,new_var_pos=None,new_var_names=None):
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		return SymbolicCol(self.sym)
 
 	def exp_str(self):
@@ -974,8 +974,8 @@ class UFCall(SparseExpColumnType):
 		for arg in self.args:
 			arg.replace_var(var_col,equal_coeff,equal_exp.copy())
 
-	def copy(self,new_var_pos=None,new_var_names=None):
-		return UFCall(self.name,[arg.copy(new_var_pos=new_var_pos,new_var_names=new_var_names) for arg in self.args])
+	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
+		return UFCall(self.name,[arg.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols) for arg in self.args])
 
 	def exp_str(self):
 		return str(self)
@@ -1008,6 +1008,9 @@ class SparseExp(IEGenObject):
 
 	def __ne__(self,other):
 		return not self==other
+
+	def __len__(self):
+		return len(self.exp)
 
 	def __repr__(self):
 		return '%s(%s)'%(self.__class__.__name__,repr(self.exp))
@@ -1170,7 +1173,7 @@ class SparseExp(IEGenObject):
 			if term in new_cols:
 				exp_copy[new_cols[term].copy(new_var_pos=new_var_pos,new_var_names=new_var_names)]=coeff
 			else:
-				exp_copy[term.copy(new_var_pos=new_var_pos,new_var_names=new_var_names)]=coeff
+				exp_copy[term.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols)]=coeff
 
 		return SparseExp(exp_copy)
 
@@ -1271,6 +1274,9 @@ class SparseConstraint(IEGenObject):
 	def contains_term(self,term):
 		return self.sparse_exp.contains_term(term)
 
+	def is_contradiction(self):
+		return False
+
 	def var_is_function_input(self,var_col):
 		return self.sparse_exp.var_is_function_input(var_col)
 
@@ -1347,6 +1353,14 @@ class SparseEquality(SparseConstraint):
 
 	def is_equality(self):
 		return True
+
+	def is_contradiction(self):
+		res=False
+		if len(self.sparse_exp)==1:
+			if ConstantCol() in self.sparse_exp.exp:
+				res=True
+
+		return res
 
 	def copy(self,new_var_pos=None,new_var_names=None,new_cols=None):
 		return SparseEquality(sparse_exp=self.sparse_exp.copy(new_var_pos=new_var_pos,new_var_names=new_var_names,new_cols=new_cols))
@@ -1430,6 +1444,18 @@ class SparseConjunction(IEGenObject):
 
 	def contains_term(self,term):
 		return any((constraint.contains_term(term) for constraint in self.constraints))
+
+	#Returns True if this conjunction contains a 0=1 constraint
+	def is_contradiction(self):
+		self._check_frozen()
+
+		res=False
+		for constraint in self.constraints:
+			if constraint.is_contradiction():
+				res=True
+				break
+
+		return res
 
 	def add_constraint(self,constraint):
 		self._check_mutate()
@@ -1737,6 +1763,19 @@ class SparseDisjunction(IEGenObject):
 
 		return projected_out
 
+	def remove_contradictions(self):
+		self._check_mutate()
+
+		#Remove 'empty' conjunctions: i.e. conjunctions that have
+		# a 0=1 constraint and represent an empty set of integer tuples
+		self._conjunctions=[conjunction for conjunction in self.conjunctions if not conjunction.is_contradiction()]
+
+		#If all conjunctions were removed, add one back that has the single constraint 0=1
+		if 0==len(self):
+			conj=SparseConjunction(constraints=[SparseEquality(sparse_exp=SparseExp({ConstantCol():-1}))])
+			conj.freeze()
+			self._conjunctions=[conj]
+
 	def bounds(self,var_col):
 		return tuple([conjunction.bounds(var_col) for conjunction in self.conjunctions])
 
@@ -1749,6 +1788,8 @@ class SparseDisjunction(IEGenObject):
 			#Freeze each conjunction in the disjunction
 			for conjunction in self.conjunctions:
 				conjunction.freeze()
+
+			self.remove_contradictions()
 
 			self._conjunctions.sort()
 			self._conjunctions=frozenset(self.conjunctions)

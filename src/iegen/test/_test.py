@@ -492,6 +492,27 @@ class SetTestCase(TestCase):
 
 		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
 
+	def testSimplifyRemoveFalse1(self):
+		from iegen import Set
+
+		set=Set('{[a]: a=5}')
+		set=set.union(Set('{[a]: 5=6}'))
+		set=set.union(Set('{[a]: a=6}'))
+
+		set_res=Set('{[a]: a=5}').union(Set('{[a]: a=6}'))
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyRemoveFalse2(self):
+		from iegen import Set
+
+		set=Set('{[a]: 5=6 and a=10}')
+		set=set.union(Set('{[a]: 5=6}'))
+
+		set_res=Set('{[a]: 0=1}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
 	def testSimplifyReplaceInFunction1(self):
 		from iegen import Set
 
@@ -1214,6 +1235,27 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
 
+	def testSimplifyRemoveFalse1(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: a=5}')
+		rel=rel.union(Relation('{[a]->[b]: 5=6}'))
+		rel=rel.union(Relation('{[a]->[b]: a=6}'))
+
+		rel_res=Relation('{[a]->[b]: a=5}').union(Relation('{[a]->[b]: a=6}'))
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyRemoveFalse2(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: 5=6 and a=10}')
+		rel=rel.union(Relation('{[a]->[b]: 5=6}'))
+
+		rel_res=Relation('{[a]->[b]: 0=1}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
 	def testSimplifyReplaceInFunction1(self):
 		from iegen import Relation
 
@@ -1554,6 +1596,18 @@ class RelationTestCase(TestCase):
 		composed=relation1.compose(relation2)
 
 		composed_res=Relation('{[c,d]->[b,c0]}')
+
+		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
+
+	def testComposeReal1(self):
+		from iegen import Relation
+
+		sched=Relation('{[c0,s0,c1,j,c2]->[s,i]: s=s0 and c1=1 and i=j and c2=0 and c0=0}')
+		ar=Relation('{[s,i]->[k]: k=inter1(i)}')
+
+		composed=ar.compose(sched)
+
+		composed_res=Relation('{[c0,s0,c1,j,c2]->[k]: c0=0 and c1=1 and c2=0 and k=inter1(j)}')
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
