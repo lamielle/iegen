@@ -567,6 +567,24 @@ class SetTestCase(TestCase):
 
 		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
 
+	def testSimplifyEmpty1(self):
+		from iegen import Set
+
+		set=Set('{[a]: a=0 and a=1}')
+
+		set_res=Set('{[a]: 0=1}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyEmpty2(self):
+		from iegen import Set
+
+		set=Set('{[a]: a=1 and a=c}')
+
+		set_res=Set('{[a]: a=1}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
 	# End simplification tests
 	#----------------------------------------
 
@@ -1307,6 +1325,24 @@ class RelationTestCase(TestCase):
 		iegen.simplify.unregister_inverse_pair('g')
 
 		rel_res=Relation('{[a,b]->[c,d]: 11b=13f(17g_inv(2a+3b-7c))}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyEmpty1(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: a=0 and a=1}')
+
+		rel_res=Relation('{[a]->[b]: 0=1}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyEmpty2(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: a=1 and a=c}')
+
+		rel_res=Relation('{[a]->[b]: a=1}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
 

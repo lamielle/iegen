@@ -844,6 +844,9 @@ class SparseExpColumnType(IEGenObject):
 	def is_function(self):
 		return False
 
+	def is_tuple_var(self):
+		return False
+
 class SparseExpNameColumnType(SparseExpColumnType):
 	__slots__=('name','_mem_hash')
 
@@ -913,6 +916,9 @@ class TupleVarCol(SparseExpColumnType):
 
 	def exp_str(self):
 		return self.name
+
+	def is_tuple_var(self):
+		return True
 
 class SymbolicCol(SparseExpColumnType):
 	__slots__=('sym',)
@@ -1209,6 +1215,9 @@ class SparseConstraint(IEGenObject):
 	def __ne__(self,other):
 		return not self==other
 
+	def __len__(self):
+		return len(self.sparse_exp)
+
 	def __repr__(self):
 		return '%s(%s)'%(self.__class__.__name__,self.sparse_exp.exp)
 
@@ -1355,7 +1364,7 @@ class SparseEquality(SparseConstraint):
 
 	def is_contradiction(self):
 		res=False
-		if len(self.sparse_exp)==1:
+		if len(self)==1:
 			if ConstantCol() in self.sparse_exp.exp:
 				res=True
 
@@ -1593,14 +1602,60 @@ class SparseConjunction(IEGenObject):
 			self.add_constraint(constraint)
 
 	def remove_empty_constraints(self):
-		self._constraints=[constraint for constraint in self.constraints if len(constraint.sparse_exp.exp)>0]
+		self._constraints=[constraint for constraint in self.constraints if len(constraint)>0]
 
 	def remove_true_constraints(self):
 		constraints=list(self.constraints)
 		for constraint in constraints:
-			if 1==len(constraint.sparse_exp.exp) and constraint.contains_term(ConstantCol()):
+			if 1==len(constraint) and constraint.contains_term(ConstantCol()):
 				if constraint.sparse_exp.exp[ConstantCol()]>=0:
 					self.remove_constraint(constraint)
+
+	def remove_all_if_empty(self):
+		is_empty=False
+
+		#Map of tuple vars to constants they are equal to
+		var_const_map=defaultdict(set)
+
+		#Look at each constraint
+		for constraint in self.constraints:
+			#Only consider equalities
+			if constraint.is_equality():
+				#Only consider equalities with one or two terms
+				#Does the constraint have a single term?
+				if len(constraint)==1:
+					tuple_vars=[term for term,coeff in constraint.sparse_exp.exp.iteritems() if term.is_tuple_var()]
+
+					#If the constraint contains exactly one tuple variable
+					if 1==len(tuple_vars):
+						#Get the tuple var
+						tuple_var=tuple_vars[0]
+
+						#Record the fact that it is equal to 0
+						var_const_map[tuple_var].add(0)
+				#Does the constraint have two terms?
+				elif len(constraint)==2:
+					tuple_vars=[(term,coeff) for term,coeff in constraint.sparse_exp.exp.iteritems() if term.is_tuple_var()]
+
+					#If the constraint contains exactly one tuple variable
+					if 1==len(tuple_vars):
+						#Get the tuple vari
+						tuple_var,coeff=tuple_vars[0]
+
+						#If the constraint contains exactly one tuple variable
+						if 1==abs(coeff):
+							#If the other term is a constant
+							if ConstantCol() in constraint.sparse_exp.exp:
+								var_const_map[tuple_var].add(coeff*constraint.sparse_exp.exp[ConstantCol()])
+
+		#If any tuple variable is equal to more than one constant,
+		# this constraint is empty
+		is_empty=any((len(consts)>1 for consts in var_const_map.itervalues()))
+
+		#If we found a tuple variable equal to two different constants
+		if is_empty:
+			#Define a single constraint to be only 0=1
+			self._constraints=[SparseEquality(sparse_exp=SparseExp({ConstantCol():-1}))]
 
 	def simplify(self):
 		self._check_mutate()
@@ -1616,6 +1671,10 @@ class SparseConjunction(IEGenObject):
 		# constant >=0
 		# where constant is >=0 itself
 		self.remove_true_constraints()
+
+		#Remove all constraints and replace with a 0=1 constraint IF
+		# we find a pair of equalities such as v=0 and v=1
+		self.remove_all_if_empty()
 
 		#Discover equalities
 		self.discover_equalities()
