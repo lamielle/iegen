@@ -847,6 +847,9 @@ class SparseExpColumnType(IEGenObject):
 	def is_tuple_var(self):
 		return False
 
+	def is_free_var(self):
+		return False
+
 class SparseExpNameColumnType(SparseExpColumnType):
 	__slots__=('name','_mem_hash')
 
@@ -875,6 +878,9 @@ class FreeVarCol(SparseExpNameColumnType):
 			name=new_var_names[self.name]
 
 		return FreeVarCol(name)
+
+	def is_free_var(self):
+		return True
 
 class ConstantCol(SparseExpNameColumnType):
 	def __init__(self):
@@ -1330,8 +1336,8 @@ class SparseConstraint(IEGenObject):
 				#Only consider function terms that:
 				#-Have a coefficient of 1
 				#-Have an inverse
-				#-Have a single argument
-				if 1==abs(function_coeff) and function_term.name in iegen.simplify.inverse_pairs() and 1==len(function_term.args):
+				#-Have a single argument that is a free variable
+				if 1==abs(function_coeff) and function_term.name in iegen.simplify.inverse_pairs() and 1==len(function_term.args) and list(function_term.args[0])[0][0].is_free_var():
 					new_exp=SparseExp()
 					new_arg=SparseExp()
 
