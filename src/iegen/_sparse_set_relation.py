@@ -1326,6 +1326,7 @@ class SparseConstraint(IEGenObject):
 	def simplify(self):
 		self.sparse_exp.simplify()
 		self.inverse_simplify()
+		self.remove_function_simplify()
 
 	#Inverse simplification
 	def inverse_simplify(self):
@@ -1358,6 +1359,33 @@ class SparseConstraint(IEGenObject):
 
 					#Set the new expression for this constraint to the new expression
 					self.sparse_exp=new_exp
+
+	#Converts f(i)=f(j) -> i=j if f has an inverse
+	def remove_function_simplify(self):
+		#Only consider equality constraints
+		if self.is_equality():
+			#If this equality has two terms
+			if 2==len(self):
+				#Get the terms of this constraint that are functions
+				function_terms=list(self.function_terms())
+
+				#If both terms are functions
+				if 2==len(function_terms):
+					f1,f1_coeff=function_terms[0]
+					f2,f2_coeff=function_terms[1]
+
+					#If both functions:
+					#-have the same name
+					#-the function has a known inverse
+					#-have 1/-1 coefficients
+					#-are on opposite sides of the equality
+					#-have only one argument each
+					if f1.name==f2.name and f1.name in iegen.simplify.inverse_pairs() and 1==abs(f1_coeff) and 1==abs(f2_coeff) and f1_coeff==-1*f2_coeff and 1==len(f1.args) and 1==len(f2.args):
+						f1_arg,f1_arg_coeff=list(f1.args[0])[0]
+						f2_arg,f2_arg_coeff=list(f2.args[0])[0]
+
+						#Create the constraint f1.args = f2.args instead
+						self.sparse_exp=SparseExp({f1_arg:f1_arg_coeff,f2_arg:-1*f2_arg_coeff})
 
 #Class representing a sparse equality constraint
 class SparseEquality(SparseConstraint):
