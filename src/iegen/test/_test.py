@@ -591,6 +591,34 @@ class SetTestCase(TestCase):
 
 		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
 
+	def testSimplifyInverseFunction6(self):
+		from iegen import Set
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('f')
+		iegen.simplify.register_inverse_pair('g')
+		set=Set('{[a,b]: f(a)=g(b)}')
+		iegen.simplify.unregister_inverse_pair('f')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		set_res=Set('{[a,b]: b=g_inv(f(a))}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
+	def testSimplifyInverseFunction7(self):
+		from iegen import Set
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('f')
+		iegen.simplify.register_inverse_pair('g')
+		set=Set('{[a,b]: f(b)=g(a)}')
+		iegen.simplify.unregister_inverse_pair('f')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		set_res=Set('{[a,b]: b=f_inv(g(a))}')
+
+		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
+
 	def testSimplifyEmpty1(self):
 		from iegen import Set
 
@@ -1373,6 +1401,34 @@ class RelationTestCase(TestCase):
 		iegen.simplify.unregister_inverse_pair('g')
 
 		rel_res=Relation('{[a]->[b]: a=b}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyInverseFunction6(self):
+		from iegen import Relation
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('f')
+		iegen.simplify.register_inverse_pair('g')
+		rel=Relation('{[a]->[b]: f(a)=g(b)}')
+		iegen.simplify.unregister_inverse_pair('f')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		rel_res=Relation('{[a]->[b]: b=g_inv(f(a))}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyInverseFunction7(self):
+		from iegen import Relation
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('f')
+		iegen.simplify.register_inverse_pair('g')
+		rel=Relation('{[a]->[b]: f(b)=g(a)}')
+		iegen.simplify.unregister_inverse_pair('f')
+		iegen.simplify.unregister_inverse_pair('g')
+
+		rel_res=Relation('{[a]->[b]: b=f_inv(g(a))}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
 

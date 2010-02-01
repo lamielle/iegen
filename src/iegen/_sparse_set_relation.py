@@ -1327,6 +1327,7 @@ class SparseConstraint(IEGenObject):
 		self.sparse_exp.simplify()
 		self.inverse_simplify()
 		self.remove_function_simplify()
+		self.move_function_simplify()
 
 	#Inverse simplification
 	def inverse_simplify(self):
@@ -1362,30 +1363,69 @@ class SparseConstraint(IEGenObject):
 
 	#Converts f(i)=f(j) -> i=j if f has an inverse
 	def remove_function_simplify(self):
-		#Only consider equality constraints
-		if self.is_equality():
-			#If this equality has two terms
-			if 2==len(self):
-				#Get the terms of this constraint that are functions
-				function_terms=list(self.function_terms())
+		#Only consider equalities with 2 constraints
+		if self.is_equality() and 2==len(self):
+			#Get the terms of this constraint that are functions
+			function_terms=list(self.function_terms())
 
-				#If both terms are functions
-				if 2==len(function_terms):
-					f1,f1_coeff=function_terms[0]
-					f2,f2_coeff=function_terms[1]
+			#If both terms are functions
+			if 2==len(function_terms):
+				f1,f1_coeff=function_terms[0]
+				f2,f2_coeff=function_terms[1]
 
-					#If both functions:
-					#-have the same name
-					#-the function has a known inverse
-					#-have 1/-1 coefficients
-					#-are on opposite sides of the equality
-					#-have only one argument each
-					if f1.name==f2.name and f1.name in iegen.simplify.inverse_pairs() and 1==abs(f1_coeff) and 1==abs(f2_coeff) and f1_coeff==-1*f2_coeff and 1==len(f1.args) and 1==len(f2.args):
-						f1_arg,f1_arg_coeff=list(f1.args[0])[0]
-						f2_arg,f2_arg_coeff=list(f2.args[0])[0]
+				#If both functions:
+				#-have the same name
+				#-the function has a known inverse
+				#-have 1/-1 coefficients
+				#-are on opposite sides of the equality
+				#-have only one argument each
+				if f1.name==f2.name and f1.name in iegen.simplify.inverse_pairs() and 1==abs(f1_coeff) and 1==abs(f2_coeff) and f1_coeff==-1*f2_coeff and 1==len(f1.args) and 1==len(f2.args):
+					f1_arg,f1_arg_coeff=list(f1.args[0])[0]
+					f2_arg,f2_arg_coeff=list(f2.args[0])[0]
 
-						#Create the constraint f1.args = f2.args instead
-						self.sparse_exp=SparseExp({f1_arg:f1_arg_coeff,f2_arg:-1*f2_arg_coeff})
+					#Create the constraint f1.args = f2.args instead
+					self.sparse_exp=SparseExp({f1_arg.copy():f1_arg_coeff,f2_arg.copy():-1*f2_arg_coeff})
+
+	#Converts f(i)=g(j) -> i=f_inv(g(j)) if the inverse of f is f_inv
+	#Also, the tuple variable with the 'largest' position will be i in the above example
+	def move_function_simplify(self):
+		#Only consider equalities with 2 constraints
+		if self.is_equality() and 2==len(self):
+			#Get the terms of this constraint that are functions
+			function_terms=list(self.function_terms())
+
+			#If both terms are functions
+			if 2==len(function_terms):
+				f1,f1_coeff=function_terms[0]
+				f2,f2_coeff=function_terms[1]
+
+				#If both functions:
+				#-have 1/-1 coefficients
+				#-are on opposite sides of the equality
+				#-have only one argument each
+				#-each argument has only a single term
+				if 1==abs(f1_coeff) and 1==abs(f2_coeff) and f1_coeff==-1*f2_coeff and 1==len(f1.args) and 1==len(f2.args) and 1==len(f1.args[0]) and 1==len(f2.args[0]):
+					#Get each function's single term argument
+					f1_arg,f1_arg_coeff=list(f1.args[0])[0]
+					f2_arg,f2_arg_coeff=list(f2.args[0])[0]
+
+					#If both arguments are tuple variables
+					if f1_arg.is_tuple_var() and f2_arg.is_tuple_var():
+						move=False
+
+						if f1_arg.pos>f2_arg.pos and f1.name in iegen.simplify.inverse_pairs():
+							move=True
+						elif f2_arg.pos>f1_arg.pos and f2.name in iegen.simplify.inverse_pairs():
+							move=True
+							f1,f2=f2,f1
+							f1_coeff,f2_coeff=f2_coeff,f1_coeff
+							f1_arg,f2_arg=f2_arg,f1_arg
+							f1_arg_coeff,f2_arg_coeff=f2_arg_coeff,f1_arg_coeff
+
+						if move:
+							lhs=f1_arg.copy()
+							rhs=UFCall(iegen.simplify.inverse_pairs()[f1.name],[SparseExp({f2.copy():1})])
+							self.sparse_exp=SparseExp({lhs:1,rhs:-1})
 
 #Class representing a sparse equality constraint
 class SparseEquality(SparseConstraint):
