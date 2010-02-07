@@ -203,6 +203,29 @@ class SetTestCase(TestCase):
 		self.failIf(set_copy is set,'Copy returns same Set instance')
 		self.failUnless(set_copy==set,'%s!=%s'%(set_copy,set))
 
+	def testCopyCollapse(self):
+		from iegen import Set
+
+		set=Set('{[a,b]: b=f(g(a))}').copy(collapse=[('f','g')])
+
+		set_res=Set('{[a,b]: b=f_g(a)}')
+
+		self.failUnless(set_res==set,'%s!=%s'%(set_res,set))
+
+	def testContainsNest1(self):
+		from iegen import Set
+
+		set=Set('{[a,b]: b=f(g(a))}')
+
+		self.failUnless(set.contains_nest(('f','g')),'%s does not contain nest %s'%(set,('f','g')))
+
+	def testContainsNest2(self):
+		from iegen import Set
+
+		set=Set('{[a,b]: b=f(g(a))}')
+
+		self.failIf(set.contains_nest(('f','h')),'%s contains nest %s'%(set,('f','h')))
+
 	def testSimpleFunction(self):
 		from iegen import Set
 
@@ -257,12 +280,12 @@ class SetTestCase(TestCase):
 
 		set1=Set('{[a,b,c]: a=b and c>10}',freeze=False)
 
-		self.failUnless(1==len(set1.disjunction),'Set does not have exactly one conjunction')
-		self.failUnless(2==len(list(set1.disjunction.conjunctions)[0]),'Set conjunction does not have exactly two constraints')
+		self.failUnless(1==len(set1),'Set does not have exactly one conjunction')
+		self.failUnless(2==len(list(set1.disjunction)[0]),'Set conjunction does not have exactly two constraints')
 
 		set1.clear()
 
-		self.failUnless(0==len(set1.disjunction),'Set does not have exactly zero conjunctions')
+		self.failUnless(0==len(set1),'Set does not have exactly zero conjunctions')
 
 	@raises(ValueError)
 	def testModifyFrozen1(self):
@@ -711,7 +734,7 @@ class SetTestCase(TestCase):
 
 		set3=set1.union(set2)
 
-		self.failUnless(1==len(set3.disjunction),'Unioned set should have exactly one conjunction')
+		self.failUnless(1==len(set3),'Unioned set should have exactly one conjunction')
 		self.failUnless(set3==set1,'%s!=%s'%(set3,set1))
 		self.failUnless(set2==set1,'%s!=%s'%(set2,set1))
 
@@ -729,7 +752,7 @@ class SetTestCase(TestCase):
 		res_union.add_conjunction(res_union.get_conjunction([res_union.get_equality({res_union.get_column('a'):1,res_union.get_constant_column():-10}),res_union.get_equality({res_union.get_column('b'):1,res_union.get_constant_column():-10})]))
 		res_union.freeze()
 
-		self.failUnless(2==len(set_union.disjunction),'Unioned set should have exactly two conjunctions')
+		self.failUnless(2==len(set_union),'Unioned set should have exactly two conjunctions')
 		self.failUnless(set_union==res_union,'%s!=%s'%(set_union,res_union))
 
 		set1=Set('{[a,b]: a=b}')
@@ -742,7 +765,7 @@ class SetTestCase(TestCase):
 		res_union.add_conjunction(res_union.get_conjunction([res_union.get_equality({res_union.get_column('a'):1,res_union.get_column('b'):-1})]))
 		res_union.freeze()
 
-		self.failUnless(1==len(set_union.disjunction),'Unioned set should have exactly one conjunction')
+		self.failUnless(1==len(set_union),'Unioned set should have exactly one conjunction')
 		self.failUnless(set_union==res_union,'%s!=%s'%(set_union,res_union))
 
 	def testUnionStr(self):
@@ -1140,6 +1163,29 @@ class RelationTestCase(TestCase):
 		self.failIf(rel_copy is rel,'Copy returns same Relation instance')
 		self.failUnless(rel_copy==rel,'%s!=%s'%(rel_copy,rel))
 
+	def testCopyCollapse(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: b=f(g(a))}').copy(collapse=[('f','g')])
+
+		rel_res=Relation('{[a]->[b]: b=f_g(a)}')
+
+		self.failUnless(rel_res==rel,'%s!=%s'%(rel_res,rel))
+
+	def testContainsNest1(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: b=f(g(a))}')
+
+		self.failUnless(rel.contains_nest(('f','g')),'%s does not contain nest %s'%(rel,('f','g')))
+
+	def testContainsNest2(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: b=f(g(a))}')
+
+		self.failIf(rel.contains_nest(('f','h')),'%s contains nest %s'%(rel,('f','h')))
+
 	def testSimpleFunction(self):
 		from iegen import Relation
 
@@ -1194,12 +1240,12 @@ class RelationTestCase(TestCase):
 
 		rel=Relation('{[a]->[b,c]: a=b and c>10}',freeze=False)
 
-		self.failUnless(1==len(rel.disjunction),'Relation does not have exactly one conjunction')
-		self.failUnless(2==len(list(rel.disjunction.conjunctions)[0]),'Relation conjunction does not have exactly two constraints')
+		self.failUnless(1==len(rel),'Relation does not have exactly one conjunction')
+		self.failUnless(2==len(list(rel.disjunction)[0]),'Relation conjunction does not have exactly two constraints')
 
 		rel.clear()
 
-		self.failUnless(0==len(rel.disjunction),'Relation does not have exactly zero conjunctions')
+		self.failUnless(0==len(rel),'Relation does not have exactly zero conjunctions')
 
 	@raises(ValueError)
 	def testModifyFrozen1(self):
@@ -1525,7 +1571,7 @@ class RelationTestCase(TestCase):
 
 		rel3=rel1.union(rel2)
 
-		self.failUnless(1==len(rel3.disjunction),'Unioned relation should have exactly one conjunction')
+		self.failUnless(1==len(rel3),'Unioned relation should have exactly one conjunction')
 		self.failUnless(rel3==rel1,'%s!=%s'%(rel3,rel1))
 		self.failUnless(rel2==rel1,'%s!=%s'%(rel2,rel1))
 
@@ -1543,7 +1589,7 @@ class RelationTestCase(TestCase):
 		res_union.add_conjunction(res_union.get_conjunction([res_union.get_equality({res_union.get_column('a'):1,res_union.get_constant_column():-10}),res_union.get_equality({res_union.get_column('b'):1,res_union.get_constant_column():-10})]))
 		res_union.freeze()
 
-		self.failUnless(2==len(rel_union.disjunction),'Unioned relation should have exactly two conjunctions')
+		self.failUnless(2==len(rel_union),'Unioned relation should have exactly two conjunctions')
 		self.failUnless(rel_union==res_union,'%s!=%s'%(rel_union,res_union))
 
 		rel1=Relation('{[a]->[b]: a=b}')
@@ -1556,7 +1602,7 @@ class RelationTestCase(TestCase):
 		res_union.add_conjunction(res_union.get_conjunction([res_union.get_equality({res_union.get_column('a'):1,res_union.get_column('b'):-1})]))
 		res_union.freeze()
 
-		self.failUnless(1==len(rel_union.disjunction),'Unioned relation should have exactly one conjunction')
+		self.failUnless(1==len(rel_union),'Unioned relation should have exactly one conjunction')
 		self.failUnless(rel_union==res_union,'%s!=%s'%(rel_union,res_union))
 
 	def testUnionStr(self):
