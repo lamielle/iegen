@@ -872,7 +872,7 @@ class SparseExpNameColumnType(SparseExpColumnType):
 	def __repr__(self):
 		return "%s(%s)"%(self.__class__.__name__,repr(self.name))
 
-	def exp_str(self):
+	def exp_str(self,**kwargs):
 		return self.name
 
 class FreeVarCol(SparseExpNameColumnType):
@@ -929,7 +929,7 @@ class TupleVarCol(SparseExpColumnType):
 
 		return TupleVarCol(pos,name)
 
-	def exp_str(self):
+	def exp_str(self,**kwargs):
 		return self.name
 
 	def is_tuple_var(self):
@@ -953,7 +953,7 @@ class SymbolicCol(SparseExpColumnType):
 	def copy(self,**kwargs):
 		return SymbolicCol(self.sym)
 
-	def exp_str(self):
+	def exp_str(self,**kwargs):
 		return self.sym.name
 
 #Represents an instance of an uninterpreted function call
@@ -976,8 +976,20 @@ class UFCall(SparseExpColumnType):
 		return '%s(%s,%s)'%(self.__class__.__name__,repr(self.name),repr(self.args))
 
 	def __str__(self):
+		return self.value_string()
+
+	def value_string(self,function_name_map=None):
+		if function_name_map is None:
+			function_name_map={}
+
 		arg_strs=[str(arg) for arg in self.args]
-		return '%s(%s)'%(self.name,','.join(arg_strs))
+
+		name_start=self.name+'('
+		name_end=')'
+		if self.name in function_name_map:
+			name_start,name_end=function_name_map[self.name]
+
+		return '%s%s%s'%(name_start,','.join(arg_strs),name_end)
 
 	def get_function_names(self):
 		function_names=[function_name for arg in self.args for function_name in arg.get_function_names()]
@@ -1019,8 +1031,8 @@ class UFCall(SparseExpColumnType):
 
 		return UFCall(copy_name,copy_args)
 
-	def exp_str(self):
-		return str(self)
+	def exp_str(self,function_name_map=None,**kwargs):
+		return self.value_string(function_name_map)
 
 # End SparseExpColumnType classes
 #--------------------------------------------------
@@ -1070,6 +1082,12 @@ class SparseExp(IEGenObject):
 		return '%s(%s)'%(self.__class__.__name__,repr(self.exp))
 
 	def __str__(self):
+		return self.value_string()
+
+	def value_string(self,function_name_map=None):
+		if function_name_map is None:
+			function_name_map={}
+
 		term_strs=[]
 
 		#If there are no terms, just return '0'
@@ -1084,9 +1102,9 @@ class SparseExp(IEGenObject):
 				else:
 					#If the coefficient is not 0, add it to the list of expression strings
 					if 1==coeff:
-						term_strs.append('%s'%(term.exp_str()))
+						term_strs.append('%s'%(term.exp_str(function_name_map=function_name_map)))
 					else:
-						term_strs.append('%s%s'%(coeff,term.exp_str()))
+						term_strs.append('%s%s'%(coeff,term.exp_str(function_name_map=function_name_map)))
 
 			#Return a string for the sum of all expression strings
 			return '+'.join(term_strs)
