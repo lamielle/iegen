@@ -55,12 +55,12 @@ def gen_index_array(index_array):
 
 	#Calculate the size of this index array
 	#Assumes only one set in the union...
-	if 1!=len(input_bounds.sets): raise ValueError("IndexArray's input bounds have multiple terms in the disjunction")
+	if 1!=len(input_bounds): raise ValueError("IndexArray's input bounds have multiple terms in the disjunction")
 	#Assumes the index array dataspace is 1D...
-	if 1!=input_bounds.sets[0].arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
+	if 1!=input_bounds.arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
 
 	#Get the single tuple variable's name
-	var_name=input_bounds.sets[0].tuple_set.vars[0].id
+	var_name=input_bounds.tuple_set[0]
 
 	#Get the string that calculates the size of the ER at runtime
 	size_string=calc_size_string(input_bounds,var_name)
@@ -76,8 +76,7 @@ def gen_tuple_vars_decl(set):
 	from iegen.codegen import VarDecl
 
 	var_decl=VarDecl('int')
-	for set in set.sets:
-		for var in set.tuple_set.vars:
-			var_decl.var_names.append(var.id)
+	var_decl.var_names.extend(set.tuple_set)
+
 	return [var_decl]
 #-------------------------------------------------------

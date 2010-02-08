@@ -90,14 +90,14 @@ def gen_inverse_er_spec(er_spec):
 def gen_explicit_er_union_1d(er_spec,mapir):
 	from iegen.codegen import Statement,Comment
 
-	if 0==len(er_spec.relation.relations): raise ValueError("ESpec's relation has no terms in the disjunction")
+	if 0==len(er_spec.relation): raise ValueError("ESpec's relation has no terms in the disjunction")
 	if (1,1)!=er_spec.relation.arity(): raise ValueError("ESpec's relation must have arity (1,1)")
 
 	iegen.print_progress("Generating code for ERSpec '%s'..."%(er_spec.name))
 	iegen.print_detail(er_spec)
 
-	var_in_name=er_spec.relation.relations[0].tuple_in.vars[0].id
-	var_out_name=er_spec.relation.relations[0].tuple_out.vars[0].id
+	var_in_name=er_spec.relation.tuple_in[0]
+	var_out_name=er_spec.relation.tuple_out[0]
 
 	stmts=[]
 	stmts.append(Comment('Creation of ER_U1D for abstract relation:'))
@@ -185,9 +185,9 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 	# Currently it just generates code for explicit functions
 	#TODO: Generalize the bounds expression calculations to handle
 	# more than a single expression (with min/max)
-	var_name=output_er_spec.input_bounds.sets[0].tuple_set.vars[0].id
-	lower_bound=str(output_er_spec.input_bounds.lower_bound(var_name)[0])
-	upper_bound=str(output_er_spec.input_bounds.upper_bound(var_name)[0])
+	var_name=output_er_spec.input_bounds.tuple_set[0]
+	lower_bound=str(list(output_er_spec.input_bounds.lower_bounds(var_name)[0])[0])
+	upper_bound=str(list(output_er_spec.input_bounds.upper_bounds(var_name)[0])[0])
 	stmts.append(Comment('Creation of ExplicitFunction for abstract relation:'))
 	stmts.append(Comment(str(output_er_spec.relation)))
 	stmts.append(Comment('Bounds for set %s'%(output_er_spec.input_bounds)))

@@ -190,9 +190,12 @@ class Statement(object):
 def codegen(statements):
 	#Process the statements
 	iters=statements[0].domain.tuple_vars
-	for statement in statements[1:]:
-		if statement.domain.tuple_vars!=iters:
-			raise ValueError("Statements's domains do not have the same iterator names: %s!=%s"%(curr_iters,iters))
+
+	#This previously checked that all iterators had the same names.
+	#It isn't strictly necessary, and thus has been commented out for now
+	#for statement in statements[1:]:
+	#	if statement.domain.tuple_vars!=iters:
+	#		raise ValueError("Statements's domains do not have the same iterator names: %s!=%s"%(statement.domain.tuple_vars,iters))
 
 	#Collect the params from all domain/scatter fields in all statements
 	params=[symbolic for statement in statements for symbolic in statement.domain.symbolics]

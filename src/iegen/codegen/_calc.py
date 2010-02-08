@@ -162,8 +162,6 @@ def calc_update_access_relations(mapir):
 
 #Un-updates access relations following the computation phase
 def calc_unupdate_access_relations(mapir):
-	from iegen.ast.visitor import RenameVisitor
-
 	iegen.print_progress('Un-updating access relations...')
 
 	#Update each access relation's iteration to data relation to
@@ -178,7 +176,7 @@ def calc_unupdate_access_relations(mapir):
 			access_relation.iter_to_data=access_relation.iter_to_data.compose(statement.scatter)
 
 			#Rename the input tuple variables to match the statement's iteration space
-			RenameVisitor(calc_access_relation_rename(access_relation.iter_to_data,statement.iter_space)).visit(access_relation.iter_to_data)
+			access_relation.iter_to_data=access_relation.iter_to_data.copy(new_var_names=calc_access_relation_rename(access_relation.iter_to_data,statement.iter_space))
 
 			iegen.print_modified("Un-updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
 
@@ -188,13 +186,13 @@ def calc_access_relation_rename(access_relation,iter_space):
 	if access_relation.arity_in()!=iter_space.arity():
 		raise ValueError('Input arity of access relation (%d) is not equal to arity of iteration space (%d).'%(access_relation.arity_in(),iter_space.arity()))
 
-	from_vars=access_relation.relations[0].tuple_in.vars
-	to_vars=iter_space.sets[0].tuple_set.vars
+	from_vars=access_relation.tuple_in
+	to_vars=iter_space.tuple_set
 
 	rename={}
 
 	for i in xrange(len(from_vars)):
-		rename[from_vars[i].id]=to_vars[i].id
+		rename[from_vars[i]]=to_vars[i]
 
 	return rename
 #-----------------------------------------------------------
@@ -265,28 +263,24 @@ def calc_size_string(set,var_name):
 #If raw_array is True, accesses to arrays (functions) will not be treated as explicit relation lookups
 def calc_equality_value(var_name,formula,mapir,raw_array=False):
 	import iegen
-	from iegen.ast.visitor import FindConstraintVisitor,ValueStringVisitor
-	from iegen.ast import Equality,NormExp
 
 	iegen.print_detail("Calculating equality value for tuple variable '%s' in relation %s"%(var_name,formula))
 
-	values=FindConstraintVisitor(Equality,var_name).visit(formula).var_constraints
+	bounds=formula.bounds(var_name)
 
-	if 0==len(values): raise ValueError("Tuple variable '%s' is not involved in any equality constraints in formula '%s'"%(var_name,formula))
-	if len(values)>1: raise ValueError("Tuple variable '%s' is equal to multiple values in formula '%s'"%(var_name,formula))
+	if 0==len(bounds): raise ValueError("Tuple variable '%s' is not involved in any equality constraints in formula '%s'"%(var_name,formula))
+	if len(bounds)>1: raise ValueError("Tuple variable '%s' is equal to multiple values in formula '%s'"%(var_name,formula))
 
-	value=values[0]
+	lower_bounds,upper_bounds=bounds[0]
 
-	var=value[0]
-	exp=value[1].exp
+	if 1!=len(lower_bounds) or 1!=len(upper_bounds): raise ValueError("TupleVariable '%s' is not equal to exactly one value in formula '%s'"%(var_name,formula))
+	if lower_bounds!=upper_bounds: raise ValueError("TupleVariable '%s' is not equal to one value in formula '%s'"%(var_name,formula))
 
-	if var.coeff>0:
-		var=NormExp([],-1)*NormExp([var],0)
-		exp=NormExp([],-1)*exp
-	else:
-		var=NormExp([var],0)
+	equal_value=list(lower_bounds)[0]
 
-	value=exp-var
+	function_name_map={}
+	for er_spec in mapir.get_er_specs():
+		function_name_map[er_spec.name]=('EF_get(%s,'%(er_spec.get_var_name()),')')
 
-	return ValueStringVisitor(mapir,raw_array).visit(value).value
+	return equal_value.value_string(function_name_map=function_name_map)
 #---------------------------------------------------

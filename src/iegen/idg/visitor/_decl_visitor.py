@@ -21,7 +21,7 @@ class DeclVisitor(TopoVisitor):
 	def collect_iter_space_vars(self):
 		from iegen.ast.visitor import CollectVarsVisitor
 		for statement in self.mapir.get_statements():
-			self.add_int_vars(statement.iter_space.variables())
+			self.add_int_vars(statement.iter_space.tuple_set)
 
 	def atIDGSymbolic(self,node): pass
 
