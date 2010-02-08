@@ -1361,6 +1361,7 @@ class SparseConstraint(IEGenObject):
 		self.sparse_exp.simplify()
 		self.inverse_simplify()
 		self.remove_function_simplify()
+		self.move_functions_simplify()
 		self.move_function_simplify()
 
 	#Inverse simplification
@@ -1422,7 +1423,7 @@ class SparseConstraint(IEGenObject):
 
 	#Converts f(i)=g(j) -> i=f_inv(g(j)) if the inverse of f is f_inv
 	#Also, the tuple variable with the 'largest' position will be i in the above example
-	def move_function_simplify(self):
+	def move_functions_simplify(self):
 		#Only consider equalities with 2 constraints
 		if self.is_equality() and 2==len(self):
 			#Get the terms of this constraint that are functions
@@ -1460,6 +1461,39 @@ class SparseConstraint(IEGenObject):
 							lhs=f1_arg.copy()
 							rhs=UFCall(iegen.simplify.inverse_pairs()[f1.name],[SparseExp({f2.copy():1})])
 							self.sparse_exp=SparseExp({lhs:1,rhs:-1})
+
+	def move_function_simplify(self):
+		#Only consider equalities with 2 constraints
+		if self.is_equality() and 2==len(self):
+			terms=list(self)
+			term1,term1_coeff=terms[0]
+			term2,term2_coeff=terms[1]
+
+			#If one term is a function and the other is a tuple variable
+			if (term1.is_tuple_var() and term2.is_function()) or (term1.is_function() and term2.is_tuple_var()):
+				if term1.is_function():
+					function,function_coeff=term1,term1_coeff
+					tuple_var,tuple_var_coeff=term2,term2_coeff
+				else:
+					function,function_coeff=term2,term2_coeff
+					tuple_var,tuple_var_coeff=term1,term1_coeff
+
+				#If both terms:
+				#-have 1/-1 coefficients
+				#-are on opposite sides of the equality
+				if 1==abs(tuple_var_coeff) and 1==abs(function_coeff) and tuple_var_coeff==-1*function_coeff:
+					#If the function has a registered inverse
+					if function.name in iegen.simplify.inverse_pairs():
+						#If the function has a single argument with a single term
+						if 1==len(function.args) and 1==len(function.args[0]):
+							function_arg,function_arg_coeff=list(function.args[0])[0]
+
+							#If that term is a tuple variable with a coefficient of 1
+							# and that tuple variable's position is less that the other tuple variable's position
+							if function_arg.is_tuple_var() and 1==function_arg_coeff and function_arg.pos>tuple_var.pos:
+								new_function=UFCall(iegen.simplify.inverse_pairs()[function.name],[SparseExp({tuple_var.copy():1})])
+								new_tuple_var=function_arg.copy()
+								self.sparse_exp=SparseExp({new_tuple_var:1,new_function:-1})
 
 	def contains_nest(self,nest):
 		return self.sparse_exp.contains_nest(nest)

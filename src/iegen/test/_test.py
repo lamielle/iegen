@@ -598,7 +598,7 @@ class SetTestCase(TestCase):
 		set=Set('{[a,b]: a=g(b)}')
 		iegen.simplify.unregister_inverse_pair('g')
 
-		set_res=Set('{[a,b]: a=g(b)}')
+		set_res=Set('{[a,b]: b=g_inv(a)}')
 
 		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
 
@@ -1434,7 +1434,7 @@ class RelationTestCase(TestCase):
 		rel=Relation('{[a]->[b]: a=g(b)}')
 		iegen.simplify.unregister_inverse_pair('g')
 
-		rel_res=Relation('{[a]->[b]: a=g(b)}')
+		rel_res=Relation('{[a]->[b]: b=g_inv(a)}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
 
