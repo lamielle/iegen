@@ -200,7 +200,7 @@ print a8_1
 print
 print "==== Loop Alignment"
 print "The transformation relation: "
-T_I0_to_I1 = Relation('{[c0, s, c0, i, c0] -> [c0, s, c0, j, c0] : c0=0 && i=sigma(j)}')
+T_I0_to_I1 = Relation('{[c0, s, c0, i, c0] -> [c0, s, c0, j, c0] : c0=0 && j=sigma(i)}')
 T_I0_to_I1 = T_I0_to_I1.union( Relation('{[c0, s, c1, ii, x] -> [c0, s, c1, ii, x] : c0=0 && c1=1}') )
 print "\tT_I0_to_I1 = "
 print T_I0_to_I1
@@ -213,7 +213,7 @@ print "\ta1_2  = a1_1 compose (inverse T_I0_to_I1)"
 #print 'a1_1:',a1_1
 #print 'T_I0_to_I1:',T_I0_to_I1
 #print 'T_I0_to_I1.inverse():',T_I0_to_I1.inverse()
-a1_2 =  a1_1.compose( T_I0_to_I1 )
+a1_2 =  a1_1.compose( T_I0_to_I1.inverse() )
 #print 'a1_1.compose(T_I0_to_I1.inverse())',a1_2
 #print '___END___'
 print 'a1_2 =  a1_1.compose( T_I0_to_I1.inverse() ):'
@@ -227,7 +227,7 @@ print "\ta4_2  = a4_1 compose (inverse T_I0_to_I1)"
 #print 'a4_1:',a4_1
 #print 'T_I0_to_I1:',T_I0_to_I1
 #print 'T_I0_to_I1.inverse():',T_I0_to_I1.inverse()
-a4_2 =  a4_1.compose( T_I0_to_I1 )
+a4_2 =  a4_1.compose( T_I0_to_I1.inverse() )
 #print 'a4_1.compose(T_I0_to_I1.inverse()):',a4_2
 #print '___END___'
 print 'a4_2 =  a4_1.compose( T_I0_to_I1.inverse() ):'
@@ -241,7 +241,7 @@ print "\ta8_2  = a8_1 compose (inverse T_I0_to_I1)"
 #print 'a8_1:',a8_1
 #print 'T_I0_to_I1:',T_I0_to_I1
 #print 'T_I0_to_I1.inverse():',T_I0_to_I1.inverse()
-a8_2 =  a8_1.compose( T_I0_to_I1 )
+a8_2 =  a8_1.compose( T_I0_to_I1.inverse() )
 #print 'a8_1.compose(T_I0_to_I1.inverse()):',a8_2
 #print '___END___'
 print a8_2
