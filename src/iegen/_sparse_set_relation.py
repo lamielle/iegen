@@ -1785,7 +1785,11 @@ class SparseConjunction(IEGenObject):
 		constraints=list(self.constraints)
 		for constraint in constraints:
 			if 1==len(constraint) and ConstantCol() in constraint:
-				if constraint[ConstantCol()]>=0:
+				const_value=constraint[ConstantCol()]
+
+				if constraint.is_equality() and 0==const_value:
+					self.remove_constraint(constraint)
+				elif not constraint.is_equality() and const_value>=0:
 					self.remove_constraint(constraint)
 
 	def remove_all_if_empty(self):

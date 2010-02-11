@@ -660,6 +660,14 @@ class SetTestCase(TestCase):
 
 		self.failUnless(set==set_res,'%s!=%s'%(set,set_res))
 
+	def testSimplifyEmpty3(self):
+		from iegen import Set
+
+		set_string='{[a]: 0=1}'
+		set=Set(set_string)
+
+		self.failUnless(str(set)==set_string,'%s!=%s'%(set,set_string))
+
 	# End simplification tests
 	#----------------------------------------
 
@@ -1495,6 +1503,14 @@ class RelationTestCase(TestCase):
 		rel_res=Relation('{[a]->[b]: a=1}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	def testSimplifyEmpty3(self):
+		from iegen import Relation
+
+		rel_string='{[a]->[b]: 0=1}'
+		rel=Relation(rel_string)
+
+		self.failUnless(str(rel)==rel_string,'%s!=%s'%(rel,rel_string))
 
 	# End simplification tests
 	#----------------------------------------
