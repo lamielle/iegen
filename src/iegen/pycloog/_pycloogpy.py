@@ -178,10 +178,10 @@ class Statement(object):
 		from iegen.util import raise_objs_not_like_types
 		from iegen import Set,Relation
 
-		raise_objs_not_like_types(domain,Set)
+#		raise_objs_not_like_types(domain,Set)
 		self.domain=domain
 
-		if scatter is not None: raise_objs_not_like_types(scatter,Relation)
+#		if scatter is not None: raise_objs_not_like_types(scatter,Relation)
 		self.scatter=scatter
 
 #The only public function of this module
