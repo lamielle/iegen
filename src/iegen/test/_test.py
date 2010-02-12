@@ -1486,6 +1486,22 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
 
+	def testSimplifyInverseFunction8(self):
+		from iegen import Relation
+		import iegen.simplify
+
+		iegen.simplify.register_inverse_pair('f')
+
+		r2=Relation('{[i]->[j]: i=j}')
+		r1=Relation('{[m]->[n]: f(m)=g(n)}')
+		rel=r1.compose(r2)
+
+		iegen.simplify.unregister_inverse_pair('f')
+
+		rel_res=Relation('{[i]->[n]: i=f_inv(g(n))}')
+
+		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
 	def testSimplifyEmpty1(self):
 		from iegen import Relation
 

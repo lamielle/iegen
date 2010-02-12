@@ -1400,7 +1400,7 @@ class SparseConstraint(IEGenObject):
 					for term,coeff in self:
 						#Exclude the function itself
 						if term!=function_term:
-							new_arg[term.copy()]=coeff
+							new_arg[term.copy()]=-1*sign(function_coeff)*coeff
 
 					#Create the new function
 					new_func=UFCall(iegen.simplify.inverse_pairs()[function_term.name],[new_arg])
