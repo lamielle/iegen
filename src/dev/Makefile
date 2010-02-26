@@ -1,4 +1,7 @@
-# MMS, 5/30/08
+#11/16/09, this directory is somewhat defunct.  
+#See RTRTcode/src/drivers/moldyn/IEGenLib for more recent versions.
+
+# MMS, 5/30/09
 # Simple makefile for building the test driver that unit
 # tests the hypergraph and explicit relation datastructures.
 

@@ -1,6 +1,11 @@
 # Set and Relation operations needed for M2 example.
+#
 # See RTRTJournalShared/moldyn-FST-example.tex for corresponding writeup.
 # Also see iegen/example/moldyn-FST.spec
+#
+# Need to keep in mind that the M2 example is not doing pointer update.  I want to keep 
+# it that way so that we end up with some pretty deep nesting of UFS.
+
 
 import cProfile
 import pstats
@@ -357,149 +362,87 @@ print "\t           = "
 print D_I2_to_I2
 #PrettyPrintVisitor().visit(D_I2_to_I2)
 
-#### SparseTileTrans
-print
-print "==== SparseTileTrans"
-print "Data dependences to and from seed partitioning space."
-print "Will be computed in calc_input method"
-print "(See iegen/doc/sparse-tile-design.txt for algorithm)."
-print
-print "Input:"
-print "\tDirect data dependences:"
-D_1_2 = Relation("{[c0,s,c1,i,c2] -> [c0,s,c3,ii,c2] : i = inter1(ii) && c1=0 && c2=0 && c0=0 && c3=1}")
-D_1_2 = D_1_2.union(Relation("{[c0,s,c1,i,c2] -> [c0,s,c3,ii,c2] : i = inter2(ii) && c1=0 && c2=0 && c0=0 && c3=1}"))
-D_1_3 = D_1_2
-D_2_1 = Relation("{[c0,s,c1,ii,c0] -> [c0,s2,c0,i,c0] : s2 > s && i=inter1(ii) && c0=0 && c1=1}")
-D_2_1 = D_2_1.union(Relation("{[c0,s,c1,ii,c0] -> [c0,s2,c0,i,c0] : s2 > s && i = inter2(ii) && c0=0 && c1=1}"))
-print "\t\tD_1_2 = D_1_3 = "
-print D_1_2
-#PrettyPrintVisitor().visit(D_1_2)
-print
-print "\t\tD_2_1 = "
-print D_2_1
-#PrettyPrintVisitor().visit(D_2_1)
-print
-print "\tDirect data dependences modified by the previous transformations:"
-print
-print "\t\tD_1_2 = T_I0_to_I1 compose ( D_1_2 compose (inverse T_I0_to_I1) ) ) = "
-#### some profiling to figure out why compose is so slow
-#cProfile.run('T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )','prof')
-#p = pstats.Stats('prof')
-#p.strip_dirs()
-#p.sort_stats('cumulative').print_stats(20)
-#p.sort_stats('time').print_stats(20)
-#p.print_callers(20)
-####
 
-#print '___START___'
-#print 'T_I0_to_I1:',T_I0_to_I1
-#print 'T_I0_to_I1.inverse():',T_I0_to_I1.inverse()
-#print 'D_1_2:',D_1_2
-D_1_2 = T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )
-#print 'T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) ):',D_1_2
-#print '___END___'
-print D_1_2
-#PrettyPrintVisitor().visit(D_1_2)
-print
-print "\t\tD_1_2 = T_I1_to_I2 compose ( D_1_2 compose (inverse T_I1_to_I2) ) ) ="
-D_1_2 = T_I1_to_I2.compose( D_1_2.compose( T_I1_to_I2.inverse() ) )
-print D_1_2
-#PrettyPrintVisitor().visit(D_1_2)
-print
-print "\t\tD_1_3 = T_I0_to_I1 compose ( D_1_3 compose (inverse T_I0_to_I1) ) ) ="
-D_1_3 = T_I0_to_I1.compose( D_1_3.compose( T_I0_to_I1.inverse() ) )
-print D_1_3
-#PrettyPrintVisitor().visit(D_1_3)
-print
-print "\t\tD_1_3 = T_I1_to_I2 compose ( D_1_3 compose (inverse T_I1_to_I2) ) ) ="
-D_1_3 = T_I1_to_I2.compose( D_1_3.compose( T_I1_to_I2.inverse() ) )
-print D_1_3
-#PrettyPrintVisitor().visit(D_1_3)
-print
-print "\t\tfull_I = ", full_I
-iter_sub_space_relation = Relation("{[c0,s,x,i,y]->[x,i]}")
-iter_seed_space_relation = Relation("{[c0,s,c1,i,c2]->[i] : c1=1}")
-print
-print "\t\titer_sub_space_relation (issr) = "
-print iter_sub_space_relation
-#PrettyPrintVisitor().visit(iter_sub_space_relation)
-print
-print "\t\titer_seed_space_relation (iseedsr) = "
-print iter_seed_space_relation
-#PrettyPrintVisitor().visit(iter_seed_space_relation)
-print
-print "Algorithm:"
-print "\t\t# Dependences that exist within space being sparse tiled"
-D = D_1_3.union(D_1_2)
-print "\t\trelevant dependences = D_1_2 union D_1_3 = ",
-print D
-#PrettyPrintVisitor().visit(D)
-print
-print "\t\tMake it so data dependence relations start and end in sparse tiling subspace"
-print "\t\t\tissr compose D ="
-print iter_sub_space_relation.compose(D)
-#PrettyPrintVisitor().visit(iter_sub_space_relation.compose(D))
-print
-print "\t\tD_ST = inverse (issr compose (inverse (issr compose D)))"
-#print '___START___'
-#print 'iter_sub_space_relation:',iter_sub_space_relation
-#print 'iter_sub_space_relation.inverse():',iter_sub_space_relation.inverse()
-#print 'D:',D
-D_ST = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse()
-#print 'iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse():',D_ST
-#print '___END___'
-print D_ST
-#PrettyPrintVisitor().visit(D_ST)
-print
-print "\t\tNOTE: not doing verification that dependences in D_ST are not loop carried because I don't know how to iterate over the disjuntions or in and out tuples yet."
-print
-print "\t\t1) Count number of statements, for example count = 3"
-print "\t\t2) Compute D_ST_+"
-D_ST_0 = D_ST
-print "\t\t\tD_ST_0 = D_ST = "
-print D_ST_0
-#PrettyPrintVisitor().visit(D_ST_0)
-print
-print "\t\t\tD_ST_0 compose D_ST = "
-print D_ST_0.compose(D_ST)
-#PrettyPrintVisitor().visit(D_ST_0.compose(D_ST))
-#print '___START___'
-#print 'D_ST_0:',D_ST_0
-#print 'D_ST:',D_ST
-D_ST_1 = D_ST_0.compose(D_ST).union(D_ST)
-#print 'D_ST_0.compose(D_ST).union(D_ST):',D_ST_1
-#print '___END___'
-print "\t\t\tD_ST_1 = (D_ST_0 compose D_ST) union D_ST = "
-print D_ST_1
-#PrettyPrintVisitor().visit(D_ST_1)
+##### SparseTileTrans 
+#spec.add_transformation(
+#    type=iegen.trans.SparseTileTrans,
+#    name='fst',    # name used in IDG I think?
+#    grouping_name='theta',  # sparse tiling create a grouping function 
+#
+#    # Mapping from full iteration space to sub space being tiled.
+#    iter_sub_space_relation='{[x,s,y,i,z]->[y,i]}', # Tiling across inner loops
+#
+#    # Mapping from full iteration space to seed space.  Seed space should be 
+#    # subset of subspace.
+#    iter_seed_space_relation='{[x,s,c1,i,z]->[c1,i] : c1=1}', # Second inner loop
+#
+#    # Dependences in sub space that end in seed space (to_deps) and start 
+#    # in seed space (from_deps).
+#    # FIXME: Eventually we want to calculate this instead of having the user 
+#    # specify it.
+#    to_deps=Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter1(delta_inv(j)))}').union(Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter2(delta_inv(j)))}'))
+#    from_deps=null,    # For M2 there is no third inner loop.
+#
+#    erg_func_name='ERG_fst',
+#
+#    iter_space_trans=Relation("{[x,s,y,i,z] -> [x,s,c0,t,y,i,z] : c0=0 and t=theta(y,i)}")
 
-print "Output:"
-print "\tFROM_SS = "
-print "\tTO_SS = "
+iter_sub_space_relation=Relation('{[x,s,y,i,z]->[y,i]}')
 
-print 
+iter_seed_space_relation=Relation('{[x,s,c1,i,z]->[c1,i] : c1=1}')
+
+to_deps=Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter1(delta_inv(j)))}').union(Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter2(delta_inv(j)))}'))
+
+
+
+## Creating the IDG nodes for SparseTileTrans
+# See m2-idg-after-sparse-tile.pdf in paper.
+# 1) For input need the dependences to and from the seed space.  Currently the
+#    user is providing them so no set and/or relation operations are needed.
+#    Will need "construct explicit relation" nodes and then the resulting ER 
+#    spec nodes.  Will need inputs to the construct node.  For this example, 
+#    will need sigma, inter1, inter2, and delta_inv nodes as input to 
+#    construct node.    
+# 
+# 2) Then need an ERG node for full sparse tiling, which takes the created 
+#    input nodes as input.
+#
+# 3) Then need an ER spec for the tiling function theta, which is generated 
+#    by the full sparse tiling function.
+
+
+## Modifying the MapIR for SparseTileTrans
 print "========\nModifying the MapIR due to sparse tiling transformation:"
+#
+#T_I2_to_I3 = Relation("{[c0,s,c0,i,c0] -> [c0,s,c0,t,c0,i,c0] : c0=0 && t=theta(0,i)}")
+#T_I2_to_I3 = T_I2_to_I3.union( Relation("{[c0,s,c1,ii,x] -> [c0,s4,c0,t,c1,ii,x] : t = theta(1,ii) && c0=0 && c1=1 }"))
+T_I2_to_I3 = Relation("{[c0,s,x,i,y] -> [c0,s,c0,t,x,i,y] : c0=0 && t=theta(x,i)}")
 
-T_I2_to_I3 = Relation("{[c0,s,c0,i,c0] -> [c0,s,c0,t,c0,i,c0] : c0=0 && t=theta(0,i)}")
-T_I2_to_I3 = T_I2_to_I3.union( Relation("{[c0,s,c1,ii,x] -> [c0,s4,c0,t,c1,ii,x] : t = theta(1,ii) && c0=0 && c1=1 }"))
 print "\tT_I2_to_I3 = ", T_I2_to_I3
 print T_I2_to_I3
-#PrettyPrintVisitor().visit(T_I2_to_I3)
+
+# Alan: When generating the code for the unified iteration spaces
+# that result from these schedule changes, you will need to collect
+# the non-affine constraints into a guard for the statement.
 print
 print "Modifying the scheduling function:"
 S1_sched = Relation("{[s,i]->[c0,s,c0,i,c0] : c0=0}")
 print "\tS1_sched = "
 print S1_sched
-#PrettyPrintVisitor().visit(S1_sched)
 print "\tT_I2_to_I3 compose S1_sched = "
 print 'T_I2_to_I3:',T_I2_to_I3
 print 'S1_sched:',S1_sched
 S1_sched = T_I2_to_I3.compose(S1_sched)
 print 'T_I2_to_I3.compose(S1_sched):',S1_sched
 print S1_sched
-#PrettyPrintVisitor().visit(S1_sched)
 
 
+
+# The access relations end up with that extra constraint involving the 
+# iteration variable from the loops being tiled and theta.  
+# When generating code, we will have to have logic that ignores this
+# extra constraint.  If we had the equivalent of a gist operation we 
+# could get rid of that constraint.
 print
 print "Updating access relations due to T_I2_to_I3: "
 print
@@ -529,28 +472,145 @@ print
 
 print
 print "Updating the data dependences due to T_I2_to_I3:"
-print "\t\tD_1_2 = T_I2_to_I3 compose ( D_1_2 compose (inverse T_I2_to_I3) ) ) ="
-#D_1_2 = T_I2_to_I3.compose( D_1_2.compose( T_I2_to_I3.inverse() ) )
-#cProfile.run('D_1_2 = T_I2_to_I3.compose( D_1_2.compose( T_I2_to_I3.inverse() ) )','prof')
-#p = pstats.Stats('prof')
-#p.strip_dirs()
-#p.sort_stats('cumulative').print_stats(20)
-#p.sort_stats('time').print_stats(20)
-#p.print_callers(20)
+print "\tD_I2_to_I2 = "
+print D_I2_to_I2
+print "\t\tD_I3_to_I3 = T_I2_to_I3 compose ( D_I2_to_I2 compose (inverse T_I2_to_I3) ) ) ="
+D_I3_to_I3 = T_I2_to_I3.compose( D_I2_to_I2.compose( T_I2_to_I3.inverse() ) )
+print "\tD_I3_to_I3 = "
+print D_I3_to_I3
 
-print D_1_2
-#PrettyPrintVisitor().visit(D_1_2)
-print
-print "\t\tD_1_3 = T_I2_to_I3 compose ( D_1_3 compose (inverse T_I2_to_I3) ) ) ="
-#print '___START___'
-#print 'T_I2_to_I3:',T_I2_to_I3
-#print 'T_I2_to_I3.inverse():',T_I2_to_I3.inverse()
-#print 'D_1_3:',D_1_3
-D_1_3 = T_I2_to_I3.compose( D_1_3.compose( T_I2_to_I3.inverse() ) )
-#print 'T_I2_to_I3.compose( D_1_3.compose( T_I2_to_I3.inverse() ) ):',D_1_3
-#print '___END___'
-print D_1_3
-#PrettyPrintVisitor().visit(D_1_3)
+# And some profiling at the end.
+cProfile.run('T_I2_to_I3.compose( D_I2_to_I2.compose( T_I2_to_I3.inverse() ) )','prof')
+p = pstats.Stats('prof')
+p.strip_dirs()
+p.sort_stats('cumulative').print_stats(20)
+p.sort_stats('time').print_stats(20)
+p.print_callers(20)
 
 
+
+##### SparseTileTrans OLD
+## All of the below is how we were going to attempt to figure out the dependences to
+## input to Sparse tiling.  Now we are just going to have the user provide them.
+## Eventually we need to automate this.
+#print
+#print "==== SparseTileTrans"
+#print "Data dependences to and from seed partitioning space."
+#print "Will be computed in calc_input method"
+#print "(See iegen/doc/sparse-tile-design.txt for algorithm)."
+#print
+#print "Input:"
+#print "\tDirect data dependences:"
+#D_1_2 = Relation("{[c0,s,c1,i,c2] -> [c0,s,c3,ii,c2] : i = inter1(ii) && c1=0 && c2=0 && c0=0 && c3=1}")
+#D_1_2 = D_1_2.union(Relation("{[c0,s,c1,i,c2] -> [c0,s,c3,ii,c2] : i = inter2(ii) && c1=0 && c2=0 && c0=0 && c3=1}"))
+#D_1_3 = D_1_2
+#D_2_1 = Relation("{[c0,s,c1,ii,c0] -> [c0,s2,c0,i,c0] : s2 > s && i=inter1(ii) && c0=0 && c1=1}")
+#D_2_1 = D_2_1.union(Relation("{[c0,s,c1,ii,c0] -> [c0,s2,c0,i,c0] : s2 > s && i = inter2(ii) && c0=0 && c1=1}"))
+#print "\t\tD_1_2 = D_1_3 = "
+#print D_1_2
+##PrettyPrintVisitor().visit(D_1_2)
+#print
+#print "\t\tD_2_1 = "
+#print D_2_1
+##PrettyPrintVisitor().visit(D_2_1)
+#print
+#print "\tDirect data dependences modified by the previous transformations:"
+#print
+#print "\t\tD_1_2 = T_I0_to_I1 compose ( D_1_2 compose (inverse T_I0_to_I1) ) ) = "
+##### some profiling to figure out why compose is so slow
+##cProfile.run('T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )','prof')
+##p = pstats.Stats('prof')
+##p.strip_dirs()
+##p.sort_stats('cumulative').print_stats(20)
+##p.sort_stats('time').print_stats(20)
+##p.print_callers(20)
+#####
+#
+##print '___START___'
+##print 'T_I0_to_I1:',T_I0_to_I1
+##print 'T_I0_to_I1.inverse():',T_I0_to_I1.inverse()
+##print 'D_1_2:',D_1_2
+#D_1_2 = T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) )
+##print 'T_I0_to_I1.compose( D_1_2.compose( T_I0_to_I1.inverse() ) ):',D_1_2
+##print '___END___'
+#print D_1_2
+##PrettyPrintVisitor().visit(D_1_2)
+#print
+#print "\t\tD_1_2 = T_I1_to_I2 compose ( D_1_2 compose (inverse T_I1_to_I2) ) ) ="
+#D_1_2 = T_I1_to_I2.compose( D_1_2.compose( T_I1_to_I2.inverse() ) )
+#print D_1_2
+##PrettyPrintVisitor().visit(D_1_2)
+#print
+#print "\t\tD_1_3 = T_I0_to_I1 compose ( D_1_3 compose (inverse T_I0_to_I1) ) ) ="
+#D_1_3 = T_I0_to_I1.compose( D_1_3.compose( T_I0_to_I1.inverse() ) )
+#print D_1_3
+##PrettyPrintVisitor().visit(D_1_3)
+#print
+#print "\t\tD_1_3 = T_I1_to_I2 compose ( D_1_3 compose (inverse T_I1_to_I2) ) ) ="
+#D_1_3 = T_I1_to_I2.compose( D_1_3.compose( T_I1_to_I2.inverse() ) )
+#print D_1_3
+##PrettyPrintVisitor().visit(D_1_3)
+#print
+#print "\t\tfull_I = ", full_I
+#iter_sub_space_relation = Relation("{[c0,s,x,i,y]->[x,i]}")
+#iter_seed_space_relation = Relation("{[c0,s,c1,i,c2]->[i] : c1=1}")
+#print
+#print "\t\titer_sub_space_relation (issr) = "
+#print iter_sub_space_relation
+##PrettyPrintVisitor().visit(iter_sub_space_relation)
+#print
+#print "\t\titer_seed_space_relation (iseedsr) = "
+#print iter_seed_space_relation
+##PrettyPrintVisitor().visit(iter_seed_space_relation)
+#print
+#print "Algorithm:"
+#print "\t\t# Dependences that exist within space being sparse tiled"
+#D = D_1_3.union(D_1_2)
+#print "\t\trelevant dependences = D_1_2 union D_1_3 = ",
+#print D
+##PrettyPrintVisitor().visit(D)
+#print
+#print "\t\tMake it so data dependence relations start and end in sparse tiling subspace"
+#print "\t\t\tissr compose D ="
+#print iter_sub_space_relation.compose(D)
+##PrettyPrintVisitor().visit(iter_sub_space_relation.compose(D))
+#print
+#print "\t\tD_ST = inverse (issr compose (inverse (issr compose D)))"
+##print '___START___'
+##print 'iter_sub_space_relation:',iter_sub_space_relation
+##print 'iter_sub_space_relation.inverse():',iter_sub_space_relation.inverse()
+##print 'D:',D
+#D_ST = iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse()
+##print 'iter_sub_space_relation.compose(iter_sub_space_relation.compose(D).inverse()).inverse():',D_ST
+##print '___END___'
+#print D_ST
+##PrettyPrintVisitor().visit(D_ST)
+#print
+#print "\t\tNOTE: not doing verification that dependences in D_ST are not loop carried because I don't know how to iterate over the disjuntions or in and out tuples yet."
+#print
+#print "\t\t1) Count number of statements, for example count = 3"
+#print "\t\t2) Compute D_ST_+"
+#D_ST_0 = D_ST
+#print "\t\t\tD_ST_0 = D_ST = "
+#print D_ST_0
+##PrettyPrintVisitor().visit(D_ST_0)
+#print
+#print "\t\t\tD_ST_0 compose D_ST = "
+#print D_ST_0.compose(D_ST)
+##PrettyPrintVisitor().visit(D_ST_0.compose(D_ST))
+##print '___START___'
+##print 'D_ST_0:',D_ST_0
+##print 'D_ST:',D_ST
+#D_ST_1 = D_ST_0.compose(D_ST).union(D_ST)
+##print 'D_ST_0.compose(D_ST).union(D_ST):',D_ST_1
+##print '___END___'
+#print "\t\t\tD_ST_1 = (D_ST_0 compose D_ST) union D_ST = "
+#print D_ST_1
+##PrettyPrintVisitor().visit(D_ST_1)
+#
+#print "Output:"
+#print "\tFROM_SS = "
+#print "\tTO_SS = "
+#
+#print 
 
