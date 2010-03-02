@@ -8,6 +8,11 @@
 #              #pragma iegen index     inter2  "int %s[]"         {[k]: 0<=k && k<n_inter} -> {[k]: 0<=k && k<n_moles};
 #              #pragma iegen data      data    "double %s[][9]"   {[k]: 0<=k && k<n_moles};
 #              for (tstep = 0; tstep < n_tstep; tstep++) {
+#
+#                 cutoffSquare = cutoffRadius*cutoffRadius ;
+#                 n_inter = ninter;
+#                 vir  = 0.0 ;
+#                 epot = 0.0;
 #         
 #                 /*................*/
 #                 /* UpdateCoordinates(); */
@@ -35,10 +40,6 @@
 #                 /*................*/
 #                 /* ComputeForces(); */
 #         
-#                 cutoffSquare = cutoffRadius*cutoffRadius ;
-#                 n_inter = ninter;
-#                 vir  = 0.0 ;
-#                 epot = 0.0;
 #         
 #                 for(ii=0; ii<n_inter; ii++) {
 #                   xx = data[inter1[ii]][3] - data[inter2[ii]][3];
@@ -156,7 +157,7 @@ data[ %(a1)s ][ 6 ] = 0.0;
 data[ %(a1)s ][ 7 ] = 0.0;
 data[ %(a1)s ][ 8 ] = 0.0;''',
         iter_space='{ [ tstep, i ] : 0 <= tstep && tstep < n_tstep && 0 <= i && i < n_moles }',
-        scatter='{ [ tstep, i ]->[ c0, tstep, c0, i, c0 ] : c0=0 }')
+        scatter='{ [ tstep, i ]->[ c0, tstep, c1, i, c0 ] : c0=0 && c1=1 }')
 spec.add_access_relation(
         statement_name='s__0_tstep_0_i_0',
         name='a1',
@@ -165,6 +166,7 @@ spec.add_access_relation(
 
 
 # ------------------------------------------------------------------------------
+# 3/2/10, MMS, moved these above first loop so line numbers won't line up.
 #         Line 292: cutoffSquare = cutoffRadius*cutoffRadius ;
 #         Line 293: n_inter = ninter;
 #         Line 294: vir  = 0.0 ;
@@ -178,7 +180,7 @@ n_inter = ninter;
 vir = 0.0;
 epot = 0.0;''',
         iter_space='{ [tstep] : 0 <= tstep && tstep < n_tstep }',
-        scatter='{ [ tstep ]->[ c0, tstep, c1, c0, c0 ] : c0=0 && c1=1 }')
+        scatter='{ [ tstep ]->[ c0, tstep, c0, c0, c0 ] : c0=0 }')
 
 
 # ------------------------------------------------------------------------------
