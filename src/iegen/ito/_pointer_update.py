@@ -31,23 +31,16 @@ class PointerUpdate(InterTransOpt):
 
 		#Look for each of the nest patterns in each of the ERSpecs.
 		for nest in self.nests:
-			#Look for a single nest pattern.
-			(nestrefs, affected_er_specs) = self.find_nestrefs(nest,mapir)
-			self.print_detail("\tnestrefs = %s\n"%nestrefs)
+			#Search the MapIR for any instances of the current nesting
+			#Collapse any instances that are found
+			affected_er_specs,found_nest=self.collapse_nest(nest,mapir)
 
-			#For this particular nest, if there are any nestdefs found
-			#then create an ERSpec for nested function symbol.
-			if len(nestrefs)>0:
-				newfunc_ERSpec = self.create_ERSpec(nest,nestrefs[0],mapir)
+			#If we found a nesting anywhere above...
+			if found_nest:
+				#Create an ERSpec for the collapsed functions
+				newfunc_ERSpec = self.create_ERSpec(nest,mapir)
+
 				self.print_detail("\tnewfunc_ERSpec = %s"%newfunc_ERSpec)
-
-				#For each of the nest references,
-				#modify the outer function expression so that it now
-				#calls the new function with the args from the innermost
-				#function call.
-				for nestref in nestrefs:
-					nestref.outer_node.name = newfunc_ERSpec.name
-					nestref.outer_node.args = nestref.inner_node.args
 
 			#Modify the IDG by removing old dependences coming
 			#from individual functions, putting in a new dependences
@@ -56,73 +49,78 @@ class PointerUpdate(InterTransOpt):
 			#functions and the new function ERSpec.
 			self.update_IDG_for_newfunc(mapir,newfunc_ERSpec,affected_er_specs,nest)
 
-	#Look for a nest patterns in each of the ERSpecs in mapir.
-	#Input: list of function name strings that specify nest, ["f","g"]
-	#Output: tuple with a list of FuncNest references for function nests
-	# that fit pattern and the list of ERSpecs in IDG where those patterns
-	# were found.
-	def find_nestrefs(self,nest,mapir):
-		nestrefs = []
-		affected_er_specs = []
+	#Searches for the given function nest in the given MapIR
+	#
+	#Returns (affected_er_specs,found_nest):
+	#affected_er_specs: ERSpecs that contain the given nest
+	#found_nest: True if the given nest was found anywhere
+	def collapse_nest(self,nest,mapir):
+		affected_er_specs=[]
+		found_nest=False
 
-		#All of the ERSpecs in IDG and MapIR.
-		for er_spec in mapir.er_specs.values():
+		#Search for the given nest in the MapIR and replace any occurrences
+		# of the given nest
+		#Also create ERSpecs for the replaced nestings and update the IDG
+
+		#Search for nests in the ERSpecs
+		for er_spec in mapir.get_er_specs():
 			self.print_detail("\ter_spec = %s"%er_spec)
-			found_nestrefs = \
-				FindFuncNestVisitor(nest).visit(er_spec.relation).nestrefs
-			if len(found_nestrefs)>0:
-				nestrefs.extend(found_nestrefs)
+			if er_spec.relation.contains_nest(nest):
 				affected_er_specs.append(er_spec)
-			self.print_detail("\tnestrefs = %s\n"%nestrefs)
+				er_spec.relation=er_spec.relation.copy(collapse=[nest])
+				found_nest=True
 
-		#The scattering functions and access relations.
-		for stmt in mapir.statements.values():
-			self.print_detail("\tstmt.scatter = %s"%(stmt.scatter))
-			nestrefs.extend(
-				FindFuncNestVisitor(nest).visit(stmt.scatter).nestrefs)
-			self.print_detail("\tnestrefs = %s\n"%nestrefs)
+		#Search for nests in the scattering functions and access relations.
+		for statement in mapir.get_statements():
+			self.print_detail("\tstatement.scatter = %s"%(statement.scatter))
 
-			for ar in stmt.access_relations.values():
-				self.print_detail("\tar = %s"%ar)
-				nestrefs.extend(
-					FindFuncNestVisitor(nest).visit(ar.iter_to_data).nestrefs)
-				self.print_detail("\tnestrefs = %s\n"%nestrefs)
+			if statement.scatter.contains_nest(nest):
+				#Replace the scattering function with a collapsed relation
+				statement.scatter=statement.scatter.copy(collapse=[nest])
+				found_nest=True
 
-		return (nestrefs,affected_er_specs)
+			#Search for nests in the current statement's access relations
+			for access_relation in statement.get_access_relations():
+				self.print_detail("\taccess_relation = %s"%access_relation)
+
+				if access_relation.iter_to_data.contains_nest(nest):
+					access_relation.iter_to_data=access_relation.iter_to_data.copy(collapse=[nest])
+					found_nest=True
+
+		return (affected_er_specs,found_nest)
 
 	#Returns the ERSpec for the collapsed function.
-	#Input: nest specification ["f","g"], example FuncNest/nestref, and mapir
+	#Input: nest specification ["f","g"] and mapir
 	#Output: ERSpec for f_g
-	def create_ERSpec(self,nest,nestref,mapir):
+	def create_ERSpec(self,nest,mapir):
 		# concatenate function names to create new function name
-		newfunc = ""
-		for func in nest:
-			newfunc = newfunc + func + "_"
-		newfunc = newfunc[:-1]
+		newfunc='_'.join(nest)
 		self.print_detail("\tnewfunc = %s"%newfunc)
 
 		# use domain of innermost function symbol as domain
-		inner_ERSpec = mapir.er_specs[nestref.inner_node.name]
+		inner_ERSpec = mapir.er_specs[nest[-1]]
 		inner_domain = inner_ERSpec.input_bounds.copy()
 		# use range of outermost function symbol as range
-		outer_ERSpec = mapir.er_specs[nestref.outer_node.name]
+		outer_ERSpec = mapir.er_specs[nest[0]]
 		outer_range = outer_ERSpec.output_bounds.copy()
+
+		#FIXME: currently assuming that domain and range
+		#are both 1D.  At some point we may want to remove
+		#this restriction.
+		if 1!=inner_domain.arity():
+			raise ValueError('Domain arity is not 1')
+		if 1!=outer_range.arity():
+			raise ValueError('Range arity is not 1')
 
 		#Create ERSpec
 		#Explicit relation is a function because it is
 		#the composition of two uninterpreted functions.
-		#FIXME: currently assuming that domain and range
-		#are both 1D.  At some point we may want to remove
-		#this restriction.
-		#FIXME: Alan, how do I "assert" that the above is
-		#true?  Also need to assert that inner function
-		#calls have coefficients  of 1.
 		new_ERSpec=ERSpec(
 		     name=newfunc,
 		     input_bounds=inner_domain,
 		     output_bounds=outer_range,
 		     is_function=True,
-		     relation=Relation('{[i] -> [j] : j=%s(%s(i))}'%tuple(nest))
+		     relation=Relation('{[i] -> [j] : j=%s(i%s}'%('('.join(nest),')'*len(nest)))
 		     )
 		mapir.add_er_spec(new_ERSpec)
 
@@ -132,7 +130,8 @@ class PointerUpdate(InterTransOpt):
 	#   mapir: The MapIR data structure.
 	#   newfunc_ERSpec: ERSpec for new function
 	#   affected_er_specs: ERSpecs that had nest, which will be replaced with
-	#       new function.  #   nest: list of function name strings that specify nest, ["f","g"] #
+	#       new function.
+	#   nest: list of function name strings that specify nest, ["f","g"] #
 	#SideEffect:
 	#   Modifies the IDG by removing old dependences coming
 	#   from individual functions, putting in a new dependences
@@ -169,5 +168,4 @@ class PointerUpdate(InterTransOpt):
 			func_node = mapir.idg.get_node(IDGERSpec,
 				mapir.er_specs[func_name])
 			gen_newfunc_node.add_dep(func_node)
-
 #-------------------------------------------

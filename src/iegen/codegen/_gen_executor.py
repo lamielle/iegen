@@ -46,6 +46,7 @@ def gen_executor_loop_stmts(mapir):
 		stmts.append(Comment('%s'%(statement.text)))
 		ar_dict={}
 		for access_relation in statement.get_access_relations():
+			iegen.print_detail('Generating code for access relation %s'%(access_relation.name))
 			stmts.append(Comment('%s: %s'%(access_relation.name,access_relation.iter_to_data)))
 			ar_dict[access_relation.name]=calc_equality_value(access_relation.iter_to_data.tuple_out[0],access_relation.iter_to_data,mapir)
 

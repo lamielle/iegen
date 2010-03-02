@@ -169,6 +169,10 @@ class SparseFormula(IEGenObject):
 
 	def __len__(self):
 		return len(self.disjunction)
+
+	def __iter__(self):
+		for conjunction_pos in xrange(len(self)):
+			yield self.copy(conjunction_pos=conjunction_pos)
 	#--------------------------------------------------
 
 	#--------------------------------------------------
@@ -982,7 +986,7 @@ class UFCall(SparseExpColumnType):
 		if function_name_map is None:
 			function_name_map={}
 
-		arg_strs=[str(arg) for arg in self.args]
+		arg_strs=[arg.value_string(function_name_map) for arg in self.args]
 
 		name_start=self.name+'('
 		name_end=')'
@@ -1055,7 +1059,7 @@ class SparseExp(IEGenObject):
 		return self._mem_hash
 
 	def _update_hash(self):
-		self._mem_hash=hash(frozenset(sorted(self)))
+		self._mem_hash=hash(frozenset(((col,str(coeff)) for col,coeff in sorted(self))))
 
 	def __eq__(self,other):
 		return hash(self)==hash(other)
@@ -1722,16 +1726,15 @@ class SparseConjunction(IEGenObject):
 			remove_constraints=set()
 
 			#Look at each pair of lower/upper bounds
-			for lb_coeff,lower_bound,lb_constraint in lower_bounds:
-				for ub_coeff,upper_bound,ub_constraint in upper_bounds:
-					lower_bound=lower_bound.copy()
-					upper_bound=upper_bound.copy()
+			for lb_coeff,lower_bound_orig,lb_constraint in lower_bounds:
+				for ub_coeff,upper_bound_orig,ub_constraint in upper_bounds:
+					lower_bound=lower_bound_orig.copy()
+					upper_bound=upper_bound_orig.copy()
 
 					#Create the new constraint:
 					#ub_coeff*lower_bound <= lb_coeff*upper_bound
 					lower_bound.multiply(ub_coeff)
-					upper_bound.multiply(lb_coeff)
-					upper_bound.multiply(-1)
+					upper_bound.multiply(-1*lb_coeff)
 
 					new_exp=SparseExp()
 					new_exp.add_exp(lower_bound)
@@ -1760,10 +1763,10 @@ class SparseConjunction(IEGenObject):
 		remove_constraints=set()
 		add_equalities=set()
 
-		#Look at all pairs of constraints
-		for constraint1 in self:
+		#Look at all pairs of inequality constraints
+		for constraint1 in (c for c in self if not c.is_equality()):
 			if constraint1 not in remove_constraints:
-				for constraint2 in self:
+				for constraint2 in (c for c in self if not c.is_equality()):
 					if constraint2 not in remove_constraints:
 						if constraint1.sparse_exp==constraint2.sparse_exp.complement():
 							remove_constraints.add(constraint1)
@@ -2044,11 +2047,14 @@ class SparseDisjunction(IEGenObject):
 
 			self._frozen=True
 
-	def copy(self,freeze=True,**kwargs):
+	def copy(self,freeze=True,conjunction_pos=None,**kwargs):
 		selfcopy=SparseDisjunction()
 
-		for conjunction in self:
-			selfcopy.add_conjunction(conjunction.copy(freeze=freeze,**kwargs))
+		if conjunction_pos is None:
+			for conjunction in self:
+				selfcopy.add_conjunction(conjunction.copy(freeze=freeze,conjunction_pos=conjunction_pos,**kwargs))
+		else:
+			selfcopy.add_conjunction(list(self.conjunctions)[conjunction_pos].copy(freeze=freeze,conjunction_pos=conjunction_pos,**kwargs))
 
 		if self.frozen and freeze:
 			selfcopy.freeze()

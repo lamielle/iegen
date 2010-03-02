@@ -51,9 +51,11 @@ class IterAlignTrans(Transformation):
 	def update_mapir(self,mapir):
 		#Update the access relations of all statements
 		self.print_progress('Updating access relations for IterAlignTrans...')
+		self.print_detail('--> using transformation relation: %s'%(self.iter_space_trans))
 		for statement in mapir.get_statements():
 			for access_relation in statement.get_access_relations():
 				self.print_detail("Updating access relation '%s'..."%(access_relation.name))
+				self.print_detail('-->%s.compose(%s.inverse())'%(access_relation.iter_to_data,self.iter_space_trans))
 				access_relation.iter_to_data=access_relation.iter_to_data.compose(self.iter_space_trans.inverse())
 
 		#Update the data dependences

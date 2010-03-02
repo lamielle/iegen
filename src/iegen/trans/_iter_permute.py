@@ -26,7 +26,7 @@ class IterPermuteTrans(Transformation):
 		#We do this by unioning all bounds and simply checking that there is a single conjunction in the disjunction
 		target_bounds=[data_array.bounds for data_array in self.target_data_arrays]
 		unioned_bounds=reduce(lambda da1,da2: da1.union(da2),target_bounds)
-		if len(unioned_bounds.sets)!=1:
+		if len(unioned_bounds)!=1:
 			raise ValueError('All target data arrays must have the same bounds')
 
 	def __repr__(self):
@@ -90,7 +90,8 @@ class IterPermuteTrans(Transformation):
 		#Iteration Sub Space Relation
 		issr=self.iter_sub_space_relation
 
-		#Calculate the full iteration space to data space relation #Collect all iter_to_data relations in all access relations
+		#Calculate the full iteration space to data space relation
+		#Collect all iter_to_data relations in all access relations
 		self.print_detail("Filtering access relations...")
 		access_relations=[ar.iter_to_data for stmt in mapir.get_statements() for ar in stmt.get_access_relations() if set()!=set([ar.data_array]).intersection(set(self.target_data_arrays))]
 

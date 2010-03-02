@@ -117,9 +117,9 @@ class SetTestCase(TestCase):
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
-		set_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m}'
+		set_string='{[a,b]: b=2n and a>=m and a+b>=c and a=10}'
 		set=Set(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m | m,n}'
+		res_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
@@ -159,7 +159,7 @@ class SetTestCase(TestCase):
 
 		set_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m}'
 		set=Set(set_string,symbolics)
-		res_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m | m,n}'
+		res_string='{[a,b]: a>=m and b=2n and a=10 and a+b>=c | m,n}'
 		res_string='Set("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
@@ -265,6 +265,19 @@ class SetTestCase(TestCase):
 		res_string=str(set)
 
 		self.failUnless(res_string==set_string,'%s!=%s'%(res_string,set_string))
+
+	def testIter(self):
+		from iegen import Set
+
+		set_union=Set('{[a]: a=10}').union(Set('{[a]: a=11}'))
+
+		set0=Set('{[a]: a=10}')
+		set1=Set('{[a]: a=11}')
+
+		sets=list(set_union)
+
+		self.failUnless(sets[0]==set0)
+		self.failUnless(sets[1]==set1)
 
 	#Tests that a frozen set cannot be cleared
 	@raises(ValueError)
@@ -784,7 +797,7 @@ class SetTestCase(TestCase):
 
 		set_union=set1.union(set2)
 
-		res_str='{[a,b]: a=10} union {[a,b]: a=b}'
+		res_str='{[a,b]: a=b} union {[a,b]: a=10}'
 
 		self.failUnless(res_str==str(set_union),'%s!=%s'%(str(set_union),res_str))
 
@@ -1087,7 +1100,7 @@ class RelationTestCase(TestCase):
 
 		rel_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m}'
 		rel=Relation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m | m,n}'
+		res_string='{[a]->[b]: a>=m and b=2n and a=10 and a+b>=c | m,n}'
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
@@ -1127,7 +1140,7 @@ class RelationTestCase(TestCase):
 
 		rel_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m}'
 		rel=Relation(rel_string,symbolics)
-		res_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m | m,n}'
+		res_string='{[a]->[b]: a>=m and b=2n and a=10 and a+b>=c | m,n}'
 		res_string='Relation("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
@@ -1233,6 +1246,19 @@ class RelationTestCase(TestCase):
 		res_string=str(rel)
 
 		self.failUnless(res_string==rel_string,'%s!=%s'%(res_string,rel_string))
+
+	def testIter(self):
+		from iegen import Relation
+
+		rel_union=Relation('{[a]->[b]: a=10}').union(Relation('{[a]->[b]: a=11}'))
+
+		rel0=Relation('{[a]->[b]: a=10}')
+		rel1=Relation('{[a]->[b]: a=11}')
+
+		rels=list(rel_union)
+
+		self.failUnless(rels[0]==rel0)
+		self.failUnless(rels[1]==rel1)
 
 	#Tests that a frozen relation cannot be cleared
 	@raises(ValueError)
@@ -1645,7 +1671,7 @@ class RelationTestCase(TestCase):
 
 		rel_union=rel1.union(rel2)
 
-		res_str='{[a]->[b]: a=10} union {[a]->[b]: a=b}'
+		res_str='{[a]->[b]: a=b} union {[a]->[b]: a=10}'
 
 		self.failUnless(res_str==str(rel_union),'%s!=%s'%(str(rel_union),res_str))
 
