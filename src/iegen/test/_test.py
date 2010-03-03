@@ -164,6 +164,11 @@ class SetTestCase(TestCase):
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
 
+	def testEqualityOrder(self):
+		from iegen import Set
+
+		self.failUnless(Set('{[a,b]: a=b}')==Set('{[a,b]: b=a}'))
+
 	def testDuplicateConstraint(self):
 		from iegen import Set
 
@@ -1145,6 +1150,11 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
 
+	def testEqualityOrder(self):
+		from iegen import Set
+
+		self.failUnless(Set('{[a,b]: a=b}')==Set('{[a,b]: b=a}'))
+
 	def testDuplicateConstraint(self):
 		from iegen import Relation
 
@@ -1930,3 +1940,41 @@ class RelationTestCase(TestCase):
 	# End matrix translation tests
 	#----------------------------------------
 #------------------------------------------
+
+#---------- TupleVarCol Tests ----------
+class TupleVarColTestCase(TestCase):
+
+	#Tests the ordering of TupleVarCols
+	def testOrdering(self):
+		from iegen import TupleVarCol
+
+		self.failUnless(TupleVarCol(0)!='a')
+		self.failUnless(TupleVarCol(0)!=0)
+
+		self.failUnless(TupleVarCol(0)==TupleVarCol(0))
+		self.failUnless(TupleVarCol(1)==TupleVarCol(1))
+		self.failUnless(TupleVarCol(2)==TupleVarCol(2))
+
+		self.failUnless(TupleVarCol(0)!=TupleVarCol(1))
+		self.failUnless(TupleVarCol(0)!=TupleVarCol(2))
+
+		self.failUnless(TupleVarCol(1)!=TupleVarCol(0))
+		self.failUnless(TupleVarCol(1)!=TupleVarCol(2))
+
+		self.failUnless(TupleVarCol(2)!=TupleVarCol(0))
+		self.failUnless(TupleVarCol(2)!=TupleVarCol(1))
+
+		self.failUnless(TupleVarCol(0)<TupleVarCol(1))
+		self.failUnless(TupleVarCol(1)>TupleVarCol(0))
+		self.failUnless(TupleVarCol(0)<TupleVarCol(2))
+		self.failUnless(TupleVarCol(2)>TupleVarCol(0))
+		self.failUnless(TupleVarCol(1)<TupleVarCol(2))
+		self.failUnless(TupleVarCol(2)>TupleVarCol(1))
+
+		self.failUnless(TupleVarCol(0)<=TupleVarCol(1))
+		self.failUnless(TupleVarCol(1)>=TupleVarCol(0))
+		self.failUnless(TupleVarCol(0)<=TupleVarCol(2))
+		self.failUnless(TupleVarCol(2)>=TupleVarCol(0))
+		self.failUnless(TupleVarCol(1)<=TupleVarCol(2))
+		self.failUnless(TupleVarCol(2)>=TupleVarCol(1))
+#---------------------------------------
