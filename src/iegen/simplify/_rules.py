@@ -127,6 +127,18 @@ def register_inverse_simplify_listener(listener_func,instance=None):
 	iegen.print_debug("Registering inverse simplify function '%s'"%(listner_func_name))
 	_inverse_simplify_listeners[listner_func_name]=(listener_func,instance)
 
+#Notify all registered inverse simplification listeners
+# that the inverse simplification rule has fired
+def notify_inverse_listeners(func_name,inv_func_name):
+	#Notify any listeners that the inverse simplification rule has been applied
+		for listener_func,listener_instance in _inverse_simplify_listeners.values():
+			#Is this a function call?
+			if listener_instance is None:
+				listener_func(v.func_name,v.func_inv_name)
+			#This is a method call
+			else:
+				listener_func(listener_instance,func_name,inv_func_name)
+
 #Runs the inverse simplification visitor on the given object
 def inverse_simplify(obj):
 	from iegen.ast.visitor import RemoveFreeVarFunctionVisitor
@@ -138,15 +150,8 @@ def inverse_simplify(obj):
 	changed=v.visit(obj).changed
 	if changed and iegen.settings.debug: iegen.print_debug('Simplify: inverse simplification: %s -> %s'%(before,obj))
 
-	#Notify any listeners that the rule has been applied
 	if changed:
-		for listener_func,listener_instance in _inverse_simplify_listeners.values():
-			#Is this a function call?
-			if listener_instance is None:
-				listener_func(v.func_name,v.func_inv_name)
-			#This is a method call
-			else:
-				listener_func(listener_instance,v.func_name,v.func_inv_name)
+		notify_inverse_listeners(v.func_name,v.func_inv_name)
 
 	return changed
 #-------------------------------------------------

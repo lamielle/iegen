@@ -1487,7 +1487,9 @@ class SparseConstraint(IEGenObject):
 							new_arg[term.copy()]=-1*sign(function_coeff)*coeff
 
 					#Create the new function
-					new_func=UFCall(iegen.simplify.inverse_pairs()[function_term.name],[new_arg])
+					func_name=function_term.name
+					new_func_name=iegen.simplify.inverse_pairs()[func_name]
+					new_func=UFCall(new_func_name,[new_arg])
 
 					#Add the new function to the new expression
 					new_exp.add_exp(SparseExp({new_func:-1}))
@@ -1497,6 +1499,9 @@ class SparseConstraint(IEGenObject):
 
 					#Set the new expression for this constraint to the new expression
 					self._sparse_exp=new_exp
+
+					#Notify all listeners that this rule has fired
+					iegen.simplify.notify_inverse_listeners(func_name,new_func_name)
 
 	#Converts f(i)=f(j) -> i=j if f has an inverse
 	def remove_function_simplify(self):
@@ -1561,8 +1566,12 @@ class SparseConstraint(IEGenObject):
 
 						if move:
 							lhs=f1_arg.copy()
-							rhs=UFCall(iegen.simplify.inverse_pairs()[f1.name],[SparseExp({f2.copy():1})])
+							f1_inv_name=iegen.simplify.inverse_pairs()[f1.name]
+							rhs=UFCall(f1_inv_name,[SparseExp({f2.copy():1})])
 							self._sparse_exp=SparseExp({lhs:1,rhs:-1})
+
+							#Notify that we created and instance of f1_inv_name
+							iegen.simplify.notify_inverse_listeners(f1.name,f1_inv_name)
 
 	def move_function_simplify(self):
 		#Only consider equalities with 2 constraints
@@ -1593,9 +1602,13 @@ class SparseConstraint(IEGenObject):
 							#If that term is a tuple variable with a coefficient of 1
 							# and that tuple variable's position is less that the other tuple variable's position
 							if function_arg.is_tuple_var() and 1==function_arg_coeff and function_arg.pos>tuple_var.pos:
-								new_function=UFCall(iegen.simplify.inverse_pairs()[function.name],[SparseExp({tuple_var.copy():1})])
+								function_inv_name=iegen.simplify.inverse_pairs()[function.name]
+								new_function=UFCall(function_inv_name,[SparseExp({tuple_var.copy():1})])
 								new_tuple_var=function_arg.copy()
 								self._sparse_exp=SparseExp({new_tuple_var:1,new_function:-1})
+
+								#Notify that we created an instance of the inverse function
+								iegen.simplify.notify_inverse_listeners(function.name,function_inv_name)
 
 	def contains_nest(self,nest):
 		return self._sparse_exp.contains_nest(nest)

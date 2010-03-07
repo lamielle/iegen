@@ -54,7 +54,9 @@ class MapIR(IEGenObject):
 	def add_er_spec(self,er_spec):
 		self.print_progress("Adding ERSpec '%s'..."%er_spec.name)
 		#Register this function and its inverse if it is a permutation
-		if er_spec.is_permutation:
+		# and if it is not already part of a a pair of inverses
+		if er_spec.is_permutation and er_spec.name not in iegen.simplify.inverse_pairs():
+			self.print_progress("Registering function '%s' as an inverse..."%(er_spec.name))
 			iegen.simplify.register_inverse_pair(er_spec.name)
 		self.er_specs[er_spec.name]=er_spec
 
@@ -91,7 +93,7 @@ class MapIR(IEGenObject):
 			er_spec_inv=ERSpec(func_inv_name,
 			  input_bounds=er_spec.output_bounds.copy(),
 			  output_bounds=er_spec.input_bounds.copy(),
-			  relation=er_spec.relation.inverse(),
+			  relation=None,
 			  is_function=er_spec.is_function,
 			  is_permutation=er_spec.is_permutation,
 			  is_inverse=True,
@@ -99,6 +101,9 @@ class MapIR(IEGenObject):
 
 			#Add the inverse ERSpec to the MapIR
 			self.add_er_spec(er_spec_inv)
+
+			#Set the relation now that we have added the ERSpec to the MapIR
+			self.er_specs[func_inv_name].relation=er_spec.relation.inverse()
 
 			#Get the IDG nodes
 			er_spec_node=self.idg.get_node(IDGOutputERSpec,er_spec)
