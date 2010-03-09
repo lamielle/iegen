@@ -1501,7 +1501,7 @@ class SparseConstraint(IEGenObject):
 					self._sparse_exp=new_exp
 
 					#Notify all listeners that this rule has fired
-					iegen.simplify.notify_inverse_listeners(func_name,new_func_name)
+					iegen.simplify.notify_inverse_simplify_listeners(func_name,new_func_name)
 
 	#Converts f(i)=f(j) -> i=j if f has an inverse
 	def remove_function_simplify(self):
@@ -1571,7 +1571,7 @@ class SparseConstraint(IEGenObject):
 							self._sparse_exp=SparseExp({lhs:1,rhs:-1})
 
 							#Notify that we created and instance of f1_inv_name
-							iegen.simplify.notify_inverse_listeners(f1.name,f1_inv_name)
+							iegen.simplify.notify_inverse_simplify_listeners(f1.name,f1_inv_name)
 
 	def move_function_simplify(self):
 		#Only consider equalities with 2 constraints
@@ -1608,7 +1608,7 @@ class SparseConstraint(IEGenObject):
 								self._sparse_exp=SparseExp({new_tuple_var:1,new_function:-1})
 
 								#Notify that we created an instance of the inverse function
-								iegen.simplify.notify_inverse_listeners(function.name,function_inv_name)
+								iegen.simplify.notify_inverse_simplify_listeners(function.name,function_inv_name)
 
 	def contains_nest(self,nest):
 		return self._sparse_exp.contains_nest(nest)
@@ -1800,6 +1800,7 @@ class SparseConjunction(IEGenObject):
 					constraint.replace_var(var_col,equal_coeff,equal_exp.copy())
 
 				res=True
+				iegen.simplify.notify_equality_simplify_listeners()
 				break
 
 		#If equality replacement couldn't be performed, run standard Fourier-Motzkin
@@ -1812,6 +1813,9 @@ class SparseConjunction(IEGenObject):
 
 			#Constraint to be removed
 			remove_constraints=set()
+
+			if len(lower_bounds)>0 and len(upper_bounds)>0:
+				iegen.simplify.notify_fm_listeners()
 
 			#Look at each pair of lower/upper bounds
 			for lb_coeff,lower_bound_orig,lb_constraint in lower_bounds:
@@ -2089,6 +2093,8 @@ class SparseDisjunction(IEGenObject):
 
 	def project_out(self,var_col):
 		self._check_mutate()
+
+		iegen.simplify.notify_project_out_listeners()
 
 		projected_out=True
 		for conjunction in self:
