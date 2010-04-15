@@ -479,7 +479,41 @@ D_I3_to_I3 = T_I2_to_I3.compose( D_I2_to_I2.compose( T_I2_to_I3.inverse() ) )
 print "\tD_I3_to_I3 = "
 print D_I3_to_I3
 
-# And some profiling at the end.
+##### SparseLoopOpt
+# The goal of the sparse loop optimization is to get rid of any
+# guards in the inner loop that involve UFS.
+#spec.add_transformation(
+#    type=iegen.trans.SparseLoopOpt,
+#    name='sparseLoop',     # name used in IDG I think?
+#)
+#
+# The sparse loop optimization doesn't need much specification because
+# initially I think we should have it apply to all loops where there
+# is a UFS constraint in the schedule.  Later we can specify individual loops
+# for the transformation.  Is this going to be enough info or does user
+# have to specify relation for each loop?
+# The main questions are (1) which statement does the opt apply,
+# (2) which constraint to remove from statement's schedule, 
+# (3) relation for projecting out innermost loop from schedule, and
+# (4) sparse loop relation with schedule output tuple vars as input
+# vars and innermost loop var as an output tuple var.
+# The access relations will stay the same so it is important to maintain
+# tuple variable names (FIXME: this could be a problem).
+#
+# Assumption: All statements within a loop have been fused into one statement.
+#   Only have one inner sparse loop.
+#
+# The SparseLoopOpt transformation should work as follows:
+#   1) Iterate through all statements and find those with a UFS constraint
+#      in the schedule.  For now let's focus on those where the UFS constraint
+#      involves the innermost iterator variable.  If we find a case where 
+#      this is not true, then assert.
+#   2) 
+
+
+
+
+###################### And some profiling at the end.
 cProfile.run('T_I2_to_I3.compose( D_I2_to_I2.compose( T_I2_to_I3.inverse() ) )','prof')
 p = pstats.Stats('prof')
 p.strip_dirs()
