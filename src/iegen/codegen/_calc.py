@@ -282,5 +282,7 @@ def calc_equality_value(var_name,formula,mapir,raw_array=False):
 	for er_spec in mapir.get_er_specs():
 		function_name_map[er_spec.name]=('EF_get(%s,'%(er_spec.get_var_name()),')')
 
+	iegen.print_detail("-->Equality value for tuple variable '%s' in relation %s: %s"%(var_name,formula,equal_value.value_string(function_name_map=function_name_map)))
+
 	return equal_value.value_string(function_name_map=function_name_map)
 #---------------------------------------------------

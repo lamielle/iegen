@@ -21,11 +21,11 @@ spec.add_transformation(
 #because they used to be accessing the data array sequentially 
 #and are not accessing it through sigma.
 #This is broken out into a transformation per statement.
-#T0 is for the first loop.  T1 is for the statement that is not a loop.
+#T1 is for the first loop.  T0 is for the statement that is not a loop.
 #T2 is the loop that does NOT need realigned.
 #T3 is the third loop.
-T0 = Relation('{[c0,s,c0,i,c0]->[c0,s,c0,j,c0]: c0=0 && c2=2 && j=sigma(i)}')
-T1 = Relation('{[c0,s,c1,c0,c0]->[c0,s,c1,c0,c0]: c0=0 && c1=1}')
+T0 = Relation('{[c0,s,c0,c0,c0]->[c0,s,c1,c0,c0]: c0=0 }')
+T1 = Relation('{[c0,s,c1,i,c0]->[c0,s,c1,j,c0]: c0=0 && c1=1 && j=sigma(i)}')
 T2 = Relation('{[c0, s, c2, ii, x] -> [c0, s, c2, ii, x] : c0=0 && c2=2}')
 T3 = Relation('{[c0,s,c3,i,x] -> [c0,s,c3,j,x] : c0=0 && c3=3 && j=sigma(i)}')
 

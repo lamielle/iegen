@@ -37,16 +37,16 @@ def gen_domain(name,set):
 	stmts=[]
 	stmts.append(Comment('RectUnionDomain for set %s'%(set)))
 
-	if 1==len(set.sets):
+	if 1==len(set):
 		conj_name = '%s_conj0'%(name)
-		stmts.extend(gen_rect_domain(conj_name, iegen.Set(sets=[set.sets[0]])))
+		stmts.extend(gen_rect_domain(conj_name, list(set)[0]))
 		stmts.append(Statement('RectUnionDomain *%s=RUD_ctor(%s);'%(name,conj_name)))
 	else:
 		stmts.append(Statement('RectUnionDomain *%s=RUD_ctor(%d);'%(name,set.arity())))
 		count = 0
-		for conjunct in set.sets:
+		for conjunct in set:
 			conj_name = '%s_conj%d'%(name,count)
-			stmts.extend(gen_rect_domain(conj_name, iegen.Set(sets=[conjunct])))
+			stmts.extend(gen_rect_domain(conj_name,conjunct))
 			stmts.append(Statement('RUD_insert(%s,%s);'%(name,conj_name)))
 			count = count + 1
 
@@ -55,14 +55,14 @@ def gen_domain(name,set):
 def gen_rect_domain(name,set):
 	from iegen.codegen import Statement,Comment
 
-	if 1!=len(set.sets): raise ValueError("Set's relation has multiple terms in the disjunction: '%s'"%(set))
+	if 1!=len(set): raise ValueError("Set's relation has multiple terms in the disjunction: '%s'"%(set))
 
 	stmts=[]
 	stmts.append(Comment('RectDomain for set %s'%(set)))
 	stmts.append(Statement('RectDomain *%s=RD_ctor(%d);'%(name,set.arity())))
-	for var in set.sets[0].tuple_set.vars:
-		stmts.append(Statement('RD_set_lb(%s,0,%s);'%(name,calc_lower_bound_string(set.lower_bound(var.id)))))
-		stmts.append(Statement('RD_set_ub(%s,0,%s);'%(name,calc_upper_bound_string(set.upper_bound(var.id)))))
+	for var in set.tuple_set:
+		stmts.append(Statement('RD_set_lb(%s,0,%s);'%(name,calc_lower_bound_string(set.lower_bounds(var)[0]))))
+		stmts.append(Statement('RD_set_ub(%s,0,%s);'%(name,calc_upper_bound_string(set.upper_bounds(var)[0]))))
 
 	return stmts
 
@@ -127,22 +127,20 @@ def gen_explicit_er_spec(er_spec,mapir):
 	from iegen.pycloog import codegen
 	from iegen.codegen import Statement,Comment
 
-	if 0==len(er_spec.relation.relations): raise ValueError("ESpec's relation has no terms in the disjunction")
+	if 0==len(er_spec.relation): raise ValueError("ESpec's relation has no terms in the disjunction")
 	if (1,1)!=er_spec.relation.arity(): raise ValueError("ESpec's relation must have arity (1,1)")
 
 	iegen.print_progress("Generating code for ERSpec '%s'..."%(er_spec.name))
 	iegen.print_detail(er_spec)
 
-	var_in_name=er_spec.relation.relations[0].tuple_in.vars[0].id
-	var_out_name=er_spec.relation.relations[0].tuple_out.vars[0].id
+	var_in_name=er_spec.relation.tuple_in[0]
+	var_out_name=er_spec.relation.tuple_out[0]
 
 	#Generate the define/undefine statements
 	cloog_stmts=[]
 	define_stmts=[]
 	undefine_stmts=[]
-	for relation_index in xrange(len(er_spec.relation.relations)):
-		relation=er_spec.relation.relations[relation_index]
-
+	for relation_index,relation in enumerate(er_spec.relation):
 		#Get the value to insert
 		value=calc_equality_value(var_out_name,relation,mapir)
 
@@ -201,14 +199,12 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 		define_stmts=[]
 		undefine_stmts=[]
 
-		var_in_name=output_er_spec.relation.relations[0].tuple_in.vars[0].id
-		var_out_name=output_er_spec.relation.relations[0].tuple_out.vars[0].id
+		var_in_name=output_er_spec.relation.tuple_in[0]
+		var_out_name=output_er_spec.relation.tuple_out[0]
 
-		for relation_index in xrange(len(output_er_spec.relation.relations)):
-			relation=output_er_spec.relation.relations[relation_index]
-
+		for relation_index,single_relation in enumerate(output_er_spec.relation):
 			#Get the value to insert
-			value=calc_equality_value(var_out_name,relation,mapir)
+			value=calc_equality_value(var_out_name,single_relation,mapir)
 
 			define_stmts.append(Statement('#define S%d(%s) EF_set(%s,%s,%s);'%(relation_index,var_in_name,output_er_spec.get_var_name(),var_in_name,value)))
 

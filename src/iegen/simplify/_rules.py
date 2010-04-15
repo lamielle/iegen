@@ -109,23 +109,54 @@ def remove_equal_functions(obj):
 	if changed and iegen.settings.debug: iegen.print_debug('Simplify: removed equal functions: %s -> %s'%(before,obj))
 	return changed
 
-#---------- Inverse Simplification Rule ----------
-#----- Inverse Simplification Rule Listeners -----
+#----- Simplification Rule Listeners -----
 #Dictionary containing name->(func,instance) mappings
 #name is the name of the function/method
 #func is the function/method object
 #instance is the instance if func is a method
 _inverse_simplify_listeners={}
+_equality_simplify_listeners={}
+_fm_listeners={}
+_project_out_listeners={}
 
-#Register the given function as a simplification rule
-#rule_func: The function to run for the rule
+#Register the given function as a listener
+#listener_func: The function to notify
 #instance: If this is a method, the instance to use for self
-#rule_group: What group (int) to put this rule into
-#            0 and 1 are reserved, 3+ are for users
 def register_inverse_simplify_listener(listener_func,instance=None):
 	listner_func_name=listener_func.__name__
-	iegen.print_debug("Registering inverse simplify function '%s'"%(listner_func_name))
+	iegen.print_debug("Registering inverse simplify listener '%s'"%(listner_func_name))
 	_inverse_simplify_listeners[listner_func_name]=(listener_func,instance)
+def register_equality_simplify_listener(listener_func,instance=None):
+	listner_func_name=listener_func.__name__
+	iegen.print_debug("Registering equality simplify listener '%s'"%(listner_func_name))
+	_equality_simplify_listeners[listner_func_name]=(listener_func,instance)
+def register_fm_listener(listener_func,instance=None):
+	listner_func_name=listener_func.__name__
+	iegen.print_debug("Registering fm listener '%s'"%(listner_func_name))
+	_fm_listeners[listner_func_name]=(listener_func,instance)
+def register_project_out_listener(listener_func,instance=None):
+	listner_func_name=listener_func.__name__
+	iegen.print_debug("Registering project out listener '%s'"%(listner_func_name))
+	_project_out_listeners[listner_func_name]=(listener_func,instance)
+
+def notify_listeners(listeners,*args):
+	for listener_func,listener_instance in listeners.values():
+		#Is this a function call?
+		if listener_instance is None:
+			listener_func(*args)
+		#This is a method call
+		else:
+			listener_func(listener_instance,*args)
+
+#Notify all registered simplification listeners of various events
+def notify_inverse_simplify_listeners(func_name,inv_func_name):
+	notify_listeners(_inverse_simplify_listeners,func_name,inv_func_name)
+def notify_equality_simplify_listeners():
+	notify_listeners(_equality_simplify_listeners)
+def notify_fm_listeners():
+	notify_listeners(_fm_listeners)
+def notify_project_out_listeners():
+	notify_listeners(_project_out_listeners)
 
 #Runs the inverse simplification visitor on the given object
 def inverse_simplify(obj):
@@ -138,19 +169,11 @@ def inverse_simplify(obj):
 	changed=v.visit(obj).changed
 	if changed and iegen.settings.debug: iegen.print_debug('Simplify: inverse simplification: %s -> %s'%(before,obj))
 
-	#Notify any listeners that the rule has been applied
 	if changed:
-		for listener_func,listener_instance in _inverse_simplify_listeners.values():
-			#Is this a function call?
-			if listener_instance is None:
-				listener_func(v.func_name,v.func_inv_name)
-			#This is a method call
-			else:
-				listener_func(listener_instance,v.func_name,v.func_inv_name)
+		notify_inverse_simplify_listeners(v.func_name,v.func_inv_name)
 
 	return changed
 #-------------------------------------------------
-#--------------------------------------------------
 
 #---------- Rule Registration ----------
 register_rule(merge_terms,rule_group=0)

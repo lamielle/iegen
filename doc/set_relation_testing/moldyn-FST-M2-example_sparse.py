@@ -514,6 +514,7 @@ print D_I3_to_I3
 
 
 ###################### And some profiling at the end.
+# And some profiling at the end.
 cProfile.run('T_I2_to_I3.compose( D_I2_to_I2.compose( T_I2_to_I3.inverse() ) )','prof')
 p = pstats.Stats('prof')
 p.strip_dirs()
