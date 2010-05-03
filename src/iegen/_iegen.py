@@ -168,30 +168,111 @@ class ERSpec(IEGenObject):
 	def functions(self):
 		return list(set(self.input_bounds.function_names+self.output_bounds.function_names+self.relation.function_names))
 
-	#Returns true if this ERSpec can be represented as a union of explicit 1D functions
+	#EF_1D
+	#- if in and out arity are both 1D.
+	#- if ERSpec is a function.
+	#- If only has one conjunction.
+	def is_ef_1d(self):
+		return (1,1)==self.relation.arity() and self.is_function and len(self.relation)==1
+
+	#EF_2D
+	#- if in and out arity are both less than or equal to 2.
+	#- if ERSpec is a function.
+	#- If only has one conjunction.
+	#- example: theta
+	def is_ef_2d(self):
+		return self.relation.arity_in()<=2 and self.relation.arity_out()<=2 and self.is_function and len(self.relation)==1
+
+	#ER_U1D
+	#- if in and out arity are both 1D.
+	#- Each conjunction is a function.  (TODO: have a flag for this in Relation object)  More specifically, when doing code gen each conjunction should have an EF_1D associated with it.
 	def is_union_1d(self):
-		return (1,1)==self.relation.arity() and self.is_function and len(self.relation)>1
+		#return (1,1)==self.relation.arity() and self.is_function
+		#TODO: add flag for individual relations being functions
+		return (1,1)==self.relation.arity()
+
+	#ER_1DCOO
+	#- if in and out arity are both 1D.
+	#- Do not have each conjunction as a function.
+	#- Could be multiple conjunctions.q
+	#TODO: Add support for this ER type
 
 	#Returns the variable type string for this ERSpec
 	def get_type(self):
-		if self.is_union_1d():
+		if self.is_ef_1d():
+			return 'EF_1D *'
+		elif self.is_ef_2d():
+			return 'EF_2D *'
+		elif self.is_union_1d():
 			return 'ER_U1D *'
 		else:
-			return 'ExplicitFunction *'
-
-	#Returns the variable name for this ERSpec
-	def get_var_name(self):
-		if self.is_union_1d():
-			return self.name+'_ER_U1D'
-		else:
-			return self.name+'_EF'
+			raise ValueError('Unknown ERSpec type')
 
 	#Returns the parameter type string for this ERSpec
 	def get_param_type(self):
-		if self.is_union_1d():
+		if self.is_ef_1d():
+			return 'EF_1D **'
+		elif self.is_ef_2d():
+			return 'EF_2D **'
+		elif self.is_union_1d():
 			return 'ER_U1D **'
 		else:
-			return 'ExplicitFunction **'
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the name of the getter function
+	def get_getter_str(self):
+		if self.is_ef_1d():
+			return 'EF_1D_get'
+		elif self.is_ef_2d():
+			return 'EF_2D_get'
+		elif self.is_union_1d():
+			return 'ER_U1D_get'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the name of the ctor
+	def get_ctor_str(self):
+		if self.is_ef_1d():
+			return 'EF_1D_ctor'
+		elif self.is_ef_2d():
+			return 'EF_2D_ctor'
+		elif self.is_union_1d():
+			return 'ER_U1D_ctor'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the name of the genInverse routine
+	def get_genInverse_str(self):
+		if self.is_ef_1d():
+			return 'EF_1D_genInverse'
+		elif self.is_ef_2d():
+			return 'EF_2D_genInverse'
+		elif self.is_union_1d():
+			return 'ER_U1D_genInverse'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the name of the setter function
+	def get_setter_str(self):
+		if self.is_ef_1d():
+			return 'EF_1D_set'
+		elif self.is_ef_2d():
+			return 'EF_2D_set'
+		elif self.is_union_1d():
+			return 'ER_U1D_set'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the variable name for this ERSpec
+	def get_var_name(self):
+		if self.is_ef_1d():
+			return self.name+'_EF_1D'
+		elif self.is_ef_2d():
+			return self.name+'_EF_2D'
+		elif self.is_union_1d():
+			return self.name+'_ER_U1D'
+		else:
+			raise ValueError('Unknown ERSpec type: %s %s'%(self.name,self.relation))
 
 	#Returns the parameter name for this ERSpec
 	def get_param_name(self):
@@ -230,11 +311,23 @@ class IndexArray(ERSpec):
 
 	#Returns the variable type string for this index array
 	def get_type(self):
-		return 'ExplicitFunction *'
+		return 'EF_1D *'
+
+	#Returns the name of the getter function
+	def get_getter_str(self):
+		return 'EF_1D_get'
+
+	#Returns the name of the setter function
+	def get_setter_str(self):
+		return 'EF_1D_set'
+
+	#Returns the name of the ctor
+	def get_ctor_str(self):
+		return 'EF_1D_ctor'
 
 	#Returns the variable name for this index array
 	def get_var_name(self):
-		return self.name+'_EF'
+		return self.name+'_EF_1D'
 
 	#Returns the parameter name for this index array
 	def get_param_name(self):

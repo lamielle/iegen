@@ -13,7 +13,7 @@ spec.add_transformation(
     data_arrays=['data'],
     iter_sub_space_relation='{[c0,s,c2,ii,x]->[ii] : c0=0 && c2=2}',
     target_data_arrays=['data'],
-    erg_func_name='EFG_cpack')
+    erg_func_name='ERG_cpack')
 
 #Loop alignment
 #After the data reordering performed on the data array, it is

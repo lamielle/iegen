@@ -30,7 +30,7 @@ class TopoVisitor(IEGenObject):
 
 	#---------- Visit methods ----------
 	def visit(self,idg):
-		#Create mappings from node keys to number of depences
+		#Create mappings from node keys to number of dependences
 		num_deps=dict(((node_key,len(node.deps)) for node_key,node in idg.nodes.iteritems()))
 
 		#Loop until we have visited all nodes
@@ -53,7 +53,7 @@ class TopoVisitor(IEGenObject):
 				for use_key in idg.nodes[dep_key].uses:
 					num_deps[use_key]-=1
 
-				#Remove the node from depdence counts
+				#Remove the node from dependence counts
 				del num_deps[dep_key]
 
 		return self

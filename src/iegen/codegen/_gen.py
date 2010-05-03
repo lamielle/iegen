@@ -67,7 +67,7 @@ def gen_index_array(index_array):
 
 	stmts=[]
 	stmts.append(Comment('Wrapping index array %s'%(index_array.name)))
-	stmts.append(Statement('%s=EF_ctor(%s,%s);'%(index_array.get_var_name(),index_array.get_param_name(),size_string)))
+	stmts.append(Statement('%s=%s(%s,%s);'%(index_array.get_var_name(),index_array.get_ctor_str(),index_array.get_param_name(),size_string)))
 	stmts.append(Statement())
 
 	return stmts

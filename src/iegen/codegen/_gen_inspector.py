@@ -70,7 +70,7 @@ def gen_rect_domain(name,set):
 #Generate code for a given ERSpec
 def gen_er_spec(er_spec,mapir):
 	if er_spec.is_inverse:
-		stmts=gen_inverse_er_spec(er_spec)
+		stmts=gen_inverse_er_spec(er_spec,mapir)
 	else:
 		if er_spec.is_union_1d():
 			stmts=gen_explicit_er_union_1d(er_spec,mapir)
@@ -79,11 +79,11 @@ def gen_er_spec(er_spec,mapir):
 	return stmts
 
 #Generate an ERSpec that is the inverse of another
-def gen_inverse_er_spec(er_spec):
+def gen_inverse_er_spec(er_spec,mapir):
 	from iegen.codegen import Statement,Comment
 	stmts=[]
 	stmts.append(Comment("Create the inverse ER '%s' from the ER '%s'"%(er_spec.name,er_spec.inverse_of)))
-	stmts.append(Statement('*%s=EF_genInverse(%s);'%(er_spec.get_param_name(),er_spec.inverse_of)))
+	stmts.append(Statement('*%s=%s(%s);'%(er_spec.get_param_name(),er_spec.get_genInverse_str(),mapir.er_specs[er_spec.inverse_of].get_var_name())))
 	stmts.append(Statement('%s=*%s;'%(er_spec.get_var_name(),er_spec.get_param_name())))
 	return stmts
 
@@ -102,7 +102,7 @@ def gen_explicit_er_union_1d(er_spec,mapir):
 	stmts=[]
 	stmts.append(Comment('Creation of ER_U1D for abstract relation:'))
 	stmts.append(Comment(str(er_spec.relation)))
-	stmts.append(Statement('%s = ER_U1D_ctor();'%(er_spec.get_var_name())))
+	stmts.append(Statement('%s = %s();'%(er_spec.get_var_name(),er_spec.get_ctor_str())))
 	stmts.append(Statement())
 	stmts.append(Comment('Insert relevant EFs into ER_U1D'))
 
@@ -156,7 +156,7 @@ def gen_explicit_er_spec(er_spec,mapir):
 	stmts.append(Statement())
 	stmts.append(Comment('Creation of ExplicitRelation'))
 	stmts.append(Comment(str(er_spec.relation)))
-	stmts.append(Statement('%s_ER = ER_ctor(%d,%d,%s,%s,%s);'%(er_spec.name,er_spec.relation.arity_in(),er_spec.relation.arity_out(),in_domain_name,str(er_spec.is_function).lower(),str(er_spec.is_permutation).lower())))
+	stmts.append(Statement('%s_ER = %s(%d,%d,%s,%s,%s);'%(er_spec.name,er_spec.get_ctor_str(),er_spec.relation.arity_in(),er_spec.relation.arity_out(),in_domain_name,str(er_spec.is_function).lower(),str(er_spec.is_permutation).lower())))
 	stmts.append(Statement())
 	stmts.append(Comment('Define loop body statements'))
 	stmts.extend(define_stmts)
@@ -189,7 +189,7 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 	stmts.append(Comment('Creation of ExplicitFunction for abstract relation:'))
 	stmts.append(Comment(str(output_er_spec.relation)))
 	stmts.append(Comment('Bounds for set %s'%(output_er_spec.input_bounds)))
-	stmts.append(Statement('*%s=EF_ctor(%s,%s,%s);'%(output_er_spec.get_param_name(),lower_bound,upper_bound,str(output_er_spec.is_permutation).lower())))
+	stmts.append(Statement('*%s=%s(%s,%s,%s);'%(output_er_spec.get_param_name(),output_er_spec.get_ctor_str(),lower_bound,upper_bound,str(output_er_spec.is_permutation).lower())))
 	stmts.append(Statement('%s=*%s;'%(output_er_spec.get_var_name(),output_er_spec.get_param_name())))
 	stmts.append(Statement())
 
@@ -206,7 +206,7 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 			#Get the value to insert
 			value=calc_equality_value(var_out_name,single_relation,mapir)
 
-			define_stmts.append(Statement('#define S%d(%s) EF_set(%s,%s,%s);'%(relation_index,var_in_name,output_er_spec.get_var_name(),var_in_name,value)))
+			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(relation_index,var_in_name,output_er_spec.get_setter_str(),output_er_spec.get_var_name(),var_in_name,value)))
 
 			cloog_stmts.append(iegen.pycloog.Statement(output_er_spec.input_bounds))
 			undefine_stmts.append(Statement('#undef S%d'%(relation_index,)))
