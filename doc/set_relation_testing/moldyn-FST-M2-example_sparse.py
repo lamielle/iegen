@@ -367,7 +367,10 @@ print D_I2_to_I2
 #spec.add_transformation(
 #    type=iegen.trans.SparseTileTrans,
 #    name='fst',    # name used in IDG I think?
-#    grouping_name='theta',  # sparse tiling create a grouping function 
+#    tilefunc_name='theta',  #? sparse tiling create a grouping function 
+#    #tilefunc_in_arity=2,   #DON'T use, get arity from iter_sub_space_relation
+#                            # out arity
+#    tilefunc_out_range='{[z] : 0<=z and z< nt}',
 #
 #    # Mapping from full iteration space to sub space being tiled.
 #    iter_sub_space_relation='{[x,s,y,i,z]->[y,i]}', # Tiling across inner loops
@@ -386,6 +389,8 @@ print D_I2_to_I2
 #    erg_func_name='ERG_fst',
 #
 #    iter_space_trans=Relation("{[x,s,y,i,z] -> [x,s,c0,t,y,i,z] : c0=0 and t=theta(y,i)}")
+#
+#    
 
 iter_sub_space_relation=Relation('{[x,s,y,i,z]->[y,i]}')
 
@@ -409,6 +414,8 @@ to_deps=Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter1(delta
 #
 # 3) Then need an ER spec for the tiling function theta, which is generated 
 #    by the full sparse tiling function.
+
+tiled_sub_space = iter_sub_space_relation.apply(I2)
 
 
 ## Modifying the MapIR for SparseTileTrans
