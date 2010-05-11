@@ -370,7 +370,8 @@ print D_I2_to_I2
 #    tilefunc_name='theta',  #? sparse tiling create a grouping function 
 #    #tilefunc_in_arity=2,   #DON'T use, get arity from iter_sub_space_relation
 #                            # out arity
-#    tilefunc_out_range='{[z] : 0<=z and z< nt}',
+#    #tilefunc_out_range='{[z] : 0<=z and z< nt}',
+#    num_tile_symbol = 'nt',
 #
 #    # Mapping from full iteration space to sub space being tiled.
 #    iter_sub_space_relation='{[x,s,y,i,z]->[y,i]}', # Tiling across inner loops
