@@ -6,3 +6,4 @@ from _iter_permute import IterPermuteTrans
 from _iter_align import IterAlignTrans
 from _iter_embed import IterEmbedTrans
 from _iter_project import IterProjectTrans
+from _sparse_tile import SparseTileTrans

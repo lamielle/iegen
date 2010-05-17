@@ -14,7 +14,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen.trans classes
 	def testNameImport(self):
 		try:
-			from iegen.trans import Transformation,DataPermuteTrans,DataEmbedTrans,DataProjectTrans,IterPermuteTrans,IterEmbedTrans,IterProjectTrans
+			from iegen.trans import Transformation,DataPermuteTrans,DataEmbedTrans,DataProjectTrans,IterPermuteTrans,IterEmbedTrans,IterProjectTrans,SparseTileTrans
 		except ImportError,e:
 			self.fail('Importing classes from iegen.trans failed: '+str(e))
 #----------------------------------

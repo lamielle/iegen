@@ -1865,6 +1865,18 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(composed==composed_res,'%s!=%s'%(composed,composed_res))
 
+	def testComposeBug1(self):
+		from iegen import Relation
+
+		itd=Relation('{[t,i0]->[sigma_out]: t=theta(i0)}')
+		sc=Relation('{[ii]->[t,i0]: ii=i0 and t=theta(ii)}')
+
+		composed=itd.compose(sc)
+
+		res=Relation('{[ii]->[sigma_out]: t=theta(ii)}')
+
+		self.failUnless(composed==res,'%s!=%s'%(composed,res))
+
 	# End operation tests
 	#----------------------------------------
 

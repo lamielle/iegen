@@ -75,18 +75,16 @@ spec.add_transformation(
     type=iegen.trans.SparseTileTrans,
     name='fst',    # name used in IDG I think?
     grouping_name='theta',  # sparse tiling create a grouping function
+    num_tile_name='nt', #defines the name of the symbolic for the number of tiles
 
     # Mapping from full iteration space to sub space being tiled.
     iter_sub_space_relation='{[x,s,y,i,z]->[y,i]}', # Tiling across inner loops
 
-    # Mapping from full iteration space to seed space.  Seed space should be
-    # subset of subspace.
+    # Mapping from full iteration space to seed space.  Seed space should be subset of subspace.
     iter_seed_space_relation='{[x,s,c1,i,z]->[c1,i] : c1=1}', # Second inner loop
 
-    # Dependences in sub space that end in seed space (to_deps) and start
-    # in seed space (from_deps).
-    # FIXME: Eventually we want to calculate this instead of having the user
-    # specify it.
+    # Dependences in sub space that end in seed space (to_deps) and start in seed space (from_deps).
+    # FIXME: Eventually we want to calculate this instead of having the user specify it.
     to_deps=Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter1(delta_inv(j)))}').union(Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter2(delta_inv(j)))}')),
     from_deps=None,    # For M2 there is no third inner loop.
 

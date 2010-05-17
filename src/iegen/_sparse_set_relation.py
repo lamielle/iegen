@@ -1206,8 +1206,11 @@ class SparseExp(IEGenObject):
 			raise ValueError("Column '%s' is not present in this expression (%s)"%(var_col,self))
 
 	def multiply(self,factor):
-		for term,coeff in self:
-			self[term]*=factor
+		for key in self.exp.keys():
+			#TODO: Bug is here?
+			coeff=self[key]
+			coeff*=factor
+			self[key]=coeff
 		self._update()
 
 	def add_exp(self,other_exp):
