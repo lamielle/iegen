@@ -1274,7 +1274,7 @@ class SparseExp(IEGenObject):
 
 	def replace_var(self,var_col,equal_coeff,equal_exp):
 		#Replace the variable within any function terms of this expression
-		for term,coeff in self:
+		for term in self.exp.keys():
 			if term.is_function():
 				#Grab the current coefficient for the function term
 				coeff=self[term]

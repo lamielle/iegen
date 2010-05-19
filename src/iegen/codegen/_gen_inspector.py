@@ -175,6 +175,7 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 	from iegen.codegen import Statement,Comment
 
 	iegen.print_progress("Generating code for output ERSpec '%s'..."%(output_er_spec.name))
+	iegen.print_detail(str(output_er_spec))
 
 	stmts=[]
 
