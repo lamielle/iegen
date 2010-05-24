@@ -154,14 +154,21 @@ class PointerUpdate(InterTransOpt):
 		for er_spec in affected_er_specs:
 			er_node = mapir.idg.get_node(IDGERSpec,er_spec)
 
+			#Fail if the ERSpec node has more than one parent
+			if len(er_node.deps)!=1:
+				raise ValueError('ERSpec node does not have exactly one parent')
+
+			#Get the node that produced the ERSpec
+			parent_er_node = er_node.deps[er_node.deps.keys()[0]]
+
 			#Remove dependence on old functions.
 			for func_name in nest:
 				func_node = mapir.idg.get_node(IDGERSpec,
 					mapir.er_specs[func_name])
-				er_node.remove_dep(func_node)
+				parent_er_node.remove_dep(func_node)
 
 			#Add dependence on new function.
-			er_node.add_dep(newfunc_node)
+			parent_er_node.add_dep(newfunc_node)
 
 		#Have new function node depend on old functions.
 		for func_name in nest:
