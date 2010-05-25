@@ -1,8 +1,8 @@
 from cStringIO import StringIO
 from iegen.trans import Transformation
 from iegen import ERSpec,Set,Relation,VersionedDataArray,DataDependence
-from iegen.idg import IDGDataArray,IDGERSpec,IDGOutputERSpec,IDGGenERSpec,IDGCall,IDGSymbolic
-from iegen.codegen import calc_erg_call,calc_reorder_call
+from iegen.idg import IDGDataArray,IDGERSpec,IDGOutputERSpec,IDGGenERSpec,IDGCall,IDGSymbolic,IDGDataDep,IDGGenDataDep
+from iegen.codegen import calc_erg_call,calc_reorder_call,calc_data_dep_deps
 
 #---------- SparseTileTrans class ----------
 class SparseTileTrans(Transformation):
@@ -73,7 +73,8 @@ class SparseTileTrans(Transformation):
 		#The tiling routine takes the dependences into and out of the iteration seed space
 		#These dependences are given by the user currently, so we do not need to calculate them
 		#Create a DataDependence instance for the dependences
-		self.to_deps=DataDependence('to_deps',self.to_deps)
+		self.to_deps=DataDependence('%s_to_deps'%(self.grouping_name,),self.to_deps)
+		self.from_deps=DataDependence('%s_from_deps'%(self.grouping_name,),self.from_deps)
 
 		#Create a new Symbolic for the number of tiles
 		#TODO: The type is constant here, it would be better if this were defined somewhere else
@@ -81,11 +82,13 @@ class SparseTileTrans(Transformation):
 
 	#Calculate the output from the sparse tiling routine
 	def calc_output(self,mapir):
+		#input bounds calculated based on full iteration space and the specified iter_seed_space_relation
+		input_bounds=mapir.full_iter_space.apply(self.iter_seed_space_relation)
+
 		#Create a static description of the tiling function (theta) that is the output of the tiling routine
 		self.outputs.append(ERSpec(
 		    name=self.grouping_name,
-		    #TODO: Need to define input bounds
-		    input_bounds=Set('{[c,i]}'),
+		    input_bounds=input_bounds,
 		    output_bounds=Set('{[tile]: 0<=tile and tile<=%s}'%(self.num_tile_name,)),
 		    relation=Relation('{[%s_in]->[%s_out]: %s_out=%s(%s_in)}'%(5*(self.grouping_name,))),
 		    is_function=True,
@@ -112,9 +115,22 @@ class SparseTileTrans(Transformation):
 		self.print_progress('Updating data dependences for SparseTileTrans...')
 		for data_dependence in mapir.get_data_dependences():
 			self.print_detail("Updating data dependence '%s'..."%(data_dependence.name))
+			print data_dependence
 			data_dependence.dep_rel=self.iter_space_trans.compose(data_dependence.dep_rel.compose(self.iter_space_trans.inverse()))
 
 	def update_idg(self,mapir):
+		#Add the to/from data dependence nodes to the IDG
+		to_data_dep_node=mapir.idg.get_node(IDGDataDep,self.to_deps)
+		from_data_dep_node=mapir.idg.get_node(IDGDataDep,self.from_deps)
+
+		#Add the data dependence generation nodes to the IDG
+		gen_to_data_dep_node=mapir.idg.get_node(IDGGenDataDep,self.to_deps)
+		gen_from_data_dep_node=mapir.idg.get_node(IDGGenDataDep,self.from_deps)
+
+		#Add the dependence of the data dependence nodes on the generation ndoes
+		to_data_dep_node.add_dep(gen_to_data_dep_node)
+		from_data_dep_node.add_dep(gen_from_data_dep_node)
+
 		#Add the ERG call node to the IDG
 		#This is the node that represents the call to the sparse tiling routine
 		erg_call_node=mapir.idg.get_node(IDGCall,calc_erg_call(self.name,self.erg_func_name,self.inputs,self.outputs))
@@ -125,9 +141,17 @@ class SparseTileTrans(Transformation):
 		#Add a dependence of the ERG call on the symbolic
 		erg_call_node.add_dep(num_tile_node)
 
+		#Add dependences of the ERG call on the data dependence nodes
+		erg_call_node.add_dep(to_data_dep_node)
+		erg_call_node.add_dep(from_data_dep_node)
+
 		#Add the output node to the IDG
 		output_node=mapir.idg.get_node(IDGERSpec,self.outputs[0])
 
 		#Add a dependence of the output on the ERG call node
 		output_node.add_dep(erg_call_node)
+
+		#Setup dependences for the data dependence nodes
+		calc_data_dep_deps(self.to_deps,mapir)
+		calc_data_dep_deps(self.from_deps,mapir)
 #-------------------------------------------

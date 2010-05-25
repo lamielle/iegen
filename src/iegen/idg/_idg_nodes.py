@@ -82,6 +82,14 @@ class IDGOutputERSpec(IDGERSpec):
 	def apply_visitor(self,visitor):
 		visitor.visitIDGOutputERSpec(self)
 #-------------------------------------
+
+#---------- IDGDataDep ----------
+class IDGDataDep(IDGDataNode):
+	_prefix='data_dep_'
+
+	def apply_visitor(self,visitor):
+		visitor.visitIDGDataDep(self)
+#---------------------------------
 #----------------------------------------------------
 
 #-------------------- Task Nodes --------------------
@@ -99,6 +107,14 @@ class IDGGenOutputERSpec(IDGTaskNode):
 
 	def apply_visitor(self,visitor):
 		visitor.visitIDGGenOutputERSpec(self)
+#---------------------------------
+
+#---------- IDGGenDataDep ----------
+class IDGGenDataDep(IDGTaskNode):
+	_prefix='gen_data_dep_'
+
+	def apply_visitor(self,visitor):
+		visitor.visitIDGGenDataDep(self)
 #---------------------------------
 
 #---------- IDGCall ----------

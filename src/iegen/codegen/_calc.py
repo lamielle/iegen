@@ -140,6 +140,40 @@ def calc_er_spec_deps(er_spec,mapir):
 
 				#Recursively add dependences for the dependence node
 				calc_er_spec_deps(dep_node.data,mapir)
+
+#Adds any dependences the given DataDependence has to the IDG
+def calc_data_dep_deps(data_dep,mapir):
+	from iegen.idg import IDGSymbolic,IDGIndexArray,IDGERSpec,IDGDataDep
+	#Get the IDG node for the given DataDependence
+	data_dep_node=mapir.idg.get_node(IDGDataDep,data_dep)
+
+	#Make sure this node is dependent on only one node
+	if len(data_dep_node.deps)>1:
+		raise ValueError("IDG node '%s' is dependent on more than one node"%(data_dep_node.name))
+
+	#Get the node that produced this ERSpec
+	parent_of_data_dep_node=data_dep_node.deps[data_dep_node.deps.keys()[0]]
+
+	#Gather symbolic dependences
+	for symbolic in data_dep.symbolics():
+		symbolic_node=mapir.idg.get_node(IDGSymbolic,mapir.symbolics[symbolic])
+		parent_of_data_dep_node.add_dep(symbolic_node)
+
+	#Gather ERSpec dependences
+	for function in data_dep.functions():
+		#Die if the function is referenced but no associated ERSpec exists in the MapIR
+		if function not in mapir.er_specs:
+			raise ValueError("Function '%s' referenced but no associated ERSpec exists"%function)
+
+		#Get the IDG node for the ERSpec that represents this function
+		#Check if the function is an index array
+		if function in mapir.index_arrays:
+			dep_node=mapir.idg.get_node(IDGIndexArray,mapir.index_arrays[function])
+		else:
+			dep_node=mapir.idg.get_node(IDGERSpec,mapir.er_specs[function])
+
+		#Setup the dependence relationship
+		parent_of_data_dep_node.add_dep(dep_node)
 #-------------------------------------------------------
 
 #---------- Access Relation calculation functions ----------

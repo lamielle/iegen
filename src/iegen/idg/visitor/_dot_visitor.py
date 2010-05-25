@@ -56,12 +56,20 @@ class DotVisitor(TopoVisitor):
 		self.write_node_def(node.key,'IDGOutputERSpec\\n%s'%(node.data.name),'rectangle')
 		self.write_node_uses(node)
 
+	def atIDGDataDep(self,node):
+		self.write_node_def(node.key,'IDGDataDep\\n%s'%(node.data.name),'rectangle')
+		self.write_node_uses(node)
+
 	def atIDGGenERSpec(self,node):
 		self.write_node_def(node.key,'IDGGenERSpec\\n%s'%(node.data.name))
 		self.write_node_uses(node)
 
 	def atIDGGenOutputERSpec(self,node):
 		self.write_node_def(node.key,'IDGGenOutputERSpec\\n%s'%(node.data.name))
+		self.write_node_uses(node)
+
+	def atIDGGenDataDep(self,node):
+		self.write_node_def(node.key,'IDGGenDataDep\\n%s'%(node.data.name))
 		self.write_node_uses(node)
 
 	def atIDGCall(self,node):

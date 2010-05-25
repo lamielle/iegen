@@ -73,8 +73,8 @@ spec.add_intertransopt(
 #Full Sparse Tiling
 spec.add_transformation(
     type=iegen.trans.SparseTileTrans,
-    name='fst',    # name used in IDG I think?
-    grouping_name='theta',  # sparse tiling create a grouping function
+    name='fst',    # name used in IDG
+    grouping_name='theta',  # name of sparse tiling created grouping function
     num_tile_name='nt', #defines the name of the symbolic for the number of tiles
 
     # Mapping from full iteration space to sub space being tiled.
@@ -85,8 +85,8 @@ spec.add_transformation(
 
     # Dependences in sub space that end in seed space (to_deps) and start in seed space (from_deps).
     # FIXME: Eventually we want to calculate this instead of having the user specify it.
-    to_deps=Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter1(delta_inv(j)))}').union(Relation('{[c0,i,x] -> [c1,j,y] : c0=0 and c1=1 and i=sigma(inter2(delta_inv(j)))}')),
-    from_deps=None,    # For M2 there is no third inner loop.
+    to_deps=Relation('{[c1,i]->[c2,k] : c1=1 and c2=2 and i=sigma(inter1(delta_inv(j))) and 0<=i and i<n_moles and 0<=k and k<n_inter}').union(Relation('{[c1,i] -> [c2,j] : c1=1 and c2=2 and i=sigma(inter2(delta_inv(j))) and 0<=i and i<n_moles and 0<=k and k<n_inter}')),
+    from_deps=Relation('{[c2,i]->[c3,k] : c2=2 and c3=3 and i=sigma(inter1(delta_inv(j))) and 0<=i and i<n_moles and 0<=k and k<n_inter}').union(Relation('{[c2,i] -> [c3,j] : c2=2 and c3=3 and i=sigma(inter2(delta_inv(j))) and 0<=i and i<n_moles and 0<=k and k<n_inter}')),
 
     erg_func_name='ERG_fst',
 

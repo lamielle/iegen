@@ -437,6 +437,15 @@ class DataDependence(IEGenObject):
 		return '''%sDataDependence:
 %s|-name: %s
 %s|-dep_rel: %s'''%(spaces,spaces,self.name,spaces,self.dep_rel)
+
+	#Returns all symbolics in this data dependence
+	def symbolics(self):
+		return list(set(self.dep_rel.symbolic_names))
+
+	#Returns the names of all functions in this data dependence
+	def functions(self):
+		return list(set(self.dep_rel.function_names))
+
 #------------------------------------------
 
 #---------- Function Call class ----------
