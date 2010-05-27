@@ -29,21 +29,44 @@ def do_calc(mapir):
 		iegen.print_detail(mapir.full_iter_space)
 		iegen.print_detail('-----------------------------------------')
 
-		iegen.print_progress('Calculating inputs to transformation...')
-		#Tell the transformation to calculate the inputs that it will need at runtime
-		transformation.calc_input(mapir)
+		#Assume the current transformation is a transformation, not an ITO
+		try:
+			#Ensure the transformation has the four expected methods
+			calc_input=transformation.calc_input
+			calc_output=transformation.calc_output
+			update_mapir=transformation.update_mapir
+			update_idg=transformation.update_idg
 
-		iegen.print_progress('Calculating outputs from transformation...')
-		#Tell the transformation to calculate the outputs it will produce at runtime
-		transformation.calc_output(mapir)
+			iegen.print_progress('Calculating inputs to transformation...')
+			#Tell the transformation to calculate the inputs that it will need at runtime
+			transformation.calc_input(mapir)
 
-		iegen.print_progress('Updating the MapIR...')
-		#Tell the transformation to update the access relations, scattering functions and other components of the MapIR
-		transformation.update_mapir(mapir)
+			iegen.print_progress('Calculating outputs from transformation...')
+			#Tell the transformation to calculate the outputs it will produce at runtime
+			transformation.calc_output(mapir)
 
-		iegen.print_progress('Updating the IDG...')
-		#Tell the transformation to update the IDG
-		transformation.update_idg(mapir)
+			iegen.print_progress('Updating the MapIR...')
+			#Tell the transformation to update the access relations, scattering functions and other components of the MapIR
+			transformation.update_mapir(mapir)
+
+			iegen.print_progress('Updating the IDG...')
+			#Tell the transformation to update the IDG
+			transformation.update_idg(mapir)
+
+		except AttributeError as e1:
+			#Try the current transformation as an ITO
+			try:
+				apply=transformation.apply
+
+				iegen.print_progress("Applying intertransopt '%s'..."%(transformation.name))
+
+				iegen.print_detail('----- InterTransOpt: -----')
+				iegen.print_detail(transformation)
+				iegen.print_detail('------------------------------------')
+
+				transformation.apply(mapir)
+			except AttributeError as e2:
+				raise ValueError("Current transformation '%s' is neither a transformation nor an ITO"%(transformation.name))
 
 		#Calculate IDG dependences
 		calc_idg_deps(mapir)
@@ -53,16 +76,6 @@ def do_calc(mapir):
 			iegen.print_modified(statement)
 			iegen.print_modified("\n")
 		iegen.print_modified('-----------------------------------------')
-
-	#Apply inter-transformation optimizations
-	for intertransopt in mapir.intertransopts:
-		iegen.print_progress("Applying intertransopt '%s'..."%(intertransopt.name))
-
-		iegen.print_detail('----- InterTransOpt: -----')
-		iegen.print_detail(intertransopt)
-		iegen.print_detail('------------------------------------')
-
-		intertransopt.apply(mapir)
 
 	#Un-update access relations now that the calculation phase is over
 	calc_unupdate_access_relations(mapir)

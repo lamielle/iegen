@@ -179,7 +179,7 @@ class MapIR(IEGenObject):
 	#Adds an inter transformation optimization to the MapIR of the given type
 	# and constructs it from the given arguments.
 	#ITOs are not stored as a dictionary as the ordering
-	# is meaningful (they will be applied in the order they are added)
+	# is meaningful (they will be applied in the order they are added along with the transformations)
 	def add_intertransopt(self,type,**kwargs):
 		self.print_progress("Adding ITO '%s'..."%kwargs['name'])
 
@@ -187,7 +187,7 @@ class MapIR(IEGenObject):
 		ito=self._convert_create_add(type,**kwargs)
 
 		#Add the ITO to the list of ITOs
-		self.intertransopts.append(ito)
+		self.transformations.append(ito)
 	#-------------------------------------
 
 
