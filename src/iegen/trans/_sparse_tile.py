@@ -7,7 +7,7 @@ from iegen.codegen import calc_erg_call,calc_reorder_call,calc_data_dep_deps
 #---------- SparseTileTrans class ----------
 class SparseTileTrans(Transformation):
 	__slots__=('grouping_name','num_tile_name','iter_sub_space_relation','iter_seed_space_relation','to_deps','from_deps','erg_func_name','iter_space_trans')
-	_relation_fields=('iter_sub_space_relation','iter_seed_space_relation',)
+	_relation_fields=('iter_seed_space_relation',)
 
 	def __init__(self,name,grouping_name,num_tile_name,iter_sub_space_relation,iter_seed_space_relation,to_deps,from_deps,erg_func_name,iter_space_trans):
 		Transformation.__init__(self,name)
@@ -83,14 +83,19 @@ class SparseTileTrans(Transformation):
 	#Calculate the output from the sparse tiling routine
 	def calc_output(self,mapir):
 		#input bounds calculated based on full iteration space and the specified iter_seed_space_relation
-		input_bounds=mapir.full_iter_space.apply(self.iter_seed_space_relation)
+		input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation)
+
+		#TODO: calculate relation properly
+#		input_tuple=','.join(['%s_in%d']*input_bounds.arity_in())
+#		relation=Relation('{[%s_in]->[t]: t=%s_out=%s(%s_in)}'%(5*(self.grouping_name,)))
+		relation=Relation('{[a]->[b]}')
 
 		#Create a static description of the tiling function (theta) that is the output of the tiling routine
 		self.outputs.append(ERSpec(
 		    name=self.grouping_name,
 		    input_bounds=input_bounds,
 		    output_bounds=Set('{[tile]: 0<=tile and tile<=%s}'%(self.num_tile_name,)),
-		    relation=Relation('{[%s_in]->[%s_out]: %s_out=%s(%s_in)}'%(5*(self.grouping_name,))),
+			 relation=relation,
 		    is_function=True,
 		    is_permutation=False))
 

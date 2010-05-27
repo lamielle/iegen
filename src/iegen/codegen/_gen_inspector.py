@@ -233,6 +233,13 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 
 	return stmts
 
+def gen_data_dep(data_dep,mapir):
+	stmts=[]
+
+	stmts.append(Comment('Data dep code for %s goes here'%(data_dep.name)))
+
+	return stmts
+
 def gen_call(call_spec):
 	iegen.print_progress("Generating code for call to '%s'..."%(call_spec.function_name))
 

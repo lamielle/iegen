@@ -78,7 +78,7 @@ spec.add_transformation(
     num_tile_name='nt', #defines the name of the symbolic for the number of tiles
 
     # Mapping from full iteration space to sub space being tiled.
-    iter_sub_space_relation='{[x,s,y,i,z]->[y,i]}', # Tiling across inner loops
+    iter_sub_space_relation=Relation('{[x,s,y,i,z]->[y,i]: y=1}').union(Relation('{[x,s,y,i,z]->[y,i]: y=2}')).union(Relation('{[x,s,y,i,z]->[y,i]: y=3}')), # Tiling across inner loops
 
     # Mapping from full iteration space to seed space.  Seed space should be subset of subspace.
     iter_seed_space_relation='{[x,s,c1,i,z]->[c1,i] : c1=1}', # Second inner loop
