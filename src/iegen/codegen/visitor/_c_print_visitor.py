@@ -51,4 +51,4 @@ class CPrintVisitor(DFVisitor):
 
 	def inComment(self,node):
 		indent= self.indent if self.in_function else ''
-		print >>self.code,indent+'/* '+node.text+' */'
+		print >>self.code,indent+'// '+node.text
