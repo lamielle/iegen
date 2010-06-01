@@ -29,6 +29,10 @@ def do_calc(mapir):
 		iegen.print_detail(mapir.full_iter_space)
 		iegen.print_detail('-----------------------------------------')
 
+		#Determine if the current transformation is a transformation or an ITO
+		is_transformation=False
+		is_ito=False
+
 		#Assume the current transformation is a transformation, not an ITO
 		try:
 			#Ensure the transformation has the four expected methods
@@ -37,6 +41,18 @@ def do_calc(mapir):
 			update_mapir=transformation.update_mapir
 			update_idg=transformation.update_idg
 
+			is_transformation=True
+		except AttributeError as e1:
+			#Try the current transformation as an ITO
+			try:
+				#Ensure the ito has the single 'apply' method
+				apply=transformation.apply
+
+				is_ito=True
+			except AttributeError as e2:
+				pass
+
+		if is_transformation:
 			iegen.print_progress('Calculating inputs to transformation...')
 			#Tell the transformation to calculate the inputs that it will need at runtime
 			transformation.calc_input(mapir)
@@ -52,21 +68,16 @@ def do_calc(mapir):
 			iegen.print_progress('Updating the IDG...')
 			#Tell the transformation to update the IDG
 			transformation.update_idg(mapir)
+		elif is_ito:
+			iegen.print_progress("Applying intertransopt '%s'..."%(transformation.name))
 
-		except AttributeError as e1:
-			#Try the current transformation as an ITO
-			try:
-				apply=transformation.apply
+			iegen.print_detail('----- InterTransOpt: -----')
+			iegen.print_detail(transformation)
+			iegen.print_detail('------------------------------------')
 
-				iegen.print_progress("Applying intertransopt '%s'..."%(transformation.name))
-
-				iegen.print_detail('----- InterTransOpt: -----')
-				iegen.print_detail(transformation)
-				iegen.print_detail('------------------------------------')
-
-				transformation.apply(mapir)
-			except AttributeError as e2:
-				raise ValueError("Current transformation '%s' is neither a transformation nor an ITO"%(transformation.name))
+			transformation.apply(mapir)
+		else:
+			raise ValueError("Current transformation '%s' is neither a transformation nor an ITO"%(transformation.name))
 
 		#Calculate IDG dependences
 		calc_idg_deps(mapir)
