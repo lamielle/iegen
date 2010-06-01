@@ -1877,6 +1877,73 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(composed==res,'%s!=%s'%(composed,res))
 
+	@raises(ValueError)
+	def testRestrictDomainFail(self):
+		from iegen import Relation,Set
+
+		rel=Relation('{[a]->[b]}')
+		set=Set('{[a,b]: 1<=a and a<=10}')
+
+		rest=rel.restrict_domain(set)
+
+	def testRestrictDomain1(self):
+		from iegen import Relation,Set
+
+		rel=Relation('{[a]->[b]}')
+		set=Set('{[a]: 1<=a and a<=10}')
+
+		rest=rel.restrict_domain(set)
+
+		res=Relation('{[a]->[b]: 1<=a and a<=10}')
+
+		self.failUnless(rest==res,'%s!=%s'%(rest,res))
+
+	def testRestrictDomain2(self):
+		from iegen import Relation,Set,Symbolic
+
+		syms=[Symbolic('n_inter'),Symbolic('n_moles')]
+		rel=Relation('{[a,b]->[c]: c=f(a,b)}')
+		set=Set('{[y0,i0]: n_moles>=1+i0 and 1=y0 and i0>=0}',symbolics=syms).union(Set('{[y0,i0]: n_moles>=1+i0 and i0>=0 and y0=3}',symbolics=syms)).union(Set('{[y0,i0]: 2=y0 and i0>=0 and n_inter>=1+i0}',symbolics=syms))
+
+		rest=rel.restrict_domain(set)
+
+		res=Relation('{[y0,i0]->[t]: t=f(y0,i0) and n_moles>=1+i0 and 1=y0 and i0>=0}',symbolics=syms).union(Relation('{[y0,i0]->[t]: t=f(y0,i0) and n_moles>=1+i0 and i0>=0 and y0=3}',symbolics=syms)).union(Relation('{[y0,i0]->[t]: t=f(y0,i0) and 2=y0 and i0>=0 and n_inter>=1+i0}',symbolics=syms))
+
+		self.failUnless(rest==res,'%s!=%s'%(rest,res))
+
+	@raises(ValueError)
+	def testRestrictRangeFail(self):
+		from iegen import Relation,Set
+
+		rel=Relation('{[a]->[b]}')
+		set=Set('{[a,b]: 1<=a and a<=10}')
+
+		rest=rel.restrict_range(set)
+
+	def testRestrictRange1(self):
+		from iegen import Relation,Set
+
+		rel=Relation('{[a]->[b]}')
+		set=Set('{[b]: 1<=b and b<=10}')
+
+		rest=rel.restrict_range(set)
+
+		res=Relation('{[a]->[b]: 1<=b and b<=10}')
+
+		self.failUnless(rest==res,'%s!=%s'%(rest,res))
+
+	def testRestrictRange2(self):
+		from iegen import Relation,Set,Symbolic
+
+		rel=Relation('{[a,b]->[c]: c=f(a,b)}')
+		set=Set('{[t]: 0<=t and t<=nt}',symbolics=[Symbolic('nt')])
+
+		rest=rel.restrict_range(set)
+
+		res=Relation('{[a,b]->[c]: c=f(a,b) and 0<=c and c<=nt}',symbolics=[Symbolic('nt')])
+
+		self.failUnless(rest==res,'%s!=%s'%(rest,res))
+
 	# End operation tests
 	#----------------------------------------
 

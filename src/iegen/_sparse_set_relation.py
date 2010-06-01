@@ -824,7 +824,105 @@ class Relation(SparseFormula):
 
 		return new_relation
 
-		return self
+	#Restrict domain:
+	#Let R=R1 union R2 union ... union RN
+	#Let S=S1 union S2 union ... union SM
+	#
+	#Then R\S=R1\S1 union R1\S2 union ... union R1\SM union
+	#         R2\S1 union R2\S2 union ... union R2\SM union
+	#         ...
+	#         RN\S1 union RN\S2 union ... union RN\SM
+	def restrict_domain(self,other):
+		#Make sure the relations are frozen
+		self._check_frozen()
+		other._check_frozen()
+
+		#Make sure the set's arity matches the relation's input arity
+		if other.arity()!=self.arity_in():
+			raise ValueError('Restrict domain failure: Input arity of relation (%d) does not match arity of set (%d)'%(self.arity_in(),other.arity()))
+
+		#Collections for building the new relation
+		new_tuple_vars=[]
+		new_free_vars=[]
+		other_var_map={}
+		self_var_map={}
+		used_vars=set()
+
+		#Determine the resutling relation's tuple variable names
+		get_unique_vars(self.tuple_in,new_tuple_vars,used_vars,self_var_map)
+		get_unique_vars(self.tuple_out,new_tuple_vars,used_vars,self_var_map)
+
+		#Determine the resulting relation's free variable names
+		get_unique_vars(other.tuple_vars,new_free_vars,used_vars,other_var_map)
+		get_unique_vars(other.free_vars,new_free_vars,used_vars,other_var_map)
+		get_unique_vars(self.free_vars,new_free_vars,used_vars,self_var_map)
+
+		#Get the combined symbolics for the new relation
+		new_symbolics=list(set(other.symbolics+self.symbolics))
+
+		#Create a new relation with no constraints, we will build the constraints
+		new_relation=Relation(tuple_var_names=new_tuple_vars,arity_in=self.arity_in(),free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
+
+		#Create the constraints: cartesian product of both disjunctions + free variable equalities
+		new_relation._join(self,self.tuple_in,self_var_map,other,other.tuple_vars,other_var_map,None)
+
+		#Freeze the new resulting relation now that we're done modifying it
+		new_relation.freeze()
+
+		self.print_debug('Compose: \n\t%s\n\n\t.compose(%s)\n\n\t' %(self,other) )
+		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
+
+		return new_relation
+
+	#Restrict range:
+	#Let R=R1 union R2 union ... union RN
+	#Let S=S1 union S2 union ... union SM
+	#
+	#Then R/S=R1/S1 union R1/S2 union ... union R1/SM union
+	#         R2/S1 union R2/S2 union ... union R2/SM union
+	#         ...
+	#         RN/S1 union RN/S2 union ... union RN/SM
+	def restrict_range(self,other):
+		#Make sure the relations are frozen
+		self._check_frozen()
+		other._check_frozen()
+
+		#Make sure the set's arity matches the relation's input arity
+		if other.arity()!=self.arity_out():
+			raise ValueError('Restrict range failure: Output arity of relation (%d) does not match arity of set (%d)'%(self.arity_out(),other.arity()))
+
+		#Collections for building the new relation
+		new_tuple_vars=[]
+		new_free_vars=[]
+		other_var_map={}
+		self_var_map={}
+		used_vars=set()
+
+		#Determine the resutling relation's tuple variable names
+		get_unique_vars(self.tuple_in,new_tuple_vars,used_vars,self_var_map)
+		get_unique_vars(self.tuple_out,new_tuple_vars,used_vars,self_var_map)
+
+		#Determine the resulting relation's free variable names
+		get_unique_vars(other.tuple_vars,new_free_vars,used_vars,other_var_map)
+		get_unique_vars(other.free_vars,new_free_vars,used_vars,other_var_map)
+		get_unique_vars(self.free_vars,new_free_vars,used_vars,self_var_map)
+
+		#Get the combined symbolics for the new relation
+		new_symbolics=list(set(other.symbolics+self.symbolics))
+
+		#Create a new relation with no constraints, we will build the constraints
+		new_relation=Relation(tuple_var_names=new_tuple_vars,arity_in=self.arity_in(),free_var_names=new_free_vars,symbolics=new_symbolics,freeze=False)
+
+		#Create the constraints: cartesian product of both disjunctions + free variable equalities
+		new_relation._join(self,self.tuple_out,self_var_map,other,other.tuple_vars,other_var_map,None)
+
+		#Freeze the new resulting relation now that we're done modifying it
+		new_relation.freeze()
+
+		self.print_debug('Compose: \n\t%s\n\n\t.compose(%s)\n\n\t' %(self,other) )
+		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
+
+		return new_relation
 
 	#Returns the constraint matrix for the scattering function for this relation
 	def get_scatter_mat(self,symbolics=None):
