@@ -71,6 +71,12 @@ spec.add_intertransopt(
     nests=[['sigma_inter1','delta_inv'],['sigma_inter2','delta_inv']])
 
 #Full Sparse Tiling
+
+T0 = Relation('{[c0,s,c0,c0,c0]->[c0,s,c0,t,c0,c0,c0]: c0=0 && t=theta(c0,c0)}')
+T1 = Relation('{[c0,s,c1,i,x] ->[c0,s,c1,t,c1,i,x]: c0=0 && c1=1 && t=theta(c1,j)}')
+T2 = Relation('{[c0,s,c2,i,x] ->[c0,s,c1,t,c2,i,x]: c0=0 && c1=1 && c2=2 && t=theta(c2,ii)}')
+T3 = Relation('{[c0,s,c3,i,x] ->[c0,s,c1,t,c3,i,x]: c0=0 && c1=1 && c3=3 && t=theta(c3,j)}')
+
 spec.add_transformation(
     type=iegen.trans.SparseTileTrans,
     name='fst',    # name used in IDG
@@ -90,4 +96,4 @@ spec.add_transformation(
 
     erg_func_name='ERG_fst',
 
-    iter_space_trans=Relation("{[x,s,y,i,z] -> [x,s,c0,t,y,i,z] : c0=0 and t=theta(y,i)}") )
+    iter_space_trans=T0.union(T1).union(T2).union(T3) )
