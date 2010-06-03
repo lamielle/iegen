@@ -175,14 +175,6 @@ class ERSpec(IEGenObject):
 	def is_ef_1d(self):
 		return (1,1)==self.relation.arity() and self.is_function and len(self.relation)==1
 
-	#EF_2D
-	#- if in and out arity are both less than or equal to 2.
-	#- if ERSpec is a function.
-	#- If only has one conjunction.
-	#- example: theta
-	def is_ef_2d(self):
-		return self.relation.arity_in()<=2 and self.relation.arity_out()<=2 and self.is_function and len(self.relation)==1
-
 	#ER_U1D
 	#- if in and out arity are both 1D.
 	#- Each conjunction is a function.  (TODO: have a flag for this in Relation object)  More specifically, when doing code gen each conjunction should have an EF_1D associated with it.
@@ -190,6 +182,13 @@ class ERSpec(IEGenObject):
 		#return (1,1)==self.relation.arity() and self.is_function
 		#TODO: add flag for individual relations being functions
 		return (1,1)==self.relation.arity()
+
+	#EF_2D
+	#- if in and out arity are both less than or equal to 2.
+	#- if ERSpec is a function.
+	#- example: theta
+	def is_ef_2d(self):
+		return self.relation.arity_in()<=2 and self.relation.arity_out()<=2 and self.is_function
 
 	#ER_1DCOO
 	#- if in and out arity are both 1D.
@@ -201,10 +200,10 @@ class ERSpec(IEGenObject):
 	def get_type(self):
 		if self.is_ef_1d():
 			return 'EF_1D *'
-		elif self.is_ef_2d():
-			return 'EF_2D *'
 		elif self.is_union_1d():
 			return 'ER_U1D *'
+		elif self.is_ef_2d():
+			return 'EF_2D *'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
@@ -212,10 +211,10 @@ class ERSpec(IEGenObject):
 	def get_param_type(self):
 		if self.is_ef_1d():
 			return 'EF_1D **'
-		elif self.is_ef_2d():
-			return 'EF_2D **'
 		elif self.is_union_1d():
 			return 'ER_U1D **'
+		elif self.is_ef_2d():
+			return 'EF_2D **'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
@@ -223,10 +222,10 @@ class ERSpec(IEGenObject):
 	def get_getter_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_get'
-		elif self.is_ef_2d():
-			return 'EF_2D_get'
 		elif self.is_union_1d():
 			return 'ER_U1D_get'
+		elif self.is_ef_2d():
+			return 'EF_2D_get'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
@@ -234,10 +233,10 @@ class ERSpec(IEGenObject):
 	def get_ctor_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_ctor'
-		elif self.is_ef_2d():
-			return 'EF_2D_ctor'
 		elif self.is_union_1d():
 			return 'ER_U1D_ctor'
+		elif self.is_ef_2d():
+			return 'EF_2D_ctor'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
@@ -245,10 +244,10 @@ class ERSpec(IEGenObject):
 	def get_genInverse_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_genInverse'
-		elif self.is_ef_2d():
-			return 'EF_2D_genInverse'
 		elif self.is_union_1d():
 			return 'ER_U1D_genInverse'
+		elif self.is_ef_2d():
+			return 'EF_2D_genInverse'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
@@ -256,10 +255,10 @@ class ERSpec(IEGenObject):
 	def get_setter_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_set'
-		elif self.is_ef_2d():
-			return 'EF_2D_set'
 		elif self.is_union_1d():
 			return 'ER_U1D_set'
+		elif self.is_ef_2d():
+			return 'EF_2D_set'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
@@ -267,10 +266,10 @@ class ERSpec(IEGenObject):
 	def get_var_name(self):
 		if self.is_ef_1d():
 			return self.name+'_EF_1D'
-		elif self.is_ef_2d():
-			return self.name+'_EF_2D'
 		elif self.is_union_1d():
 			return self.name+'_ER_U1D'
+		elif self.is_ef_2d():
+			return self.name+'_EF_2D'
 		else:
 			raise ValueError('Unknown ERSpec type: %s %s'%(self.name,self.relation))
 
