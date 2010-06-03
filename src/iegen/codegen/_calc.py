@@ -12,6 +12,15 @@ def do_calc(mapir):
 	#Calculate the initial IDG
 	calc_initial_idg(mapir)
 
+	iegen.print_progress('Calculating full iteration space...')
+
+	#Calculate the full iteration space based on the current iteration spaces of the statements
+	mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
+
+	iegen.print_detail('----- Current full iteration space: -----')
+	iegen.print_detail(mapir.full_iter_space)
+	iegen.print_detail('-----------------------------------------')
+
 	#Do calculations for each reordering
 	for transformation in mapir.transformations:
 		iegen.print_progress("Applying transformation '%s'..."%(transformation.name))
@@ -19,15 +28,6 @@ def do_calc(mapir):
 		iegen.print_detail('----- Transformation: -----')
 		iegen.print_detail(transformation)
 		iegen.print_detail('------------------------------------')
-
-		iegen.print_progress('Calculating full iteration space...')
-
-		#Calculate the full iteration space based on the current iteration spaces of the statements
-		mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
-
-		iegen.print_detail('----- Current full iteration space: -----')
-		iegen.print_detail(mapir.full_iter_space)
-		iegen.print_detail('-----------------------------------------')
 
 		#Determine if the current transformation is a transformation or an ITO
 		is_transformation=False
@@ -87,6 +87,15 @@ def do_calc(mapir):
 			iegen.print_modified(statement)
 			iegen.print_modified("\n")
 		iegen.print_modified('-----------------------------------------')
+
+		iegen.print_progress('Calculating full iteration space...')
+
+		#Calculate the full iteration space based on the current iteration spaces of the statements
+		mapir.full_iter_space=calc_full_iter_space(mapir.get_statements())
+
+		iegen.print_detail('----- Current full iteration space: -----')
+		iegen.print_detail(mapir.full_iter_space)
+		iegen.print_detail('-----------------------------------------')
 
 	#Un-update access relations now that the calculation phase is over
 	calc_unupdate_access_relations(mapir)
