@@ -43,7 +43,8 @@ def gen_executor_loop_stmts(mapir):
 	statement_names.sort()
 	for i,statement_name in enumerate(statement_names):
 		statement=mapir.statements[statement_name]
-		stmts.append(Comment('%s'%(statement.text)))
+		for comment_line in statement.text.split('\n'):
+			stmts.append(Comment(comment_line))
 		ar_dict={}
 		for access_relation in statement.get_access_relations():
 			iegen.print_detail('Generating code for access relation %s'%(access_relation.name))
@@ -56,6 +57,8 @@ def gen_executor_loop_stmts(mapir):
 		stmt_string='#define S%d(%s) %s'%(i,iterators,statement.text)
 		stmt_string=stmt_string.replace('\n','\\\n')
 		stmts.append(Statement(stmt_string%ar_dict))
+
+		stmts.append(Statement())
 
 	return stmts
 
