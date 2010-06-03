@@ -85,17 +85,24 @@ class SparseTileTrans(Transformation):
 		#input bounds calculated based on full iteration space and the specified iter_seed_space_relation
 		input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation)
 
-		#TODO: calculate relation properly
-#		input_tuple=','.join(['%s_in%d']*input_bounds.arity_in())
-#		relation=Relation('{[%s_in]->[t]: t=%s_out=%s(%s_in)}'%(5*(self.grouping_name,)))
-		relation=Relation('{[a]->[b]}')
+		#output is a tile number, therefore the bounds are from 0 to the number of tiles
+		output_bounds=Set('{[tile]: 0<=tile and tile<=%s}'%(self.num_tile_name,))
+
+		#the relation takes the input loop position and iterator and yields a tile number
+		input_tuple_vars=[]
+		for i in xrange(input_bounds.arity()):
+			input_tuple_vars.append('%s_in%d'%(self.grouping_name,i))
+		input_tuple=','.join(input_tuple_vars)
+		relation=Relation('{[%s]->[t]: t=%s(%s)}'%(input_tuple,self.grouping_name,input_tuple))
+		relation=relation.restrict_domain(input_bounds)
+		relation=relation.restrict_range(output_bounds)
 
 		#Create a static description of the tiling function (theta) that is the output of the tiling routine
 		self.outputs.append(ERSpec(
 		    name=self.grouping_name,
 		    input_bounds=input_bounds,
-		    output_bounds=Set('{[tile]: 0<=tile and tile<=%s}'%(self.num_tile_name,)),
-			 relation=relation,
+		    output_bounds=output_bounds,
+		    relation=relation,
 		    is_function=True,
 		    is_permutation=False))
 
