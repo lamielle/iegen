@@ -1873,6 +1873,16 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(composed==res,'%s!=%s'%(composed,res))
 
+	def testDomain(self):
+		from iegen import Relation,Set
+
+		rel=Relation('{[a]->[b]: a>10 and b>9}')
+		dom=rel.domain()
+
+		res=Set('{[a]: a>10}')
+
+		self.failUnless(dom==res,'%s!=%s'%(dom,res))
+
 	@raises(ValueError)
 	def testRestrictDomainFail(self):
 		from iegen import Relation,Set
@@ -1906,6 +1916,16 @@ class RelationTestCase(TestCase):
 		res=Relation('{[y0,i0]->[t]: t=f(y0,i0) and n_moles>=1+i0 and 1=y0 and i0>=0}',symbolics=syms).union(Relation('{[y0,i0]->[t]: t=f(y0,i0) and n_moles>=1+i0 and i0>=0 and y0=3}',symbolics=syms)).union(Relation('{[y0,i0]->[t]: t=f(y0,i0) and 2=y0 and i0>=0 and n_inter>=1+i0}',symbolics=syms))
 
 		self.failUnless(rest==res,'%s!=%s'%(rest,res))
+
+	def testRange(self):
+		from iegen import Relation,Set
+
+		rel=Relation('{[a]->[b]: a>10 and b>9}')
+		rng=rel.range()
+
+		res=Set('{[b]: b>9}')
+
+		self.failUnless(rng==res,'%s!=%s'%(rng,res))
 
 	@raises(ValueError)
 	def testRestrictRangeFail(self):

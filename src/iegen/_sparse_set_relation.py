@@ -824,6 +824,15 @@ class Relation(SparseFormula):
 
 		return new_relation
 
+	#Returns a set with tuple variables being the input tuple variables of this relation
+	def domain(self):
+		#Construct the universial set of the same arity as this relation's output tuple
+		#universal set tuple variables: s0, s1, s2, ...
+		tuple_vars=(','.join(['s%d']*self.arity_out()))%tuple(xrange(self.arity_out()))
+		univ_set=Set('{[%s]}'%tuple_vars)
+
+		return univ_set.apply(self.inverse())
+
 	#Restrict domain:
 	#Let R=R1 union R2 union ... union RN
 	#Let S=S1 union S2 union ... union SM
@@ -873,6 +882,15 @@ class Relation(SparseFormula):
 		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
 
 		return new_relation
+
+	#Returns a set with tuple variables being the input tuple variables of this relation
+	def range(self):
+		#Construct the universial set of the same arity as this relation's input tuple
+		#universal set tuple variables: s0, s1, s2, ...
+		tuple_vars=(','.join(['s%d']*self.arity_in()))%tuple(xrange(self.arity_in()))
+		univ_set=Set('{[%s]}'%tuple_vars)
+
+		return univ_set.apply(self)
 
 	#Restrict range:
 	#Let R=R1 union R2 union ... union RN
