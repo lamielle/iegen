@@ -80,6 +80,10 @@ class SparseTileTrans(Transformation):
 		#TODO: The type is constant here, it would be better if this were defined somewhere else
 		mapir.add_symbolic(name=self.num_tile_name,type='int %s',lower_bound=0)
 
+		self.inputs.append(self.to_deps)
+		self.inputs.append(self.from_deps)
+		self.inputs.append(mapir.symbolics[self.num_tile_name])
+
 	#Calculate the output from the sparse tiling routine
 	def calc_output(self,mapir):
 		#input bounds calculated based on full iteration space and the specified iter_seed_space_relation

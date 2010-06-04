@@ -70,6 +70,9 @@ class Symbolic(Node):
 
 	def apply_visitor(self,visitor):
 		visitor.visitSymbolic(self)
+
+	def get_var_name(self):
+		return self.name
 #------------------------------------
 
 #---------- DataArray class ----------
@@ -445,6 +448,8 @@ class DataDependence(IEGenObject):
 	def functions(self):
 		return list(set(self.dep_rel.function_names))
 
+	def get_var_name(self):
+		return self.name+'_ED'
 #------------------------------------------
 
 #---------- Function Call class ----------
