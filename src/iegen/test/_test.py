@@ -117,12 +117,6 @@ class SetTestCase(TestCase):
 
 		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
 
-		set_string='{[a,b]: b=2n and a>=m and a+b>=c and a=10}'
-		set=Set(set_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a,b]: a=10 and b=2n and a>=m and a+b>=c | m,n}'
-
-		self.failUnless(res_string==str(set),'%s!=%s'%(str(set),res_string))
-
 	def testStrEmptyInequality1(self):
 		from iegen import Set
 
@@ -153,13 +147,6 @@ class SetTestCase(TestCase):
 		symbolics=[Symbolic('m'),Symbolic('n')]
 		set=Set(set_string,symbolics)
 		res_string='{[a,b]: b=2n and a=10 and a>=m | m,n}'
-		res_string='Set("%s",%s)'%(res_string,repr(symbolics))
-
-		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
-
-		set_string='{[a,b]: b=2n and a=10 and a+b>=c and a>=m}'
-		set=Set(set_string,symbolics)
-		res_string='{[a,b]: a>=m and b=2n and a=10 and a+b>=c | m,n}'
 		res_string='Set("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(set),'%s!=%s'%(repr(set),res_string))
@@ -332,6 +319,17 @@ class SetTestCase(TestCase):
 		set_res=Set('{[a,b,c]: a=b and b>=c}')
 
 		self.failUnless(set1==set_res,'%s!=%s'%(set1,set_res))
+
+	#Bug #265: When only one upper or lower bound is present for a variable being projected out,
+	# the variable is not properly projected out
+	def testFMBug1Bound(self):
+		from iegen import Set
+
+		set1=Set('{[a]: a>10 and b>5}')
+
+		set2=Set('{[a]: a>10}')
+
+		self.failUnless(set1==set2,'%s!=%s'%(set1,set2))
 
 	#Tests that the bounds method fails when given variable names that aren't part of the tuple
 	@raises(ValueError)
@@ -1103,12 +1101,6 @@ class RelationTestCase(TestCase):
 
 		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
 
-		rel_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m}'
-		rel=Relation(rel_string,[Symbolic('n'),Symbolic('m')])
-		res_string='{[a]->[b]: a>=m and b=2n and a=10 and a+b>=c | m,n}'
-
-		self.failUnless(res_string==str(rel),'%s!=%s'%(str(rel),res_string))
-
 	def testStrEmptyInequality1(self):
 		from iegen import Relation
 
@@ -1139,13 +1131,6 @@ class RelationTestCase(TestCase):
 		symbolics=[Symbolic('m'),Symbolic('n')]
 		rel=Relation(rel_string,symbolics)
 		res_string='{[a]->[b]: b=2n and a=10 and a>=m | m,n}'
-		res_string='Relation("%s",%s)'%(res_string,repr(symbolics))
-
-		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
-
-		rel_string='{[a]->[b]: b=2n and a=10 and a+b>=c and a>=m}'
-		rel=Relation(rel_string,symbolics)
-		res_string='{[a]->[b]: a>=m and b=2n and a=10 and a+b>=c | m,n}'
 		res_string='Relation("%s",%s)'%(res_string,repr(symbolics))
 
 		self.failUnless(res_string==repr(rel),'%s!=%s'%(repr(rel),res_string))
@@ -1318,6 +1303,17 @@ class RelationTestCase(TestCase):
 		rel_res=Relation('{[a]->[b,c]: a=b and b>=c}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	#Bug #265: When only one upper or lower bound is present for a variable being projected out,
+	# the variable is not properly projected out
+	def testFMBug1Bound(self):
+		from iegen import Relation
+
+		rel1=Relation('{[a]->[b]: a>10 and c>5}')
+
+		rel2=Relation('{[a]->[b]: a>10}')
+
+		self.failUnless(rel1==rel2,'%s!=%s'%(rel1,rel2))
 
 	#Tests that Relation implements __len__
 	def testLen1(self):

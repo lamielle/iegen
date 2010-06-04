@@ -1908,6 +1908,8 @@ class SparseConjunction(IEGenObject):
 		if not res and not self.var_is_function_input(var_col):
 			#Get the lower and upper bounds for the variable we are projecting out
 			lower_bounds,upper_bounds=self.bounds(var_col,extra_info=True)
+			lower_bounds=tuple(lower_bounds)
+			upper_bounds=tuple(upper_bounds)
 
 			#New constraints to be added
 			add_constraints=[]
@@ -1918,27 +1920,34 @@ class SparseConjunction(IEGenObject):
 			if len(lower_bounds)>0 and len(upper_bounds)>0:
 				iegen.simplify.notify_fm_listeners()
 
-			#Look at each pair of lower/upper bounds
-			for lb_coeff,lower_bound_orig,lb_constraint in lower_bounds:
-				for ub_coeff,upper_bound_orig,ub_constraint in upper_bounds:
-					lower_bound=lower_bound_orig.copy()
-					upper_bound=upper_bound_orig.copy()
+			#Check first that there is at least one pair of constraints
+			#Related to bug #265
+			if len(lower_bounds)==1 and len(upper_bounds)==0:
+				remove_constraints.add(lower_bounds[0][2])
+			elif len(lower_bounds)==0 and len(upper_bounds)==1:
+				remove_constraints.add(upper_bounds[0][2])
+			else:
+				#Look at each pair of lower/upper bounds
+				for lb_coeff,lower_bound_orig,lb_constraint in lower_bounds:
+					for ub_coeff,upper_bound_orig,ub_constraint in upper_bounds:
+						lower_bound=lower_bound_orig.copy()
+						upper_bound=upper_bound_orig.copy()
 
-					#Create the new constraint:
-					#ub_coeff*lower_bound <= lb_coeff*upper_bound
-					lower_bound.multiply(ub_coeff)
-					upper_bound.multiply(-1*lb_coeff)
+						#Create the new constraint:
+						#ub_coeff*lower_bound <= lb_coeff*upper_bound
+						lower_bound.multiply(ub_coeff)
+						upper_bound.multiply(-1*lb_coeff)
 
-					new_exp=SparseExp()
-					new_exp.add_exp(lower_bound)
-					new_exp.add_exp(upper_bound)
-					new_exp=new_exp.complement()
+						new_exp=SparseExp()
+						new_exp.add_exp(lower_bound)
+						new_exp.add_exp(upper_bound)
+						new_exp=new_exp.complement()
 
-					new_constraint=SparseInequality(sparse_exp=new_exp)
-					add_constraints.append(new_constraint)
+						new_constraint=SparseInequality(sparse_exp=new_exp)
+						add_constraints.append(new_constraint)
 
-					remove_constraints.add(lb_constraint)
-					remove_constraints.add(ub_constraint)
+						remove_constraints.add(lb_constraint)
+						remove_constraints.add(ub_constraint)
 
 			#Remove all necessary constraints
 			for constraint in remove_constraints:
