@@ -66,7 +66,65 @@ def gen_rect_domain(name,set):
 
 	return stmts
 
+def calc_int_bounds_from_bounds(bounds):
+	int_bounds=[]
+	for bound in bounds:
+		if len(bound)!=1:
+			raise ValueError('Multiple bounds discovered')
+		bound=str(list(bound)[0])
+		try:
+			bound=int(bound)
+		except ValueError as e:
+			raise ValueError('Non-integer bound discovered')
+		int_bounds.append(bound)
 
+	return int_bounds
+
+def calc_single_bounds_from_bounds(bounds):
+	res_bounds=[]
+	for bound in bounds:
+		if len(bound)!=1:
+			raise ValueError('Multiple bounds discovered')
+		bound=str(list(bound)[0])
+		res_bounds.append(bound)
+
+	return res_bounds
+
+def gen_rect_union_domain_2d(name,set):
+	from iegen.codegen import Statement,Comment
+
+	if set.arity()!=2: raise ValueError("Set does not have arity 2 (%d)"%(set.arity()))
+
+	stmts=[]
+
+	#Determine the lower and upper bounds of the first dimension of each conjunction in the set
+	lbs=calc_int_bounds_from_bounds(set.lower_bounds(set.tuple_vars[0]))
+	ubs=calc_int_bounds_from_bounds(set.upper_bounds(set.tuple_vars[0]))
+
+	#Make sure the integer bounds are pair-wise equal
+	for i in xrange(len(set)):
+		if lbs[i]!=ubs[i]:
+			raise ValueError('Non-constant value for first dimension of given set: %s'%(set))
+
+	#The list of constant values for each conjunction
+	const_vals=lbs
+
+	#Determine the lower and upper bounds of the second dimensions of each conjunction in the set
+	lbs=calc_single_bounds_from_bounds(set.lower_bounds(set.tuple_vars[1]))
+	ubs=calc_single_bounds_from_bounds(set.upper_bounds(set.tuple_vars[1]))
+
+	#Calculate the static array for the bounds
+	bounds_sub_arrays=['{%s,%s,%s}'%items for items in zip(const_vals,lbs,ubs)]
+	bounds_array='{'+','.join(bounds_sub_arrays)+'}'
+
+	#Declare the bounds for the dimensions
+	stmts.append(Comment('RUD2D bounds for %s'%(name,)))
+	stmts.append(Statement('int %s_bounds[][3] = %s;'%(name,bounds_array)))
+	stmts.append(Statement('RectUnionDomain2D *%s_rud = RUD2D_ctor(%d,%d,%d,%s_bounds);'%(name,set.arity(),min(const_vals),max(const_vals),name)))
+
+	return stmts
+
+#---------- ERSpec code generation ----------
 #Generate code for a given ERSpec
 def gen_er_spec(er_spec,mapir):
 	if er_spec.is_inverse:
@@ -74,6 +132,8 @@ def gen_er_spec(er_spec,mapir):
 	else:
 		if er_spec.is_union_1d():
 			stmts=gen_explicit_er_union_1d(er_spec,mapir)
+		elif er_spec.is_ef_2d():
+			raise ValueError('Code generation of non-output EF_2D ERSpecs not yet implemented')
 		else:
 			stmts=gen_explicit_er_spec(er_spec,mapir)
 	return stmts
@@ -168,8 +228,46 @@ def gen_explicit_er_spec(er_spec,mapir):
 	stmts.append(Comment('Undefine loop body statements'))
 	stmts.extend(undefine_stmts)
 	return stmts
+#--------------------------------------------
 
+#---------- Output ERSpec code generation ----------
 def gen_output_er_spec(output_er_spec,is_call_input,mapir):
+	if output_er_spec.is_union_1d():
+		stmts=gen_output_er_spec_general(output_er_spec,is_call_input,mapir)
+	elif output_er_spec.is_ef_2d():
+		stmts=gen_output_ef_2d(output_er_spec,is_call_input,mapir)
+	else:
+		raise ValueError('Code generation for unsupported output ERSpec type')
+
+	return stmts
+
+def gen_output_ef_2d(output_er_spec,is_call_input,mapir):
+	import iegen.pycloog
+	from iegen.pycloog import codegen
+	from iegen.codegen import Statement,Comment
+
+	iegen.print_progress("Generating code for output ERSpec '%s'..."%(output_er_spec.name))
+	iegen.print_detail(str(output_er_spec))
+
+	stmts=[]
+
+	stmts.extend(gen_rect_union_domain_2d(output_er_spec.name,output_er_spec.input_bounds))
+
+	#Variable name of the RUD2D
+	domain_name='%s_rud'%(output_er_spec.get_param_name(),)
+
+	stmts.append(Comment('Creation of ExplicitFunction for abstract relation:'))
+	stmts.append(Comment(str(output_er_spec.relation)))
+	stmts.append(Comment('Bounds for set %s'%(output_er_spec.input_bounds)))
+
+	stmts.append(Statement('*%s=%s(%s,%s,%s);'%(output_er_spec.get_param_name(),output_er_spec.get_ctor_str(),output_er_spec.relation.arity_in(),output_er_spec.relation.arity_out(),domain_name)))
+
+	stmts.append(Statement('%s=*%s;'%(output_er_spec.get_var_name(),output_er_spec.get_param_name())))
+	stmts.append(Statement())
+
+	return stmts
+
+def gen_output_er_spec_general(output_er_spec,is_call_input,mapir):
 	import iegen.pycloog
 	from iegen.pycloog import codegen
 	from iegen.codegen import Statement,Comment
@@ -232,6 +330,7 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 	#stmts.append(Statement('%s_ER=*%s;'%(output_er_spec.name,output_er_spec.name)))
 
 	return stmts
+#---------------------------------------------------
 
 def gen_data_dep(data_dep,mapir):
 	stmts=[]
@@ -244,7 +343,7 @@ def gen_call(call_spec):
 	iegen.print_progress("Generating code for call to '%s'..."%(call_spec.function_name))
 
 	stmts=[]
-	stmts.append(Comment('Call %s routine'%(call_spec.function_name)))
+	stmts.append(Comment('Call the %s routine'%(call_spec.function_name)))
 	stmts.append(Statement(call_spec.function_name+'('+','.join(call_spec.arguments)+');'))
 	stmts.append(Statement())
 

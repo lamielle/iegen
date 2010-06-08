@@ -162,7 +162,7 @@ class SparseTileTrans(Transformation):
 		erg_call_node.add_dep(from_data_dep_node)
 
 		#Add the output node to the IDG
-		output_node=mapir.idg.get_node(IDGERSpec,self.outputs[0])
+		output_node=mapir.idg.get_node(IDGOutputERSpec,self.outputs[0])
 
 		#Add a dependence of the output on the ERG call node
 		output_node.add_dep(erg_call_node)
