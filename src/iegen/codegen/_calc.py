@@ -328,7 +328,8 @@ def calc_size_string(set,var_name):
 
 #Returns the value that the given variable is equal to in the given formula
 #If raw_array is True, accesses to arrays (functions) will not be treated as explicit relation lookups
-def calc_equality_value(var_name,formula,mapir,raw_array=False):
+#If only_eqs is True, only equality constraints are considered (inequalities are ignored)
+def calc_equality_value(var_name,formula,mapir,raw_array=False,only_eqs=False):
 	import iegen
 
 	iegen.print_detail("Calculating equality value for tuple variable '%s' in relation %s"%(var_name,formula))
@@ -338,7 +339,18 @@ def calc_equality_value(var_name,formula,mapir,raw_array=False):
 	if 0==len(bounds): raise ValueError("Tuple variable '%s' is not involved in any equality constraints in formula '%s'"%(var_name,formula))
 	if len(bounds)>1: raise ValueError("Tuple variable '%s' is equal to multiple values in formula '%s'"%(var_name,formula))
 
-	lower_bounds,upper_bounds=bounds[0]
+	#Ignore inequality constraints?
+	if only_eqs:
+		lower_bounds=[]
+		upper_bounds=[]
+
+		#Remove any bounds that are only an upper or a lower bound (looking for equalities)
+		for lb in bounds[0][0]:
+			if lb in bounds[0][1]:
+				lower_bounds.append(lb)
+				upper_bounds.append(lb)
+	else:
+		lower_bounds,upper_bounds=bounds[0]
 
 	if 1!=len(lower_bounds) or 1!=len(upper_bounds): raise ValueError("TupleVariable '%s' is not equal to exactly one value in formula '%s'"%(var_name,formula))
 	if lower_bounds!=upper_bounds: raise ValueError("TupleVariable '%s' is not equal to one value in formula '%s'"%(var_name,formula))

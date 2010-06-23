@@ -72,10 +72,17 @@ spec.add_intertransopt(
 
 #Full Sparse Tiling
 
+#T0 = Relation('{[c0,s,c0,c0,c0]->[c0,s,c0,c0,c0,c0,c0]: c0=0}')
+#T1 = Relation('{[c0,s,c1,i,x] ->[c0,s,c1,t,c0,i,x]: c0=0 && c1=1 && t=theta(c1,i)}')
+#T2 = Relation('{[c0,s,c2,i,x] ->[c0,s,c1,t,c1,i,x]: c0=0 && c1=1 && c2=2 && t=theta(c2,i)}')
+#T3 = Relation('{[c0,s,c3,i,x] ->[c0,s,c1,t,c2,i,x]: c0=0 && c1=1 && c2=2 && c3=3 && t=theta(c3,i)}')
+
 T0 = Relation('{[c0,s,c0,c0,c0]->[c0,s,c0,c0,c0,c0,c0]: c0=0}')
-T1 = Relation('{[c0,s,c1,i,x] ->[c0,s,c1,t,c0,i,x]: c0=0 && c1=1 && t=theta(c1,i)}')
-T2 = Relation('{[c0,s,c2,i,x] ->[c0,s,c1,t,c1,i,x]: c0=0 && c1=1 && c2=2 && t=theta(c2,i)}')
-T3 = Relation('{[c0,s,c3,i,x] ->[c0,s,c1,t,c2,i,x]: c0=0 && c1=1 && c2=2 && c3=3 && t=theta(c3,i)}')
+T1 = Relation('{[c0,s,c1,i,x] ->[c0,s,c1,t,c0,i,x]: c0=0 && c1=1 && 0<=t and t<=nt}',symbolics=[Symbolic('nt')])
+T2 = Relation('{[c0,s,c2,i,x] ->[c0,s,c1,t,c1,i,x]: c0=0 && c1=1 && c2=2 && 0<=t and t<=nt}',symbolics=[Symbolic('nt')])
+T3 = Relation('{[c0,s,c3,i,x] ->[c0,s,c1,t,c2,i,x]: c0=0 && c1=1 && c2=2 && c3=3 && 0<=t and t<=nt}',symbolics=[Symbolic('nt')])
+
+symbolics=[Symbolic('n_inter'),Symbolic('n_moles'),Symbolic('nt')]
 
 spec.add_transformation(
     type=iegen.trans.SparseTileTrans,
@@ -91,8 +98,8 @@ spec.add_transformation(
 
     # Dependences in sub space that end in seed space (to_deps) and start in seed space (from_deps).
     # FIXME: Eventually we want to calculate this instead of having the user specify it.
-    to_deps=Relation('{[c1,i]->[c2,k] : c1=1 and c2=2 and i=sigma_inter1_delta_inv(j) and 0<=i and i<n_moles and 0<=k and k<n_inter}').union(Relation('{[c1,i] -> [c2,j] : c1=1 and c2=2 and i=sigma_inter2_delta_inv(j) and 0<=i and i<n_moles and 0<=k and k<n_inter}')),
-    from_deps=Relation('{[c2,i]->[c3,k] : c2=2 and c3=3 and i=sigma_inter1_delta_inv(j) and 0<=i and i<n_moles and 0<=k and k<n_inter}').union(Relation('{[c2,i] -> [c3,j] : c2=2 and c3=3 and i=sigma_inter2_delta_inv(j) and 0<=i and i<n_moles and 0<=k and k<n_inter}')),
+    to_deps=Relation('{[c1,i]->[c2,k] : c1=1 and c2=2 and i=sigma_inter1_delta_inv(k) and 0<=i and i<n_moles and 0<=k and k<n_inter}',symbolics=symbolics).union(Relation('{[c1,i] -> [c2,k] : c1=1 and c2=2 and i=sigma_inter2_delta_inv(k) and 0<=i and i<n_moles and 0<=k and k<n_inter}',symbolics=symbolics)),
+    from_deps=Relation('{[c2,k]->[c3,i] : c2=2 and c3=3 and i=sigma_inter1_delta_inv(k) and 0<=i and i<n_moles and 0<=k and k<n_inter}',symbolics=symbolics).union(Relation('{[c2,k] -> [c3,i] : c2=2 and c3=3 and i=sigma_inter2_delta_inv(k) and 0<=i and i<n_moles and 0<=k and k<n_inter}',symbolics=symbolics)),
 
     erg_func_name='ERG_fst',
 

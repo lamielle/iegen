@@ -420,15 +420,16 @@ class AccessRelation(IEGenObject):
 
 #---------- DataDependence class ----------
 class DataDependence(IEGenObject):
-	__slots__=('name','dep_rel')
+	__slots__=('name','dep_rel','target',)
 	_relation_fields=('dep_rel',)
 
-	def __init__(self,name,dep_rel):
+	def __init__(self,name,dep_rel,target):
 		self.name=name
 		self.dep_rel=dep_rel
+		self.target=target
 
 	def __repr__(self):
-		return 'DataDependence(%s,%s)'%(self.name,self.dep_rel)
+		return 'DataDependence(%s,%s,%s)'%(self.name,self.dep_rel,self.target)
 
 	def __str__(self):
 		return self._get_string(0)
@@ -438,7 +439,8 @@ class DataDependence(IEGenObject):
 		spaces=' '*indent
 		return '''%sDataDependence:
 %s|-name: %s
-%s|-dep_rel: %s'''%(spaces,spaces,self.name,spaces,self.dep_rel)
+%s|-dep_rel: %s
+%s|-target: %s'''%(spaces,spaces,self.name,spaces,self.dep_rel,self.target)
 
 	#Returns all symbolics in this data dependence
 	def symbolics(self):
@@ -450,6 +452,15 @@ class DataDependence(IEGenObject):
 
 	def get_var_name(self):
 		return self.name+'_ED'
+
+	def get_type(self):
+		return 'ExplicitDependence*'
+
+	def get_setter_str(self):
+		return 'ED_insert'
+
+	def get_ctor_str(self):
+		return 'ED_ctor'
 #------------------------------------------
 
 #---------- Function Call class ----------

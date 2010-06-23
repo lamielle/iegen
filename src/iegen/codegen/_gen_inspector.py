@@ -1,5 +1,5 @@
 import iegen
-from iegen import IEGenObject
+from iegen import IEGenObject,Set
 from iegen.codegen import Statement,Comment,calc_equality_value,calc_lower_bound_string,calc_upper_bound_string,calc_size_string
 
 #Generates code for the inspector
@@ -84,7 +84,7 @@ def calc_single_bounds_from_bounds(bounds):
 	res_bounds=[]
 	for bound in bounds:
 		if len(bound)!=1:
-			raise ValueError('Multiple bounds discovered')
+			raise ValueError('Multiple bounds discovered: %s'%(str(bound)))
 		bound=str(list(bound)[0])
 		res_bounds.append(bound)
 
@@ -332,12 +332,77 @@ def gen_output_er_spec_general(output_er_spec,is_call_input,mapir):
 	return stmts
 #---------------------------------------------------
 
+#---------- Data dependence code generation ----------
 def gen_data_dep(data_dep,mapir):
+	from iegen.pycloog import codegen
+
+	#Get the dependence relation from the data dependence object
+	dep_rel=data_dep.dep_rel
+
+	#Ensure the data dep is 2d -> 2d
+	if (2,2)!=dep_rel.arity():
+		raise ValueError('Code generation for data dependences that are not 2d -> 2d is not supported')
+
 	stmts=[]
 
-	stmts.append(Comment('Data dep code for %s goes here'%(data_dep.name)))
+	#Input constant value (from loop)
+	in_const=calc_equality_value(dep_rel.tuple_in[0],list(dep_rel)[0],mapir)
+
+	#Determine if the target loop is the input or output of the relation
+	if in_const==data_dep.target:
+		bounds_var=dep_rel.tuple_in[1]
+	else:
+		bounds_var=dep_rel.tuple_out[1]
+
+	#Get the lower and upper bounds for the bounds variable
+	lbs=calc_single_bounds_from_bounds(dep_rel.lower_bounds(bounds_var))
+	ubs=calc_single_bounds_from_bounds(dep_rel.upper_bounds(bounds_var))
+
+	stmts.append(Comment('Dependences for %s'%(data_dep.name)))
+	stmts.append(Comment(str(dep_rel)))
+
+	#Declare the explicit dependence variable
+	const_in=calc_equality_value(dep_rel.tuple_in[0],list(dep_rel)[0],mapir)
+	const_out=calc_equality_value(dep_rel.tuple_out[0],list(dep_rel)[0],mapir)
+	stmts.append(Statement('%s %s=%s(%s,%s);'%(data_dep.get_type(),data_dep.get_var_name(),data_dep.get_ctor_str(),const_in,const_out)))
+
+	#Generate the define/undefine statements
+	cloog_stmts=[]
+	define_stmts=[]
+	undefine_stmts=[]
+
+	var_in_name=dep_rel.tuple_in[1]
+	var_out_name=dep_rel.tuple_out[1]
+
+	for conjunction_index,single_relation in enumerate(dep_rel):
+		bounds_set=Set('{[%s]: %s<=%s and %s<=%s}'%(var_in_name,lbs[conjunction_index],var_in_name,var_in_name,ubs[conjunction_index]),mapir.get_symbolics())
+
+		#Get the value to insert
+		if in_const==data_dep.target:
+			value=calc_equality_value(var_out_name,single_relation,mapir,only_eqs=True)
+			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,var_in_name,data_dep.get_setter_str(),data_dep.get_var_name(),value,var_out_name)))
+		else:
+			value=calc_equality_value(var_in_name,single_relation,mapir,only_eqs=True)
+			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,var_in_name,data_dep.get_setter_str(),data_dep.get_var_name(),value,var_in_name)))
+
+		cloog_stmts.append(iegen.pycloog.Statement(bounds_set))
+
+		undefine_stmts.append(Statement('#undef S%d'%(conjunction_index,)))
+
+	#Generate the whole set of statements
+	stmts.append(Comment('Define loop body statements'))
+	stmts.extend(define_stmts)
+	stmts.append(Statement())
+	loop_stmts=codegen(cloog_stmts).split('\n')
+	for loop_stmt in loop_stmts:
+		stmts.append(Statement(loop_stmt))
+	stmts.append(Statement())
+	stmts.append(Comment('Undefine loop body statements'))
+	stmts.extend(undefine_stmts)
+	stmts.append(Statement())
 
 	return stmts
+#-----------------------------------------------------
 
 def gen_call(call_spec):
 	iegen.print_progress("Generating code for call to '%s'..."%(call_spec.function_name))

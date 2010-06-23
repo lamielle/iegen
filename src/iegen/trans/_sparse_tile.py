@@ -2,7 +2,7 @@ from cStringIO import StringIO
 from iegen.trans import Transformation
 from iegen import ERSpec,Set,Relation,VersionedDataArray,DataDependence
 from iegen.idg import IDGDataArray,IDGERSpec,IDGOutputERSpec,IDGGenERSpec,IDGCall,IDGSymbolic,IDGDataDep,IDGGenDataDep
-from iegen.codegen import calc_erg_call,calc_reorder_call,calc_data_dep_deps
+from iegen.codegen import calc_erg_call,calc_reorder_call,calc_data_dep_deps,calc_equality_value
 
 #---------- SparseTileTrans class ----------
 class SparseTileTrans(Transformation):
@@ -73,8 +73,9 @@ class SparseTileTrans(Transformation):
 		#The tiling routine takes the dependences into and out of the iteration seed space
 		#These dependences are given by the user currently, so we do not need to calculate them
 		#Create a DataDependence instance for the dependences
-		self.to_deps=DataDependence('%s_to_deps'%(self.grouping_name,),self.to_deps)
-		self.from_deps=DataDependence('%s_from_deps'%(self.grouping_name,),self.from_deps)
+		target=calc_equality_value(self.to_deps.tuple_out[0],list(self.to_deps)[0],mapir)
+		self.to_deps=DataDependence('%s_to_deps'%(self.grouping_name,),self.to_deps,target)
+		self.from_deps=DataDependence('%s_from_deps'%(self.grouping_name,),self.from_deps,target)
 
 		#Create a new Symbolic for the number of tiles
 		#TODO: The type is constant here, it would be better if this were defined somewhere else
