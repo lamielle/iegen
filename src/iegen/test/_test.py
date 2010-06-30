@@ -320,6 +320,26 @@ class SetTestCase(TestCase):
 
 		self.failUnless(set1==set_res,'%s!=%s'%(set1,set_res))
 
+	#Bug #295: Duplicate name simplification bug
+	def testDuplicateNameEqualityBug(self):
+		from iegen import Set
+
+		set=Set('{[a,a]: a=a}')
+		res=Set('{[a,a0]: a=a0}')
+		self.failUnless(set==res,'%s!=%s'%(set,res))
+
+		set=Set('{[a,a]: a+a+a=a}')
+		res=Set('{[a,a0]: 2a=0 and a=a0}')
+		self.failUnless(set==res,'%s!=%s'%(set,res))
+
+		set=Set('{[a,b]: a+a=b+b}')
+		res=Set('{[a,b]: 2a=2b}')
+		self.failUnless(set==res,'%s!=%s'%(set,res))
+
+		set=Set('{[a,b]: f(a+a)=g(b+b)}')
+		res=Set('{[a,b]: f(2a)=g(2b)}')
+		self.failUnless(set==res,'%s!=%s'%(set,res))
+
 	#Bug #265: When only one upper or lower bound is present for a variable being projected out,
 	# the variable is not properly projected out
 	def testFMBug1Bound(self):
@@ -1303,6 +1323,26 @@ class RelationTestCase(TestCase):
 		rel_res=Relation('{[a]->[b,c]: a=b and b>=c}')
 
 		self.failUnless(rel==rel_res,'%s!=%s'%(rel,rel_res))
+
+	#Bug #295: Duplicate name simplification bug
+	def testDuplicateNameEqualityBug(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[a]: a=a}')
+		res=Relation('{[a]->[a0]: a=a0}')
+		self.failUnless(rel==res,'%s!=%s'%(rel,res))
+
+		rel=Relation('{[a]->[a]: a+a+a=a}')
+		res=Relation('{[a]->[a0]: 2a=0 and a=a0}')
+		self.failUnless(rel==res,'%s!=%s'%(rel,res))
+
+		rel=Relation('{[a]->[b]: a+a=b+b}')
+		res=Relation('{[a]->[b]: 2a=2b}')
+		self.failUnless(rel==res,'%s!=%s'%(rel,res))
+
+		rel=Relation('{[a]->[b]: f(a+a)=g(b+b)}')
+		res=Relation('{[a]->[b]: f(2a)=g(2b)}')
+		self.failUnless(rel==res,'%s!=%s'%(rel,res))
 
 	#Bug #265: When only one upper or lower bound is present for a variable being projected out,
 	# the variable is not properly projected out
