@@ -79,7 +79,7 @@ class SparseTileTrans(Transformation):
 
 		#Create a new Symbolic for the number of tiles
 		#TODO: The type is constant here, it would be better if this were defined somewhere else
-		mapir.add_symbolic(name=self.num_tile_name,type='int %s',lower_bound=0)
+		mapir.add_symbolic(name=self.num_tile_name,type='int %s',lower_bound=1)
 
 		self.inputs.append(self.to_deps)
 		self.inputs.append(self.from_deps)
@@ -119,9 +119,11 @@ class SparseTileTrans(Transformation):
 
 	#Update the MapIR based on this transformation
 	def update_mapir(self,mapir):
-		#Update the scattering functions and access relations of all statements
-		self.print_progress('Updating scattering functions and access relations...')
+		#Update the iteration spcaes, scattering functions, and access relations of all statements based on the specified transformation
+		self.print_progress('Updating iteration spaces, scattering functions, and access relations...')
 		for statement in mapir.get_statements():
+			self.print_detail("Updating statement '%s'..."%(statement.name))
+			statement.iter_space=statement.iter_space.apply(self.iter_space_trans)
 			statement.scatter=self.iter_space_trans.compose(statement.scatter)
 
 			for access_relation in statement.get_access_relations():
@@ -132,7 +134,6 @@ class SparseTileTrans(Transformation):
 		self.print_progress('Updating data dependences for SparseTileTrans...')
 		for data_dependence in mapir.get_data_dependences():
 			self.print_detail("Updating data dependence '%s'..."%(data_dependence.name))
-			print data_dependence
 			data_dependence.dep_rel=self.iter_space_trans.compose(data_dependence.dep_rel.compose(self.iter_space_trans.inverse()))
 
 	def update_idg(self,mapir):

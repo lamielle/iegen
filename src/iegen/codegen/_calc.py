@@ -6,8 +6,8 @@ def do_calc(mapir):
 
 	iegen.print_progress('Starting calculation phase...')
 
-	#Update access relations before we start calculations
-	calc_update_access_relations(mapir)
+	#Update iteration spaces and access relations before we start calculations
+	calc_update(mapir)
 
 	#Calculate the initial IDG
 	calc_initial_idg(mapir)
@@ -97,8 +97,8 @@ def do_calc(mapir):
 		iegen.print_detail(mapir.full_iter_space)
 		iegen.print_detail('-----------------------------------------')
 
-	#Un-update access relations now that the calculation phase is over
-	calc_unupdate_access_relations(mapir)
+	#Un-update iteration spaces and access relations now that the calculation phase is over
+	calc_unupdate(mapir)
 
 	from iegen.idg.visitor import DotVisitor
 	v=DotVisitor().visit(mapir.idg)
@@ -210,6 +210,20 @@ def calc_data_dep_deps(data_dep,mapir):
 #-------------------------------------------------------
 
 #---------- Access Relation calculation functions ----------
+#Updates the MapIR for the computation phase
+def calc_update(mapir):
+	calc_update_iter_spaces(mapir)
+	calc_update_access_relations(mapir)
+
+#Updates iteration spaces for the computation phase
+def calc_update_iter_spaces(mapir):
+	iegen.print_progress('Updating iteration spaces...')
+
+	#Update each statement's iteration space to be within the context of the full iteration space
+	#rather than just iterators
+	for statement in mapir.get_statements():
+		statement.iter_space=statement.iter_space.apply(statement.scatter)
+
 #Updates access relations for the computation phase
 def calc_update_access_relations(mapir):
 	iegen.print_progress('Updating access relations...')
@@ -227,12 +241,62 @@ def calc_update_access_relations(mapir):
 
 			iegen.print_modified("Updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
 
+#Un-updates the MapIR following the computation phase
+def calc_unupdate(mapir):
+	full_to_iter=calc_unupdate_iter_spaces(mapir)
+	calc_unupdate_access_relations(mapir,full_to_iter)
+	calc_unupdate_scatter(mapir)
+
+#Unupdates iteration spaces following the computation phase
+def calc_unupdate_iter_spaces(mapir):
+	from iegen import Relation
+	iegen.print_progress('Un-updating iteration spaces...')
+
+	full_to_iter={}
+
+	#Update each statement's iteration space to be only iterators and no interleaved constants
+	for statement in mapir.get_statements():
+		#Extract the iterators and not the constant positions (iterators are the odd positions)
+		iters=[tuple_var for pos,tuple_var in enumerate(statement.iter_space.tuple_set) if pos%2==1]
+
+		#Create a new set with just the extracted iterators
+		extract_iters_rel=Relation('{[%s]->[%s]}'%(','.join(statement.iter_space.tuple_set),','.join(iters)))
+		temp_iter=statement.iter_space.apply(extract_iters_rel)
+
+		#Determine the dimensions of the new iteration space that are not constant
+		non_const_vars=[]
+		for var in temp_iter.tuple_set:
+			try:
+				#Try to determine what the current variable is equal to
+				val=calc_equality_value(var,temp_iter,mapir)
+			except ValueError as e:
+				#The current variable wasn't equal to a single value, i.e. not constant
+				non_const_vars.append(var)
+			else:
+				try:
+					#The current variable was equal to a single value, try to convert it to an integer
+					val=int(val)
+				except ValueError as e:
+					#The current variable was equal to a single value but not an integer
+					#TODO: This checking doesn't check for transitivity (i.e. a=b and b=0)
+					non_const_vars.append(var)
+
+		#Construct a relation for taking the full iteration space down to just the non-constant iterators
+		full_to_iter_rel=Relation('{[%s]->[%s]}'%(','.join(iters[:len(non_const_vars)]),','.join(statement.iter_space.tuple_set))).inverse()
+		full_to_iter[statement.name]=full_to_iter_rel
+
+		#Un-update the statement's iteration space using the full_to_iter relation
+		statement.iter_space=statement.iter_space.apply(full_to_iter_rel)
+
+	return full_to_iter
+
 #Un-updates access relations following the computation phase
-def calc_unupdate_access_relations(mapir):
+def calc_unupdate_access_relations(mapir,full_to_iter):
+	from iegen import Relation
 	iegen.print_progress('Un-updating access relations...')
 
 	#Update each access relation's iteration to data relation to
-	# match its statement's scattering function
+	# match its statement's iteration space
 	for statement in mapir.get_statements():
 		for access_relation in statement.get_access_relations():
 			iegen.print_detail("Un-updating iter_to_data of access relation '%s'..."%(access_relation.name))
@@ -240,12 +304,45 @@ def calc_unupdate_access_relations(mapir):
 			before=str(access_relation.iter_to_data)
 
 			#Compose the access relation to be in terms of the statement's iteration space
-			access_relation.iter_to_data=access_relation.iter_to_data.compose(statement.scatter)
-
-			#Rename the input tuple variables to match the statement's iteration space
-			access_relation.iter_to_data=access_relation.iter_to_data.copy(new_var_names=calc_access_relation_rename(access_relation.iter_to_data,statement.iter_space))
+			access_relation.iter_to_data=full_to_iter[statement.name].compose(access_relation.iter_to_data.inverse()).inverse()
 
 			iegen.print_modified("Un-updated iter_to_data of access relation '%s': %s -> %s"%(access_relation.name,before,access_relation.iter_to_data))
+
+def calc_unupdate_scatter(mapir):
+	from iegen import Relation
+
+	iegen.print_progress("Un-updating scattering functions...")
+
+	for statement in mapir.get_statements():
+		#TODO: This approach is a HACK due to the lack of an intersect operation with set/relation
+		#Get a string of the constraints for the statement's scattering function
+		scatter_constrs=str(list(list(statement.scatter.range())[0].disjunction.conjunctions)[0])
+
+		#Get the output tuple from the scattering function
+		scatter_tuple_out=statement.scatter.tuple_out
+
+		#Get just the iterators and not interleaved constants from the scattering function
+		scatter_iters=[tuple_var for pos,tuple_var in enumerate(statement.scatter.tuple_out) if pos%2==1]
+
+		#Get the statement's iteration space iterators
+		iters=statement.iter_space.tuple_set
+
+		#Get pairs of scatter iters/iteration space iters
+		#If there are more scattering iters than in the iteration space, zip handles it
+		iter_pairs=zip(iters,scatter_iters)
+
+		#Create equality constraint strings for the pairs of iterators
+		eq_constraints=[]
+		for iter_space_iter,scatter_iter in iter_pairs:
+			eq_constraints.append('%s=%s'%(iter_space_iter,scatter_iter))
+		eq_constraints=' and '.join(eq_constraints)
+
+		#Make comma separated lists
+		iters=','.join(iters)
+		scatter_tuple_out=','.join(scatter_tuple_out)
+
+		new_scatter=Relation('{[%s]->[%s]: %s and %s}'%(iters,scatter_tuple_out,scatter_constrs,eq_constraints),symbolics=statement.scatter.symbolics)
+		statement.scatter=new_scatter
 
 def calc_access_relation_rename(access_relation,iter_space):
 	#Make sure the input arity of the access relation matches
@@ -292,9 +389,9 @@ def calc_erg_call(trans_name,erg_func_name,inputs,outputs):
 #Given a collection of Statement objects, calculates the combined iteration space of all statements
 #Assumes that at least one statement is given
 def calc_full_iter_space(statements):
-	full_iter=statements[0].iter_space.apply(statements[0].scatter)
+	full_iter=statements[0].iter_space
 	for statement in statements[1:]:
-		full_iter=full_iter.union(statement.iter_space.apply(statement.scatter))
+		full_iter=full_iter.union(statement.iter_space)
 	return full_iter
 
 #Creates a string that is a C expression that will combine the given bounds using the given function name
