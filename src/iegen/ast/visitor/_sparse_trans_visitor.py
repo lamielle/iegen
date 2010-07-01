@@ -1,3 +1,4 @@
+from collections import defaultdict
 from iegen.ast.visitor import DFVisitor
 
 #Sparse Translation Visitor: Translate the visited PresSet or PresRelation into
@@ -21,7 +22,7 @@ class SparseTransVisitor(DFVisitor):
 	class FunctionContext(object):
 		def __init__(self,name,num_args):
 			self.name=name
-			self.arg_exps=[{} for i in xrange(num_args)]
+			self.arg_exps=[defaultdict(int) for i in xrange(num_args)]
 			self.curr_arg=-1
 
 		def curr_arg_exp(self):
@@ -60,7 +61,7 @@ class SparseTransVisitor(DFVisitor):
 
 	def _inConstraint(self,node):
 		self.in_constraint=True
-		self.constraint_coeff={}
+		self.constraint_coeff=defaultdict(int)
 
 	def _outConstraint(self,node):
 		self.in_constraint=False
@@ -84,9 +85,9 @@ class SparseTransVisitor(DFVisitor):
 		if self.in_constraint:
 			#Check if we are in a function or not
 			if len(self.func_context)>0:
-				self.func_context[-1].curr_arg_exp()[self.sparse_formula.get_column(node.id)]=node.coeff
+				self.func_context[-1].curr_arg_exp()[self.sparse_formula.get_column(node.id)]+=node.coeff
 			else:
-				self.constraint_coeff[self.sparse_formula.get_column(node.id)]=node.coeff
+				self.constraint_coeff[self.sparse_formula.get_column(node.id)]+=node.coeff
 
 	def inNormExp(self,node):
 		#Move to the next function argument if we are in a function
