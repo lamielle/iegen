@@ -919,6 +919,17 @@ class SetTestCase(TestCase):
 
 		self.failUnless(applied==applied_res,'%s!=%s'%(applied,applied_res))
 
+	def testApproximate1(self):
+		from iegen import Set
+
+		start=Set('{[a,b]: a=f(b)}')
+
+		approx=start.approximate({'f':Set('{[c]: 0<=c and c<=10}')})
+
+		res=Set('{[a,b]: 0<=a and a<=10}')
+
+		self.failUnless(approx==res,'%s!=%s'%(approx,res))
+
 	# End operation tests
 	#----------------------------------------
 
@@ -1999,6 +2010,17 @@ class RelationTestCase(TestCase):
 		res=Relation('{[a,b]->[c]: c=f(a,b) and 0<=c and c<=nt}',symbolics=[Symbolic('nt')])
 
 		self.failUnless(rest==res,'%s!=%s'%(rest,res))
+
+	def testApproximate1(self):
+		from iegen import Set,Relation
+
+		start=Relation('{[a]->[b]: a=f(b)}')
+
+		approx=start.approximate({'f':Set('{[c]: 0<=c and c<=10}')})
+
+		res=Relation('{[a]->[b]: 0<=a and a<=10}')
+
+		self.failUnless(approx==res,'%s!=%s'%(approx,res))
 
 	# End operation tests
 	#----------------------------------------

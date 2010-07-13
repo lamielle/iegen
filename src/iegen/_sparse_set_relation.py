@@ -628,6 +628,12 @@ class Set(SparseFormula):
 
 		return new_set
 
+	#Returns a new Set object with any UFS equalities approximated.
+	#Takes as input a dictionary mapping UFS names to a Set representing the range of each UFS.
+	#Example:  {[a,b]: a=f(b)}.approximate({'f':{[f]: 0<=f and f<=10}}) = {[a,b]: 0<=a and a<=10}
+	def approximate(self,bounds_dict):
+		return self.copy(bounds_dict=bounds_dict)
+
 	#Returns the constraint matrix for this set
 	def get_constraint_mat(self,symbolics=None):
 		pos_map={}
@@ -823,6 +829,12 @@ class Relation(SparseFormula):
 		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
 
 		return new_relation
+
+	#Returns a new Relation object with any UFS equalities approximated.
+	#Takes as input a dictionary mapping UFS names to a Set representing the range of each UFS.
+	#Example:  {[a]->[b]: a=f(b)}.approximate({'f':{[f]: 0<=f and f<=10}}) = {[a]->[b]: 0<=a and a<=10}
+	def approximate(self,bounds_dict):
+		return self.copy(bounds_dict=bounds_dict)
 
 	#Returns a set with tuple variables being the input tuple variables of this relation
 	def domain(self):
@@ -2135,11 +2147,69 @@ class SparseConjunction(IEGenObject):
 			self._constraints=frozenset(self.constraints)
 			self._frozen=True
 
-	def copy(self,freeze=True,**kwargs):
+	def copy(self,freeze=True,bounds_dict=None,**kwargs):
 		selfcopy=SparseConjunction()
 
 		for constraint in self:
 			selfcopy.add_constraint(constraint.copy(**kwargs))
+
+		#Should we perform approximation?
+		if bounds_dict is not None:
+			update_list=[]
+
+			#Look for constraints that look like tuple_var=f(...)
+			for constraint in selfcopy:
+				#Equality constraint with two terms?
+				if constraint.is_equality() and 2==len(constraint):
+					term1,term2=list(constraint)
+					term1,term1_coeff=term1
+					term2,term2_coeff=term2
+					tuple_var=function_term=None
+
+					#Make sure the coffcients are 1/-1
+					if 1==abs(term1_coeff) and 1==abs(term2_coeff):
+						#Determine if we have exactly one tuple var and one function term
+						if term1.is_tuple_var() and term2.is_function():
+							tuple_var=term1
+							function_term=term2
+						elif term1.is_function() and term2.is_tuple_var():
+							tuple_var=term2
+							function_term=term1
+
+						if tuple_var is not None and function_term is not None:
+							if function_term.name in bounds_dict:
+								#Triggered!  We have a tuple var equal to a function and have bounds for the function
+								#Add this to the list of updates to make
+								update_list.append((constraint,tuple_var,function_term))
+
+			#Make all of the noted updates
+			for update in update_list:
+				#Updating consists of:
+				#-Removing the old equality constraint tuple_var=f(...)
+				#-Obtaining the bounds for f from the given bounds_dict
+				#-Copying the bounds constraints and replacing the bounds tuple var with tuple_var
+				#
+				#This may have BUGS!  One issue that may arise is if the bounds constraints have a symbolic
+				# that selfcopy does not have already
+				constaint,tuple_var,function_term=update
+
+				#Get the bounds for the function term
+				bounds=bounds_dict[function_term.name]
+
+				#Make sure there is a single conjunction
+				if len(bounds)!=1:
+					raise ValueError('Cannot approximate with multiple conjunctions for function bounds')
+
+				#Make sure there is a single bounds dimension
+				if len(bounds.tuple_vars)!=1:
+					raise ValueError('Approximate function bounds must have exactly one dimension')
+
+				#Remove old tuple_var=f(...)
+				selfcopy.remove_constraint(constraint)
+
+				#Add copies of the bounds constraints
+				for bounds_constraint in list(bounds.disjunction)[0]:
+					selfcopy.add_constraint(bounds_constraint.copy(new_var_names={bounds.tuple_vars[0]:tuple_var.name}))
 
 		if self.frozen and freeze:
 			selfcopy.freeze()
