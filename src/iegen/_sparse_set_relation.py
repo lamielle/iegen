@@ -409,6 +409,17 @@ class SparseFormula(IEGenObject):
 		#Set this sparse formula's state to frozen
 		self._frozen=True
 
+	#Returns a new Set/Relation object with any UFS equalities approximated.
+	#Takes as input a dictionary mapping UFS names to a Set/Relation representing the range of each UFS.
+	#Examples:  {[a,b]: a=f(b)}.approximate({'f':{[f]: 0<=f and f<=10}}) = {[a,b]: 0<=a and a<=10}
+	#           {[a]->[b]: a=f(b)}.approximate({'f':{[f]: 0<=f and f<=10}}) = {[a]->[b]: 0<=a and a<=10}
+	def approximate(self,bounds_dict):
+		return self.copy(bounds_dict=bounds_dict)
+
+	#Returns collections of all constraints (one per conjunction) that contain an UFS
+	def ufs_constraints(self):
+		return self.disjunction.ufs_constraints()
+
 	#Returns the SparseExpColumnType object for the column with the given name:
 	#The name could be a symbolic, tuple variable, or free variable
 	def get_column(self,name):
@@ -628,12 +639,6 @@ class Set(SparseFormula):
 
 		return new_set
 
-	#Returns a new Set object with any UFS equalities approximated.
-	#Takes as input a dictionary mapping UFS names to a Set representing the range of each UFS.
-	#Example:  {[a,b]: a=f(b)}.approximate({'f':{[f]: 0<=f and f<=10}}) = {[a,b]: 0<=a and a<=10}
-	def approximate(self,bounds_dict):
-		return self.copy(bounds_dict=bounds_dict)
-
 	#Returns the constraint matrix for this set
 	def get_constraint_mat(self,symbolics=None):
 		pos_map={}
@@ -829,12 +834,6 @@ class Relation(SparseFormula):
 		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
 
 		return new_relation
-
-	#Returns a new Relation object with any UFS equalities approximated.
-	#Takes as input a dictionary mapping UFS names to a Set representing the range of each UFS.
-	#Example:  {[a]->[b]: a=f(b)}.approximate({'f':{[f]: 0<=f and f<=10}}) = {[a]->[b]: 0<=a and a<=10}
-	def approximate(self,bounds_dict):
-		return self.copy(bounds_dict=bounds_dict)
 
 	#Returns a set with tuple variables being the input tuple variables of this relation
 	def domain(self):
@@ -1744,6 +1743,9 @@ class SparseConstraint(IEGenObject):
 	def contains_nest(self,nest):
 		return self._sparse_exp.contains_nest(nest)
 
+	def contains_ufs(self):
+		return any((term.is_function() for term,coeff in self))
+
 #Class representing a sparse equality constraint
 class SparseEquality(SparseConstraint):
 	_op='='
@@ -2153,7 +2155,7 @@ class SparseConjunction(IEGenObject):
 		for constraint in self:
 			selfcopy.add_constraint(constraint.copy(**kwargs))
 
-		#Should we perform approximation?
+		#Should we perform approximation? (approximate UFS equalities)
 		if bounds_dict is not None:
 			update_list=[]
 
@@ -2167,7 +2169,7 @@ class SparseConjunction(IEGenObject):
 					tuple_var=function_term=None
 
 					#Make sure the coffcients are 1/-1
-					if 1==abs(term1_coeff) and 1==abs(term2_coeff):
+					if 1==abs(term1_coeff) and 1==abs(term2_coeff) and term1_coeff==-1*term2_coeff:
 						#Determine if we have exactly one tuple var and one function term
 						if term1.is_tuple_var() and term2.is_function():
 							tuple_var=term1
@@ -2191,7 +2193,7 @@ class SparseConjunction(IEGenObject):
 				#
 				#This may have BUGS!  One issue that may arise is if the bounds constraints have a symbolic
 				# that selfcopy does not have already
-				constaint,tuple_var,function_term=update
+				constraint,tuple_var,function_term=update
 
 				#Get the bounds for the function term
 				bounds=bounds_dict[function_term.name]
@@ -2209,13 +2211,16 @@ class SparseConjunction(IEGenObject):
 
 				#Add copies of the bounds constraints
 				for bounds_constraint in list(bounds.disjunction)[0]:
-					selfcopy.add_constraint(bounds_constraint.copy(new_var_names={bounds.tuple_vars[0]:tuple_var.name}))
+					to_add=bounds_constraint.copy(new_var_pos={0:tuple_var.pos},new_var_names={bounds.tuple_vars[0]:tuple_var.name})
+					selfcopy.add_constraint(to_add)
 
 		if self.frozen and freeze:
 			selfcopy.freeze()
 
 		return selfcopy
 
+	def ufs_constraints(self):
+		return [constraint for constraint in self if constraint.contains_ufs()]
 # End SparseConjunction class
 #--------------------------------------------------
 
@@ -2352,5 +2357,7 @@ class SparseDisjunction(IEGenObject):
 
 		return selfcopy
 
+	def ufs_constraints(self):
+		return [conjunction.ufs_constraints() for conjunction in self]
 # End SparseDisjunction class
 #--------------------------------------------------

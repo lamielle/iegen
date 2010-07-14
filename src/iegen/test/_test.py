@@ -930,6 +930,28 @@ class SetTestCase(TestCase):
 
 		self.failUnless(approx==res,'%s!=%s'%(approx,res))
 
+	def testUFSConstraints1(self):
+		from iegen import Set
+
+		set=Set('{[a]: a=f(b)}')
+
+		ufs_constraints=set.ufs_constraints()
+
+		self.failUnless(len(ufs_constraints)==1)
+		self.failUnless(len(ufs_constraints[0])==1)
+		self.failUnless('a=f(b)'==str(ufs_constraints[0][0]),'a=f(b) != %s'%(str(ufs_constraints[0])))
+
+	def testUFSConstraints2(self):
+		from iegen import Set
+
+		set=Set('{[a]: a>0 and a=f(b)}')
+
+		ufs_constraints=set.ufs_constraints()
+
+		self.failUnless(len(ufs_constraints)==1)
+		self.failUnless(len(ufs_constraints[0])==1)
+		self.failUnless('a=f(b)'==str(ufs_constraints[0][0]),'a=f(b) != %s'%(str(ufs_constraints[0])))
+
 	# End operation tests
 	#----------------------------------------
 
@@ -2021,6 +2043,17 @@ class RelationTestCase(TestCase):
 		res=Relation('{[a]->[b]: 0<=a and a<=10}')
 
 		self.failUnless(approx==res,'%s!=%s'%(approx,res))
+
+	def testUFSConstraints(self):
+		from iegen import Relation
+
+		rel=Relation('{[a]->[b]: a=f(b)}')
+
+		ufs_constraints=rel.ufs_constraints()
+
+		self.failUnless(len(ufs_constraints)==1)
+		self.failUnless(len(ufs_constraints[0])==1)
+		self.failUnless('a=f(b)'==str(ufs_constraints[0][0]),'a=f(b) != %s'%(str(ufs_constraints[0])))
 
 	# End operation tests
 	#----------------------------------------
