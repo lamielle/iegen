@@ -210,6 +210,17 @@ class MapIR(IEGenObject):
 	#---------------------------------------
 
 	#---------- Utility methods ----------
+	#Returns a dict that maps the name of each UFS (ERSpec and index array) to that UFS's range
+	def ufs_range_dict(self):
+		range_dict={}
+
+		for er_spec in self.get_er_specs():
+			range_dict[er_spec.name]=er_spec.output_bounds
+
+		return range_dict
+	#-------------------------------------
+
+	#---------- Private Utility methods ----------
 	#Creates an object and adds it to each of the given dictionaries
 	#This method does three things:
 	#-Creates Sets/Relations for certain fields in kwargs
@@ -302,5 +313,5 @@ class MapIR(IEGenObject):
 					dict[field_name][pos]=self.data_arrays[dict[field_name][pos]]
 				except KeyError,e:
 					raise NameError("Data array '%s' does not exist in the MapIR"%(dict[field_name][pos]))
-	#-------------------------------------
+	#---------------------------------------------
 #---------------------------------
