@@ -210,6 +210,13 @@ class MapIR(IEGenObject):
 	#---------------------------------------
 
 	#---------- Utility methods ----------
+	#Returns a mapping from the name of each UFS (ERSpec and index array) to that UFS's getter string
+	def ufs_name_map(self):
+		ufs_name_map={}
+		for er_spec in self.get_er_specs():
+			ufs_name_map[er_spec.name]=('%s(%s,'%(er_spec.get_getter_str(),er_spec.get_var_name()),')')
+		return ufs_name_map
+
 	#Returns a dict that maps the name of each UFS (ERSpec and index array) to that UFS's range
 	def ufs_range_dict(self):
 		range_dict={}
