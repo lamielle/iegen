@@ -1511,6 +1511,12 @@ class SparseConstraint(IEGenObject):
 		return '%s(%s)'%(self.__class__.__name__,self._sparse_exp.exp)
 
 	def __str__(self):
+		return self.value_string()
+
+	def value_string(self,function_name_map=None):
+		if function_name_map is None:
+			function_name_map={}
+
 		lhs_exp_strs=[]
 		rhs_exp_strs=[]
 
@@ -1528,14 +1534,14 @@ class SparseConstraint(IEGenObject):
 					#If the coefficient is not 0, add it to the list of expression strings
 					if coeff>0:
 						if 1==coeff:
-							lhs_exp_strs.append('%s'%(term.exp_str()))
+							lhs_exp_strs.append('%s'%(term.exp_str(function_name_map=function_name_map)))
 						else:
-							lhs_exp_strs.append('%s%s'%(coeff,term.exp_str()))
+							lhs_exp_strs.append('%s%s'%(coeff,term.exp_str(function_name_map=function_name_map)))
 					else:
 						if -1==coeff:
-							rhs_exp_strs.append('%s'%(term.exp_str()))
+							rhs_exp_strs.append('%s'%(term.exp_str(function_name_map=function_name_map)))
 						else:
-							rhs_exp_strs.append('%s%s'%(-1*coeff,term.exp_str()))
+							rhs_exp_strs.append('%s%s'%(-1*coeff,term.exp_str(function_name_map=function_name_map)))
 
 		lhs_exp_str='+'.join(lhs_exp_strs)
 		rhs_exp_str='+'.join(rhs_exp_strs)
