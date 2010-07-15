@@ -72,15 +72,10 @@ spec.add_intertransopt(
 
 #Full Sparse Tiling
 
-#T0 = Relation('{[c0,s,c0,c0,c0]->[c0,s,c0,c0,c0,c0,c0]: c0=0}')
-#T1 = Relation('{[c0,s,c1,i,x] ->[c0,s,c1,t,c0,i,x]: c0=0 && c1=1 && t=theta(c1,i)}')
-#T2 = Relation('{[c0,s,c2,i,x] ->[c0,s,c1,t,c1,i,x]: c0=0 && c1=1 && c2=2 && t=theta(c2,i)}')
-#T3 = Relation('{[c0,s,c3,i,x] ->[c0,s,c1,t,c2,i,x]: c0=0 && c1=1 && c2=2 && c3=3 && t=theta(c3,i)}')
-
 T0 = Relation('{[c0,s,c0,c0,c0]->[c0,s,c0,c0,c0,c0,c0]: c0=0}')
-T1 = Relation('{[c0,s,c1,i,x]->[c0,s,c1,t,c0,i,x]: c0=0 && c1=1 && 0<=t and t<nt}',symbolics=[Symbolic('nt',lower_bound=1)])
-T2 = Relation('{[c0,s,c2,i,x]->[c0,s,c1,t,c1,i,x]: c0=0 && c1=1 && c2=2 && 0<=t and t<nt}',symbolics=[Symbolic('nt',lower_bound=1)])
-T3 = Relation('{[c0,s,c3,i,x]->[c0,s,c1,t,c2,i,x]: c0=0 && c1=1 && c2=2 && c3=3 && 0<=t and t<nt}',symbolics=[Symbolic('nt',lower_bound=1)])
+T1 = Relation('{[c0,s,c1,i,x] ->[c0,s,c1,t,c0,i,x]: c0=0 && c1=1 && t=theta(c1,i)}',symbolics=[Symbolic('nt',lower_bound=1)])
+T2 = Relation('{[c0,s,c2,i,x] ->[c0,s,c1,t,c1,i,x]: c0=0 && c1=1 && c2=2 && t=theta(c2,i)}',symbolics=[Symbolic('nt',lower_bound=1)])
+T3 = Relation('{[c0,s,c3,i,x] ->[c0,s,c1,t,c2,i,x]: c0=0 && c1=1 && c2=2 && c3=3 && t=theta(c3,i)}',symbolics=[Symbolic('nt',lower_bound=1)])
 
 symbolics=[Symbolic('n_inter'),Symbolic('n_moles'),Symbolic('nt',lower_bound=1)]
 
