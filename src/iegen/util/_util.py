@@ -73,6 +73,12 @@ def sign(num):
 def invert_dict(d):
 	return dict(((v,k) for k,v in d.items()))
 
+#Returns a string where a single '=' character is replaced with '=='
+#This routine does not change the '=' character in '>=' or '<='
+def trans_equals(instr):
+	import re
+	return re.sub('([^<>])=',r'\1==',instr)
+
 #Calculates 'equality sets' for the given input dictionary
 #
 #equality_dict: A dictionary mapping keys to lists of values, such as:

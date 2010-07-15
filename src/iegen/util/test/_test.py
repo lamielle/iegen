@@ -124,6 +124,34 @@ class InvertDictTestCase(TestCase):
 		self.failUnless(dict_res==dict,'%s!=%s'%(dict_res,dict))
 #---------------------------------------
 
+#---------- trans_equals Tests ----------
+class TransEqualsTestCase(TestCase):
+
+	def TestConstants(self):
+		from iegen.util import trans_equals
+		self.failUnless('6==1'==trans_equals('6=1'),'%s'%(trans_equals('6=1'),))
+
+	def TestVars(self):
+		from iegen.util import trans_equals
+		self.failUnless('a==b'==trans_equals('a=b'),'%s'%(trans_equals('a=b'),))
+
+	def TestIgnoreGE(self):
+		from iegen.util import trans_equals
+		self.failUnless('a>=b'==trans_equals('a>=b'),'%s'%(trans_equals('a>=b'),))
+
+	def TestIgnoreLE(self):
+		from iegen.util import trans_equals
+		self.failUnless('a<=b'==trans_equals('a<=b'),'%s'%(trans_equals('a<=b'),))
+
+	def TestMultiple(self):
+		from iegen.util import trans_equals
+		self.failUnless('a==b and c==d'==trans_equals('a=b and c=d'),'%s'%(trans_equals('a=b and c=d'),))
+
+	def TestComplex(self):
+		from iegen.util import trans_equals
+		self.failUnless('a==b and a<=b and 6==1 and c>=d'==trans_equals('a=b and a<=b and 6=1 and c>=d'),'%s'%(trans_equals('a=b and a<=b and 6=1 and c>=d'),))
+#----------------------------------------
+
 #---------- Equality Sets Tests ----------
 class EqualitySestsTestCase(TestCase):
 
