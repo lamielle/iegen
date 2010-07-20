@@ -191,7 +191,7 @@ class ERSpec(IEGenObject):
 	#- if ERSpec is a function.
 	#- example: theta
 	def is_ef_2d(self):
-		return self.relation.arity_in()<=2 and self.relation.arity_out()<=2 and self.is_function
+		return not self.is_ef_1d() and self.relation.arity_in()<=2 and self.relation.arity_out()<=2 and self.is_function
 
 	#ER_1DCOO
 	#- if in and out arity are both 1D.
@@ -275,6 +275,16 @@ class ERSpec(IEGenObject):
 			return self.name+'_EF_2D'
 		else:
 			raise ValueError('Unknown ERSpec type: %s %s'%(self.name,self.relation))
+
+	def get_getter_pair(self):
+		if self.is_ef_2d() and self.relation.arity_out()==1:
+			name_open='Tuple2D_get(%s(%s,'%(self.get_getter_str(),self.get_var_name())
+			name_close='),0)'
+		else:
+			name_open='%s(%s,'%(self.get_getter_str(),self.get_var_name())
+			name_close=')'
+
+		return (name_open,name_close)
 
 	#Returns the parameter name for this ERSpec
 	def get_param_name(self):
