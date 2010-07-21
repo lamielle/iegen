@@ -375,15 +375,15 @@ def gen_data_dep(data_dep,mapir):
 	var_out_name=dep_rel.tuple_out[1]
 
 	for conjunction_index,single_relation in enumerate(dep_rel):
-		bounds_set=Set('{[%s]: %s<=%s and %s<=%s}'%(var_in_name,lbs[conjunction_index],var_in_name,var_in_name,ubs[conjunction_index]),mapir.get_symbolics())
+		bounds_set=Set('{[%s]: %s<=%s and %s<=%s}'%(bounds_var,lbs[conjunction_index],bounds_var,bounds_var,ubs[conjunction_index]),mapir.get_symbolics())
 
 		#Get the value to insert
 		if in_const==data_dep.target:
 			value=calc_equality_value(var_out_name,single_relation,mapir,only_eqs=True)
-			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,var_in_name,data_dep.get_setter_str(),data_dep.get_var_name(),value,var_out_name)))
+			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,bounds_var,data_dep.get_setter_str(),data_dep.get_var_name(),value,bounds_var)))
 		else:
 			value=calc_equality_value(var_in_name,single_relation,mapir,only_eqs=True)
-			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,var_in_name,data_dep.get_setter_str(),data_dep.get_var_name(),value,var_in_name)))
+			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,bounds_var,data_dep.get_setter_str(),data_dep.get_var_name(),value,bounds_var)))
 
 		cloog_stmts.append(iegen.pycloog.Statement(bounds_set))
 
