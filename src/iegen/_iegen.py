@@ -348,7 +348,7 @@ class IndexArray(ERSpec):
 
 #---------- Statement class ----------
 class Statement(IEGenObject):
-	__slots__=('name','text','iter_space','scatter','access_relations')
+	__slots__=('name','text','iter_space','scatter','access_relations','sparse_sched')
 	_set_fields=('iter_space',)
 	_relation_fields=('scatter',)
 
@@ -358,13 +358,14 @@ class Statement(IEGenObject):
 		self.iter_space=iter_space
 		self.scatter=scatter
 		self.access_relations={} if None is access_relations else access_relations
+		self.sparse_sched=None
 
 		#Make sure the arity of the iteration space is the same as the input arity of the scattering funcion
 		if self.iter_space.arity()!=self.scatter.arity_in():
 			raise ValueError('Input arity of scattering function must be equal to arity of iteration space.')
 
 	def __repr__(self):
-		return 'Statement(%s,%s,%s,%s,%s)'%(self.name,self.text,self.iter_space,self.scatter,self.access_relations)
+		return 'Statement(%s,%s,%s,%s,%s,%s)'%(self.name,self.text,self.iter_space,self.scatter,self.access_relations,self.sparse_sched)
 
 	def __str__(self):
 		return self._get_string(0)
@@ -384,7 +385,8 @@ class Statement(IEGenObject):
 %s|-iter_space: %s
 %s|-scatter: %s
 %s|-access_relations:
-%s'''%(spaces,self.name,spaces,self.text,spaces,self.iter_space,spaces,self.scatter,spaces,ar_string)
+%s
+%s|-sparse_sched: %s'''%(spaces,self.name,spaces,self.text,spaces,self.iter_space,spaces,self.scatter,spaces,ar_string,sparse,self.sparse_sched)
 
 	#---------- Access Relations ----------
 	def get_access_relations(self): return self.access_relations.values()
