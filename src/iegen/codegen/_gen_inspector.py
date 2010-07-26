@@ -114,7 +114,8 @@ def gen_rect_union_domain_2d(name,set):
 	ubs=calc_single_bounds_from_bounds(set.upper_bounds(set.tuple_vars[1]))
 
 	#Calculate the static array for the bounds
-	bounds_sub_arrays=['{%s,%s,%s}'%items for items in zip(const_vals,lbs,ubs)]
+	bounds_tuples=sorted(((const_val,lb,ub) for const_val,lb,ub in zip(const_vals,lbs,ubs)),key=lambda t: t[0])
+	bounds_sub_arrays=['{%s,%s,%s}'%item for item in bounds_tuples]
 	bounds_array='{'+','.join(bounds_sub_arrays)+'}'
 
 	#Declare the bounds for the dimensions
@@ -258,7 +259,7 @@ def gen_output_ef_2d(output_er_spec,is_call_input,mapir):
 
 	stmts.append(Comment('Creation of ExplicitFunction for abstract relation:'))
 	stmts.append(Comment(str(output_er_spec.relation)))
-	stmts.append(Comment('Bounds for set %s'%(output_er_spec.input_bounds)))
+	stmts.append(Comment('Input bounds for abstract relation: %s'%(output_er_spec.input_bounds)))
 
 	stmts.append(Statement('*%s=%s(%s,%s,%s);'%(output_er_spec.get_param_name(),output_er_spec.get_ctor_str(),output_er_spec.relation.arity_in(),output_er_spec.relation.arity_out(),domain_name)))
 
@@ -287,7 +288,7 @@ def gen_output_er_spec_general(output_er_spec,is_call_input,mapir):
 	upper_bound=str(list(output_er_spec.input_bounds.upper_bounds(var_name)[0])[0])
 	stmts.append(Comment('Creation of ExplicitFunction for abstract relation:'))
 	stmts.append(Comment(str(output_er_spec.relation)))
-	stmts.append(Comment('Bounds for set %s'%(output_er_spec.input_bounds)))
+	stmts.append(Comment('Input bounds for abstract relation: %s'%(output_er_spec.input_bounds)))
 	stmts.append(Statement('*%s=%s(%s,%s,%s);'%(output_er_spec.get_param_name(),output_er_spec.get_ctor_str(),lower_bound,upper_bound,str(output_er_spec.is_permutation).lower())))
 	stmts.append(Statement('%s=*%s;'%(output_er_spec.get_var_name(),output_er_spec.get_param_name())))
 	stmts.append(Statement())
@@ -380,7 +381,7 @@ def gen_data_dep(data_dep,mapir):
 		#Get the value to insert
 		if in_const==data_dep.target:
 			value=calc_equality_value(var_out_name,single_relation,mapir,only_eqs=True)
-			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,bounds_var,data_dep.get_setter_str(),data_dep.get_var_name(),value,bounds_var)))
+			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,bounds_var,data_dep.get_setter_str(),data_dep.get_var_name(),bounds_var,value)))
 		else:
 			value=calc_equality_value(var_in_name,single_relation,mapir,only_eqs=True)
 			define_stmts.append(Statement('#define S%d(%s) %s(%s,%s,%s);'%(conjunction_index,bounds_var,data_dep.get_setter_str(),data_dep.get_var_name(),value,bounds_var)))
