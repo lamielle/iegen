@@ -15,7 +15,7 @@ class ImportTestCase(TestCase):
 	#Test simple importing of iegen classes
 	def testNameImport(self):
 		try:
-			from iegen import IEGenObject,MapIR,Symbolic,DataArray,IndexArray,AccessRelation,Statement,FunctionCallSpec,DataDependence,Set,Relation
+			from iegen import IEGenObject,MapIR,Symbolic,DataArray,IndexArray,AccessRelation,Statement,FunctionCallSpec,DataDependence,Set,Relation,Constant
 
 			#SparseFormula related imports
 			from iegen import SparseFormula,SparseExpColumnType,TupleVarCol,SymbolicCol,FreeVarCol,ConstantCol,UFCall,SparseExp,SparseConstraint,SparseEquality,SparseInequality

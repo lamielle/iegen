@@ -380,9 +380,18 @@ def calc_erg_call(trans_name,erg_func_name,inputs,outputs):
 	from iegen import FunctionCallSpec
 	name=trans_name+'_'+erg_func_name
 
-	args=[er.get_var_name() for er in inputs+outputs]
+	args=[er for er in inputs+outputs]
 
-	return FunctionCallSpec(name,erg_func_name,args)
+	arg_strs=[]
+	for er in inputs+outputs:
+		if er.is_gen_output():
+			arg_strs.append('&%s'%(er.get_var_name()))
+		else:
+			arg_strs.append(er.get_var_name())
+
+	output_args=[arg for arg in args if arg.is_gen_output()]
+
+	return FunctionCallSpec(name,erg_func_name,arg_strs,output_args)
 #----------------------------------------------------
 
 #---------- Utility calculation functions ----------

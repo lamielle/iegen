@@ -233,12 +233,16 @@ def gen_explicit_er_spec(er_spec,mapir):
 
 #---------- Output ERSpec code generation ----------
 def gen_output_er_spec(output_er_spec,is_call_input,mapir):
-	if output_er_spec.is_union_1d():
-		stmts=gen_output_er_spec_general(output_er_spec,is_call_input,mapir)
-	elif output_er_spec.is_ef_2d():
-		stmts=gen_output_ef_2d(output_er_spec,is_call_input,mapir)
+	#Do not generate code for ERSpecs that are constructed within an ERG
+	if output_er_spec.is_gen_output():
+		stmts=[]
 	else:
-		raise ValueError('Code generation for unsupported output ERSpec type')
+		if output_er_spec.is_union_1d():
+			stmts=gen_output_er_spec_general(output_er_spec,is_call_input,mapir)
+		elif output_er_spec.is_ef_2d():
+			stmts=gen_output_ef_2d(output_er_spec,is_call_input,mapir)
+		else:
+			raise ValueError('Code generation for unsupported output ERSpec type')
 
 	return stmts
 
@@ -411,6 +415,11 @@ def gen_call(call_spec):
 	stmts=[]
 	stmts.append(Comment('Call the %s routine'%(call_spec.function_name)))
 	stmts.append(Statement(call_spec.function_name+'('+','.join(call_spec.arguments)+');'))
+
+	#Generate the proper output argument assignments, if any
+	for output_arg in call_spec.output_args:
+		stmts.append(Statement('*%s=%s;'%(output_arg.name,output_arg.get_var_name())))
+
 	stmts.append(Statement())
 
 	return stmts

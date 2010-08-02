@@ -73,6 +73,29 @@ class Symbolic(Node):
 
 	def get_var_name(self):
 		return self.name
+
+	def is_gen_output(self):
+		return False
+#------------------------------------
+
+#---------- Constant class ----------
+class Constant(Node):
+	__slots__=('val',)
+
+	def __init__(self,val):
+		self.val=val
+
+	def __repr__(self):
+		return 'Constant(%s)'%(self.val)
+
+	def __str__(self):
+		return self.val
+
+	def get_var_name(self):
+		return self.val
+
+	def is_gen_output(self):
+		return False
 #------------------------------------
 
 #---------- DataArray class ----------
@@ -120,9 +143,9 @@ class VersionedDataArray(IEGenObject):
 
 #---------- ERSpec class ----------
 class ERSpec(IEGenObject):
-	__slots__=('name','input_bounds','output_bounds','relation','_is_function','_is_permutation','is_inverse','inverse_of')
+	__slots__=('name','input_bounds','output_bounds','relation','_is_function','_is_permutation','is_inverse','inverse_of','_is_gen_output')
 
-	def __init__(self,name,input_bounds,output_bounds,relation,is_function=False,is_permutation=False,is_inverse=False,inverse_of=None):
+	def __init__(self,name,input_bounds,output_bounds,relation,is_function=False,is_permutation=False,is_inverse=False,inverse_of=None,is_gen_output=False):
 		self.name=name
 		self.input_bounds=input_bounds
 		self.output_bounds=output_bounds
@@ -131,6 +154,7 @@ class ERSpec(IEGenObject):
 		self.is_permutation=is_permutation
 		self.is_inverse=is_inverse
 		self.inverse_of=inverse_of
+		self._is_gen_output=is_gen_output
 
 	def _get_is_function(self): return self._is_function
 	def _set_is_function(self,is_function):
@@ -145,7 +169,7 @@ class ERSpec(IEGenObject):
 	is_permutation=property(_get_is_permutation,_set_is_permutation)
 
 	def __repr__(self):
-		return 'ERSpec(%s,%s,%s,%s,%s,%s,%s,%s)'%(self.name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation),self.is_function,self.is_permutation,self.is_inverse,self.inverse_of)
+		return 'ERSpec(%s,%s,%s,%s,%s,%s,%s,%s,%s)'%(self.name,repr(self.input_bounds),repr(self.output_bounds),repr(self.relation),self.is_function,self.is_permutation,self.is_inverse,self.inverse_of,self.is_gen_output())
 
 	def __str__(self):
 		return self._get_string(0)
@@ -161,7 +185,8 @@ class ERSpec(IEGenObject):
 %s|-is_function: %s
 %s|-permutation: %s
 %s|-is_inverse: %s
-%s|-inverse_of: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation,spaces,self.is_function,spaces,self.is_permutation,spaces,self.is_inverse,spaces,self.inverse_of)
+%s|-inverse_of: %s
+%s|-is_gen_output: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation,spaces,self.is_function,spaces,self.is_permutation,spaces,self.is_inverse,spaces,self.inverse_of,spaces,self.is_gen_output())
 
 	#Returns all symbolics in each Set/Relation that this ERSpec contains
 	def symbolics(self):
@@ -177,6 +202,10 @@ class ERSpec(IEGenObject):
 	#- If only has one conjunction.
 	def is_ef_1d(self):
 		return (1,1)==self.relation.arity() and self.is_function and len(self.relation)==1
+
+	#ER_1D
+	def is_er_1d(self):
+		return (1,1)==self.relation.arity() and not self.is_function and len(self.relation)==1
 
 	#ER_U1D
 	#- if in and out arity are both 1D.
@@ -203,6 +232,8 @@ class ERSpec(IEGenObject):
 	def get_type(self):
 		if self.is_ef_1d():
 			return 'EF_1D *'
+		elif self.is_er_1d():
+			return 'ER_1D *'
 		elif self.is_union_1d():
 			return 'ER_U1D *'
 		elif self.is_ef_2d():
@@ -214,6 +245,8 @@ class ERSpec(IEGenObject):
 	def get_param_type(self):
 		if self.is_ef_1d():
 			return 'EF_1D **'
+		elif self.is_er_1d():
+			return 'ER_1D **'
 		elif self.is_union_1d():
 			return 'ER_U1D **'
 		elif self.is_ef_2d():
@@ -225,6 +258,8 @@ class ERSpec(IEGenObject):
 	def get_getter_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_get'
+		elif self.is_er_1d():
+			return 'ER_1D_get'
 		elif self.is_union_1d():
 			return 'ER_U1D_get'
 		elif self.is_ef_2d():
@@ -236,6 +271,8 @@ class ERSpec(IEGenObject):
 	def get_ctor_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_ctor'
+		elif self.is_er_1d():
+			return 'ER_1D_get'
 		elif self.is_union_1d():
 			return 'ER_U1D_ctor'
 		elif self.is_ef_2d():
@@ -247,6 +284,8 @@ class ERSpec(IEGenObject):
 	def get_genInverse_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_genInverse'
+		elif self.is_er_1d():
+			return 'ER_1D_genInverse'
 		elif self.is_union_1d():
 			return 'ER_U1D_genInverse'
 		elif self.is_ef_2d():
@@ -258,6 +297,8 @@ class ERSpec(IEGenObject):
 	def get_setter_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_set'
+		elif self.is_er_1d():
+			return 'ER_1D_set'
 		elif self.is_union_1d():
 			return 'ER_U1D_set'
 		elif self.is_ef_2d():
@@ -269,6 +310,8 @@ class ERSpec(IEGenObject):
 	def get_var_name(self):
 		if self.is_ef_1d():
 			return self.name+'_EF_1D'
+		elif self.is_er_1d():
+			return self.name+'_ER_1D'
 		elif self.is_union_1d():
 			return self.name+'_ER_U1D'
 		elif self.is_ef_2d():
@@ -289,6 +332,9 @@ class ERSpec(IEGenObject):
 	#Returns the parameter name for this ERSpec
 	def get_param_name(self):
 		return self.name
+
+	def is_gen_output(self):
+		return self._is_gen_output
 #----------------------------------
 
 #---------- IndexArray class ----------
@@ -473,14 +519,18 @@ class DataDependence(IEGenObject):
 
 	def get_ctor_str(self):
 		return 'ED_ctor'
+
+	def is_gen_output(self):
+		return False
 #------------------------------------------
 
 #---------- Function Call class ----------
 class FunctionCallSpec(IEGenObject):
-	__slots__=('name','function_name','arguments')
+	__slots__=('name','function_name','arguments','output_args')
 
-	def __init__(self,name,function_name,arguments):
+	def __init__(self,name,function_name,arguments,output_args=None):
 		self.name=name
 		self.function_name=function_name
 		self.arguments=arguments
+		self.output_args=[] if output_args is None else output_args
 #-----------------------------------------
