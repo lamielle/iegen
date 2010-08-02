@@ -306,6 +306,27 @@ class ERSpec(IEGenObject):
 		else:
 			raise ValueError('Unknown ERSpec type')
 
+	#Returns the begin iterator function name
+	def get_begin_iter(self):
+		if self.is_er_1d():
+			return 'ER_1D_out_begin'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the next iterator function name
+	def get_next_iter(self):
+		if self.is_er_1d():
+			return 'ER_1D_out_next'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the end iterator function name
+	def get_end_iter(self):
+		if self.is_er_1d():
+			return 'ER_1D_out_end'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
 	#Returns the variable name for this ERSpec
 	def get_var_name(self):
 		if self.is_ef_1d():
