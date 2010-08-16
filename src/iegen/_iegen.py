@@ -341,12 +341,8 @@ class ERSpec(IEGenObject):
 			raise ValueError('Unknown ERSpec type: %s %s'%(self.name,self.relation))
 
 	def get_getter_pair(self):
-		if self.is_ef_2d() and self.relation.arity_out()==1:
-			name_open='Tuple2D_get(%s(%s,'%(self.get_getter_str(),self.get_var_name())
-			name_close='),0)'
-		else:
-			name_open='%s(%s,'%(self.get_getter_str(),self.get_var_name())
-			name_close=')'
+		name_open='%s(%s,'%(self.get_getter_str(),self.get_var_name())
+		name_close=')'
 
 		return (name_open,name_close)
 
