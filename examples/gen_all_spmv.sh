@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 
-cd ..
 ./waf install
 
 IEGEN=./iegen/bin/iegen
