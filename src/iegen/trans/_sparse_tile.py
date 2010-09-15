@@ -91,7 +91,7 @@ class SparseTileTrans(Transformation):
 		input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation)
 
 		#output is a tile number, therefore the bounds are from 0 to the number of tiles
-		output_bounds=Set('{[tile]: 0<=tile and tile<=%s}'%(self.num_tile_name,),symbolics=[mapir.symbolics[self.num_tile_name]])
+		output_bounds=Set('{[tile]: 0<=tile and tile<%s}'%(self.num_tile_name,),symbolics=[mapir.symbolics[self.num_tile_name]])
 
 		#the relation takes the input loop position and iterator and yields a tile number
 		input_tuple_vars=[]
