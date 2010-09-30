@@ -498,18 +498,18 @@ class SparseFormula(IEGenObject):
 
 	#Returns all of the lower bound expressions of each conjunction for the given variable
 	#The format is: (set(lb_conj1),...,set(lb_conjn))
-	def lower_bounds(self,tuple_var_name):
-		return tuple([bounds[0] for bounds in self.bounds(tuple_var_name)])
+	def lower_bounds(self,tuple_var_name,ignore_ufs=False):
+		return tuple([bounds[0] for bounds in self.bounds(tuple_var_name,ignore_ufs=ignore_ufs)])
 
 	#Returns all of the upper bound expressions of each conjunction for the given variable
 	#The format is: (set(ub_conj1),...,set(ub_conjn))
-	def upper_bounds(self,tuple_var_name):
-		return tuple([bounds[1] for bounds in self.bounds(tuple_var_name)])
+	def upper_bounds(self,tuple_var_name,ignore_ufs=False):
+		return tuple([bounds[1] for bounds in self.bounds(tuple_var_name,ignore_ufs=ignore_ufs)])
 
 	#Returns all of the lower and upper bound expressions of each conjunction for the given variable
 	#The format is: ((set(lb_conj1),set(ub_conj1)),...,(set(lb_conjn),set(ub_conjn)))
-	def bounds(self,tuple_var_name):
-		return self.disjunction.bounds(self.get_column(tuple_var_name))
+	def bounds(self,tuple_var_name,ignore_ufs=False):
+		return self.disjunction.bounds(self.get_column(tuple_var_name),ignore_ufs=ignore_ufs)
 
 	#Returns True if this formula contains an instance of the given nested functions
 	#Example: nest=('f','g')
@@ -2099,7 +2099,7 @@ class SparseConjunction(IEGenObject):
 			#Define a single constraint to be only 0=1
 			self._constraints=[SparseEquality(sparse_exp=SparseExp({ConstantCol():-1}))]
 
-	def bounds(self,var_col,extra_info=False):
+	def bounds(self,var_col,extra_info=False,ignore_ufs=False):
 		lower_bounds=set()
 		upper_bounds=set()
 
@@ -2108,7 +2108,8 @@ class SparseConjunction(IEGenObject):
 			constraint=constraint.copy()
 
 			#See if the given variable is present in the constraint
-			if var_col in constraint:
+			# and there are no UFS terms if we are ignoring UFSs
+			if var_col in constraint and (not ignore_ufs or not constraint.contains_ufs()):
 				#Get the coefficient of the variable in the constraint
 				var_coeff=constraint[var_col]
 
@@ -2329,8 +2330,8 @@ class SparseDisjunction(IEGenObject):
 			conj=SparseConjunction(constraints=[SparseEquality(sparse_exp=SparseExp({ConstantCol():-1}))])
 			self._conjunctions=[conj]
 
-	def bounds(self,var_col):
-		return tuple([conjunction.bounds(var_col) for conjunction in self])
+	def bounds(self,var_col,ignore_ufs=False):
+		return tuple([conjunction.bounds(var_col,ignore_ufs=ignore_ufs) for conjunction in self])
 
 	def get_mat(self,pos_map,make_positive,make_negative):
 		return tuple([conjunction.get_mat(pos_map,make_positive,make_negative) for conjunction in self])

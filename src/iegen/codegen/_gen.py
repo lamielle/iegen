@@ -51,23 +51,34 @@ def gen_preamble():
 def gen_index_array(index_array):
 	from iegen.codegen import Statement,Comment,calc_size_string
 
-	input_bounds=index_array.input_bounds
-
 	#Calculate the size of this index array
 	#Assumes only one set in the union...
+	input_bounds=index_array.input_bounds
 	if 1!=len(input_bounds): raise ValueError("IndexArray's input bounds have multiple terms in the disjunction")
 	#Assumes the index array dataspace is 1D...
 	if 1!=input_bounds.arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
 
-	#Get the single tuple variable's name
-	var_name=input_bounds.tuple_set[0]
+	#Get the single input tuple variable's name
+	input_var_name=input_bounds.tuple_set[0]
 
-	#Get the string that calculates the size of the ER at runtime
-	size_string=calc_size_string(input_bounds,var_name)
+	#Calculate the output range of this index array
+	#Assumes onle one set in the union...
+	output_bounds=index_array.output_bounds
+	if 1!=len(output_bounds): raise ValueError("IndexArray's output bounds have multiple terms in the disjunction")
+	#Assumes the index array dataspace is 1D...
+	if 1!=output_bounds.arity(): raise ValueError("IndexArray's dataspace does not have arity 1")
+
+	#Get the single output tuple variable's name
+	output_var_name=output_bounds.tuple_set[0]
+
+	#Get the strings that calculate the size of input domain and
+	# output range of the ER at runtime
+	input_size_string=calc_size_string(input_bounds,input_var_name)
+	output_size_string=calc_size_string(output_bounds,output_var_name)
 
 	stmts=[]
 	stmts.append(Comment('Wrapping index array %s'%(index_array.name)))
-	stmts.append(Statement('%s=%s(%s,%s);'%(index_array.get_var_name(),index_array.get_ctor_str(),index_array.get_param_name(),size_string)))
+	stmts.append(Statement('%s=%s(%s,%s,%s);'%(index_array.get_var_name(),index_array.get_ctor_str(),index_array.get_param_name(),input_size_string,output_size_string)))
 	stmts.append(Statement())
 
 	return stmts

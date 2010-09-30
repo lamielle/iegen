@@ -368,8 +368,10 @@ def gen_data_dep(data_dep,mapir):
 
 	#Declare the explicit dependence variable
 	const_in=calc_equality_value(dep_rel.tuple_in[0],list(dep_rel)[0],mapir)
+	input_size_string=calc_size_string(list(dep_rel)[0],dep_rel.tuple_in[1])
 	const_out=calc_equality_value(dep_rel.tuple_out[0],list(dep_rel)[0],mapir)
-	stmts.append(Statement('%s %s=%s(%s,%s);'%(data_dep.get_type(),data_dep.get_var_name(),data_dep.get_ctor_str(),const_in,const_out)))
+	output_size_string=calc_size_string(list(dep_rel)[0],dep_rel.tuple_out[1])
+	stmts.append(Statement('%s %s=%s(%s,%s,%s,%s,%s);'%(data_dep.get_type(),data_dep.get_var_name(),data_dep.get_ctor_str(),const_in,const_out,input_size_string,output_size_string,len(dep_rel))))
 
 	#Generate the define/undefine statements
 	cloog_stmts=[]

@@ -417,17 +417,17 @@ def calc_bound_string(bounds,func):
 
 #Creates a string that is a C expression that will calculate the lower bound for a given collection of NormExps
 def calc_lower_bound_string(bounds):
-	return calc_bound_string(bounds,'min')
+	return calc_bound_string(bounds,'max')
 
 #Creates a string that is a C expression that will calculate the upper bound for a given collection of NormExps
 def calc_upper_bound_string(bounds):
-	return calc_bound_string(bounds,'max')
+	return calc_bound_string(bounds,'min')
 
 #Calculates the difference of the upper and lower bounds of the given variable in the given set
 def calc_size_string(set,var_name):
 	#Get the upper/lower bounds for the variable
-	upper_bounds=set.upper_bounds(var_name)[0]
-	lower_bounds=set.lower_bounds(var_name)[0]
+	upper_bounds=set.upper_bounds(var_name,ignore_ufs=True)[0]
+	lower_bounds=set.lower_bounds(var_name,ignore_ufs=True)[0]
 
 	#Get the string that calculates the size of the ER at runtime
 	return '%s-%s+1'%(calc_upper_bound_string(upper_bounds),calc_lower_bound_string(lower_bounds))
