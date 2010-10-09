@@ -204,7 +204,7 @@ class ERSpec(IEGenObject):
 		return (1,1)==self.relation.arity() and self.is_function and len(self.relation)==1
 
 	#ER_1D
-	def is_er_1d(self):
+	def is_er_1dto1d(self):
 		return (1,1)==self.relation.arity() and not self.is_function and len(self.relation)==1
 
 	#ER_U1D
@@ -232,8 +232,8 @@ class ERSpec(IEGenObject):
 	def get_type(self):
 		if self.is_ef_1d():
 			return 'EF_1D *'
-		elif self.is_er_1d():
-			return 'ER_1D *'
+		elif self.is_er_1dto1d():
+			return 'ER_1Dto1D *'
 		elif self.is_union_1d():
 			return 'ER_U1D *'
 		elif self.is_ef_2d():
@@ -245,8 +245,8 @@ class ERSpec(IEGenObject):
 	def get_param_type(self):
 		if self.is_ef_1d():
 			return 'EF_1D **'
-		elif self.is_er_1d():
-			return 'ER_1D **'
+		elif self.is_er_1dto1d():
+			return 'ER_1Dto1D **'
 		elif self.is_union_1d():
 			return 'ER_U1D **'
 		elif self.is_ef_2d():
@@ -258,8 +258,8 @@ class ERSpec(IEGenObject):
 	def get_getter_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_get'
-		elif self.is_er_1d():
-			return 'ER_1D_get'
+		elif self.is_er_1dto1d():
+			return 'ER_1Dto1D_get'
 		elif self.is_union_1d():
 			return 'ER_U1D_get'
 		elif self.is_ef_2d():
@@ -271,8 +271,8 @@ class ERSpec(IEGenObject):
 	def get_ctor_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_ctor'
-		elif self.is_er_1d():
-			return 'ER_1D_get'
+		elif self.is_er_1dto1d():
+			return 'ER_1Dto1D_get'
 		elif self.is_union_1d():
 			return 'ER_U1D_ctor'
 		elif self.is_ef_2d():
@@ -284,8 +284,8 @@ class ERSpec(IEGenObject):
 	def get_genInverse_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_genInverse'
-		elif self.is_er_1d():
-			return 'ER_1D_genInverse'
+		elif self.is_er_1dto1d():
+			return 'ER_1Dto1D_genInverse'
 		elif self.is_union_1d():
 			return 'ER_U1D_genInverse'
 		elif self.is_ef_2d():
@@ -297,8 +297,8 @@ class ERSpec(IEGenObject):
 	def get_setter_str(self):
 		if self.is_ef_1d():
 			return 'EF_1D_set'
-		elif self.is_er_1d():
-			return 'ER_1D_set'
+		elif self.is_er_1dto1d():
+			return 'ER_1Dto1D_set'
 		elif self.is_union_1d():
 			return 'ER_U1D_set'
 		elif self.is_ef_2d():
@@ -308,22 +308,22 @@ class ERSpec(IEGenObject):
 
 	#Returns the begin iterator function name
 	def get_begin_iter(self):
-		if self.is_er_1d():
-			return 'ER_1D_out_begin'
+		if self.is_er_1dto1d():
+			return 'ER_1Dto1D_out_begin'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
 	#Returns the next iterator function name
 	def get_next_iter(self):
-		if self.is_er_1d():
-			return 'ER_1D_out_next'
+		if self.is_er_1dto1d():
+			return 'ER_1Dto1D_out_next'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
 	#Returns the end iterator function name
 	def get_end_iter(self):
-		if self.is_er_1d():
-			return 'ER_1D_out_end'
+		if self.is_er_1dto1d():
+			return 'ER_1Dto1D_out_end'
 		else:
 			raise ValueError('Unknown ERSpec type')
 
@@ -331,8 +331,8 @@ class ERSpec(IEGenObject):
 	def get_var_name(self):
 		if self.is_ef_1d():
 			return self.name+'_EF_1D'
-		elif self.is_er_1d():
-			return self.name+'_ER_1D'
+		elif self.is_er_1dto1d():
+			return self.name+'_ER_1Dto1D'
 		elif self.is_union_1d():
 			return self.name+'_ER_U1D'
 		elif self.is_ef_2d():
