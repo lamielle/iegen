@@ -90,7 +90,7 @@ def calc_single_bounds_from_bounds(bounds):
 
 	return res_bounds
 
-def gen_rect_union_domain_2d(name,set):
+def gen_rect_union_domain_2d(name,prefix,set):
 	from iegen.codegen import Statement,Comment
 
 	if set.arity()!=2: raise ValueError("Set does not have arity 2 (%d)"%(set.arity()))
@@ -119,9 +119,9 @@ def gen_rect_union_domain_2d(name,set):
 	bounds_array='{'+','.join(bounds_sub_arrays)+'}'
 
 	#Declare the bounds for the dimensions
-	stmts.append(Comment('RUD2D bounds for %s'%(name,)))
-	stmts.append(Statement('int %s_bounds[][3] = %s;'%(name,bounds_array)))
-	stmts.append(Statement('RectUnionDomain2D *%s_rud = RUD2D_ctor(%d,%d,%d,%s_bounds);'%(name,set.arity(),min(const_vals),max(const_vals),name)))
+	stmts.append(Comment('RUD2D %s bounds for %s'%(prefix,name,)))
+	stmts.append(Statement('int %s_%s_bounds[][3] = %s;'%(name,prefix,bounds_array)))
+	stmts.append(Statement('RectUnionDomain2D *%s_%s_rud = RUD2D_ctor(%d,%d,%d,%s_%s_bounds);'%(name,prefix,set.arity(),min(const_vals),max(const_vals),name,prefix)))
 
 	return stmts
 
@@ -256,16 +256,34 @@ def gen_output_ef_2d(output_er_spec,is_call_input,mapir):
 
 	stmts=[]
 
-	stmts.extend(gen_rect_union_domain_2d(output_er_spec.name,output_er_spec.input_bounds))
+	stmts.extend(gen_rect_union_domain_2d(output_er_spec.name,'input',output_er_spec.input_bounds))
 
-	#Variable name of the RUD2D
-	domain_name='%s_rud'%(output_er_spec.get_param_name(),)
+	output_bounds=output_er_spec.output_bounds
+
+	#Make sure the output tuple is 1D
+	if 1!=output_bounds.arity(): raise ValueError("EF_2D's (%s) output tuple is not 1D"%(output_er_spec.get_param_name()))
+
+	output_var=output_bounds.tuple_vars[0]
+
+	#Get the bounds on the single output var
+	output_lbs=output_bounds.lower_bounds(output_var)
+	output_ubs=output_bounds.upper_bounds(output_var)
+
+	#Make sure the is a single lower and upper bound on the variable
+	if 1!=len(output_lbs) or 1!=len(output_ubs): raise ValueError("Output bounds have more than one upper or lower bound")
+	if 1!=len(output_lbs[0]) or 1!=len(output_ubs[0]): raise ValueError("Output bounds have more than one upper or lower bound")
+
+	output_lb=list(output_lbs[0])[0]
+	output_ub=list(output_ubs[0])[0]
+
+	#Variable names for the two RUD2D
+	input_domain_name='%s_input_rud'%(output_er_spec.get_param_name(),)
 
 	stmts.append(Comment('Creation of ExplicitFunction for abstract relation:'))
 	stmts.append(Comment(str(output_er_spec.relation)))
 	stmts.append(Comment('Input bounds for abstract relation: %s'%(output_er_spec.input_bounds)))
 
-	stmts.append(Statement('*%s=%s(%s,%s,%s);'%(output_er_spec.get_param_name(),output_er_spec.get_ctor_str(),output_er_spec.relation.arity_in(),output_er_spec.relation.arity_out(),domain_name)))
+	stmts.append(Statement('*%s=%s(%s,%s,%s,%s,%s);'%(output_er_spec.get_param_name(),output_er_spec.get_ctor_str(),output_er_spec.relation.arity_in(),output_er_spec.relation.arity_out(),input_domain_name,output_lb,output_ub)))
 
 	stmts.append(Statement('%s=*%s;'%(output_er_spec.get_var_name(),output_er_spec.get_param_name())))
 	stmts.append(Statement())
