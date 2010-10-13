@@ -22,6 +22,7 @@ def build(bld):
 	install_files('PREFIX',inst_dir,'_iter_embed.py')
 	install_files('PREFIX',inst_dir,'_iter_project.py')
 	install_files('PREFIX',inst_dir,'_sparse_tile.py')
+	install_files('PREFIX',inst_dir,'_cache_block.py')
 	install_files('PREFIX',inst_dir,'_sparse_loop_trans.py')
 
 	bld.add_subdirs('test')
