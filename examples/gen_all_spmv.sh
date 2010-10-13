@@ -9,6 +9,7 @@ OUT_DIR=$HOME/RTRTcode/trunk/src/drivers/spmv
 VERSIONS="
 notrans
 cpack
+cacheblock
 "
 
 exit_on_error() {
@@ -25,7 +26,7 @@ do
   echo
   echo "-----Generating version ${VERSION}-----"
   echo
-  command="$IEGEN examples/spmv_$VERSION.spec --inspector-name=inspector_${VERSION} --executor-name=executor_${VERSION} -o $OUT_DIR/spmv_${VERSION}.c"
+  command="$IEGEN examples/spmv_$VERSION.spec --inspector-name=inspector_${VERSION} --executor-name=executor_${VERSION} -o $OUT_DIR/iegen_${VERSION}.c"
   echo $command
   $command
   exit_on_error $?
