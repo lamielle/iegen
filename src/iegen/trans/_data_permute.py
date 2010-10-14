@@ -146,11 +146,13 @@ class DataPermuteTrans(Transformation):
 		#Data spaces are not changed
 		#Scattering functions are not changed
 
-		#Update the access relations of all statements
+		#Update the access relations of all statements that access
+		# the reordered data array(s)
 		self.print_progress('Updating access relations...')
 		for statement in mapir.get_statements():
 			for access_relation in statement.get_access_relations():
-				access_relation.iter_to_data=self._data_reordering.compose(access_relation.iter_to_data)
+				if access_relation.data_array in self.data_arrays:
+					access_relation.iter_to_data=self._data_reordering.compose(access_relation.iter_to_data)
 
 	#Update the idg based on this transformation
 	def update_idg(self,mapir):
