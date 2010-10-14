@@ -26,7 +26,7 @@ do
   echo
   echo "-----Generating version ${VERSION}-----"
   echo
-  command="$IEGEN examples/spmv_$VERSION.spec --inspector-name=inspector_${VERSION} --executor-name=executor_${VERSION} -o $OUT_DIR/iegen_${VERSION}.c"
+  command="$IEGEN examples/spmv_$VERSION.spec --inspector-name=inspector_${VERSION}_gen --executor-name=executor_${VERSION}_gen -o $OUT_DIR/iegen_${VERSION}_gen.c"
   echo $command
   $command
   exit_on_error $?
