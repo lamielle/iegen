@@ -111,7 +111,10 @@ class DataPermuteTrans(Transformation):
 		    input_bounds=mapir.full_iter_space.apply(self.iter_sub_space_relation),
 		    output_bounds=self.target_data_arrays[0].bounds.copy(),
 		    relation=iter_to_data,
-		    is_function=True))
+		    is_function=True,
+		    er_type='er_u1d'))
+
+		print 'In DataPermuteTrans, input type %s.is_er_u1d()=%s'%(self.inputs[-1].get_var_name(),self.inputs[-1].is_er_u1d())
 
 		#Add the ERSpec to the MapIR
 		mapir.add_er_spec(self.inputs[0])

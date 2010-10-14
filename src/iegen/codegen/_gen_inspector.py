@@ -131,8 +131,8 @@ def gen_er_spec(er_spec,mapir):
 	if er_spec.is_inverse:
 		stmts=gen_inverse_er_spec(er_spec,mapir)
 	else:
-		if er_spec.is_union_1d():
-			stmts=gen_explicit_er_union_1d(er_spec,mapir)
+		if er_spec.is_er_u1d():
+			stmts=gen_er_u1d(er_spec,mapir)
 		elif er_spec.is_ef_2d():
 			raise ValueError('Code generation of non-output EF_2D ERSpecs not yet implemented')
 		else:
@@ -148,7 +148,7 @@ def gen_inverse_er_spec(er_spec,mapir):
 	stmts.append(Statement('%s=*%s;'%(er_spec.get_var_name(),er_spec.get_param_name())))
 	return stmts
 
-def gen_explicit_er_union_1d(er_spec,mapir):
+def gen_er_u1d(er_spec,mapir):
 	from iegen.codegen import Statement,Comment
 
 	if 0==len(er_spec.relation): raise ValueError("ESpec's relation has no terms in the disjunction")
@@ -237,7 +237,7 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 	if output_er_spec.is_gen_output():
 		stmts=[]
 	else:
-		if output_er_spec.is_union_1d():
+		if output_er_spec.is_er_u1d():
 			stmts=gen_output_er_spec_general(output_er_spec,is_call_input,mapir)
 		elif output_er_spec.is_ef_2d():
 			stmts=gen_output_ef_2d(output_er_spec,is_call_input,mapir)

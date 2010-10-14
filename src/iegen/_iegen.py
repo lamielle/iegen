@@ -143,9 +143,9 @@ class VersionedDataArray(IEGenObject):
 
 #---------- ERSpec class ----------
 class ERSpec(IEGenObject):
-	__slots__=('name','input_bounds','output_bounds','relation','_is_function','_is_permutation','is_inverse','inverse_of','_is_gen_output')
+	__slots__=('name','input_bounds','output_bounds','relation','_is_function','er_type','_is_permutation','is_inverse','inverse_of','_is_gen_output')
 
-	def __init__(self,name,input_bounds,output_bounds,relation,is_function=False,is_permutation=False,is_inverse=False,inverse_of=None,is_gen_output=False):
+	def __init__(self,name,input_bounds,output_bounds,relation,is_function=False,is_permutation=False,er_type=None,is_inverse=False,inverse_of=None,is_gen_output=False):
 		self.name=name
 		self.input_bounds=input_bounds
 		self.output_bounds=output_bounds
@@ -155,6 +155,7 @@ class ERSpec(IEGenObject):
 		self.is_inverse=is_inverse
 		self.inverse_of=inverse_of
 		self._is_gen_output=is_gen_output
+		self.er_type=er_type
 
 	def _get_is_function(self): return self._is_function
 	def _set_is_function(self,is_function):
@@ -201,26 +202,38 @@ class ERSpec(IEGenObject):
 	#- if ERSpec is a function.
 	#- If only has one conjunction.
 	def is_ef_1d(self):
-		return (1,1)==self.relation.arity() and self.is_function and len(self.relation)==1
+		if self.er_type is not None:
+			return 'ef_1d'==self.er_type
+		else:
+			return (1,1)==self.relation.arity() and self.is_function and len(self.relation)==1
 
 	#ER_1D
 	def is_er_1dto1d(self):
-		return (1,1)==self.relation.arity() and not self.is_function and len(self.relation)==1
+		if self.er_type is not None:
+			return 'er_1dto1d'==self.er_type
+		else:
+			return (1,1)==self.relation.arity() and not self.is_function and len(self.relation)==1
 
 	#ER_U1D
 	#- if in and out arity are both 1D.
 	#- Each conjunction is a function.  (TODO: have a flag for this in Relation object)  More specifically, when doing code gen each conjunction should have an EF_1D associated with it.
-	def is_union_1d(self):
+	def is_er_u1d(self):
 		#return (1,1)==self.relation.arity() and self.is_function
 		#TODO: add flag for individual relations being functions
-		return (1,1)==self.relation.arity()
+		if self.er_type is not None:
+			return 'er_u1d'==self.er_type
+		else:
+			return (1,1)==self.relation.arity()
 
 	#EF_2D
 	#- if in and out arity are both less than or equal to 2.
 	#- if ERSpec is a function.
 	#- example: theta
 	def is_ef_2d(self):
-		return not self.is_ef_1d() and self.relation.arity_in()<=2 and self.relation.arity_out()<=2 and self.is_function
+		if self.er_type is not None:
+			return 'ef_2d'==self.er_type
+		else:
+			return not self.is_ef_1d() and self.relation.arity_in()<=2 and self.relation.arity_out()<=2 and self.is_function
 
 	#ER_1DCOO
 	#- if in and out arity are both 1D.
@@ -234,7 +247,7 @@ class ERSpec(IEGenObject):
 			return 'EF_1D *'
 		elif self.is_er_1dto1d():
 			return 'ER_1Dto1D *'
-		elif self.is_union_1d():
+		elif self.is_er_u1d():
 			return 'ER_U1D *'
 		elif self.is_ef_2d():
 			return 'EF_2D *'
@@ -247,7 +260,7 @@ class ERSpec(IEGenObject):
 			return 'EF_1D **'
 		elif self.is_er_1dto1d():
 			return 'ER_1Dto1D **'
-		elif self.is_union_1d():
+		elif self.is_er_u1d():
 			return 'ER_U1D **'
 		elif self.is_ef_2d():
 			return 'EF_2D **'
@@ -260,7 +273,7 @@ class ERSpec(IEGenObject):
 			return 'EF_1D_get'
 		elif self.is_er_1dto1d():
 			return 'ER_1Dto1D_get'
-		elif self.is_union_1d():
+		elif self.is_er_u1d():
 			return 'ER_U1D_get'
 		elif self.is_ef_2d():
 			return 'EF_2D_get'
@@ -273,7 +286,7 @@ class ERSpec(IEGenObject):
 			return 'EF_1D_ctor'
 		elif self.is_er_1dto1d():
 			return 'ER_1Dto1D_get'
-		elif self.is_union_1d():
+		elif self.is_er_u1d():
 			return 'ER_U1D_ctor'
 		elif self.is_ef_2d():
 			return 'EF_2D_ctor'
@@ -286,7 +299,7 @@ class ERSpec(IEGenObject):
 			return 'EF_1D_genInverse'
 		elif self.is_er_1dto1d():
 			return 'ER_1Dto1D_genInverse'
-		elif self.is_union_1d():
+		elif self.is_er_u1d():
 			return 'ER_U1D_genInverse'
 		elif self.is_ef_2d():
 			return 'EF_2D_genInverse'
@@ -299,7 +312,7 @@ class ERSpec(IEGenObject):
 			return 'EF_1D_set'
 		elif self.is_er_1dto1d():
 			return 'ER_1Dto1D_set'
-		elif self.is_union_1d():
+		elif self.is_er_u1d():
 			return 'ER_U1D_set'
 		elif self.is_ef_2d():
 			return 'EF_2D_set'
@@ -333,7 +346,7 @@ class ERSpec(IEGenObject):
 			return self.name+'_EF_1D'
 		elif self.is_er_1dto1d():
 			return self.name+'_ER_1Dto1D'
-		elif self.is_union_1d():
+		elif self.is_er_u1d():
 			return self.name+'_ER_U1D'
 		elif self.is_ef_2d():
 			return self.name+'_EF_2D'
@@ -361,7 +374,7 @@ class IndexArray(ERSpec):
 
 	def __init__(self,name,type,input_bounds,output_bounds):
 		from iegen import Relation
-		ERSpec.__init__(self,name,input_bounds,output_bounds,Relation('{[]->[]}'),True,False)
+		ERSpec.__init__(self,name,input_bounds,output_bounds,Relation('{[]->[]}'),True,False,er_type='ef_1d')
 
 		self.type=type
 
@@ -383,30 +396,6 @@ class IndexArray(ERSpec):
 %s|-input_bounds: %s
 %s|-output_bounds: %s
 %s|-relation: %s'''%(spaces,spaces,self.name,spaces,self.input_bounds,spaces,self.output_bounds,spaces,self.relation)
-
-	#Returns the variable type string for this index array
-	def get_type(self):
-		return 'EF_1D *'
-
-	#Returns the name of the getter function
-	def get_getter_str(self):
-		return 'EF_1D_get'
-
-	#Returns the name of the setter function
-	def get_setter_str(self):
-		return 'EF_1D_set'
-
-	#Returns the name of the ctor
-	def get_ctor_str(self):
-		return 'EF_1D_ctor'
-
-	#Returns the variable name for this index array
-	def get_var_name(self):
-		return self.name+'_EF_1D'
-
-	#Returns the parameter name for this index array
-	def get_param_name(self):
-		return self.name
 #--------------------------------------
 
 #---------- Statement class ----------
