@@ -285,7 +285,7 @@ class ERSpec(IEGenObject):
 		if self.is_ef_1d():
 			return 'EF_1D_ctor'
 		elif self.is_er_1dto1d():
-			return 'ER_1Dto1D_get'
+			return 'ER_1Dto1D_ctor'
 		elif self.is_er_u1d():
 			return 'ER_U1D_ctor'
 		elif self.is_ef_2d():
@@ -311,7 +311,7 @@ class ERSpec(IEGenObject):
 		if self.is_ef_1d():
 			return 'EF_1D_set'
 		elif self.is_er_1dto1d():
-			return 'ER_1Dto1D_set'
+			return 'ER_1Dto1D_insert'
 		elif self.is_er_u1d():
 			return 'ER_U1D_set'
 		elif self.is_ef_2d():
@@ -337,6 +337,20 @@ class ERSpec(IEGenObject):
 	def get_end_iter(self):
 		if self.is_er_1dto1d():
 			return 'ER_1Dto1D_out_end'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the count function name
+	def get_count_name(self):
+		if self.is_er_1dto1d():
+			return 'ER_1Dto1D_count'
+		else:
+			raise ValueError('Unknown ERSpec type')
+
+	#Returns the count finalize function name
+	def get_count_finalize_name(self):
+		if self.is_er_1dto1d():
+			return 'ER_1Dto1D_finalizeCount'
 		else:
 			raise ValueError('Unknown ERSpec type')
 

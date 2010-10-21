@@ -237,8 +237,10 @@ def gen_output_er_spec(output_er_spec,is_call_input,mapir):
 	if output_er_spec.is_gen_output():
 		stmts=[]
 	else:
-		if output_er_spec.is_er_u1d():
-			stmts=gen_output_er_spec_general(output_er_spec,is_call_input,mapir)
+		if output_er_spec.is_er_1dto1d():
+			stmts=gen_output_er_1dto1d(output_er_spec,is_call_input,mapir)
+		elif output_er_spec.is_er_u1d():
+			stmts=gen_output_er_u1d(output_er_spec,is_call_input,mapir)
 		elif output_er_spec.is_ef_2d():
 			stmts=gen_output_ef_2d(output_er_spec,is_call_input,mapir)
 		else:
@@ -290,7 +292,7 @@ def gen_output_ef_2d(output_er_spec,is_call_input,mapir):
 
 	return stmts
 
-def gen_output_er_spec_general(output_er_spec,is_call_input,mapir):
+def gen_output_er_u1d(output_er_spec,is_call_input,mapir):
 	import iegen.pycloog
 	from iegen.pycloog import codegen
 	from iegen.codegen import Statement,Comment
@@ -351,6 +353,64 @@ def gen_output_er_spec_general(output_er_spec,is_call_input,mapir):
 	#stmts.extend(gen_domain(in_domain_name,output_er_spec.input_bounds))
 	#stmts.append(Statement('*%s=ER_ctor(%d,%d,%s,%s,%s);'%(output_er_spec.name,output_er_spec.input_bounds.arity(),output_er_spec.output_bounds.arity(),in_domain_name,str(output_er_spec.is_function).lower(),str(output_er_spec.is_permutation).lower())))
 	#stmts.append(Statement('%s_ER=*%s;'%(output_er_spec.name,output_er_spec.name)))
+
+	return stmts
+
+def gen_output_er_1dto1d(output_er_spec,is_call_input,mapir):
+	import iegen.pycloog
+	from iegen.pycloog import codegen
+	from iegen.codegen import Statement,Comment
+
+	iegen.print_progress("Generating code for output ERSpec '%s'..."%(output_er_spec.name))
+	iegen.print_detail(str(output_er_spec))
+
+	print 'Abstract relation: %s'%(output_er_spec.relation)
+	print 'Input bounds for abstract relation: %s'%(output_er_spec.input_bounds)
+	print 'Output bounds for abstract relation: %s'%(output_er_spec.output_bounds)
+
+	#Calculate the necessary information before generating code
+	output_bounds_var_name=output_er_spec.output_bounds.tuple_set[0]
+	output_lower_bound=str(list(output_er_spec.output_bounds.lower_bounds(output_bounds_var_name)[0])[0])
+	output_upper_bound=str(list(output_er_spec.output_bounds.upper_bounds(output_bounds_var_name)[0])[0])
+
+	input_bounds_var_name=output_er_spec.input_bounds.tuple_set[0]
+	input_lower_bound=str(list(output_er_spec.input_bounds.lower_bounds(input_bounds_var_name)[0])[0])
+	input_upper_bound=str(list(output_er_spec.input_bounds.upper_bounds(input_bounds_var_name)[0])[0])
+
+	num_entries=calc_size_string(list(output_er_spec.output_bounds)[0],output_bounds_var_name)
+
+	input_equal_value=calc_equality_value(input_bounds_var_name,list(output_er_spec.relation)[0],mapir)
+
+	input_var_name=output_er_spec.relation.tuple_in[0]
+	output_var_name=output_er_spec.relation.tuple_out[0]
+
+	stmts=[]
+	stmts.append(Comment('Creation of ER_1Dto1D for abstract relation:'))
+	stmts.append(Comment(str(output_er_spec.relation)))
+	stmts.append(Comment('Bounds for output domain: '+str(output_er_spec.output_bounds)))
+
+	#Generate the call to the constructor
+	stmts.append(Statement('%s=%s(%s,%s,%s,%s,%s);'%(output_er_spec.get_var_name(),output_er_spec.get_ctor_str(),input_lower_bound,input_upper_bound,output_lower_bound,output_upper_bound,num_entries)))
+
+	#Generate the count loop
+	stmts.append(Statement('#define S0(%s) %s(%s,%s)'%(output_var_name,output_er_spec.get_count_name(),output_er_spec.get_var_name(),input_equal_value)))
+	loop_stmts=codegen([iegen.pycloog.Statement(output_er_spec.output_bounds)]).split('\n')
+	for loop_stmt in loop_stmts:
+		stmts.append(Statement(loop_stmt))
+	stmts.append(Statement('#undef S0'))
+
+	#Generate the finalize count call
+	stmts.append(Statement('%s(%s)'%(output_er_spec.get_count_finalize_name(),output_er_spec.get_var_name())))
+
+	#Generate the insert loop
+	stmts.append(Statement('#define S0(%s) %s(%s,%s,%s)'%(output_var_name,output_er_spec.get_setter_str(),output_er_spec.get_var_name(),input_equal_value,output_var_name)))
+	loop_stmts=codegen([iegen.pycloog.Statement(output_er_spec.output_bounds)]).split('\n')
+	for loop_stmt in loop_stmts:
+		stmts.append(Statement(loop_stmt))
+	stmts.append(Statement('#undef S0'))
+
+	stmts.append(Statement('*%s=%s;'%(output_er_spec.get_param_name(),output_er_spec.get_var_name())))
+	stmts.append(Statement())
 
 	return stmts
 #---------------------------------------------------

@@ -2,7 +2,7 @@ from cStringIO import StringIO
 from iegen.trans import Transformation
 from iegen import ERSpec,Set,Relation,Constant
 from iegen.codegen import calc_equality_value,calc_erg_call
-from iegen.idg import IDGCall,IDGOutputERSpec
+from iegen.idg import IDGGenOutputERSpec,IDGOutputERSpec
 
 #---------- SparseLoopTrans class ----------
 class SparseLoopTrans(Transformation):
@@ -96,7 +96,7 @@ class SparseLoopTrans(Transformation):
 		    relation=relation,
 		    is_function=False,
 		    is_permutation=False,
-		    is_gen_output=True))
+		    is_gen_output=False))
 
 		#Add the ERSpec to the MapIR
 		mapir.add_er_spec(self.outputs[0])
@@ -115,11 +115,11 @@ class SparseLoopTrans(Transformation):
 
 	def update_idg(self,mapir):
 		#Add a call node for the ERG that will create the sparse schedule ER
-		erg_call_node=mapir.idg.get_node(IDGCall,calc_erg_call(self.name,self.erg_func_name,self.inputs,self.outputs))
+		gen_output_er_node=mapir.idg.get_node(IDGGenOutputERSpec,self.outputs[0])
 
 		#Add an output ER node for the result of the call to the ERG
-		er_node=mapir.idg.get_node(IDGOutputERSpec,self.outputs[0])
+		output_er_node=mapir.idg.get_node(IDGOutputERSpec,self.outputs[0])
 
 		#Add a dependence of the ER on the ERG call
-		er_node.add_dep(erg_call_node)
+		output_er_node.add_dep(gen_output_er_node)
 #-------------------------------------------
