@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-#    for(iter=0; iter<k; iter++) {
+#    for(iter=1; iter<=k; iter++) {
 #      for(nzid=0; nzid<nnz; i++) {
 #S0:     x[iter][row[nzid]] += x[iter-1][col[nzid]] * val[nzid];
 #      }
@@ -16,7 +16,7 @@ spec.add_data_array(
         name='x',
         type='double ** %s',
         elem_size='sizeof(double)',
-        bounds='{[iter,c]: 0<=iter and iter<k and 0<=c and c<ncols}')
+        bounds='{[iter,c]: 0<=iter and iter<=k and 0<=c and c<ncols}')
 
 spec.add_data_array(
         name='val',
@@ -39,7 +39,7 @@ spec.add_index_array(
 spec.add_statement(
         name='mul_sum',
         text='x[%(a1)s] += x[%(a2)s] * val[%(a3)s];',
-        iter_space='{[iter,nzid]: 0<=iter and iter<k and 0<=nzid and nzid<nnz}',
+        iter_space='{[iter,nzid]: 1<=iter and iter<=k and 0<=nzid and nzid<nnz}',
         scatter='{[iter,nzid]->[c0,iter,c0,nzid,c0]: c0=0}')
 spec.add_access_relation(
         statement_name='mul_sum',
