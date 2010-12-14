@@ -307,13 +307,17 @@ def gen_output_er_u1d(output_er_spec,is_call_input,mapir):
 	# Currently it just generates code for explicit functions
 	#TODO: Generalize the bounds expression calculations to handle
 	# more than a single expression (with min/max)
-	var_name=output_er_spec.input_bounds.tuple_set[0]
-	lower_bound=str(list(output_er_spec.input_bounds.lower_bounds(var_name)[0])[0])
-	upper_bound=str(list(output_er_spec.input_bounds.upper_bounds(var_name)[0])[0])
+	input_var_name=output_er_spec.input_bounds.tuple_set[0]
+	input_lower_bound=str(list(output_er_spec.input_bounds.lower_bounds(input_var_name)[0])[0])
+	input_upper_bound=str(list(output_er_spec.input_bounds.upper_bounds(input_var_name)[0])[0])
+	output_var_name=output_er_spec.output_bounds.tuple_set[0]
+	output_lower_bound=str(list(output_er_spec.output_bounds.lower_bounds(output_var_name)[0])[0])
+	output_upper_bound=str(list(output_er_spec.output_bounds.upper_bounds(output_var_name)[0])[0])
 	stmts.append(Comment('Creation of ExplicitFunction for abstract relation:'))
 	stmts.append(Comment(str(output_er_spec.relation)))
 	stmts.append(Comment('Input bounds for abstract relation: %s'%(output_er_spec.input_bounds)))
-	stmts.append(Statement('*%s=%s(%s,%s,%s);'%(output_er_spec.get_param_name(),output_er_spec.get_ctor_str(),lower_bound,upper_bound,str(output_er_spec.is_permutation).lower())))
+	stmts.append(Comment('Output bounds for abstract relation: %s'%(output_er_spec.output_bounds)))
+	stmts.append(Statement('*%s=%s(%s,%s,%s,%s,%s);'%(output_er_spec.get_param_name(),output_er_spec.get_ctor_str(),input_lower_bound,input_upper_bound,output_lower_bound,output_upper_bound,str(output_er_spec.is_permutation).lower())))
 	stmts.append(Statement('%s=*%s;'%(output_er_spec.get_var_name(),output_er_spec.get_param_name())))
 	stmts.append(Statement())
 

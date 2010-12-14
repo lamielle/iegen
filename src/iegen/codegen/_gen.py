@@ -78,7 +78,7 @@ def gen_index_array(index_array):
 
 	stmts=[]
 	stmts.append(Comment('Wrapping index array %s'%(index_array.name)))
-	stmts.append(Statement('%s=%s(%s,%s,%s);'%(index_array.get_var_name(),index_array.get_ctor_str(),index_array.get_param_name(),input_size_string,output_size_string)))
+	stmts.append(Statement('%s=%s(%s,%s,%s,%s);'%(index_array.get_var_name(),index_array.get_ctor_str(),index_array.get_param_name(),input_size_string,output_size_string,str(index_array.is_permutation).lower())))
 	stmts.append(Statement())
 
 	return stmts
