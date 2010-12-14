@@ -582,6 +582,10 @@ class Set(SparseFormula):
 		res=self._union(other,Set)
 		res.freeze()
 		self.print_debug('Set Union: %s.union(%s)=%s'%(self,other,res))
+		self.print_operation('''Set Union:
+   union_in1s.push_back("%s");
+   union_in2s.push_back("%s");
+   expected_results.push_back("%s");'''%(self,other,res))
 		return res
 
 	#Application of a relation to a set: other(self)
@@ -636,6 +640,10 @@ class Set(SparseFormula):
 		new_set.freeze()
 
 		self.print_debug('Apply: %s.apply(%s)=%s'%(self,other,new_set))
+		self.print_operation('''Apply:
+   apply_set_ins.push_back("%s");
+   apply_rel_ins.push_back("%s");
+   expected_results.push_back("%s");'''%(self,other,new_set))
 
 		return new_set
 
@@ -749,6 +757,10 @@ class Relation(SparseFormula):
 		res._arity_in=self.arity_in()
 		res.freeze()
 		self.print_debug('Relation Union: %s.union(%s)=%s'%(self,other,res))
+		self.print_operation('''Relation Union:
+   union_in1s.push_back("%s");
+   union_in2s.push_back("%s");
+   expected_results.push_back("%s");'''%(self,other,res))
 		return res
 
 	def inverse(self):
@@ -775,6 +787,9 @@ class Relation(SparseFormula):
 		selfcopy.freeze()
 
 		self.print_debug('Relation Inverse: %s.inverse()=%s'%(self,selfcopy))
+		self.print_operation('''Relation Inverse:
+   inverse_rels.push_back("%s");
+   expected_results.push_back("%s");'''%(self,selfcopy))
 
 		return selfcopy
 
@@ -832,6 +847,10 @@ class Relation(SparseFormula):
 
 		self.print_debug('Compose: \n\t%s\n\n\t.compose(%s)\n\n\t' %(self,other) )
 		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
+		self.print_operation('''Compose:
+   compose_in1s.push_back("%s");
+   compose_in2s.push_back("%s");
+   expected_results.push_back("%s");'''%(self,other,new_relation) )
 
 		return new_relation
 
@@ -889,8 +908,8 @@ class Relation(SparseFormula):
 		#Freeze the new resulting relation now that we're done modifying it
 		new_relation.freeze()
 
-		self.print_debug('Compose: \n\t%s\n\n\t.compose(%s)\n\n\t' %(self,other) )
-		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
+		self.print_debug('Restrict domain: \n\t%s\n\n\t.restrict_domain(%s)\n\n\t' %(self,other) )
+		self.print_debug('\n\tRestrict domain output: %s\n' %(new_relation))
 
 		return new_relation
 
@@ -948,8 +967,8 @@ class Relation(SparseFormula):
 		#Freeze the new resulting relation now that we're done modifying it
 		new_relation.freeze()
 
-		self.print_debug('Compose: \n\t%s\n\n\t.compose(%s)\n\n\t' %(self,other) )
-		self.print_debug('\n\tCompose output: %s\n' %(new_relation))
+		self.print_debug('Restrict range: \n\t%s\n\n\t.restrict_range(%s)\n\n\t' %(self,other) )
+		self.print_debug('\n\tRestrict range output: %s\n' %(new_relation))
 
 		return new_relation
 

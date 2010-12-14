@@ -21,6 +21,7 @@ iegen.settings.output_types=(
    ('detail','',[],[],[None],'more detailed messages'),
    ('info','',[None],[],[None],'general information messages'),
    ('debug','',[],[],[],'debug messages'),
+   ('operation','',[],[],[],'operations debugging messages'),
    ('error','',[None],[None],[None],'error messages'))
 
 #Setup default outputs
